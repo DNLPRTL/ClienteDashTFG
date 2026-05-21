@@ -66,3 +66,16 @@ Remaining risks:
 - validator does not prevent all future leakage unless later converter and runner code preserve the same boundaries.
 
 Open decision: decide whether Phase 3.3B adds converter preflight logic or additional manifest validation before any real dataset normalization.
+
+## Phase 3.3B TraceLoader Update
+
+Closed risk:
+
+- normalized rows can now be loaded into typed objects after validation.
+
+Remaining risks:
+
+- the loader can hold a full trace for a future replay environment, so future runner code must prevent future-sample exposure to controllers;
+- the loader does not validate manifests or split manifests;
+- the loader does not prove converter correctness;
+- non-strict loading must remain a diagnostic path, not benchmark input.

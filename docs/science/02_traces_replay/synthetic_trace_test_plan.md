@@ -86,3 +86,9 @@ Synthetic fixtures should be created before any converter touches the acquired H
 Synthetic trace generation is implemented only inside `unittest` temporary directories. No synthetic CSV fixtures are committed.
 
 The implemented test shapes include constant throughput, variable throughput with zero outage, invalid numeric values, invalid timing, optional columns and deterministic repeated validation.
+
+## Phase 3.3B TraceLoader Update
+
+Loader tests also use synthetic temporary CSVs only. No synthetic CSV fixture is committed.
+
+The loader test plan confirms that temporary normalized data can become typed `LoadedTrace` objects before any converter or replay work exists.

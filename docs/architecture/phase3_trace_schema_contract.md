@@ -51,3 +51,11 @@ The likely primary runner is a custom Python trace-driven fake/replay runner bec
 
 Mahimahi is a secondary Ubuntu validation candidate. Linux `tc/netem` is a Linux fallback/runbook candidate. Neither is implemented or selected as the final benchmark path by this contract.
 
+## Phase 3.3B TraceLoader Boundary
+
+`core.trace_replay.loader` can load already-normalized schema-v1 rows and CSV files into `LoadedTrace`.
+
+This is not the replay runner. `LoadedTrace` may hold all samples for the future replay environment, but it must not be passed to controllers as a future-looking decision source.
+
+The future replay/network model must consume `LoadedTrace` and reveal only observations that a real client would have at the current point in playback.
+

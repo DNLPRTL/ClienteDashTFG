@@ -106,3 +106,12 @@ Memory wording should stay precise:
 
 - valid: schema validator, synthetic tests, deterministic temporary CSVs, no real trace reads;
 - invalid: replay, conversion, QoE, benchmark ranking, controller comparison, IA/RL.
+
+## Phase 3.3B TraceLoader Update
+
+Chapter 6 can now describe a second trace-quality gate: normalized traces can be loaded into typed objects after schema validation.
+
+Memory wording should emphasize:
+
+- valid: `TraceSample`, `LoadedTrace`, strict/non-strict loading semantics, temporary synthetic CSV tests;
+- invalid: real dataset conversion, replay, QoE/reward, ranking, client runtime integration.

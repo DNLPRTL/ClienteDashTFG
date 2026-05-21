@@ -96,3 +96,9 @@ Do not commit the local JSON inventory, raw logs, ZIP archives, CSVs, media or g
 The test suite creates temporary synthetic CSV files inside OS-managed temporary directories. These temporary files are not part of the repository layout.
 
 No new real trace directory, normalized dataset directory, manifest directory or generated artifact directory is created in the repository.
+
+## Phase 3.3B TraceLoader Update
+
+Tests write temporary CSVs under OS-managed temporary directories only. No repository fixture directory is added.
+
+Real normalized traces still belong outside the repository.

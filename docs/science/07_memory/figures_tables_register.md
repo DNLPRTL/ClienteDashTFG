@@ -27,6 +27,7 @@ This register tracks candidate thesis visuals and tables before they are created
 | F19 | Phase 3.2B external storage layout | `02_traces_replay/trace_directory_layout.md` | planned original diagram |
 | F20 | Phase 3.2C local acquisition boundary | `02_traces_replay/phase3_2c_local_dataset_acquisition.md` | planned original diagram |
 | F21 | Phase 3.3A synthetic schema validation gate | `02_traces_replay/phase3_3a_synthetic_trace_schema_validation.md` | planned original diagram |
+| F22 | Phase 3.3B TraceLoader boundary | `02_traces_replay/phase3_3b_trace_loader.md` | planned original diagram |
 
 ## Tables
 
@@ -65,3 +66,4 @@ This register tracks candidate thesis visuals and tables before they are created
 | T31 | Phase 3.2B manifest schemas | `02_traces_replay/trace_manifest_schema.md` and `trace_split_manifest_policy.md` | draft |
 | T32 | Phase 3.2C local acquisition audit | `02_traces_replay/phase3_2c_dataset_audit_summary.md` | draft |
 | T33 | Phase 3.3A synthetic schema validation coverage | `02_traces_replay/phase3_3a_synthetic_trace_schema_validation.md` | draft |
+| T34 | Phase 3.3B TraceLoader API | `02_traces_replay/phase3_3b_trace_loader.md` | draft |

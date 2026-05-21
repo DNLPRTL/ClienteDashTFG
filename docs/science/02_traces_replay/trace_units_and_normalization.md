@@ -70,3 +70,9 @@ The validator enforces the canonical units already defined here:
 - `NaN` and infinity are invalid.
 
 The validator does not perform dataset-specific unit conversion. Converters remain future work.
+
+## Phase 3.3B TraceLoader Update
+
+The loader assumes normalized units already match this document. It converts required field values to Python `float` values but performs no unit conversion.
+
+Any Mbps, bytes-per-period or source-specific conversion remains the responsibility of future converters.

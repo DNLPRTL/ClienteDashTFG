@@ -100,3 +100,9 @@ The local audit JSON inventory is not a trace manifest and must not be committed
 Phase 3.3A does not create `trace_manifest_v1` files. It validates trace rows and CSVs only.
 
 Future manifest validation remains open. Future manifests should depend on validator results for sample count, duration, throughput statistics and zero-throughput presence.
+
+## Phase 3.3B TraceLoader Update
+
+`LoadedTrace` contains the validation result needed for future manifest generation, but Phase 3.3B does not create manifests.
+
+Future manifest code may use loader statistics, but generated manifest files remain outside repo unless explicitly authorized.

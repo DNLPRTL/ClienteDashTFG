@@ -93,3 +93,9 @@ Authored Markdown summaries such as `phase3_2c_dataset_audit_summary.md` are all
 Schema validation tests create temporary CSV files during test execution only. These files are not run artifacts, not benchmark artifacts and are not committed.
 
 No generated CSVs, logs, manifests or normalized real traces are added by Phase 3.3A.
+
+## Phase 3.3B TraceLoader Update
+
+TraceLoader tests create temporary CSVs during test execution only. They are not run artifacts and are not committed.
+
+Loading a CSV does not create manifests, logs, benchmark telemetry or normalized output files.

@@ -100,3 +100,14 @@ The acquired HSDPA, Ghent and Lancaster files are raw candidates only. The futur
 The future runner now has a concrete precondition: it must only consume traces that pass `validate_normalized_trace_csv` or equivalent row validation.
 
 This does not implement the runner. It adds a schema gate that future runner work must call or preserve.
+
+## Phase 3.3B TraceLoader Update
+
+The future runner may consume `LoadedTrace`, but `LoadedTrace` is not a controller-facing API.
+
+Runner requirements now include:
+
+- accept only loaded normalized traces or equivalent validated rows;
+- reveal only time-appropriate observations to controllers;
+- never pass `LoadedTrace.samples` or future throughput values directly to controllers;
+- preserve row order from the normalized trace.

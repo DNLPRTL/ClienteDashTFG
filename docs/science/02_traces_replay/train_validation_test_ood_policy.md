@@ -92,3 +92,9 @@ Raca 4G, Raca 5G and Lumos5G remain deferred/OOD acquisition candidates. They ar
 Synthetic validation tests are not train, validation, test or OOD splits. They are schema fixtures created in temporary directories.
 
 No final split is closed and no future IA training data is created.
+
+## Phase 3.3B TraceLoader Update
+
+Loading a normalized trace does not assign train, validation, test or OOD labels.
+
+Split assignment remains a separate manifest/policy step. Loader tests do not create training data.

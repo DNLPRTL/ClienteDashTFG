@@ -77,3 +77,14 @@ Use these talking points:
 - The validator rejects missing columns, malformed numeric values, `NaN`, infinity, bad timing and negative throughput.
 - Zero throughput is accepted because it represents outage/no-delivery intervals.
 - This is a gate before converters and replay, not a replay runner.
+
+## Phase 3.3B TraceLoader Update
+
+Use these talking points:
+
+- TraceLoader loads already-normalized traces only.
+- It delegates validation to the Phase 3.3A validator.
+- It preserves optional/extra columns as metadata.
+- It does not convert raw datasets and does not read HSDPA/Ghent/Lancaster raw paths.
+- `LoadedTrace` is for the future replay environment, not controller input.
+- Future replay must reveal only observations that a real client would have.

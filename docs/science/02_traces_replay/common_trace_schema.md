@@ -80,3 +80,11 @@ The schema is now backed by a minimal validator:
 Validation covers required columns, empty traces, finite numeric values, nonnegative timestamps, monotonic timestamp order, positive durations, nonnegative throughput and zero-throughput outages.
 
 The validator ignores extra optional columns. Optional context/KPI columns remain unavailable to Phase 2 baseline controllers.
+
+## Phase 3.3B TraceLoader Update
+
+`core.trace_replay.loader` now loads already-normalized schema-v1 rows into `TraceSample` and `LoadedTrace`.
+
+Required columns become float fields. Optional and unknown extra columns are stored as sample metadata strings, excluding required columns.
+
+The loader does not sort, resample, interpolate, convert units or expose samples to controllers.

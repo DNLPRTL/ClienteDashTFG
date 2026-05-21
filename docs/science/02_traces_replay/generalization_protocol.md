@@ -99,3 +99,9 @@ This means Phase 3.2C improves readiness for first integration, but it does not 
 Synthetic schema validation is domain-neutral. It does not provide generalization evidence for HSDPA, LTE, HAS, 5G or live deployment domains.
 
 Generalization remains deferred until real normalized traces and split policies exist.
+
+## Phase 3.3B TraceLoader Update
+
+Loading synthetic normalized traces does not create domain generalization evidence.
+
+The loader is domain-neutral; HSDPA, LTE, HAS, 5G and deployment domains remain meaningful only after converter and split policies exist.

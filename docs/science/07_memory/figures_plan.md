@@ -25,6 +25,7 @@
 | External trace storage layout | 6 | Show repository docs separated from raw, normalized and manifest directories outside git | `02_traces_replay/trace_directory_layout.md` | planned |
 | Local acquisition boundary | 6 | Show HSDPA/Ghent/Lancaster as raw local candidates outside repo, with normalization and replay still gated | `02_traces_replay/phase3_2c_local_dataset_acquisition.md` | planned |
 | Synthetic validation gate | 6 | Show temporary synthetic CSVs -> validator -> result object -> later converter/replay gates | `02_traces_replay/phase3_3a_synthetic_trace_schema_validation.md` | planned |
+| TraceLoader boundary | 6 | Show normalized CSV -> validator -> LoadedTrace, with controllers separated from future samples | `02_traces_replay/phase3_3b_trace_loader.md` | planned |
 
 ## Figure Policy
 

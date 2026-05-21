@@ -83,3 +83,9 @@ Raca 4G, Raca 5G and Lumos5G remain second-wave/OOD acquisition candidates. FCC 
 Converters are still not implemented. The new validator defines the first target check that future converters must satisfy after producing `normalized_trace_schema_v1` rows.
 
 Future converter work must not read real raw datasets in unit tests unless explicitly authorized and must not commit real traces.
+
+## Phase 3.3B TraceLoader Update
+
+The loader is ready to receive converter outputs in a later phase, but converters are still not implemented.
+
+Future converters must produce rows accepted by the validator and structurally loadable by `load_normalized_trace_rows` or `load_normalized_trace_csv`.

@@ -77,6 +77,8 @@ The methodology must preserve the existing separation between parser, segment do
 | `phase3_2c_closure_report.md` | Phase 3.2C closure record. |
 | `phase3_3a_synthetic_trace_schema_validation.md` | Synthetic-only implementation of normalized trace schema validation. |
 | `phase3_3a_closure_report.md` | Phase 3.3A closure record. |
+| `phase3_3b_trace_loader.md` | Minimal loader for already-normalized schema-v1 traces. |
+| `phase3_3b_closure_report.md` | Phase 3.3B closure record. |
 | `trace_dataset_cards/` | Placeholder for later dataset cards. |
 | `method_cards/` | Placeholder for later method cards. |
 
@@ -105,3 +107,9 @@ The local raw files are not normalized traces, final split inputs, benchmark art
 Phase 3.3A adds a minimal standard-library validation layer for `normalized_trace_schema_v1` under `core/trace_replay/`. Tests generate tiny synthetic CSVs inside `unittest` temporary directories.
 
 This validates the schema only. It does not read real raw datasets, implement converters, implement TraceLoader, implement replay, define QoE/reward, run benchmarks, rank controllers or change client runtime behavior.
+
+## Phase 3.3B TraceLoader Update
+
+Phase 3.3B adds a minimal `TraceLoader` for already-normalized `normalized_trace_schema_v1` rows and CSV files. It preserves row order and metadata, and delegates validity checks to the Phase 3.3A validator.
+
+This is still not replay, conversion, client integration, QoE/reward, benchmark ranking or IA/RL.

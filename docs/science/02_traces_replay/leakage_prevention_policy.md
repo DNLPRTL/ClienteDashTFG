@@ -80,3 +80,9 @@ The local acquisition audit does not create split manifests. No acquired raw fil
 The validator reduces malformed-input risk but does not solve split leakage by itself.
 
 Important boundary: tests use synthetic temporary CSVs only and do not inspect real raw HSDPA, Ghent or Lancaster files. This avoids accidental leakage from real traces into development fixtures.
+
+## Phase 3.3B TraceLoader Update
+
+`LoadedTrace` can contain all samples, but that object is intended for the replay environment, not controllers.
+
+Future runner code must enforce observation timing so controllers cannot inspect future samples. The loader itself does not implement any controller-facing API.

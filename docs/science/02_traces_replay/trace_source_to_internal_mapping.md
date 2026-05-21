@@ -48,3 +48,9 @@ No normalized columns are produced in Phase 3.2C. No raw file is copied into the
 Source-to-internal mapping remains documentation only. The validator checks already-normalized rows; it does not map HSDPA, Ghent, Lancaster, Raca, Lumos5G, FCC or Puffer raw formats.
 
 Future converters must map source data into the required columns before validation.
+
+## Phase 3.3B TraceLoader Update
+
+The loader starts after source-to-internal mapping is complete. It does not inspect source-specific HSDPA, Ghent, Lancaster, Raca, Lumos5G, FCC or Puffer formats.
+
+Phase 3.4A remains responsible for converter implementation.

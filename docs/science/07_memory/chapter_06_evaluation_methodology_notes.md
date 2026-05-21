@@ -104,3 +104,11 @@ This evidence supports:
 - no real dataset reads during schema tests.
 
 It does not support replay, conversion, QoE, ranking, IA/RL or real-network claims.
+
+## Phase 3.3B TraceLoader Update
+
+Chapter 6 can now describe the second implementation step in the trace pipeline: validated normalized rows can be loaded into `TraceSample` and `LoadedTrace` objects.
+
+This supports typed representation of already-normalized traces, metadata preservation, strict and diagnostic non-strict loading, and row-order preservation.
+
+It still does not support replay, conversion, client integration, final QoE/reward, ranking or IA/RL.

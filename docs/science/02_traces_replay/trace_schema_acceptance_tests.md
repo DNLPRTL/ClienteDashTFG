@@ -63,3 +63,9 @@ The first acceptance-test layer is implemented in `tests/test_trace_schema_valid
 It covers valid traces, zero-throughput outage samples, missing columns, nonnumeric values, negative throughput, zero and negative durations, decreasing and negative timestamps, `NaN`, infinity, empty CSVs, optional columns, summary statistics and deterministic repeated validation.
 
 Synthetic CSV files are created inside `tempfile.TemporaryDirectory` and are not committed.
+
+## Phase 3.3B TraceLoader Update
+
+`tests/test_trace_loader.py` adds loader acceptance coverage using temporary synthetic CSVs only.
+
+Coverage includes row/CSV loading, trace id derivation, metadata preservation, row ordering, stats delegation, strict/non-strict invalid behavior, missing required columns, missing files, and no committed CSV fixtures.
