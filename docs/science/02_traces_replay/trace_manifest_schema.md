@@ -94,3 +94,9 @@ Future manifests for HSDPA Norway, Ghent 4G/LTE and Lancaster must record:
 - sample count and throughput statistics only after normalization.
 
 The local audit JSON inventory is not a trace manifest and must not be committed.
+
+## Phase 3.3A Synthetic Validation Update
+
+Phase 3.3A does not create `trace_manifest_v1` files. It validates trace rows and CSVs only.
+
+Future manifest validation remains open. Future manifests should depend on validator results for sample count, duration, throughput statistics and zero-throughput presence.

@@ -74,3 +74,9 @@ Acquired raw files introduce concrete grouping concerns:
 - Lancaster archive contents require grouping by original trace and any service/day metadata discovered later.
 
 The local acquisition audit does not create split manifests. No acquired raw file may be windowed or assigned to train/validation/test/OOD before a split policy is produced.
+
+## Phase 3.3A Synthetic Validation Update
+
+The validator reduces malformed-input risk but does not solve split leakage by itself.
+
+Important boundary: tests use synthetic temporary CSVs only and do not inspect real raw HSDPA, Ghent or Lancaster files. This avoids accidental leakage from real traces into development fixtures.

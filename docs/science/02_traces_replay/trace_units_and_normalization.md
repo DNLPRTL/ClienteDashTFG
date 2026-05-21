@@ -60,3 +60,13 @@ Every normalized trace must satisfy:
 - Do not define final QoE/reward while normalizing traces.
 - Do not commit normalized real traces to the repository.
 
+## Phase 3.3A Synthetic Validation Update
+
+The validator enforces the canonical units already defined here:
+
+- `timestamp_s` and `duration_s` are numeric finite seconds;
+- `throughput_kbps` is numeric finite kilobits per second;
+- zero throughput is valid;
+- `NaN` and infinity are invalid.
+
+The validator does not perform dataset-specific unit conversion. Converters remain future work.

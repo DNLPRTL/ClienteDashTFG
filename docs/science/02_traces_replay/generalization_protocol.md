@@ -93,3 +93,9 @@ Modern/OOD domains remain deferred for acquisition:
 - Lumos5G.
 
 This means Phase 3.2C improves readiness for first integration, but it does not close generalization or OOD evaluation.
+
+## Phase 3.3A Synthetic Validation Update
+
+Synthetic schema validation is domain-neutral. It does not provide generalization evidence for HSDPA, LTE, HAS, 5G or live deployment domains.
+
+Generalization remains deferred until real normalized traces and split policies exist.

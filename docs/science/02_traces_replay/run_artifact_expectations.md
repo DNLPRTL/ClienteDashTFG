@@ -87,3 +87,9 @@ Do not commit:
 - plots or run summaries produced by tools.
 
 Authored Markdown summaries such as `phase3_2c_dataset_audit_summary.md` are allowed.
+
+## Phase 3.3A Synthetic Validation Update
+
+Schema validation tests create temporary CSV files during test execution only. These files are not run artifacts, not benchmark artifacts and are not committed.
+
+No generated CSVs, logs, manifests or normalized real traces are added by Phase 3.3A.

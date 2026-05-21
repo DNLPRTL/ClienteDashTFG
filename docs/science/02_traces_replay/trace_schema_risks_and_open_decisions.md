@@ -51,3 +51,18 @@ New risks from the acquisition audit:
 | all acquired datasets | Raw file names include logs/ZIPs | Keep raw files outside repo and commit only authored Markdown summaries. |
 
 Open decisions now include exact archive inspection procedure, converter implementation order and whether any raw source pages should be represented only by dataset-card prose.
+
+## Phase 3.3A Synthetic Validation Update
+
+Closed risk:
+
+- basic schema validation now rejects malformed normalized traces before converter or replay work.
+
+Remaining risks:
+
+- validator does not inspect real raw datasets;
+- validator does not convert source units;
+- validator does not prove replay correctness;
+- validator does not prevent all future leakage unless later converter and runner code preserve the same boundaries.
+
+Open decision: decide whether Phase 3.3B adds converter preflight logic or additional manifest validation before any real dataset normalization.

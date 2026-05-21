@@ -97,3 +97,12 @@ Chapter 6 can now state that the first real trace candidates were acquired local
 Defense boundary: these are raw local candidates only. They are not normalized traces, benchmark artifacts, split assignments or QoE evidence.
 
 Recommended next-phase statement: Phase 3.3A should validate the schema with synthetic fixtures before touching real raw datasets.
+
+## Phase 3.3A Synthetic Validation Update
+
+Chapter 6 can now describe the first implemented trace-quality gate: normalized trace schema validation.
+
+Memory wording should stay precise:
+
+- valid: schema validator, synthetic tests, deterministic temporary CSVs, no real trace reads;
+- invalid: replay, conversion, QoE, benchmark ranking, controller comparison, IA/RL.

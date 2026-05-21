@@ -68,3 +68,15 @@ Mahimahi remains a secondary Ubuntu validation candidate. Linux `tc/netem` remai
 - no controller/player/runtime/media-engine/metric changes;
 - no real trace files in the repository.
 
+## Phase 3.3A Synthetic Validation Update
+
+The schema is now backed by a minimal validator:
+
+- `core.trace_replay.schema.TRACE_SCHEMA_VERSION`
+- `core.trace_replay.schema.REQUIRED_TRACE_COLUMNS`
+- `core.trace_replay.validation.validate_normalized_trace_rows`
+- `core.trace_replay.validation.validate_normalized_trace_csv`
+
+Validation covers required columns, empty traces, finite numeric values, nonnegative timestamps, monotonic timestamp order, positive durations, nonnegative throughput and zero-throughput outages.
+
+The validator ignores extra optional columns. Optional context/KPI columns remain unavailable to Phase 2 baseline controllers.

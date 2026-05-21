@@ -86,3 +86,9 @@ Preliminary local raw roles:
 | Lancaster ABR traces | local raw first integration/benchmark-design candidate |
 
 Raca 4G, Raca 5G and Lumos5G remain deferred/OOD acquisition candidates. They are still important for future OOD policy, but they are not locally acquired in this audit.
+
+## Phase 3.3A Synthetic Validation Update
+
+Synthetic validation tests are not train, validation, test or OOD splits. They are schema fixtures created in temporary directories.
+
+No final split is closed and no future IA training data is created.

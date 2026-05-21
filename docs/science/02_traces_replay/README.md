@@ -75,6 +75,8 @@ The methodology must preserve the existing separation between parser, segment do
 | `phase3_2c_local_dataset_acquisition.md` | Local raw acquisition status for first real trace candidates. |
 | `phase3_2c_dataset_audit_summary.md` | Audit summary and risks from local acquisition. |
 | `phase3_2c_closure_report.md` | Phase 3.2C closure record. |
+| `phase3_3a_synthetic_trace_schema_validation.md` | Synthetic-only implementation of normalized trace schema validation. |
+| `phase3_3a_closure_report.md` | Phase 3.3A closure record. |
 | `trace_dataset_cards/` | Placeholder for later dataset cards. |
 | `method_cards/` | Placeholder for later method cards. |
 
@@ -97,3 +99,9 @@ Phase 3.2C records that the first three real trace candidates are locally acquir
 3. Lancaster ABR-Throughput-Traces.
 
 The local raw files are not normalized traces, final split inputs, benchmark artifacts or QoE evidence. The next recommended implementation block is Phase 3.3A synthetic trace fixtures and schema validation, not full replay.
+
+## Phase 3.3A Synthetic Validation Update
+
+Phase 3.3A adds a minimal standard-library validation layer for `normalized_trace_schema_v1` under `core/trace_replay/`. Tests generate tiny synthetic CSVs inside `unittest` temporary directories.
+
+This validates the schema only. It does not read real raw datasets, implement converters, implement TraceLoader, implement replay, define QoE/reward, run benchmarks, rank controllers or change client runtime behavior.

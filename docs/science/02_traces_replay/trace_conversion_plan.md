@@ -77,3 +77,9 @@ Local raw availability is now documented for the first three conversion prioriti
 This does not implement converters and does not normalize traces. Converter implementation remains blocked until Phase 3.2C closes and Phase 3.3A synthetic trace fixtures/schema validation establishes the first validation layer.
 
 Raca 4G, Raca 5G and Lumos5G remain second-wave/OOD acquisition candidates. FCC and Puffer remain non-conversion sources in this phase.
+
+## Phase 3.3A Synthetic Validation Update
+
+Converters are still not implemented. The new validator defines the first target check that future converters must satisfy after producing `normalized_trace_schema_v1` rows.
+
+Future converter work must not read real raw datasets in unit tests unless explicitly authorized and must not commit real traces.

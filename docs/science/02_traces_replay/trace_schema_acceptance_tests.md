@@ -55,3 +55,11 @@ The next implementation block should be Phase 3.3A synthetic trace fixtures and 
 Phase 3.3A should validate the schema using tiny synthetic fixtures before any real HSDPA, Ghent or Lancaster raw files are normalized.
 
 Real acquired raw datasets are not test fixtures and must not be committed. Tests must use `unittest`, not `pytest`.
+
+## Phase 3.3A Synthetic Validation Update
+
+The first acceptance-test layer is implemented in `tests/test_trace_schema_validation.py`.
+
+It covers valid traces, zero-throughput outage samples, missing columns, nonnumeric values, negative throughput, zero and negative durations, decreasing and negative timestamps, `NaN`, infinity, empty CSVs, optional columns, summary statistics and deterministic repeated validation.
+
+Synthetic CSV files are created inside `tempfile.TemporaryDirectory` and are not committed.

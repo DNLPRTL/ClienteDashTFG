@@ -91,3 +91,16 @@ Chapter 6 can now distinguish three states:
 The acquired candidates are HSDPA Norway, Ghent 4G/LTE and Lancaster ABR traces. They are raw local files only. They are not normalized, not split, not replayed and not benchmark evidence.
 
 Use this phase to explain storage hygiene and the next gate: Phase 3.3A synthetic trace fixtures and schema validation before converter or replay work.
+
+## Phase 3.3A Synthetic Validation Update
+
+Chapter 6 can now include a small implementation milestone: the project validates `normalized_trace_schema_v1` using synthetic traces generated in `unittest` temporary directories.
+
+This evidence supports:
+
+- schema boundary enforcement;
+- rejection of malformed normalized traces;
+- deterministic validation behavior;
+- no real dataset reads during schema tests.
+
+It does not support replay, conversion, QoE, ranking, IA/RL or real-network claims.

@@ -42,3 +42,9 @@ The audit changes the first three rows from future external candidates to local 
 | Lancaster ABR-Throughput-Traces | acquired outside repo | Archive/README must be inspected outside repo before converter design. |
 
 No normalized columns are produced in Phase 3.2C. No raw file is copied into the repository.
+
+## Phase 3.3A Synthetic Validation Update
+
+Source-to-internal mapping remains documentation only. The validator checks already-normalized rows; it does not map HSDPA, Ghent, Lancaster, Raca, Lumos5G, FCC or Puffer raw formats.
+
+Future converters must map source data into the required columns before validation.

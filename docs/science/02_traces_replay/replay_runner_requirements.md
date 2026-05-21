@@ -94,3 +94,9 @@ Before replay runner implementation:
 5. final QoE/reward must remain deferred to Phase 3.5.
 
 The acquired HSDPA, Ghent and Lancaster files are raw candidates only. The future runner must consume normalized traces, not raw logs or archives.
+
+## Phase 3.3A Synthetic Validation Update
+
+The future runner now has a concrete precondition: it must only consume traces that pass `validate_normalized_trace_csv` or equivalent row validation.
+
+This does not implement the runner. It adds a schema gate that future runner work must call or preserve.

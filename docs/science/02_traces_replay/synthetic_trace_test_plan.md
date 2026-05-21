@@ -80,3 +80,9 @@ Future tests must use `unittest`. Phase 3.2B does not add fixtures or tests.
 Phase 3.2C makes the next recommended implementation block clearer: Phase 3.3A synthetic trace fixtures and schema validation.
 
 Synthetic fixtures should be created before any converter touches the acquired HSDPA, Ghent or Lancaster raw files. The real raw datasets must not be used as committed test fixtures.
+
+## Phase 3.3A Synthetic Validation Update
+
+Synthetic trace generation is implemented only inside `unittest` temporary directories. No synthetic CSV fixtures are committed.
+
+The implemented test shapes include constant throughput, variable throughput with zero outage, invalid numeric values, invalid timing, optional columns and deterministic repeated validation.

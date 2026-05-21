@@ -44,3 +44,4 @@
 - CausalSim, Veritas, Wei 2019 and Into the Wild/ABR-Arena are Phase 3.2A methodology or threats-to-validity references, not implementation authorizations.
 - Phase 3.2B adds no new bibliography sources. It defines local schema, manifest, storage and conversion planning documents derived from the Phase 3.2A source cards.
 - Phase 3.2C adds no new bibliography sources. It records local acquisition/audit status for already-carded datasets.
+- Phase 3.3A adds no new bibliography sources. It is a local implementation and validation gate for the already-defined normalized trace schema.

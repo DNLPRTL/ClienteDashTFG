@@ -15,6 +15,7 @@ This plan tracks figures and tables that may support the Phase 3 methodology sec
 | P3-F7 | Trace schema contract | Show raw source -> normalized schema v1 -> manifest -> runner boundary. | `common_trace_schema.md`, `trace_manifest_schema.md` |
 | P3-F8 | External trace storage layout | Show repo docs separated from raw, normalized and manifest directories outside git. | `trace_directory_layout.md` |
 | P3-F9 | Local acquisition boundary | Show raw local candidates outside repo and blocked paths to normalization/replay. | `phase3_2c_local_dataset_acquisition.md` |
+| P3-F10 | Schema validation gate | Show synthetic temp CSVs -> validator -> result object, with no real trace reads. | `phase3_3a_synthetic_trace_schema_validation.md` |
 
 ## Candidate Tables
 
@@ -34,6 +35,7 @@ This plan tracks figures and tables that may support the Phase 3 methodology sec
 | P3-T12 | Conversion priority | Show first integration, OOD and reference-only groups. | `trace_conversion_plan.md` |
 | P3-T13 | Manifest schemas | Summarize `trace_manifest_v1` and `split_manifest_v1`. | `trace_manifest_schema.md`, `trace_split_manifest_policy.md` |
 | P3-T14 | Local acquisition audit | Summarize acquired raw candidate counts and sizes. | `phase3_2c_dataset_audit_summary.md` |
+| P3-T15 | Synthetic schema validation coverage | Summarize required checks and synthetic-only tests. | `phase3_3a_synthetic_trace_schema_validation.md` |
 
 ## Policy
 
@@ -52,3 +54,7 @@ Phase 3.2B adds two more useful visuals: the schema contract boundary and the ex
 ## Phase 3.2C Local Acquisition Update
 
 Add a compact table for local acquisition status and a boundary figure that separates raw local candidates from normalized traces, manifests, synthetic fixtures, converters and replay.
+
+## Phase 3.3A Synthetic Validation Update
+
+Add a compact validation-gate figure before any converter or replay figure. The figure should show that temporary synthetic CSVs validate the normalized schema without touching real raw datasets.

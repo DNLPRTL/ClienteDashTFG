@@ -90,3 +90,9 @@ C:\Users\danie\Documents\TFG\_datasets\phase3_traces_replay\_audit\phase3_2c_loc
 ```
 
 Do not commit the local JSON inventory, raw logs, ZIP archives, CSVs, media or generated files.
+
+## Phase 3.3A Synthetic Validation Update
+
+The test suite creates temporary synthetic CSV files inside OS-managed temporary directories. These temporary files are not part of the repository layout.
+
+No new real trace directory, normalized dataset directory, manifest directory or generated artifact directory is created in the repository.

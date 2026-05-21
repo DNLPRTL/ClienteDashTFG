@@ -67,3 +67,13 @@ Use these talking points:
 - No local JSON inventory, raw logs, ZIPs or generated artifacts are committed.
 - The next step should be synthetic schema validation, not full replay.
 - Final QoE/reward and controller ranking remain out of scope.
+
+## Phase 3.3A Synthetic Validation Update
+
+Use these talking points:
+
+- The first trace code is only a schema validator.
+- Tests create synthetic CSVs in temporary directories and do not read local raw datasets.
+- The validator rejects missing columns, malformed numeric values, `NaN`, infinity, bad timing and negative throughput.
+- Zero throughput is accepted because it represents outage/no-delivery intervals.
+- This is a gate before converters and replay, not a replay runner.
