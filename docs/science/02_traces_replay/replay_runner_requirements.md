@@ -123,3 +123,16 @@ Additional runner requirements now include:
 - decide later how `SegmentDownloadResult` maps into player/runtime events;
 - keep final QoE/reward in Phase 3.5;
 - keep Mahimahi and `tc/netem` as later optional validation/runbook paths.
+
+## Phase 3.4C Controlled Dry-Run Update
+
+The first controller-facing runner boundary is a controlled dry-run harness, not a benchmark runner.
+
+Additional requirements now enforced:
+
+- build controller feedback from observed state only;
+- call existing controllers through the public registry/contract adapter;
+- reject future-looking feedback keys such as complete traces, future samples, raw metadata, split labels and OOD labels;
+- write artifacts only to an explicit output directory;
+- label every artifact as `phase3_4c_dry_run`, `outputs_are_benchmark_results = false`, `final_qoe_reward_defined = false`, `row_eval_gate = do_not_use_for_eval` and `no_final_ranking = true`;
+- keep generated dry-run outputs outside git.

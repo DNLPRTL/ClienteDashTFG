@@ -100,3 +100,13 @@ Use these talking points:
 - Controllers must not receive complete traces or future samples.
 - This step is needed before IA/RL because learning needs a reproducible environment before rewards or policies can be defended.
 - Final QoE/reward, benchmark ranking, Mahimahi and `tc/netem` remain deferred.
+
+## Phase 3.4C Controlled Dry-Run Update
+
+Use these talking points:
+
+- The dry-run harness is the first controlled loop that calls existing controllers against trace-driven timing.
+- Controllers are still unmodified and are called through the public registry/contract.
+- The controller adapter blocks complete traces, future samples, raw metadata, split labels and OOD labels.
+- Dry-run outputs are explicitly labeled non-benchmark, not final QoE/reward and not for ranking.
+- This validates integration boundaries, not controller superiority.

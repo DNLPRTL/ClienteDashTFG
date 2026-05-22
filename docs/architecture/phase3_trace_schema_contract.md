@@ -74,3 +74,11 @@ Converter outputs are not benchmark results, final split inputs, QoE evidence or
 
 The future runner must still preserve controller isolation: controllers may observe only normal client/controller signals available at the current playback point, not complete traces, future samples or optional trace metadata.
 
+## Phase 3.4C Controlled Dry-Run Boundary
+
+`core.trace_replay.dry_run` may compose `TraceLoader`, `TraceDrivenNetworkModel`, `TraceDrivenFakeReplayAdapter` and an existing-controller adapter for controlled smoke/integration dry-runs.
+
+`core.trace_replay.controller_adapter.ExistingControllerAdapter` may call registered Phase 2 controllers through the current dict-based feedback/action contract. It must not modify controllers or pass complete traces, future samples, optional raw metadata, OOD labels, split labels or leakage groups into feedback.
+
+Phase 3.4C artifacts are explicitly marked as non-benchmark dry-run artifacts. They do not define final QoE/reward and cannot be used for final ranking.
+

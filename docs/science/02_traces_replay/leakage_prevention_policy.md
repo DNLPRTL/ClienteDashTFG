@@ -86,3 +86,13 @@ Important boundary: tests use synthetic temporary CSVs only and do not inspect r
 `LoadedTrace` can contain all samples, but that object is intended for the replay environment, not controllers.
 
 Future runner code must enforce observation timing so controllers cannot inspect future samples. The loader itself does not implement any controller-facing API.
+
+## Phase 3.4C Controlled Dry-Run Update
+
+The dry-run harness enforces the first controller-facing anti-leakage boundary.
+
+Allowed controller inputs are limited to current client/controller feedback such as buffer level, previous measured download rate, previous level, segment duration, downloaded bytes and the representation ladder.
+
+Forbidden controller inputs include complete traces, `LoadedTrace`, sample arrays, future samples, future throughput, raw optional trace metadata, split labels, domain labels, OOD labels and leakage groups.
+
+Dry-run artifacts are marked `do_not_use_for_eval` and `no_final_ranking = true` so they cannot become accidental benchmark, tuning or final-report inputs.

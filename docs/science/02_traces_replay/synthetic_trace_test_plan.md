@@ -110,3 +110,20 @@ Synthetic network-model tests cover:
 - temporary CSV loading through TraceLoader.
 
 No persistent CSV fixtures are committed.
+
+## Phase 3.4C Controlled Dry-Run Update
+
+Synthetic dry-run tests cover:
+
+- representation ladder construction;
+- segment-size estimation;
+- constant-trace dry-run execution with a deterministic test adapter;
+- one record per synthetic segment;
+- simple buffer and rebuffer updates;
+- temporary artifact writing;
+- non-benchmark artifact flags;
+- adapter clamping/rejection behavior;
+- controller feedback anti-leakage checks;
+- CLI execution with a temporary synthetic CSV and a supported registered controller.
+
+No persistent CSV fixtures, real datasets or generated dry-run outputs are committed.

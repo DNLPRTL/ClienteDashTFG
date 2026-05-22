@@ -46,3 +46,4 @@
 - Phase 3.2C adds no new bibliography sources. It records local acquisition/audit status for already-carded datasets.
 - Phase 3.3A adds no new bibliography sources. It is a local implementation and validation gate for the already-defined normalized trace schema.
 - Phase 3.3B adds no new bibliography sources. It is a local loader implementation for already-normalized traces.
+- Phase 3.4C adds no new bibliography sources. It is a local controlled dry-run harness and adapter boundary over the already-documented trace/replay methodology.

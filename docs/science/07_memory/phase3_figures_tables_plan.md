@@ -17,6 +17,7 @@ This plan tracks figures and tables that may support the Phase 3 methodology sec
 | P3-F9 | Local acquisition boundary | Show raw local candidates outside repo and blocked paths to normalization/replay. | `phase3_2c_local_dataset_acquisition.md` |
 | P3-F10 | Schema validation gate | Show synthetic temp CSVs -> validator -> result object, with no real trace reads. | `phase3_3a_synthetic_trace_schema_validation.md` |
 | P3-F11 | TraceLoader boundary | Show normalized CSV -> validator -> LoadedTrace, with future replay boundary separated from controllers. | `phase3_3b_trace_loader.md` |
+| P3-F12 | Controlled dry-run boundary | Show LoadedTrace -> network model -> fake replay adapter -> controller adapter feedback, with future trace data blocked. | `phase3_4c_controlled_dry_runs.md`, `phase3_4c_controller_adapter.md` |
 
 ## Candidate Tables
 
@@ -38,6 +39,7 @@ This plan tracks figures and tables that may support the Phase 3 methodology sec
 | P3-T14 | Local acquisition audit | Summarize acquired raw candidate counts and sizes. | `phase3_2c_dataset_audit_summary.md` |
 | P3-T15 | Synthetic schema validation coverage | Summarize required checks and synthetic-only tests. | `phase3_3a_synthetic_trace_schema_validation.md` |
 | P3-T16 | TraceLoader API | Summarize `TraceSample`, `LoadedTrace`, `TraceLoadError` and load functions. | `phase3_3b_trace_loader.md` |
+| P3-T17 | Dry-run artifact flags | Summarize `phase3_4c_dry_run`, non-benchmark flags, row gate and no-final-ranking flag. | `phase3_4c_controlled_dry_runs.md` |
 
 ## Policy
 
@@ -64,3 +66,7 @@ Add a compact validation-gate figure before any converter or replay figure. The 
 ## Phase 3.3B TraceLoader Update
 
 Add a TraceLoader boundary figure after the validation-gate figure. It should show that `LoadedTrace` may hold the full normalized trace for the future replay environment, while controllers must not receive future samples.
+
+## Phase 3.4C Controlled Dry-Run Update
+
+Add a dry-run boundary figure after the network-model figure. It should show that the environment owns the trace and network model, while the controller adapter receives only current feedback and emits a representation index.

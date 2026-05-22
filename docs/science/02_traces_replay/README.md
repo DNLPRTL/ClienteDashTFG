@@ -86,6 +86,10 @@ The methodology must preserve the existing separation between parser, segment do
 | `phase3_4b_fake_replay_adapter.md` | Small fake replay adapter boundary around the network model. |
 | `phase3_4b_local_model_smoke_runbook.md` | Local outside-repo smoke procedure for the model. |
 | `phase3_4b_closure_report.md` | Phase 3.4B closure record. |
+| `phase3_4c_controlled_dry_runs.md` | Controlled dry-run harness semantics and artifact boundary. |
+| `phase3_4c_controller_adapter.md` | Existing-controller adapter contract and anti-leakage boundary. |
+| `phase3_4c_local_dry_run_smoke_runbook.md` | Local outside-repo smoke procedure for dry-run artifacts. |
+| `phase3_4c_closure_report.md` | Phase 3.4C closure record. |
 | `trace_dataset_cards/` | Placeholder for later dataset cards. |
 | `method_cards/` | Placeholder for later method cards. |
 
@@ -132,3 +136,11 @@ Normalized real traces and generated manifests are local artifacts outside the r
 Phase 3.4B adds a deterministic `TraceDrivenNetworkModel` and a small `TraceDrivenFakeReplayAdapter`. They consume `LoadedTrace` objects and simulate segment download durations while treating gaps and zero-throughput intervals as no-delivery time.
 
 This is not runtime integration and not a benchmark runner. Controllers must not receive complete traces or future samples. QoE/reward remains deferred to Phase 3.5, and Mahimahi/`tc/netem` remain later optional validation/runbook work.
+
+## Phase 3.4C Controlled Dry-Run Update
+
+Phase 3.4C adds a controlled dry-run harness that can execute existing Phase 2 controllers through the public controller contract against a normalized trace and the Phase 3.4B network model.
+
+The dry-run writes artifacts only when explicitly invoked and only to the requested output directory. All artifacts are labeled `phase3_4c_dry_run`, `outputs_are_benchmark_results = false`, `final_qoe_reward_defined = false`, `row_eval_gate = do_not_use_for_eval` and `no_final_ranking = true`.
+
+This remains outside final benchmark, QoE/reward, IA/RL, Mahimahi, `tc/netem`, player/runtime integration, media-engine changes and controller changes.

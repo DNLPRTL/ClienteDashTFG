@@ -125,3 +125,16 @@ This supports:
 - a fake adapter clock boundary for later integration.
 
 It still does not support controller ranking, final QoE/reward, player/runtime integration, media-engine changes, Mahimahi/`tc/netem` execution or IA/RL. The methodological value is that deterministic environment behavior is established before any future IA or tuning loop can be defended.
+
+## Phase 3.4C Controlled Dry-Run Update
+
+Chapter 6 can now describe the first controlled controller execution loop over trace-driven timing.
+
+This supports:
+
+- exercising existing registered controllers without modifying them;
+- using only current client/controller feedback;
+- recording per-segment dry-run telemetry;
+- writing artifacts explicitly marked as non-benchmark and not final QoE/reward.
+
+It still does not support final controller ranking, final reward design, player/runtime integration, Mahimahi/`tc/netem` execution, media-engine changes or IA/RL.

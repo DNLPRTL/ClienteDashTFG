@@ -26,6 +26,7 @@
 | Local acquisition boundary | 6 | Show HSDPA/Ghent/Lancaster as raw local candidates outside repo, with normalization and replay still gated | `02_traces_replay/phase3_2c_local_dataset_acquisition.md` | planned |
 | Synthetic validation gate | 6 | Show temporary synthetic CSVs -> validator -> result object -> later converter/replay gates | `02_traces_replay/phase3_3a_synthetic_trace_schema_validation.md` | planned |
 | TraceLoader boundary | 6 | Show normalized CSV -> validator -> LoadedTrace, with controllers separated from future samples | `02_traces_replay/phase3_3b_trace_loader.md` | planned |
+| Controlled dry-run boundary | 6 | Show LoadedTrace and network model inside the environment, with controller feedback limited to observed state | `02_traces_replay/phase3_4c_controlled_dry_runs.md`, `02_traces_replay/phase3_4c_controller_adapter.md` | planned |
 
 ## Figure Policy
 

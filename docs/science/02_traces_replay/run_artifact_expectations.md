@@ -105,3 +105,21 @@ Loading a CSV does not create manifests, logs, benchmark telemetry or normalized
 Network-model tests create no persistent artifacts. Temporary synthetic CSVs used to verify loader-to-model behavior are not run artifacts and are not committed.
 
 `SegmentDownloadResult` is an in-memory simulation result, not a benchmark artifact. Future runner work may decide how to persist segment telemetry, but Phase 3.4B creates no run directories, logs, CSV outputs, plots or summaries.
+
+## Phase 3.4C Controlled Dry-Run Update
+
+Phase 3.4C introduces explicit dry-run artifacts:
+
+- `trace_dry_run_manifest.json`;
+- `trace_dry_run_segments.csv`;
+- `trace_dry_run_summary.json`.
+
+They are generated artifacts and must stay outside the repository. They must include:
+
+- `phase = phase3_4c_dry_run`;
+- `outputs_are_benchmark_results = false`;
+- `final_qoe_reward_defined = false`;
+- `row_eval_gate = do_not_use_for_eval`;
+- `no_final_ranking = true`.
+
+These artifacts are controlled integration evidence only. They are not final benchmark artifacts and not final QoE/reward inputs.

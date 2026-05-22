@@ -1,9 +1,9 @@
-"""Trace replay schema, loading, conversion and network-model helpers.
+"""Trace replay schema, loading, conversion and dry-run helpers.
 
 Phase 3 exposes normalized trace validation, loading, and raw-dataset
-conversion infrastructure plus a deterministic network model boundary. It does
-not implement client-runtime trace integration, controller changes, or QoE
-scoring.
+conversion infrastructure plus deterministic network-model and dry-run
+boundaries. It does not implement client-runtime trace integration, controller
+changes, benchmark ranking, or final QoE scoring.
 """
 
 from __future__ import annotations
@@ -34,6 +34,22 @@ from core.trace_replay.network_model import (
     TraceDrivenNetworkModel,
     TraceReplayError,
 )
+from core.trace_replay.controller_adapter import (
+    ControllerAdapterError,
+    ControllerDecision,
+    ExistingControllerAdapter,
+)
+from core.trace_replay.dry_run import (
+    Representation,
+    SegmentDryRunRecord,
+    TraceDryRunConfig,
+    TraceDryRunError,
+    TraceDryRunResult,
+    build_representations_from_kbps,
+    estimate_segment_size_bytes,
+    run_trace_dry_run,
+    write_trace_dry_run_artifacts,
+)
 from core.trace_replay.validation import (
     TraceValidationResult,
     validate_normalized_trace_csv,
@@ -57,6 +73,18 @@ __all__ = [
     "TraceDrivenFakeReplayAdapter",
     "TraceDrivenNetworkModel",
     "TraceReplayError",
+    "ControllerAdapterError",
+    "ControllerDecision",
+    "ExistingControllerAdapter",
+    "Representation",
+    "SegmentDryRunRecord",
+    "TraceDryRunConfig",
+    "TraceDryRunError",
+    "TraceDryRunResult",
+    "build_representations_from_kbps",
+    "estimate_segment_size_bytes",
+    "run_trace_dry_run",
+    "write_trace_dry_run_artifacts",
     "TraceValidationResult",
     "load_normalized_trace_csv",
     "load_normalized_trace_rows",

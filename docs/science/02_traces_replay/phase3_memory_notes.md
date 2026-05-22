@@ -126,3 +126,14 @@ Memory wording should emphasize:
 - invalid: controller ranking, final QoE/reward, player/runtime integration, media-engine changes, Mahimahi/`tc/netem` execution, IA/RL.
 
 Defense sentence: deterministic trace-driven network modeling is required before IA because a learning or tuning method needs a stable, reproducible environment transition model before reward design or policy comparison can be meaningful.
+
+## Phase 3.4C Controlled Dry-Run Update
+
+Chapter 6 can now describe a controlled integration dry-run that composes the trace loader, deterministic network model, fake replay adapter and existing controller contract.
+
+Memory wording should emphasize:
+
+- valid: dry-run controller execution, synthetic representation ladder, simple buffer update, non-benchmark artifacts, anti-leakage adapter boundary;
+- invalid: final QoE/reward, controller ranking, runtime/player integration, media-engine changes, Mahimahi/`tc/netem`, IA/RL.
+
+Defense sentence: Phase 3.4C checks that existing controllers can be exercised against controlled trace timing without leaking future trace data, while still refusing to make performance claims.
