@@ -88,3 +88,15 @@ Use these talking points:
 - It does not convert raw datasets and does not read HSDPA/Ghent/Lancaster raw paths.
 - `LoadedTrace` is for the future replay environment, not controller input.
 - Future replay must reveal only observations that a real client would have.
+
+## Phase 3.4B Network Model Update
+
+Use these talking points:
+
+- The network model is deterministic and consumes `LoadedTrace`, not raw datasets.
+- It simulates segment download time from throughput intervals, zero-throughput intervals and gaps.
+- It is not connected to controllers, player/runtime or media engines.
+- The fake replay adapter only advances a synthetic clock.
+- Controllers must not receive complete traces or future samples.
+- This step is needed before IA/RL because learning needs a reproducible environment before rewards or policies can be defended.
+- Final QoE/reward, benchmark ranking, Mahimahi and `tc/netem` remain deferred.

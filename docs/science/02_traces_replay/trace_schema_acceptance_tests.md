@@ -69,3 +69,11 @@ Synthetic CSV files are created inside `tempfile.TemporaryDirectory` and are not
 `tests/test_trace_loader.py` adds loader acceptance coverage using temporary synthetic CSVs only.
 
 Coverage includes row/CSV loading, trace id derivation, metadata preservation, row ordering, stats delegation, strict/non-strict invalid behavior, missing required columns, missing files, and no committed CSV fixtures.
+
+## Phase 3.4B Network Model Update
+
+`tests/test_trace_network_model.py` adds acceptance coverage for the first environment timing model.
+
+Coverage includes constant throughput, zero-throughput intervals, gaps, non-zero starts, exhaustion, bounded looping, all-zero traces, invalid inputs, measured throughput consistency, adapter clock behavior and temporary CSV loading through TraceLoader.
+
+This still does not prove controller behavior, runtime replay correctness, final QoE/reward or benchmark ranking.

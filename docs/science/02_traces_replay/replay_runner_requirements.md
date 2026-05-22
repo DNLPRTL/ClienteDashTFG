@@ -111,3 +111,15 @@ Runner requirements now include:
 - reveal only time-appropriate observations to controllers;
 - never pass `LoadedTrace.samples` or future throughput values directly to controllers;
 - preserve row order from the normalized trace.
+
+## Phase 3.4B Network Model Update
+
+`TraceDrivenNetworkModel` implements the deterministic network timing core that a future runner can use, but it is not the runner itself.
+
+Additional runner requirements now include:
+
+- consume network-model results as environment timing, not as controller input;
+- keep controllers isolated from complete traces and future samples;
+- decide later how `SegmentDownloadResult` maps into player/runtime events;
+- keep final QoE/reward in Phase 3.5;
+- keep Mahimahi and `tc/netem` as later optional validation/runbook paths.

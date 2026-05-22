@@ -66,3 +66,11 @@ Dataset converters may read raw local sources and write normalized CSV plus mani
 
 Converter outputs are not benchmark results, final split inputs, QoE evidence or controller-ranking evidence. Phase 3.4A still does not implement the replay runner, Mahimahi, `tc/netem`, final QoE/reward, final train/validation/test/OOD split, IA/RL, controller changes, player/runtime changes, media-engine changes or metric-definition changes.
 
+## Phase 3.4B Network Model Boundary
+
+`TraceDrivenNetworkModel` may consume a `LoadedTrace` and simulate segment download duration for a requested byte count. It is an environment component and must not be passed to controllers as future-looking state.
+
+`TraceDrivenFakeReplayAdapter` may own a synthetic current time around the model. It is not connected to player/runtime, controllers or media engines in Phase 3.4B.
+
+The future runner must still preserve controller isolation: controllers may observe only normal client/controller signals available at the current playback point, not complete traces, future samples or optional trace metadata.
+

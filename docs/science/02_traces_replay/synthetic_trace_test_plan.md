@@ -92,3 +92,21 @@ The implemented test shapes include constant throughput, variable throughput wit
 Loader tests also use synthetic temporary CSVs only. No synthetic CSV fixture is committed.
 
 The loader test plan confirms that temporary normalized data can become typed `LoadedTrace` objects before any converter or replay work exists.
+
+## Phase 3.4B Network Model Update
+
+Synthetic network-model tests cover:
+
+- constant throughput;
+- zero-throughput waiting;
+- gaps as no-delivery time;
+- non-zero start times;
+- trace exhaustion;
+- bounded looping;
+- all-zero traces;
+- invalid segment sizes and start times;
+- measured throughput consistency;
+- fake adapter clock advancement and reset;
+- temporary CSV loading through TraceLoader.
+
+No persistent CSV fixtures are committed.

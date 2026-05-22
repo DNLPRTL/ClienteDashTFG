@@ -99,3 +99,9 @@ No generated CSVs, logs, manifests or normalized real traces are added by Phase 
 TraceLoader tests create temporary CSVs during test execution only. They are not run artifacts and are not committed.
 
 Loading a CSV does not create manifests, logs, benchmark telemetry or normalized output files.
+
+## Phase 3.4B Network Model Update
+
+Network-model tests create no persistent artifacts. Temporary synthetic CSVs used to verify loader-to-model behavior are not run artifacts and are not committed.
+
+`SegmentDownloadResult` is an in-memory simulation result, not a benchmark artifact. Future runner work may decide how to persist segment telemetry, but Phase 3.4B creates no run directories, logs, CSV outputs, plots or summaries.

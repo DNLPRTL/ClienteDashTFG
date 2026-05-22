@@ -97,3 +97,22 @@ Remaining risks:
 | Benchmark overclaiming | Still open. Converter outputs are not QoE evidence. | Keep docs and manifests marked `conversion_only_no_final_split`. |
 
 Phase 3.4A still does not define final QoE/reward, replay runner, benchmark ranking, final split, Mahimahi or `tc/netem` execution, controller changes, runtime changes or IA/RL.
+
+## Phase 3.4B Network Model Update
+
+Closed risks:
+
+- deterministic segment download timing is now testable with synthetic traces;
+- zero-throughput intervals and gaps are explicitly no-delivery time;
+- trace exhaustion behavior is explicit through `END_POLICY_FAIL`;
+- loop behavior is bounded by `max_loops`;
+- the fake adapter boundary advances a synthetic current time without touching runtime code.
+
+Remaining risks:
+
+| risk | status after Phase 3.4B | mitigation |
+| --- | --- | --- |
+| Runtime mapping | Still open: `SegmentDownloadResult` is not yet connected to player/runtime events. | Later Phase 3.4C/3.4D integration must define the event boundary and tests. |
+| Controller leakage | Still open for future runner code. The model itself is not controller-facing. | Keep tests and docs requiring controllers never receive complete traces or future samples. |
+| QoE interpretation | Still deferred. Download timing is not QoE/reward. | Phase 3.5 must define QoE/reward before benchmark claims. |
+| External emulator validation | Mahimahi and `tc/netem` still not implemented. | Keep them as optional later validation/runbook work. |

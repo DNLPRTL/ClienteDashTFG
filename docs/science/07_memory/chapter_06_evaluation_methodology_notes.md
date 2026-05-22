@@ -112,3 +112,16 @@ Chapter 6 can now describe the second implementation step in the trace pipeline:
 This supports typed representation of already-normalized traces, metadata preservation, strict and diagnostic non-strict loading, and row-order preservation.
 
 It still does not support replay, conversion, client integration, final QoE/reward, ranking or IA/RL.
+
+## Phase 3.4B Network Model Update
+
+Chapter 6 can now describe a deterministic trace-driven network model that converts loaded normalized traces into segment download durations.
+
+This supports:
+
+- reproducible timing from `timestamp_s`, `duration_s` and `throughput_kbps`;
+- explicit handling of zero throughput and gaps as no-delivery time;
+- bounded end-of-trace behavior through fail or loop policy;
+- a fake adapter clock boundary for later integration.
+
+It still does not support controller ranking, final QoE/reward, player/runtime integration, media-engine changes, Mahimahi/`tc/netem` execution or IA/RL. The methodological value is that deterministic environment behavior is established before any future IA or tuning loop can be defended.

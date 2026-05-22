@@ -82,6 +82,10 @@ The methodology must preserve the existing separation between parser, segment do
 | `phase3_4a_dataset_converters.md` | Dataset converter architecture, assumptions, API and CLI. |
 | `phase3_4a_local_conversion_smoke_runbook.md` | Local outside-repo smoke procedure for real raw candidates. |
 | `phase3_4a_closure_report.md` | Phase 3.4A closure record. |
+| `phase3_4b_trace_driven_network_model.md` | Deterministic network model semantics and API. |
+| `phase3_4b_fake_replay_adapter.md` | Small fake replay adapter boundary around the network model. |
+| `phase3_4b_local_model_smoke_runbook.md` | Local outside-repo smoke procedure for the model. |
+| `phase3_4b_closure_report.md` | Phase 3.4B closure record. |
 | `trace_dataset_cards/` | Placeholder for later dataset cards. |
 | `method_cards/` | Placeholder for later method cards. |
 
@@ -122,3 +126,9 @@ This is still not replay, conversion, client integration, QoE/reward, benchmark 
 Phase 3.4A adds standard-library converters for HSDPA Norway / Riiser MMSys 2013, Ghent 4G/LTE Bandwidth Logs and Lancaster ABR-Throughput-Traces. The converters emit validated `normalized_trace_schema_v1` CSVs and local `trace_manifest_v1` JSON files.
 
 Normalized real traces and generated manifests are local artifacts outside the repository, not benchmark results. This update still does not implement replay, connect traces to runtime, define final QoE/reward, rank controllers, freeze final splits, execute Mahimahi or `tc/netem`, change controllers/player/media engines, or open IA/RL.
+
+## Phase 3.4B Trace-Driven Network Model Update
+
+Phase 3.4B adds a deterministic `TraceDrivenNetworkModel` and a small `TraceDrivenFakeReplayAdapter`. They consume `LoadedTrace` objects and simulate segment download durations while treating gaps and zero-throughput intervals as no-delivery time.
+
+This is not runtime integration and not a benchmark runner. Controllers must not receive complete traces or future samples. QoE/reward remains deferred to Phase 3.5, and Mahimahi/`tc/netem` remain later optional validation/runbook work.

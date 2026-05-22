@@ -115,3 +115,14 @@ Memory wording should emphasize:
 
 - valid: `TraceSample`, `LoadedTrace`, strict/non-strict loading semantics, temporary synthetic CSV tests;
 - invalid: real dataset conversion, replay, QoE/reward, ranking, client runtime integration.
+
+## Phase 3.4B Network Model Update
+
+Chapter 6 can now describe the first deterministic environment model: `LoadedTrace` inputs can be transformed into segment download durations without running controllers or runtime code.
+
+Memory wording should emphasize:
+
+- valid: deterministic local timing model, zero-throughput and gap handling, bounded loop/fail policies, fake adapter clock boundary;
+- invalid: controller ranking, final QoE/reward, player/runtime integration, media-engine changes, Mahimahi/`tc/netem` execution, IA/RL.
+
+Defense sentence: deterministic trace-driven network modeling is required before IA because a learning or tuning method needs a stable, reproducible environment transition model before reward design or policy comparison can be meaningful.

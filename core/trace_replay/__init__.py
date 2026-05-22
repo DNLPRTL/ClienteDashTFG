@@ -1,8 +1,9 @@
-"""Trace replay schema, loading and conversion helpers.
+"""Trace replay schema, loading, conversion and network-model helpers.
 
 Phase 3 exposes normalized trace validation, loading, and raw-dataset
-conversion infrastructure. It does not implement replay, client-runtime trace
-integration, controller changes, or QoE scoring.
+conversion infrastructure plus a deterministic network model boundary. It does
+not implement client-runtime trace integration, controller changes, or QoE
+scoring.
 """
 
 from __future__ import annotations
@@ -25,6 +26,14 @@ from core.trace_replay.converters import (
     ConversionError,
     convert_dataset,
 )
+from core.trace_replay.fake_replay_adapter import TraceDrivenFakeReplayAdapter
+from core.trace_replay.network_model import (
+    END_POLICY_FAIL,
+    END_POLICY_LOOP,
+    SegmentDownloadResult,
+    TraceDrivenNetworkModel,
+    TraceReplayError,
+)
 from core.trace_replay.validation import (
     TraceValidationResult,
     validate_normalized_trace_csv,
@@ -42,6 +51,12 @@ __all__ = [
     "ConvertedTrace",
     "ConversionError",
     "convert_dataset",
+    "END_POLICY_FAIL",
+    "END_POLICY_LOOP",
+    "SegmentDownloadResult",
+    "TraceDrivenFakeReplayAdapter",
+    "TraceDrivenNetworkModel",
+    "TraceReplayError",
     "TraceValidationResult",
     "load_normalized_trace_csv",
     "load_normalized_trace_rows",
