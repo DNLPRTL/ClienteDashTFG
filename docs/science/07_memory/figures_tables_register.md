@@ -29,6 +29,7 @@ This register tracks candidate thesis visuals and tables before they are created
 | F21 | Phase 3.3A synthetic schema validation gate | `02_traces_replay/phase3_3a_synthetic_trace_schema_validation.md` | planned original diagram |
 | F22 | Phase 3.3B TraceLoader boundary | `02_traces_replay/phase3_3b_trace_loader.md` | planned original diagram |
 | F23 | Phase 3.4C controlled dry-run boundary | `02_traces_replay/phase3_4c_controlled_dry_runs.md` and `phase3_4c_controller_adapter.md` | planned original diagram |
+| F24 | Phase 3.4D Mahimahi/tc decision boundary | `02_traces_replay/phase3_4d_mahimahi_tc_decision.md` | planned original diagram |
 
 ## Tables
 
@@ -69,3 +70,4 @@ This register tracks candidate thesis visuals and tables before they are created
 | T33 | Phase 3.3A synthetic schema validation coverage | `02_traces_replay/phase3_3a_synthetic_trace_schema_validation.md` | draft |
 | T34 | Phase 3.3B TraceLoader API | `02_traces_replay/phase3_3b_trace_loader.md` | draft |
 | T35 | Phase 3.4C dry-run artifact flags | `02_traces_replay/phase3_4c_controlled_dry_runs.md` | draft |
+| T36 | Phase 3.4D Mahimahi/tc method roles | `02_traces_replay/phase3_4d_mahimahi_tc_decision.md` | draft |

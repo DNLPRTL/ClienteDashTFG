@@ -27,6 +27,7 @@
 | Synthetic validation gate | 6 | Show temporary synthetic CSVs -> validator -> result object -> later converter/replay gates | `02_traces_replay/phase3_3a_synthetic_trace_schema_validation.md` | planned |
 | TraceLoader boundary | 6 | Show normalized CSV -> validator -> LoadedTrace, with controllers separated from future samples | `02_traces_replay/phase3_3b_trace_loader.md` | planned |
 | Controlled dry-run boundary | 6 | Show LoadedTrace and network model inside the environment, with controller feedback limited to observed state | `02_traces_replay/phase3_4c_controlled_dry_runs.md`, `02_traces_replay/phase3_4c_controller_adapter.md` | planned |
+| Mahimahi/tc decision boundary | 6 | Show Python trace-driven path as primary, Mahimahi as secondary validation and `tc/netem` as fallback/sanity | `02_traces_replay/phase3_4d_mahimahi_tc_decision.md` | planned |
 
 ## Figure Policy
 

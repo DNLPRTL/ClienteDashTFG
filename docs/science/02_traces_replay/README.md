@@ -90,6 +90,12 @@ The methodology must preserve the existing separation between parser, segment do
 | `phase3_4c_controller_adapter.md` | Existing-controller adapter contract and anti-leakage boundary. |
 | `phase3_4c_local_dry_run_smoke_runbook.md` | Local outside-repo smoke procedure for dry-run artifacts. |
 | `phase3_4c_closure_report.md` | Phase 3.4C closure record. |
+| `phase3_4d_mahimahi_tc_decision.md` | Mahimahi/tc decision: Python primary, Mahimahi secondary, tc fallback. |
+| `phase3_4d_mahimahi_runbook.md` | Ubuntu-only Mahimahi probe/runbook boundary. |
+| `phase3_4d_tc_netem_runbook.md` | Linux-only `tc/netem` probe/runbook boundary. |
+| `phase3_4d_environment_probe_policy.md` | Local/audit-only probe policy and artifact boundary. |
+| `phase3_4d_validation_boundaries.md` | Smoke, dry-run, validation, benchmark and final-evaluation boundaries. |
+| `phase3_4d_closure_report.md` | Phase 3.4D closure record. |
 | `trace_dataset_cards/` | Placeholder for later dataset cards. |
 | `method_cards/` | Placeholder for later method cards. |
 
@@ -144,3 +150,11 @@ Phase 3.4C adds a controlled dry-run harness that can execute existing Phase 2 c
 The dry-run writes artifacts only when explicitly invoked and only to the requested output directory. All artifacts are labeled `phase3_4c_dry_run`, `outputs_are_benchmark_results = false`, `final_qoe_reward_defined = false`, `row_eval_gate = do_not_use_for_eval` and `no_final_ranking = true`.
 
 This remains outside final benchmark, QoE/reward, IA/RL, Mahimahi, `tc/netem`, player/runtime integration, media-engine changes and controller changes.
+
+## Phase 3.4D Mahimahi/tc Decision Update
+
+Phase 3.4D closes the method decision for external emulation tools. The custom Python trace-driven pipeline remains the primary reproducible path for Phase 3.5 and future IA work.
+
+Mahimahi is retained as a secondary Ubuntu-only validation/runbook candidate. Linux `tc/netem` is retained as a Linux fallback/sanity/runbook candidate. Neither tool is required for Phase 3.5, and neither produces benchmark evidence in Phase 3.4D.
+
+This update is documentation only: no installation, no emulation execution, no qdisc or namespace changes, no final QoE/reward, no ranking and no runtime/controller/player/media changes.

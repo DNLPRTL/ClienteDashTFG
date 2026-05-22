@@ -44,6 +44,7 @@
 | Phase 3.3A synthetic schema validation | 6 | Show validator API, synthetic-only tests and malformed-trace checks | `02_traces_replay/phase3_3a_synthetic_trace_schema_validation.md` |
 | Phase 3.3B TraceLoader API | 6 | Show `TraceSample`, `LoadedTrace`, loader functions and future-sample boundary | `02_traces_replay/phase3_3b_trace_loader.md` |
 | Phase 3.4C dry-run artifact flags | 6 | Show non-benchmark, no-final-reward, no-ranking and row-gate labels for dry-run artifacts | `02_traces_replay/phase3_4c_controlled_dry_runs.md` |
+| Phase 3.4D Mahimahi/tc method roles | 6 | Show Python primary path, Mahimahi secondary role, `tc/netem` fallback role and non-benchmark status | `02_traces_replay/phase3_4d_mahimahi_tc_decision.md` |
 
 ## Conversion Rule
 

@@ -80,3 +80,13 @@ Reasons:
 Mahimahi remains a secondary Ubuntu validation candidate after the Python runner and trace schema are stable. Linux `tc/netem` remains a Linux fallback or isolated runbook candidate. Phase 3.2B does not implement or select either as the final benchmark path.
 
 QoE/reward remains deferred to Phase 3.5.
+
+## Phase 3.4D Decision Update
+
+The decision is now closed for the current phase:
+
+- primary path: custom Python trace-driven pipeline;
+- secondary optional path: Mahimahi on Ubuntu for future validation/runbook use;
+- fallback/sanity optional path: Linux `tc/netem` for future isolated impairment checks.
+
+Mahimahi and `tc/netem` are not required for Phase 3.5. They are not installed or executed in Phase 3.4D. Their future outputs must be method-labeled and must not be treated as equivalent to Python dry-run outputs unless a later benchmark protocol explicitly authorizes that comparison.

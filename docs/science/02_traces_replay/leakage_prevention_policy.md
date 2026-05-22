@@ -96,3 +96,15 @@ Allowed controller inputs are limited to current client/controller feedback such
 Forbidden controller inputs include complete traces, `LoadedTrace`, sample arrays, future samples, future throughput, raw optional trace metadata, split labels, domain labels, OOD labels and leakage groups.
 
 Dry-run artifacts are marked `do_not_use_for_eval` and `no_final_ranking = true` so they cannot become accidental benchmark, tuning or final-report inputs.
+
+## Phase 3.4D Mahimahi/tc Decision Update
+
+External-emulator leakage risk is now explicitly bounded.
+
+Controls:
+
+- Mahimahi/tc probes are local/audit-only and outside-repo;
+- failed probes cannot force method changes before Phase 3.5;
+- external validation outputs must not be used to tune controllers unless a later split and tuning policy allows it;
+- Mahimahi/tc outputs must not be mixed with Python dry-run outputs as equivalent benchmark rows;
+- controller ranking remains prohibited until final metrics and split rules are closed.

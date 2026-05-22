@@ -138,3 +138,14 @@ This supports:
 - writing artifacts explicitly marked as non-benchmark and not final QoE/reward.
 
 It still does not support final controller ranking, final reward design, player/runtime integration, Mahimahi/`tc/netem` execution, media-engine changes or IA/RL.
+
+## Phase 3.4D Mahimahi/tc Decision Update
+
+Chapter 6 can now close the external emulation decision for this stage:
+
+- the Python trace-driven pipeline is the primary reproducible route into Phase 3.5;
+- Mahimahi is a secondary Ubuntu-only validation/runbook candidate;
+- Linux `tc/netem` is a fallback/sanity/runbook candidate;
+- Phase 3.5 does not depend on either external tool being operational.
+
+This supports a clear methodology claim, not an experimental claim. No Mahimahi or `tc/netem` benchmark was run, and no controller ranking or final QoE/reward is implied.

@@ -136,3 +136,15 @@ Additional requirements now enforced:
 - write artifacts only to an explicit output directory;
 - label every artifact as `phase3_4c_dry_run`, `outputs_are_benchmark_results = false`, `final_qoe_reward_defined = false`, `row_eval_gate = do_not_use_for_eval` and `no_final_ranking = true`;
 - keep generated dry-run outputs outside git.
+
+## Phase 3.4D Mahimahi/tc Decision Update
+
+Runner requirements now treat external emulation as optional validation, not as a prerequisite:
+
+- the Python trace-driven pipeline remains the primary Phase 3.5 path;
+- Mahimahi is a secondary Ubuntu-only validation/runbook candidate;
+- Linux `tc/netem` is a fallback/sanity/runbook candidate;
+- environment probes are local/audit-only and outside-repo;
+- probe failures do not block Phase 3.5;
+- Mahimahi/tc outputs must not be mixed with Python dry-run outputs as equivalent benchmark results;
+- final QoE/reward and ranking remain deferred.

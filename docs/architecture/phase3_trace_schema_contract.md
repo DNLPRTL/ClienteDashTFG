@@ -82,3 +82,11 @@ The future runner must still preserve controller isolation: controllers may obse
 
 Phase 3.4C artifacts are explicitly marked as non-benchmark dry-run artifacts. They do not define final QoE/reward and cannot be used for final ranking.
 
+## Phase 3.4D Mahimahi/tc Boundary
+
+Phase 3.4D is documentation only. It does not authorize Mahimahi implementation, `tc/netem` implementation, installation, qdisc changes, namespace changes, benchmark execution or runtime integration.
+
+The custom Python trace-driven path remains the primary reproducible path for Phase 3.5. Mahimahi is a secondary Ubuntu-only validation/runbook candidate. Linux `tc/netem` is a Linux fallback/sanity/runbook candidate.
+
+Mahimahi/tc probe or future validation outputs must not be mixed with Python dry-run outputs as equivalent benchmark results. Final QoE/reward and ranking remain outside this contract until Phase 3.5 or later explicitly closes them.
+

@@ -127,3 +127,9 @@ Synthetic dry-run tests cover:
 - CLI execution with a temporary synthetic CSV and a supported registered controller.
 
 No persistent CSV fixtures, real datasets or generated dry-run outputs are committed.
+
+## Phase 3.4D Mahimahi/tc Decision Update
+
+No new synthetic fixtures are required for Phase 3.4D because the phase is documentation-only.
+
+Future Mahimahi or `tc/netem` validation should still use synthetic-first checks before any real trace or controller-comparison claim. Those checks must remain separate from Phase 3.4C Python dry-run artifacts and cannot define final QoE/reward.

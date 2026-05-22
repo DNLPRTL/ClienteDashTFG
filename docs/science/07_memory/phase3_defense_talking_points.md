@@ -110,3 +110,14 @@ Use these talking points:
 - The controller adapter blocks complete traces, future samples, raw metadata, split labels and OOD labels.
 - Dry-run outputs are explicitly labeled non-benchmark, not final QoE/reward and not for ranking.
 - This validates integration boundaries, not controller superiority.
+
+## Phase 3.4D Mahimahi/tc Decision Update
+
+Use these talking points:
+
+- The external emulation decision is closed for the current phase.
+- Python trace-driven execution remains primary because it is deterministic, testable and already integrated.
+- Mahimahi remains valuable as a secondary Ubuntu validation candidate, not as the primary benchmark path.
+- `tc/netem` remains a Linux fallback/sanity candidate because real qdisc changes have privilege, cleanup and host-contamination risks.
+- Phase 3.5 can proceed without Mahimahi or `tc/netem` installed.
+- No Mahimahi/tc output exists as benchmark evidence in Phase 3.4D.

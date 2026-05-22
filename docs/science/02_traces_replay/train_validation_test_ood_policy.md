@@ -98,3 +98,9 @@ No final split is closed and no future IA training data is created.
 Loading a normalized trace does not assign train, validation, test or OOD labels.
 
 Split assignment remains a separate manifest/policy step. Loader tests do not create training data.
+
+## Phase 3.4D Mahimahi/tc Decision Update
+
+Mahimahi and `tc/netem` probes are not train, validation, test or OOD split events. They do not create training data, validation data, test data or OOD evidence.
+
+If external emulation is later used, method choice must be recorded separately from split assignment. A trace cannot become benchmark material merely because it was run through Mahimahi or `tc/netem`.

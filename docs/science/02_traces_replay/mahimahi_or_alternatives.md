@@ -38,3 +38,13 @@ Phase 3.1 does not:
 | Linux `tc/netem` | fallback/alternative | simple impairment injection on Ubuntu | privileges, kernel/qdisc timing, interface safety | candidate only |
 | ns-3/Mininet | deferred | richer network simulation | too heavy for current phase | deferred |
 | Puffer/real deployment | methodology reference | real-world validity | out of scope, complex, causal issues | metadata/method only |
+
+## Phase 3.4D Final Position
+
+| method | Phase 3.4D role | benchmark status | Phase 3.5 dependency |
+| --- | --- | --- | --- |
+| Custom Python trace-driven pipeline | Primary reproducible path | Not benchmark until Phase 3.5 defines final metrics | Required and sufficient |
+| Mahimahi | Secondary Ubuntu-only validation/runbook candidate | Not benchmark in Phase 3.4D | Optional |
+| Linux `tc/netem` | Linux fallback/sanity/runbook candidate | Not benchmark in Phase 3.4D | Optional |
+
+Phase 3.4D does not install or run Mahimahi or `tc/netem`. It only documents probe/runbook boundaries and confirms that Phase 3.5 can proceed on the Python path.

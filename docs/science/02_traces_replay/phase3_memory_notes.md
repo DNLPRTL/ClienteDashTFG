@@ -137,3 +137,14 @@ Memory wording should emphasize:
 - invalid: final QoE/reward, controller ranking, runtime/player integration, media-engine changes, Mahimahi/`tc/netem`, IA/RL.
 
 Defense sentence: Phase 3.4C checks that existing controllers can be exercised against controlled trace timing without leaking future trace data, while still refusing to make performance claims.
+
+## Phase 3.4D Mahimahi/tc Decision Update
+
+Chapter 6 can now state that the external emulation decision is closed for the current phase:
+
+- Python trace-driven pipeline is primary for Phase 3.5;
+- Mahimahi is secondary, Ubuntu-only and optional;
+- `tc/netem` is Linux fallback/sanity-only and optional;
+- Phase 3.5 is not blocked by external emulator availability.
+
+Memory wording should emphasize that Phase 3.4D is methodological scoping, not execution evidence. It documents why external emulation is useful but not required for the next metric/QoE phase.

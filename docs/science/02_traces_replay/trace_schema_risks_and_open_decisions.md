@@ -116,3 +116,18 @@ Remaining risks:
 | Controller leakage | Still open for future runner code. The model itself is not controller-facing. | Keep tests and docs requiring controllers never receive complete traces or future samples. |
 | QoE interpretation | Still deferred. Download timing is not QoE/reward. | Phase 3.5 must define QoE/reward before benchmark claims. |
 | External emulator validation | Mahimahi and `tc/netem` still not implemented. | Keep them as optional later validation/runbook work. |
+
+## Phase 3.4D Mahimahi/tc Decision Update
+
+Closed risk:
+
+- external emulator role is now decided for the current project stage: Python primary, Mahimahi secondary, `tc/netem` fallback/sanity.
+
+Remaining risks:
+
+| risk | status after Phase 3.4D | mitigation |
+| --- | --- | --- |
+| Mahimahi availability | Optional and environment-dependent. | Probe only outside repo; do not block Phase 3.5. |
+| `tc/netem` privilege/cleanup | Real qdisc changes remain risky and unauthorized in Phase 3.4D. | Require isolated namespace or documented cleanup if future use is authorized. |
+| Cross-method comparability | Python dry-run, Mahimahi and `tc/netem` outputs are not equivalent by default. | Use method labels and do not mix as benchmark results. |
+| QoE interpretation | Still deferred. | Phase 3.5 must define final metric/QoE boundaries. |

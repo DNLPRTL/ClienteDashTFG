@@ -105,3 +105,16 @@ Generalization remains deferred until real normalized traces and split policies 
 Loading synthetic normalized traces does not create domain generalization evidence.
 
 The loader is domain-neutral; HSDPA, LTE, HAS, 5G and deployment domains remain meaningful only after converter and split policies exist.
+
+## Phase 3.4D Mahimahi/tc Decision Update
+
+Using a different emulation method does not create domain generalization evidence by itself.
+
+Mahimahi can provide future external validation context, and `tc/netem` can provide future impairment sanity context, but neither changes the underlying trace domain. Any future report must distinguish:
+
+- trace domain;
+- split role;
+- replay/emulation method;
+- whether the result is dry-run, validation or final benchmark evidence.
+
+Phase 3.5 can proceed with the Python trace-driven path without Mahimahi/tc operational status.

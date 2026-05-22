@@ -123,3 +123,20 @@ They are generated artifacts and must stay outside the repository. They must inc
 - `no_final_ranking = true`.
 
 These artifacts are controlled integration evidence only. They are not final benchmark artifacts and not final QoE/reward inputs.
+
+## Phase 3.4D Mahimahi/tc Probe Update
+
+Mahimahi and `tc/netem` environment probes, if run later, produce local/audit-only artifacts outside the repository. They are not benchmark artifacts, not Python dry-run artifacts and not final QoE/reward evidence.
+
+Do not commit:
+
+- probe logs;
+- command dumps;
+- screenshots;
+- generated summaries;
+- CSVs;
+- ZIPs;
+- PDFs;
+- media.
+
+Future Mahimahi/tc validation artifacts must carry method-specific labels and must not be mixed with Python dry-run outputs as equivalent benchmark results.
