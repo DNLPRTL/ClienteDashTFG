@@ -79,6 +79,9 @@ The methodology must preserve the existing separation between parser, segment do
 | `phase3_3a_closure_report.md` | Phase 3.3A closure record. |
 | `phase3_3b_trace_loader.md` | Minimal loader for already-normalized schema-v1 traces. |
 | `phase3_3b_closure_report.md` | Phase 3.3B closure record. |
+| `phase3_4a_dataset_converters.md` | Dataset converter architecture, assumptions, API and CLI. |
+| `phase3_4a_local_conversion_smoke_runbook.md` | Local outside-repo smoke procedure for real raw candidates. |
+| `phase3_4a_closure_report.md` | Phase 3.4A closure record. |
 | `trace_dataset_cards/` | Placeholder for later dataset cards. |
 | `method_cards/` | Placeholder for later method cards. |
 
@@ -113,3 +116,9 @@ This validates the schema only. It does not read real raw datasets, implement co
 Phase 3.3B adds a minimal `TraceLoader` for already-normalized `normalized_trace_schema_v1` rows and CSV files. It preserves row order and metadata, and delegates validity checks to the Phase 3.3A validator.
 
 This is still not replay, conversion, client integration, QoE/reward, benchmark ranking or IA/RL.
+
+## Phase 3.4A Dataset Converter Update
+
+Phase 3.4A adds standard-library converters for HSDPA Norway / Riiser MMSys 2013, Ghent 4G/LTE Bandwidth Logs and Lancaster ABR-Throughput-Traces. The converters emit validated `normalized_trace_schema_v1` CSVs and local `trace_manifest_v1` JSON files.
+
+Normalized real traces and generated manifests are local artifacts outside the repository, not benchmark results. This update still does not implement replay, connect traces to runtime, define final QoE/reward, rank controllers, freeze final splits, execute Mahimahi or `tc/netem`, change controllers/player/media engines, or open IA/RL.

@@ -1,6 +1,6 @@
 # Trace Conversion Plan
 
-This document defines the Phase 3 conversion plan. It does not implement converters and does not download datasets.
+This document defines the Phase 3 conversion plan. Phase 3.4A now implements the first converter code, but it still does not download datasets or create repository-stored trace artifacts.
 
 ## Conversion Goal
 
@@ -51,7 +51,7 @@ Replay implementation is not authorized until these docs are closed:
 - `trace_split_manifest_policy.md`
 - `trace_schema_acceptance_tests.md`
 
-Converter implementation is also not authorized by this document. A later implementation block must specify the write paths, tests and fixture policy.
+Phase 3.4A is that later implementation block for the first three dataset converters only. It authorizes code under `core/trace_replay/converters/`, `scripts/convert_trace_dataset.py` and synthetic temporary-directory tests. It does not authorize replay, benchmark runs, final splits, controller changes, player/runtime changes, real CSV fixtures, real manifests in git, or raw datasets in git.
 
 ## Dataset-Specific Conversion Notes
 
@@ -89,3 +89,15 @@ Future converter work must not read real raw datasets in unit tests unless expli
 The loader is ready to receive converter outputs in a later phase, but converters are still not implemented.
 
 Future converters must produce rows accepted by the validator and structurally loadable by `load_normalized_trace_rows` or `load_normalized_trace_csv`.
+
+## Phase 3.4A Dataset Converter Update
+
+Converters are implemented for:
+
+1. HSDPA Norway / Riiser MMSys 2013.
+2. Ghent 4G/LTE Bandwidth Logs.
+3. Lancaster ABR-Throughput-Traces.
+
+The converters produce `normalized_trace_schema_v1` CSVs and one local `trace_manifest_v1` JSON per converted trace. They validate every emitted CSV. Real normalized traces and generated manifests are local artifacts outside the repository and are not benchmark results.
+
+Phase 3.4A still does not define final split assignment, final QoE/reward, replay runner behavior, Mahimahi or `tc/netem` execution, benchmark ranking, IA/RL, controller changes, player changes or media-engine changes.

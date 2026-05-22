@@ -17,8 +17,6 @@ This document records risks that remain after defining `normalized_trace_schema_
 
 ## Open Decisions
 
-- Exact raw-download block scope for HSDPA Norway, Ghent 4G and Lancaster.
-- Exact converter implementation paths and tests.
 - Final synthetic fixture storage policy.
 - Dataset-specific rules for irregular sampling and final-row duration.
 - Whether Lancaster traces should be grouped by service/day, trace source or another metadata field.
@@ -79,3 +77,23 @@ Remaining risks:
 - the loader does not validate manifests or split manifests;
 - the loader does not prove converter correctness;
 - non-strict loading must remain a diagnostic path, not benchmark input.
+
+## Phase 3.4A Dataset Converter Update
+
+Closed risks:
+
+- converter implementation paths and synthetic-only tests are now defined for HSDPA Norway, Ghent 4G/LTE and Lancaster;
+- emitted converter CSVs are validated with `validate_normalized_trace_csv`;
+- local manifests include checksum, statistics, tags, leakage group and `split_candidate = conversion_only_no_final_split`;
+- ZIP text-source handling is covered by synthetic tests.
+
+Remaining risks:
+
+| risk | status after Phase 3.4A | mitigation |
+| --- | --- | --- |
+| HSDPA raw-format uncertainty | Still open because the audit did not show representative HSDPA `.log` data rows. | Run local smoke outside repo and inspect skipped/error counts before treating outputs as usable replay candidates. |
+| Lancaster final-row duration | Still inferred from previous positive delta or 1.0 s. | Keep assumption in manifest notes and revisit before final benchmark. |
+| Duplicate archive/plain inputs | Managed by stable source-path-derived trace ids, but duplicates may still represent the same measurement. | Use `leakage_group` and later split review to avoid duplicate leakage. |
+| Benchmark overclaiming | Still open. Converter outputs are not QoE evidence. | Keep docs and manifests marked `conversion_only_no_final_split`. |
+
+Phase 3.4A still does not define final QoE/reward, replay runner, benchmark ranking, final split, Mahimahi or `tc/netem` execution, controller changes, runtime changes or IA/RL.

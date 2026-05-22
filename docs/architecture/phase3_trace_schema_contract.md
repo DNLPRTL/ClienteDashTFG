@@ -23,7 +23,6 @@ The future runner must not expose future trace samples directly to controllers. 
 This contract does not authorize:
 
 - replay implementation;
-- converter implementation;
 - dataset download;
 - QoE/reward definition;
 - benchmark ranking;
@@ -32,6 +31,8 @@ This contract does not authorize:
 - player/runtime changes;
 - media-engine changes;
 - metric-definition changes.
+
+Phase 3.4A separately authorizes limited converter implementation for HSDPA Norway, Ghent 4G/LTE and Lancaster under `core/trace_replay/converters/` and `scripts/convert_trace_dataset.py`. That converter authorization does not change the runtime boundary above.
 
 ## Storage Boundary
 
@@ -58,4 +59,10 @@ Mahimahi is a secondary Ubuntu validation candidate. Linux `tc/netem` is a Linux
 This is not the replay runner. `LoadedTrace` may hold all samples for the future replay environment, but it must not be passed to controllers as a future-looking decision source.
 
 The future replay/network model must consume `LoadedTrace` and reveal only observations that a real client would have at the current point in playback.
+
+## Phase 3.4A Converter Boundary
+
+Dataset converters may read raw local sources and write normalized CSV plus manifest JSON outside the repository. They must validate emitted CSVs against `normalized_trace_schema_v1`.
+
+Converter outputs are not benchmark results, final split inputs, QoE evidence or controller-ranking evidence. Phase 3.4A still does not implement the replay runner, Mahimahi, `tc/netem`, final QoE/reward, final train/validation/test/OOD split, IA/RL, controller changes, player/runtime changes, media-engine changes or metric-definition changes.
 

@@ -2,7 +2,7 @@
 
 This document maps Phase 3.2A dataset/source cards to `normalized_trace_schema_v1`.
 
-The mappings are planning decisions only. They do not download data, implement converters or authorize replay.
+The mappings are conversion decisions for sources that now have Phase 3.4A converters, and planning decisions for later sources. They do not download data or authorize replay.
 
 ## Mapping Table
 
@@ -54,3 +54,13 @@ Future converters must map source data into the required columns before validati
 The loader starts after source-to-internal mapping is complete. It does not inspect source-specific HSDPA, Ghent, Lancaster, Raca, Lumos5G, FCC or Puffer formats.
 
 Phase 3.4A remains responsible for converter implementation.
+
+## Phase 3.4A Raw-To-Normalized Assumptions
+
+| dataset/source | Phase 3.4A converter assumption | emitted metadata | unresolved risk |
+| --- | --- | --- | --- |
+| HSDPA Norway / Riiser MMSys 2013 | Supports six-column interval-byte rows: `absolute_timestamp_ms elapsed_ms latitude longitude bytes interval_ms`. Also supports conservative two-column cumulative timestamp/byte pairs when bytes are non-decreasing. | `source_timestamp`, `latitude`, `longitude`, `mobility_label`, `network_type=HSDPA`, `scenario_label`, `source_dataset`, `source_file`, `notes`. | Representative local `.log` rows still need smoke confirmation because the audit sample showed index HTML but not data lines. |
+| Ghent 4G/LTE Bandwidth Logs | Uses audited six-column interval-byte rows: `absolute_timestamp_ms elapsed_ms latitude longitude bytes interval_ms`. Throughput is `bytes * 8 / interval_ms`. | `source_timestamp`, `latitude`, `longitude`, mobility inferred from path/file/archive name, `network_type=LTE`, `scenario_label`, `source_dataset`, `source_file`, `notes`. | Duplicate files can exist across expanded archives and aggregate archives; trace ids include source path hash to stay stable. |
+| Lancaster ABR-Throughput-Traces | One numeric value per line is interpreted as 1.0 s `throughput_kbps`. Two numeric columns are interpreted as `timestamp_s throughput_kbps`; durations come from adjacent timestamps and the last row uses the previous positive delta or 1.0 s. | `scenario_label`, `source_dataset`, `source_file`, `notes`. | Two-column irregular gaps are preserved as irregular durations; final-row duration remains inferred. |
+
+All generated real CSVs and manifests remain outside the repository. These outputs are not final split inputs or benchmark results until later phases define replay, split and evaluation policy.

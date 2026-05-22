@@ -1,7 +1,8 @@
-"""Trace replay schema helpers.
+"""Trace replay schema, loading and conversion helpers.
 
-Phase 3.3A exposes validation helpers only. It does not implement replay,
-dataset conversion, trace loading for client runs, or QoE scoring.
+Phase 3 exposes normalized trace validation, loading, and raw-dataset
+conversion infrastructure. It does not implement replay, client-runtime trace
+integration, controller changes, or QoE scoring.
 """
 
 from __future__ import annotations
@@ -18,6 +19,12 @@ from core.trace_replay.loader import (
     load_normalized_trace_csv,
     load_normalized_trace_rows,
 )
+from core.trace_replay.converters import (
+    ConversionBatchResult,
+    ConvertedTrace,
+    ConversionError,
+    convert_dataset,
+)
 from core.trace_replay.validation import (
     TraceValidationResult,
     validate_normalized_trace_csv,
@@ -31,6 +38,10 @@ __all__ = [
     "LoadedTrace",
     "TraceLoadError",
     "TraceSample",
+    "ConversionBatchResult",
+    "ConvertedTrace",
+    "ConversionError",
+    "convert_dataset",
     "TraceValidationResult",
     "load_normalized_trace_csv",
     "load_normalized_trace_rows",
