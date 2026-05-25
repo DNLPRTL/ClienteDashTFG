@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import csv
 import json
@@ -19,6 +19,12 @@ from core.evaluation.artifacts import (
 
 
 class QoEArtifactsTest(unittest.TestCase):
+
+    def test_qoe_artifact_filename_contract(self):
+        self.assertEqual("qoe_run_summary.json", QOE_RUN_SUMMARY_FILENAME)
+        self.assertEqual("qoe_segment_rewards.csv", QOE_SEGMENT_REWARDS_FILENAME)
+        self.assertEqual("qoe_artifact_manifest.json", QOE_ARTIFACT_MANIFEST_FILENAME)
+
     def test_load_segment_qoe_inputs_sorts_by_segment_index(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             segments_path = os.path.join(temp_dir, "trace_dry_run_segments.csv")

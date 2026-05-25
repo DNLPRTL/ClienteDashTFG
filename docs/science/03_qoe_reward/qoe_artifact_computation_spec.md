@@ -1,4 +1,4 @@
-# Phase 3.5C QoE Artifact Computation Spec
+﻿# Phase 3.5C QoE Artifact Computation Spec
 
 Status: implemented_phase3_5c_isolated_post_processor.
 
@@ -62,10 +62,10 @@ The CLI processes exactly one dry-run directory per invocation.
 
 ## Boundaries
 
-- No runner integration.
-- No dry-run execution.
-- No benchmark.
-- No ranking.
-- No IA/training.
-- No pandas or numpy.
-- No dataset discovery.
+- no runner integration
+- no dry-run execution
+- no benchmark
+- no ranking
+- no IA/training
+- no pandas`n- no numpy
+- no dataset discovery

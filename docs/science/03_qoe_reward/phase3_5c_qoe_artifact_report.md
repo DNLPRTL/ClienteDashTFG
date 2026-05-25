@@ -1,4 +1,4 @@
-# Phase 3.5C QoE Artifact Report
+﻿# Phase 3.5C QoE Artifact Report
 
 Status: completed_phase3_5c_artifact_post_processor.
 
@@ -66,3 +66,17 @@ Synthetic `unittest` coverage checks CSV loading, output creation, legacy gates,
 - Controlled QoE smoke runs with temporary or external artifacts only.
 - Validation that non-benchmark flags and gates survive end-to-end.
 - No-ranking validation before any later formal benchmark design.
+
+## Validation markers
+
+- no runner
+- no runner integration
+- no dry-run execution
+- no benchmark
+- no ranking
+- no IA/training
+- no pandas
+- no numpy
+- qoe_run_summary.json
+- qoe_segment_rewards.csv
+- qoe_artifact_manifest.json
