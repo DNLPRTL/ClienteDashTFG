@@ -50,6 +50,7 @@
 | Phase 3.5A2 secondary metrics table | 6 | Define diagnostic and provenance metrics required around the primary QoE score | `03_qoe_reward/secondary_metrics.md` |
 | Phase 3.5A2 evaluation gate policy table | 6 | Define `use_for_eval`, `diagnostic_only`, `do_not_use_for_eval` and reason codes | `03_qoe_reward/evaluation_gate_policy.md` |
 | Phase 3.5A2 benchmark result schema table | 6 | Separate segment telemetry, run-level summary and future benchmark aggregate | `03_qoe_reward/benchmark_result_schema.md` |
+| Phase 3.5B synthetic QoE test cases | 6 | Show synthetic inputs, expected formula outputs and validation errors for the pure calculator | `03_qoe_reward/qoe_calculator_acceptance_tests.md` |
 
 ## Conversion Rule
 

@@ -30,6 +30,7 @@
 | Mahimahi/tc decision boundary | 6 | Show Python trace-driven path as primary, Mahimahi as secondary validation and `tc/netem` as fallback/sanity | `02_traces_replay/phase3_4d_mahimahi_tc_decision.md` | planned |
 | QoE term mapping | 6 | Show mapping from telemetry -> QoE terms -> run-level summary, with perceptual and startup branches marked measurement-dependent | `03_qoe_reward/qoe_terms_crosswalk.md`, `03_qoe_reward/qoe_formula_candidates.md` | planned |
 | QoE artifact boundary | 6 | Show telemetry -> QoE terms -> run summary -> benchmark aggregate boundary, with gates controlling promotion | `03_qoe_reward/benchmark_result_schema.md`, `03_qoe_reward/evaluation_gate_policy.md` | planned |
+| Pure QoE calculator boundary | 6 | Show synthetic SegmentQoEInput -> pure calculator -> QoEResult, separated from runners and benchmark artifacts | `03_qoe_reward/qoe_calculator_implementation_spec.md` | planned |
 
 ## Figure Policy
 

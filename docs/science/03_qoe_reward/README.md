@@ -13,6 +13,8 @@ Phase 3.5 closes the QoE/reward metric semantics needed before any formal evalua
 | Phase 3.5A0 | closed | evidence intake scaffold |
 | Phase 3.5A1 | closed | source-card distillation and evidence matrix |
 | Phase 3.5A2 | closed | QoE/reward decision docs, secondary metrics, formula catalog, gate policy and artifact schema boundary |
+| Phase 3.5A2.1 | closed | schema marker validation hotfix |
+| Phase 3.5B | closed | pure QoE calculator and synthetic `unittest` coverage |
 
 ## A2 Decision Summary
 
@@ -26,15 +28,13 @@ Phase 3.5 closes the QoE/reward metric semantics needed before any formal evalua
 
 ## Hard Boundaries
 
-- No code in Phase 3.5A2.
-- No IA/RL training in Phase 3.5A2.
-- No controller ranking in Phase 3.5A2.
-- No benchmark claims in Phase 3.5A2.
+- No IA/RL training in Phase 3.5.
+- No controller ranking in Phase 3.5.
+- No benchmark claims in Phase 3.5.
 - No generated CSV/log/run artifacts in Git.
 - No raw PDFs, HTML captures or source captures in Git.
 - No controller, player, runtime, trace-runner or media-engine changes.
-- No QoE/reward tests or `core/evaluation` package in A2.
-- No Mahimahi or `tc/netem` experiments in A2.
+- No Mahimahi or `tc/netem` experiments in Phase 3.5.
 
 ## Evidence And Decision Flow
 
@@ -52,8 +52,21 @@ Phase 3.5 closes the QoE/reward metric semantics needed before any formal evalua
    - `metric_formula_catalog.md`
    - `evaluation_gate_policy.md`
    - `benchmark_result_schema.md`
-9. Implementation only after documentation is closed.
+9. Phase 3.5B pure calculator:
+   - `core/evaluation/qoe.py`
+   - `tests/test_qoe_metrics.py`
+   - `qoe_calculator_implementation_spec.md`
+   - `qoe_calculator_acceptance_tests.md`
 
-## Next After A2
+## Phase 3.5B Implementation Summary
 
-The next expected block is Phase 3.5B: a pure QoE calculator plus synthetic tests. That later implementation must remain isolated from controllers, player, runtime, media engines and benchmark claims.
+Phase 3.5B implements the A2 formulas as pure, deterministic functions:
+
+- `compute_linear_qoe` for `qoe_linear_v1`.
+- `compute_log_qoe` for `qoe_log_v1`.
+
+The calculator is not integrated into dry-runs, runners, controllers, player, runtime or media engines.
+
+## Next After B
+
+The next expected block is Phase 3.5C: controlled integration planning or run-summary wiring around the pure calculator, while preserving A2 gates and avoiding benchmark/ranking claims.

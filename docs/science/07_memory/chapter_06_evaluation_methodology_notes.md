@@ -176,3 +176,17 @@ Chapter 6 can now cite Phase 3.5A2 as the documentation closure for QoE/reward s
 - benchmark schema boundary: segment telemetry, run-level summary and later benchmark aggregate are separate layers.
 
 This supports Phase 3.5B implementation of a pure QoE calculator and synthetic tests. It still does not support controller ranking, formal benchmark claims, dry-run promotion, runner integration, media-engine changes or IA/RL training.
+
+## Phase 3.5B Pure QoE Calculator Update
+
+Chapter 6 can now describe a small implementation milestone: the A2 formulas are materialized as a pure Python calculator with synthetic `unittest` coverage.
+
+This supports:
+
+- deterministic calculation of `qoe_linear_v1`;
+- deterministic calculation of `qoe_log_v1` as sensitivity;
+- validation of invalid inputs before scoring;
+- immutable segment reward output;
+- no IO, pandas, numpy, runner integration or artifact generation.
+
+It still does not support dry-run integration, controller ranking, formal benchmark claims, player/runtime/media changes or IA/RL training.

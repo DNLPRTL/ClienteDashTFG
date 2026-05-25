@@ -32,6 +32,7 @@ This register tracks candidate thesis visuals and tables before they are created
 | F24 | Phase 3.4D Mahimahi/tc decision boundary | `02_traces_replay/phase3_4d_mahimahi_tc_decision.md` | planned original diagram |
 | F25 | QoE telemetry-to-summary mapping | `03_qoe_reward/qoe_terms_crosswalk.md` and `qoe_formula_candidates.md` | planned original diagram |
 | F26 | QoE telemetry-to-benchmark boundary | `03_qoe_reward/benchmark_result_schema.md` and `evaluation_gate_policy.md` | planned original diagram |
+| F27 | Pure QoE calculator boundary | `03_qoe_reward/qoe_calculator_implementation_spec.md` | planned original diagram |
 
 ## Tables
 
@@ -79,3 +80,4 @@ This register tracks candidate thesis visuals and tables before they are created
 | T40 | Phase 3.5A2 secondary metrics | `03_qoe_reward/secondary_metrics.md` | draft |
 | T41 | Phase 3.5A2 evaluation gate policy | `03_qoe_reward/evaluation_gate_policy.md` | draft |
 | T42 | Phase 3.5A2 benchmark result schema | `03_qoe_reward/benchmark_result_schema.md` | draft |
+| T43 | Phase 3.5B synthetic QoE calculator tests | `03_qoe_reward/qoe_calculator_acceptance_tests.md` | draft |
