@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 import os
@@ -20,6 +20,14 @@ from scripts.run_qoe_smoke_scenarios import (
 
 
 class QoESmokeScenariosTest(unittest.TestCase):
+
+    def test_qoe_smoke_artifact_filename_contract(self):
+        self.assertEqual("qoe_smoke_report.json", SMOKE_REPORT_FILENAME)
+        self.assertEqual("qoe_run_summary.json", QOE_RUN_SUMMARY_FILENAME)
+        self.assertEqual("qoe_segment_rewards.csv", QOE_SEGMENT_REWARDS_FILENAME)
+        self.assertEqual("qoe_artifact_manifest.json", QOE_ARTIFACT_MANIFEST_FILENAME)
+
+
 
     def test_run_qoe_smoke_scenarios_generates_report_and_checks(self):
         with tempfile.TemporaryDirectory() as temp_dir:
