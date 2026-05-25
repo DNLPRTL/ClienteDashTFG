@@ -63,6 +63,18 @@
 | gate policy and overclaiming boundary | `peroni2024qoePitfalls`, `peroni2025pipelineSurvey` |
 | state-of-the-art and future work | `timmerer2025hasReview`, `alsader2025qoeDriven6g` |
 
+## Phase 3.5E Chapter 6 Support
+
+The Phase 3.5 QoE sources support Chapter 6 methodology rather than benchmark claims:
+
+- `seufert2015hasQoeSurvey` supports stalling, startup and adaptation as influence factors.
+- `yin2015mpc` and `mao2017pensieve` support the multi-term `qoe_linear_v1` structure.
+- `spiteri2020bola` and `mao2017pensieve` support `qoe_log_v1` as sensitivity.
+- `chen2024soda` supports the decision not to omit smoothness/switching.
+- `peroni2024qoePitfalls` supports avoiding ad hoc QoE models and overclaiming.
+- `zhou2022adaptiveStreamingQualityAssessment`, `netflixVmaf` and `zuo2022ruyiPreferenceQoe` support VMAF/perceptual quality as relevant but artifact-dependent.
+- `timmerer2025hasReview`, `peroni2025pipelineSurvey` and `alsader2025qoeDriven6g` support modern context and future-work positioning.
+
 ## Later Work
 
 - Verify final BibTeX entries against publisher pages before thesis submission.
@@ -77,3 +89,4 @@
 - Phase 3.3B adds no new bibliography sources. It is a local loader implementation for already-normalized traces.
 - Phase 3.4C adds no new bibliography sources. It is a local controlled dry-run harness and adapter boundary over the already-documented trace/replay methodology.
 - Phase 3.4D adds no new bibliography sources. It reuses the existing Mahimahi and Linux `tc-netem` references only to document optional runbook boundaries.
+- Phase 3.5E adds no new bibliography sources. It consolidates the QoE/reward sources as Chapter 6 methodology support and Phase 4 context.

@@ -17,6 +17,7 @@ Phase 3.5 closes the QoE/reward metric semantics needed before any formal evalua
 | Phase 3.5B | closed | pure QoE calculator and synthetic `unittest` coverage |
 | Phase 3.5C | closed | isolated QoE artifact post-processing from dry-run outputs |
 | Phase 3.5D | closed | controlled QoE smoke runs and no-ranking validation |
+| Phase 3.5E | closed | closure, memory integration and Phase 4 transition gate |
 
 ## A2 Decision Summary
 
@@ -73,6 +74,15 @@ Phase 3.5 closes the QoE/reward metric semantics needed before any formal evalua
    - `controlled_qoe_smoke_runbook.md`
    - `phase3_5_results_boundary.md`
    - `no_ranking_policy.md`
+12. Phase 3.5E closure and transition:
+   - `phase3_5_closure_report.md`
+   - `phase3_5_open_limitations.md`
+   - `phase3_5_transition_to_phase4.md`
+   - `phase3_5_final_artifact_index.md`
+   - `phase3_5_validation_summary.md`
+   - `phase3_5_defense_talking_points.md`
+   - `phase3_5_to_phase4_context_prompt.md`
+   - `phase3_5_to_phase4_master_handoff.md`
 
 ## Phase 3.5B Implementation Summary
 
@@ -109,4 +119,14 @@ The smoke runner:
 
 ## Next After D
 
-The next expected block is Phase 3.5E: closure and transition gate for Phase 3.5.
+Phase 3.5E closes this directory as the QoE/reward methodology block. It consolidates:
+
+- final artifact index;
+- open limitations;
+- validation summary;
+- defense talking points;
+- transition gate to Phase 4.
+
+## Next After E
+
+The next expected block is Phase 4A0: IA/RL ABR literature intake and algorithm triage.

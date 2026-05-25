@@ -121,3 +121,18 @@ Use these talking points:
 - `tc/netem` remains a Linux fallback/sanity candidate because real qdisc changes have privilege, cleanup and host-contamination risks.
 - Phase 3.5 can proceed without Mahimahi or `tc/netem` installed.
 - No Mahimahi/tc output exists as benchmark evidence in Phase 3.4D.
+
+## Phase 3.5 QoE/Reward Closure Update
+
+Use these talking points:
+
+- Phase 3.5 closes the QoE/reward methodology, not a benchmark.
+- The metric decision is evidence-backed: source cards and the evidence matrix precede `qoe_linear_v1`.
+- `qoe_linear_v1` is primary because it uses the common ABR QoE core: quality utility, rebuffering and smoothness.
+- `qoe_linear_mean` is the future session metric; `reward_n` is a future IA candidate only.
+- `qoe_log_v1` is retained as sensitivity because log utility captures diminishing returns.
+- Startup remains report-only and VMAF remains artifact-dependent, so neither is forced into the primary formula.
+- Gates handle incomplete or non-comparable artifacts; they are not numeric punishments.
+- Controlled smoke scenarios validate artifact flow, not controller performance.
+- No ranking, no benchmark and no IA/RL training exists at Phase 3.5 closure.
+- Phase 4 can start with IA/RL literature intake and algorithm triage, not immediate implementation.

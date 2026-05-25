@@ -33,6 +33,7 @@
 | Pure QoE calculator boundary | 6 | Show synthetic SegmentQoEInput -> pure calculator -> QoEResult, separated from runners and benchmark artifacts | `03_qoe_reward/qoe_calculator_implementation_spec.md` | planned |
 | QoE artifact post-processor boundary | 6 | Show dry-run artifacts -> isolated QoE post-processor -> QoE summaries, with no benchmark/ranking promotion | `03_qoe_reward/qoe_artifact_computation_spec.md`, `dry_run_to_qoe_mapping.md` | planned |
 | Controlled QoE smoke boundary | 6 | Show synthetic dry-run-like artifacts -> QoE post-processor -> smoke report -> no-ranking boundary | `03_qoe_reward/controlled_qoe_smoke_runbook.md`, `phase3_5_results_boundary.md` | planned |
+| Phase 3.5 closure pipeline | 6/7 | Show evidence -> metric decision -> calculator -> post-processor -> smoke boundary -> Phase 4 transition | `03_qoe_reward/phase3_5_closure_report.md`, `phase3_5_transition_to_phase4.md` | planned |
 
 ## Figure Policy
 

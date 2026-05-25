@@ -35,6 +35,7 @@ This register tracks candidate thesis visuals and tables before they are created
 | F27 | Pure QoE calculator boundary | `03_qoe_reward/qoe_calculator_implementation_spec.md` | planned original diagram |
 | F28 | QoE artifact post-processor boundary | `03_qoe_reward/qoe_artifact_computation_spec.md` and `dry_run_to_qoe_mapping.md` | planned original diagram |
 | F29 | Controlled QoE smoke no-ranking boundary | `03_qoe_reward/controlled_qoe_smoke_runbook.md` and `phase3_5_results_boundary.md` | planned original diagram |
+| F30 | Phase 3.5 closure to Phase 4 transition | `03_qoe_reward/phase3_5_closure_report.md` and `phase3_5_transition_to_phase4.md` | planned original diagram |
 
 ## Tables
 
@@ -86,3 +87,6 @@ This register tracks candidate thesis visuals and tables before they are created
 | T44 | Phase 3.5C QoE artifact mapping | `03_qoe_reward/dry_run_to_qoe_mapping.md` | draft |
 | T45 | Phase 3.5C QoE run summary schema | `03_qoe_reward/run_summary_schema.md` | draft |
 | T46 | Phase 3.5D controlled QoE smoke scenarios | `03_qoe_reward/controlled_qoe_smoke_runbook.md` | draft |
+| T47 | Phase 3.5E QoE formula and gate summary | `03_qoe_reward/phase3_5_closure_report.md` | draft |
+| T48 | Phase 3.5E limitations summary | `03_qoe_reward/phase3_5_open_limitations.md` | draft |
+| T49 | Phase 3.5E artifact index | `03_qoe_reward/phase3_5_final_artifact_index.md` | draft |

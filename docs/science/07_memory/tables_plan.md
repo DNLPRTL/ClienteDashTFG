@@ -53,6 +53,11 @@
 | Phase 3.5B synthetic QoE test cases | 6 | Show synthetic inputs, expected formula outputs and validation errors for the pure calculator | `03_qoe_reward/qoe_calculator_acceptance_tests.md` |
 | Phase 3.5C QoE run summary fields | 6 | Define `qoe_run_summary.json` fields, gates and non-benchmark flags | `03_qoe_reward/run_summary_schema.md` |
 | Phase 3.5D controlled QoE smoke scenarios | 6 | Show fixed synthetic scenarios, expected gates and no-ranking/no-benchmark checks | `03_qoe_reward/controlled_qoe_smoke_runbook.md` |
+| Phase 3.5E QoE formula summary | 6 | Summarize `qoe_linear_v1`, `qoe_linear_mean`, `qoe_log_v1` and report-only/deferred metrics | `03_qoe_reward/phase3_5_closure_report.md` |
+| Phase 3.5E gate policy summary | 6 | Summarize `use_for_eval`, `diagnostic_only`, `do_not_use_for_eval` and no numeric failure punishment | `03_qoe_reward/phase3_5_closure_report.md` |
+| Phase 3.5E artifact schema summary | 6 | Summarize calculator, post-processor, smoke report and non-benchmark artifact boundary | `03_qoe_reward/phase3_5_final_artifact_index.md` |
+| Phase 3.5E smoke scenario summary | 6 | Summarize controlled external smoke scenarios and expected gate outcomes | `03_qoe_reward/phase3_5_validation_summary.md` |
+| Phase 3.5E limitations summary | 6/7 | Summarize benchmark, ranking, VMAF, startup, IA and split limitations | `03_qoe_reward/phase3_5_open_limitations.md` |
 
 ## Conversion Rule
 

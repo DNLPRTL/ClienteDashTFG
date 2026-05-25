@@ -214,3 +214,16 @@ Chapter 6 can now describe a controlled smoke-validation step for the QoE artifa
 - `outputs_are_benchmark_results=false` and `no_final_ranking=true` are preserved.
 
 This supports artifact-contract validation only. It does not support controller ranking, benchmark claims, real dry-run execution, player/runtime/media changes or IA/RL.
+
+## Phase 3.5E QoE/Reward Closure Update
+
+Chapter 6 can now describe Phase 3.5 as closed methodology, not closed benchmarking:
+
+- QoE evidence, source cards and formula decisions are consolidated;
+- `qoe_linear_v1` and `qoe_linear_mean` are the documented primary metric pair for future evaluation;
+- `reward_n` from `qoe_linear_v1` is a future IA reward candidate only;
+- `qoe_log_v1`, startup and VMAF are scoped as sensitivity/report-only/deferred respectively;
+- artifact gates and no-ranking/no-benchmark boundaries are documented and validated with synthetic smoke scenarios;
+- Phase 4 may start with IA/RL literature intake, but not with immediate training.
+
+This feeds Chapter 6 by giving the future evaluation method a defensible metric contract while preserving the claim boundary: no formal benchmark, no controller ranking and no IA/RL result exists yet.
