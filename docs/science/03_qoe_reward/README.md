@@ -6,24 +6,37 @@ This directory contains the scientific and methodological documentation for Phas
 
 Phase 3.5 closes the QoE/reward metric semantics needed before any formal evaluation, ranked controller comparison or IA/RL training.
 
-## Current subphase
+## Subphase Status
 
-Phase 3.5A1 - QoE/reward source-card distillation and evidence matrix.
+| subphase | status | result |
+| --- | --- | --- |
+| Phase 3.5A0 | closed | evidence intake scaffold |
+| Phase 3.5A1 | closed | source-card distillation and evidence matrix |
+| Phase 3.5A2 | closed | QoE/reward decision docs, secondary metrics, formula catalog, gate policy and artifact schema boundary |
 
-This subphase fills the selected source cards, evidence matrix, term crosswalk and candidate formula notes. It does not close `qoe_selection.md`, `reward_definition.md` or any implementation contract.
+## A2 Decision Summary
 
-## Hard boundaries
+- Primary QoE formula version: `qoe_linear_v1`.
+- Primary future session metric: `qoe_linear_mean`.
+- Segment reward candidate for future IA: `reward_n` from `qoe_linear_v1`.
+- Sensitivity metric: `qoe_log_v1`.
+- Startup: `startup_delay_s` report-only, with `startup_penalty_weight = 0.0`.
+- VMAF/perceptual quality: deferred and artifact-dependent.
+- Failures/incomplete runs: handled by `session_eval_gate` and `row_eval_gate`, not numeric punishment.
 
-- No IA/RL training in Phase 3.5A1.
-- No ranked controller comparison in Phase 3.5A1.
-- No benchmark claims in Phase 3.5A1.
+## Hard Boundaries
+
+- No code in Phase 3.5A2.
+- No IA/RL training in Phase 3.5A2.
+- No controller ranking in Phase 3.5A2.
+- No benchmark claims in Phase 3.5A2.
 - No generated CSV/log/run artifacts in Git.
 - No raw PDFs, HTML captures or source captures in Git.
-- No controller, player, runtime or media-engine changes.
-- No QoE/reward code, tests or `core/evaluation` package in this block.
-- No Mahimahi or `tc/netem` experiments in this block.
+- No controller, player, runtime, trace-runner or media-engine changes.
+- No QoE/reward tests or `core/evaluation` package in A2.
+- No Mahimahi or `tc/netem` experiments in A2.
 
-## Evidence flow
+## Evidence And Decision Flow
 
 1. Search notes and local source batch.
 2. Source inventory.
@@ -32,22 +45,15 @@ This subphase fills the selected source cards, evidence matrix, term crosswalk a
 5. QoE evidence matrix.
 6. QoE terms crosswalk.
 7. QoE formula candidates.
-8. Final QoE/reward decision documents in a later subphase.
+8. Phase 3.5A2 decision documents:
+   - `qoe_selection.md`
+   - `reward_definition.md`
+   - `secondary_metrics.md`
+   - `metric_formula_catalog.md`
+   - `evaluation_gate_policy.md`
+   - `benchmark_result_schema.md`
 9. Implementation only after documentation is closed.
 
-## Phase 3.5A1 evidence summary
+## Next After A2
 
-- The repeated common core across the strongest ABR/QoE sources is quality utility, rebuffering/stalling penalty and switching/smoothness penalty.
-- Startup delay is a recognized influence factor, but its use should be considered in A2 only if the measurement contract is homogeneous.
-- VMAF and perceptual quality are scientifically relevant, but artifact-dependent and likely secondary/deferred unless per-segment reference/distorted video artifacts exist.
-- User preference evidence shows that QoE weights are not universal.
-- Methodology sources warn against inventing an ad hoc subjective QoE model without validation.
-
-## Documents still deferred to A2
-
-- `qoe_selection.md`
-- `reward_definition.md`
-- `secondary_metrics.md`
-- `metric_formula_catalog.md`
-- `benchmark_result_schema.md`
-- `evaluation_gate_policy.md`
+The next expected block is Phase 3.5B: a pure QoE calculator plus synthetic tests. That later implementation must remain isolated from controllers, player, runtime, media engines and benchmark claims.

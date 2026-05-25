@@ -46,6 +46,10 @@
 | Phase 3.4C dry-run artifact flags | 6 | Show non-benchmark, no-final-reward, no-ranking and row-gate labels for dry-run artifacts | `02_traces_replay/phase3_4c_controlled_dry_runs.md` |
 | Phase 3.4D Mahimahi/tc method roles | 6 | Show Python primary path, Mahimahi secondary role, `tc/netem` fallback role and non-benchmark status | `02_traces_replay/phase3_4d_mahimahi_tc_decision.md` |
 | Phase 3.5A1 QoE evidence matrix | 6 | Compare QoE/reward sources by quality, rebuffering, smoothness, startup, perceptual quality, roles, units and local decision implications | `03_qoe_reward/qoe_evidence_matrix.md` |
+| Phase 3.5A2 QoE formula catalog | 6 | Show `qoe_linear_v1`, `qoe_log_v1`, penalties, units and report-only startup formula boundaries | `03_qoe_reward/metric_formula_catalog.md` |
+| Phase 3.5A2 secondary metrics table | 6 | Define diagnostic and provenance metrics required around the primary QoE score | `03_qoe_reward/secondary_metrics.md` |
+| Phase 3.5A2 evaluation gate policy table | 6 | Define `use_for_eval`, `diagnostic_only`, `do_not_use_for_eval` and reason codes | `03_qoe_reward/evaluation_gate_policy.md` |
+| Phase 3.5A2 benchmark result schema table | 6 | Separate segment telemetry, run-level summary and future benchmark aggregate | `03_qoe_reward/benchmark_result_schema.md` |
 
 ## Conversion Rule
 

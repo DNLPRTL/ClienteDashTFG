@@ -51,6 +51,18 @@
 | `zuo2022ruyiPreferenceQoe` | Adaptive Bitrate with User-level QoE Preference for Video Streaming | add for user-preference weight variability |
 | `alsader2025qoeDriven6g` | QoE-Driven Adaptive Video Streaming: Architectures, Techniques, and Future Research Challenges Toward 6G Networks | add for future-work context |
 
+## Phase 3.5A2 QoE/Reward Use
+
+| decision area | bibliography support |
+| --- | --- |
+| `qoe_linear_v1` primary formula | `yin2015mpc`, `mao2017pensieve`, with `chen2024soda` supporting smoothness |
+| `qoe_log_v1` sensitivity | `mao2017pensieve`, `spiteri2020bola` |
+| startup report-only | `seufert2015hasQoeSurvey`, `yin2015mpc` |
+| VMAF/perceptual deferred | `zhou2022adaptiveStreamingQualityAssessment`, `netflixVmaf`, `zuo2022ruyiPreferenceQoe` |
+| fixed-weight limitation | `peroni2024qoePitfalls`, `zuo2022ruyiPreferenceQoe` |
+| gate policy and overclaiming boundary | `peroni2024qoePitfalls`, `peroni2025pipelineSurvey` |
+| state-of-the-art and future work | `timmerer2025hasReview`, `alsader2025qoeDriven6g` |
+
 ## Later Work
 
 - Verify final BibTeX entries against publisher pages before thesis submission.

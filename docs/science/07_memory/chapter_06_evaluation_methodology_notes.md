@@ -161,3 +161,18 @@ Chapter 6 can now cite Phase 3.5A1 as scientific evidence for later QoE/reward/g
 - Peroni 2024 supports avoiding an ad hoc QoE model without validation.
 
 This does not close `qoe_selection.md`, `reward_definition.md`, secondary metrics, result schema or gate policy. It also does not support code changes, IA/RL, ranked controller comparison or a formal benchmark.
+
+## Phase 3.5A2 QoE/Reward Contract Update
+
+Chapter 6 can now cite Phase 3.5A2 as the documentation closure for QoE/reward semantics and evaluation gates:
+
+- primary formula version: `qoe_linear_v1`;
+- primary future session metric: `qoe_linear_mean`;
+- future segment-level IA reward candidate: `reward_n` from `qoe_linear_v1`, without opening IA/training;
+- sensitivity formula: `qoe_log_v1`;
+- startup delay: report-only with `startup_penalty_weight = 0.0`;
+- VMAF/perceptual quality: deferred and artifact-dependent;
+- incomplete/non-comparable artifacts: handled by `row_eval_gate` and `session_eval_gate`, not numeric punishment;
+- benchmark schema boundary: segment telemetry, run-level summary and later benchmark aggregate are separate layers.
+
+This supports Phase 3.5B implementation of a pure QoE calculator and synthetic tests. It still does not support controller ranking, formal benchmark claims, dry-run promotion, runner integration, media-engine changes or IA/RL training.

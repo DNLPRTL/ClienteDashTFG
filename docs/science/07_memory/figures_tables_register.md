@@ -31,6 +31,7 @@ This register tracks candidate thesis visuals and tables before they are created
 | F23 | Phase 3.4C controlled dry-run boundary | `02_traces_replay/phase3_4c_controlled_dry_runs.md` and `phase3_4c_controller_adapter.md` | planned original diagram |
 | F24 | Phase 3.4D Mahimahi/tc decision boundary | `02_traces_replay/phase3_4d_mahimahi_tc_decision.md` | planned original diagram |
 | F25 | QoE telemetry-to-summary mapping | `03_qoe_reward/qoe_terms_crosswalk.md` and `qoe_formula_candidates.md` | planned original diagram |
+| F26 | QoE telemetry-to-benchmark boundary | `03_qoe_reward/benchmark_result_schema.md` and `evaluation_gate_policy.md` | planned original diagram |
 
 ## Tables
 
@@ -74,3 +75,7 @@ This register tracks candidate thesis visuals and tables before they are created
 | T36 | Phase 3.4D Mahimahi/tc method roles | `02_traces_replay/phase3_4d_mahimahi_tc_decision.md` | draft |
 | T37 | Phase 3.5A1 QoE evidence matrix | `03_qoe_reward/qoe_evidence_matrix.md` | draft |
 | T38 | Phase 3.5A1 QoE terms crosswalk | `03_qoe_reward/qoe_terms_crosswalk.md` | draft |
+| T39 | Phase 3.5A2 QoE formula catalog | `03_qoe_reward/metric_formula_catalog.md` | draft |
+| T40 | Phase 3.5A2 secondary metrics | `03_qoe_reward/secondary_metrics.md` | draft |
+| T41 | Phase 3.5A2 evaluation gate policy | `03_qoe_reward/evaluation_gate_policy.md` | draft |
+| T42 | Phase 3.5A2 benchmark result schema | `03_qoe_reward/benchmark_result_schema.md` | draft |
