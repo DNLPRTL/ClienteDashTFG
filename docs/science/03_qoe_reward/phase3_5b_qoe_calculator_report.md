@@ -44,24 +44,26 @@ The test suite covers linear QoE without rebuffering, linear QoE with rebufferin
 
 ## Purity Confirmation
 
-- No IO.
-- No pandas.
-- No numpy.
-- No subprocess.
-- No network.
-- No generated CSV/log/PDF/zip/media artifacts.
+## Purity Confirmation
+
+- no IO
+- no pandas
+- no numpy
+- no subprocess
+- no network
+- no generated CSV/log/PDF/zip/media artifacts
 
 ## Boundary Confirmation
 
-- No runner integration.
-- No dry-run execution.
-- No controller changes.
-- No player changes.
-- No runtime changes.
-- No media-engine changes.
-- No IA/training.
-- No ranking.
-- No benchmark.
+- no runner integration
+- no dry-run execution
+- no controller changes
+- no player changes
+- no runtime changes
+- no media-engine changes
+- no IA/training
+- no ranking
+- no benchmark
 
 ## What Remains For Phase 3.5C
 
