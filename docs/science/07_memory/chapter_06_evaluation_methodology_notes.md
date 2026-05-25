@@ -190,3 +190,15 @@ This supports:
 - no IO, pandas, numpy, runner integration or artifact generation.
 
 It still does not support dry-run integration, controller ranking, formal benchmark claims, player/runtime/media changes or IA/RL training.
+
+## Phase 3.5C QoE Artifact Post-Processing Update
+
+Chapter 6 can now describe an isolated post-processing step that reads existing dry-run artifacts and writes QoE run summaries:
+
+- source artifacts: `trace_dry_run_segments.csv`, `trace_dry_run_summary.json`, `trace_dry_run_manifest.json`;
+- generated QoE artifacts: `qoe_segment_rewards.csv`, `qoe_run_summary.json`, `qoe_artifact_manifest.json`;
+- mapping: `representation_bitrate_kbps` becomes QoE bitrate input and `rebuffer_s` becomes QoE rebuffer input;
+- old dry-runs can be computed diagnostically but remain non-benchmark and non-ranking evidence through gates;
+- outputs keep `outputs_are_benchmark_results=false` and `no_final_ranking=true`.
+
+This still does not modify or execute the dry-run runner, does not aggregate controllers, does not create a benchmark and does not open IA/RL.

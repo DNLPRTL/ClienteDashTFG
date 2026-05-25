@@ -31,6 +31,7 @@
 | QoE term mapping | 6 | Show mapping from telemetry -> QoE terms -> run-level summary, with perceptual and startup branches marked measurement-dependent | `03_qoe_reward/qoe_terms_crosswalk.md`, `03_qoe_reward/qoe_formula_candidates.md` | planned |
 | QoE artifact boundary | 6 | Show telemetry -> QoE terms -> run summary -> benchmark aggregate boundary, with gates controlling promotion | `03_qoe_reward/benchmark_result_schema.md`, `03_qoe_reward/evaluation_gate_policy.md` | planned |
 | Pure QoE calculator boundary | 6 | Show synthetic SegmentQoEInput -> pure calculator -> QoEResult, separated from runners and benchmark artifacts | `03_qoe_reward/qoe_calculator_implementation_spec.md` | planned |
+| QoE artifact post-processor boundary | 6 | Show dry-run artifacts -> isolated QoE post-processor -> QoE summaries, with no benchmark/ranking promotion | `03_qoe_reward/qoe_artifact_computation_spec.md`, `dry_run_to_qoe_mapping.md` | planned |
 
 ## Figure Policy
 

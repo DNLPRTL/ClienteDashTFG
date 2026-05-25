@@ -15,6 +15,7 @@ Phase 3.5 closes the QoE/reward metric semantics needed before any formal evalua
 | Phase 3.5A2 | closed | QoE/reward decision docs, secondary metrics, formula catalog, gate policy and artifact schema boundary |
 | Phase 3.5A2.1 | closed | schema marker validation hotfix |
 | Phase 3.5B | closed | pure QoE calculator and synthetic `unittest` coverage |
+| Phase 3.5C | closed | isolated QoE artifact post-processing from dry-run outputs |
 
 ## A2 Decision Summary
 
@@ -57,6 +58,14 @@ Phase 3.5 closes the QoE/reward metric semantics needed before any formal evalua
    - `tests/test_qoe_metrics.py`
    - `qoe_calculator_implementation_spec.md`
    - `qoe_calculator_acceptance_tests.md`
+10. Phase 3.5C isolated QoE artifact post-processor:
+   - `core/evaluation/artifacts.py`
+   - `scripts/compute_qoe_from_dry_run.py`
+   - `tests/test_qoe_artifacts.py`
+   - `dry_run_to_qoe_mapping.md`
+   - `qoe_artifact_computation_spec.md`
+   - `run_summary_schema.md`
+   - `qoe_summary_schema.md`
 
 ## Phase 3.5B Implementation Summary
 
@@ -67,6 +76,17 @@ Phase 3.5B implements the A2 formulas as pure, deterministic functions:
 
 The calculator is not integrated into dry-runs, runners, controllers, player, runtime or media engines.
 
-## Next After B
+## Phase 3.5C Artifact Summary
 
-The next expected block is Phase 3.5C: controlled integration planning or run-summary wiring around the pure calculator, while preserving A2 gates and avoiding benchmark/ranking claims.
+Phase 3.5C adds an isolated post-processor from dry-run artifacts to QoE artifacts:
+
+- source: `trace_dry_run_segments.csv`, `trace_dry_run_summary.json`, `trace_dry_run_manifest.json`;
+- output: `qoe_segment_rewards.csv`, `qoe_run_summary.json`, `qoe_artifact_manifest.json`;
+- gates: legacy and non-evaluable dry-runs remain `do_not_use_for_eval`;
+- flags: `outputs_are_benchmark_results=false` and `no_final_ranking=true`.
+
+The post-processor is not a benchmark runner and does not rank controllers.
+
+## Next After C
+
+The next expected block is Phase 3.5D: controlled QoE smoke runs and no-ranking validation, while preserving A2/C gates and avoiding benchmark claims.

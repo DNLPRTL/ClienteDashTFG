@@ -33,6 +33,7 @@ This register tracks candidate thesis visuals and tables before they are created
 | F25 | QoE telemetry-to-summary mapping | `03_qoe_reward/qoe_terms_crosswalk.md` and `qoe_formula_candidates.md` | planned original diagram |
 | F26 | QoE telemetry-to-benchmark boundary | `03_qoe_reward/benchmark_result_schema.md` and `evaluation_gate_policy.md` | planned original diagram |
 | F27 | Pure QoE calculator boundary | `03_qoe_reward/qoe_calculator_implementation_spec.md` | planned original diagram |
+| F28 | QoE artifact post-processor boundary | `03_qoe_reward/qoe_artifact_computation_spec.md` and `dry_run_to_qoe_mapping.md` | planned original diagram |
 
 ## Tables
 
@@ -81,3 +82,5 @@ This register tracks candidate thesis visuals and tables before they are created
 | T41 | Phase 3.5A2 evaluation gate policy | `03_qoe_reward/evaluation_gate_policy.md` | draft |
 | T42 | Phase 3.5A2 benchmark result schema | `03_qoe_reward/benchmark_result_schema.md` | draft |
 | T43 | Phase 3.5B synthetic QoE calculator tests | `03_qoe_reward/qoe_calculator_acceptance_tests.md` | draft |
+| T44 | Phase 3.5C QoE artifact mapping | `03_qoe_reward/dry_run_to_qoe_mapping.md` | draft |
+| T45 | Phase 3.5C QoE run summary schema | `03_qoe_reward/run_summary_schema.md` | draft |
