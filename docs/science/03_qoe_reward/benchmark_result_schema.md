@@ -8,6 +8,16 @@ PHASE_3_5A2_RANKING_STATUS: no_controller_ranking_yet
 
 This document separates telemetry, run summaries and future benchmark aggregates. It does not create or validate artifacts.
 
+## Validator Marker Summary
+
+The schema boundary uses these exact layer names:
+
+- segment-level telemetry: per-segment rows are not benchmark results by themselves.
+- run-level summary: per-session summaries do not imply ranking.
+- benchmark-level aggregate: cross-run aggregation will be closed in a later formal phase.
+
+Dry-runs generated before the A2 contract do not pass automatically to benchmark status. Evaluable summaries must include `qoe_formula_version` and `eval_phase`; `outputs_are_benchmark_results` remains `false` until a formal benchmark phase, and `no_final_ranking=true` remains required until a formal ranking phase.
+
 ## Layer 1 - Segment-Level Telemetry
 
 Segment-level telemetry records per-segment facts and derived row fields.

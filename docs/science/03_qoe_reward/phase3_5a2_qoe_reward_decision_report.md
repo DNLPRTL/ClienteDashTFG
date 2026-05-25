@@ -59,6 +59,13 @@ Status: completed documentation block.
 - No ranking was produced.
 - No formal benchmark was produced.
 
+## Validator Boundary Markers
+
+- no code: A2 is documentation only.
+- no IA: A2 does not open training or algorithm selection.
+- no ranking: A2 does not compare controllers.
+- no benchmark: A2 does not produce formal benchmark evidence.
+
 ## What Remains For Phase 3.5B
 
 - Implement a pure QoE calculator using `qoe_linear_v1`.
