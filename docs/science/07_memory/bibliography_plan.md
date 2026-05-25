@@ -34,6 +34,23 @@
 | `lancasterAbrThroughputTraces` | Lancaster ABR-Throughput-Traces |
 | `pufferDataArchive` | Puffer data archive / puffer-statistics |
 
+## Phase 3.5A1 QoE/Reward Tracking
+
+| key | source | status |
+| --- | --- | --- |
+| `seufert2015hasQoeSurvey` | A Survey on Quality of Experience of HTTP Adaptive Streaming | add for QoE influence factors |
+| `yin2015mpc` | A Control-Theoretic Approach for Dynamic Adaptive Video Streaming over HTTP | already core; update use for QoE objective |
+| `mao2017pensieve` | Neural Adaptive Video Streaming with Pensieve | already core; update use for reward/QoE candidates |
+| `spiteri2020bola` | BOLA: Near-Optimal Bitrate Adaptation for Online Videos | already core; update use for log/concave utility |
+| `chen2024soda` | SODA: An Adaptive Bitrate Controller for Consistent High-Quality Video Streaming | already core; update use for smoothness evidence |
+| `peroni2024qoePitfalls` | Quality of Experience in Video Streaming: Status Quo, Pitfalls, and Guidelines | add for methodology cautions |
+| `zhou2022adaptiveStreamingQualityAssessment` | A brief survey on adaptive video streaming quality assessment | add for perceptual/quality-assessment context |
+| `netflixVmaf` | VMAF official Netflix repository reference | add as official technical source if cited |
+| `timmerer2025hasReview` | HTTP Adaptive Streaming: A Review on Current Advances and Future Challenges | already core; update use for modern HAS context |
+| `peroni2025pipelineSurvey` | An End-to-End Pipeline Perspective on Video Streaming in Best-Effort Networks | already core; update use for pipeline/QoE context |
+| `zuo2022ruyiPreferenceQoe` | Adaptive Bitrate with User-level QoE Preference for Video Streaming | add for user-preference weight variability |
+| `alsader2025qoeDriven6g` | QoE-Driven Adaptive Video Streaming: Architectures, Techniques, and Future Research Challenges Toward 6G Networks | add for future-work context |
+
 ## Later Work
 
 - Verify final BibTeX entries against publisher pages before thesis submission.

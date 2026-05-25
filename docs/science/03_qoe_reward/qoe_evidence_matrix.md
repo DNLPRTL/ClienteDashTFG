@@ -1,24 +1,24 @@
 # Phase 3.5A1 QoE Evidence Matrix
 
-Status: pending source-card distillation.
+Status: distilled_phase3_5a1 evidence matrix. This matrix supports A2 decisions; it does not close a final metric or reward.
 
 ## Matrix
 
-| source | quality utility | rebuffering/stalling | switching/smoothness | startup delay | VMAF/perceptual | training reward vs evaluation | units/weights | practical for TFG | decision |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| QOE-M01 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | pending |
-| QOE-M02 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | pending |
-| QOE-M03 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | pending |
-| QOE-M04 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | pending |
-| QOE-M05 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | pending |
-| QOE-M06 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | pending |
-| QOE-M07 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | pending |
-| QOE-M08 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | pending |
-| QOE-R01 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | pending |
-| QOE-R02 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | pending |
-| QOE-R03 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | pending |
-| QOE-R04 | TBD | TBD | TBD | TBD | TBD | TBD | TBD | TBD | pending |
+| source | source role | quality utility | rebuffering/stalling | switching/smoothness | startup delay | perceptual/VMAF | latency/live-specific factors | training reward vs evaluation metric | units/weights | practical for DashClientModular4 | Phase 3.5 decision implication |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| QOE-M01 Seufert 2015 | HAS QoE survey | Yes; video quality/adaptation is an influence factor | Strong yes; stalling is unexpected and severe | Yes; adaptation/quality variability affects QoE | Strong yes; initial delay is separate and usually less severe than stalling | Indirect; subjective QoE context, not VMAF pipeline | Not central for current trace-driven VoD/smoke scope | Methodology/context, not training reward | No universal weights | Strong for term justification | Supports rebuffering/stalling and startup as influence factors; startup should be measurement-dependent |
+| QOE-M02 Yin 2015 MPC | Classical ABR QoE objective | Strong yes; `sum q(R_k)` | Strong yes; explicit rebuffer penalty | Strong yes; explicit quality-variation penalty | Yes; explicit `T_s` penalty | No VMAF-specific model | VoD/HAS objective context, not live latency focus | Controller objective can also inform evaluation candidate, but weights remain a choice | `lambda`, `mu`, `mu_s` non-negative weights | Strong candidate formula evidence | Supports additive quality/rebuffering/smoothness candidate and optional startup term |
+| QOE-M03 Mao 2017 Pensieve | Neural ABR reward/QoE evaluation | Strong yes; linear/log/HD quality utilities | Strong yes; `mu * sum T_n` | Strong yes; absolute quality-change penalty | Not in the quoted reward core | No VMAF-specific model | Not a live-latency source for A1 | Training reward and reported average QoE per chunk are explicitly related but must be role-labeled | `mu=4.3` linear, `mu=2.66` log, `mu=8` HD | Strong candidate formula evidence | Supports qoe_linear_candidate and qoe_log_candidate for A2; does not open IA/RL |
+| QOE-M04 Spiteri 2020 BOLA | Utility-based ABR | Strong yes; utility maximization, example `ln(S_m/S_1)` | Strong yes; rebuffer avoidance in utility/buffer trade-off | Partial; switching mitigation can be adapted but is not central in original Lyapunov objective | Not central | No VMAF-specific model | Online VoD-style ABR context | Controller objective, not universal evaluation metric for all controllers | `V`, `gamma`, utility `v_m` | Strong for log/concave utility | Supports qoe_log_candidate and diminishing returns; does not justify omitting smoothness |
+| QOE-M05 Chen 2024 SODA | Modern smoothness/QoE source | Strong yes; high video quality component | Yes; rebuffer minimized via buffer-cost framing | Strong yes; bitrate switching is a key term | Not central in A1 evidence pack | No direct VMAF dependency in A1 evidence | Stronger for live/short-buffer consistency context | Controller objective, not direct run-level metric for current pipeline | `beta`, `gamma`, `omega_n`, time-based factors | Strong for smoothness evidence, weaker as direct formula | Supports smoothness as core evidence; SODA formula is not suitable as direct primary in current pipeline |
+| QOE-M06 Peroni 2024 | QoE methodology and pitfalls | Yes as one influence factor among subjective/contextual factors | Yes as measurable influence factor | Yes as measurable influence factor | Yes if measured and validated | Yes as possible objective model family, with caution | Context dependent | Warns to distinguish test conducting, model building and model using | No weights prescribed | Strong methodology guardrail | Supports transparent classical candidates and cautions against ad hoc QoE claims |
+| QOE-M07 Zhou 2022 | Adaptive streaming quality assessment survey | Yes; QoS-driven, signal fidelity and hybrid models | Strong yes; HAS needs playback-issue terms | Yes; adaptive quality changes matter | Yes; initial buffering named as playback issue | Strong yes; VMAF/PSNR/SSIM/signal-fidelity family context | Not the main current focus | Evaluation/modeling context, not training reward | Metric-specific units | Useful for secondary/perceptual discussion | Supports perceptual/VMAF as secondary/deferred unless artifacts exist |
+| QOE-M08 Netflix VMAF | Official VMAF technical source | Yes, as perceptual quality score | No; VMAF itself does not model stalling | No; switching would need per-segment score deltas outside VMAF | No | Strong yes; official VMAF/libvmaf tooling | No | Technical evaluation tool, not ABR reward by itself | VMAF score and model/tool parameters | Practical only if reference/distorted video artifacts exist | Explains artifact requirements; does not justify VMAF as sole QoE metric in A1 |
+| QOE-R01 Timmerer 2025 | Modern HAS review/context | Yes; QoE and ABR context | Yes; HAS QoE context | Yes; ABR context | Contextual | Mentions modern VMAF-aware/energy-aware directions | Includes broader modern HAS factors | State-of-the-art context, not a formula source | No formula weights selected for A1 | Useful for Chapter 2 and future work | Context source; does not close metric formula |
+| QOE-R02 Peroni/Gorinsky 2025 | End-to-end pipeline survey/tutorial | Yes; QoE models map measurable quality factors to experience | Yes; stall duration is a measurable influence factor | Contextual yes | Contextual yes | Contextual perceptual-quality discussion | Broader pipeline context; not all factors enter current ABR evaluation | Model-using context, not training reward | No A1 weights | Useful for scope boundary | Keeps QoE inside pipeline context without expanding evaluation to CDN/ingestion |
+| QOE-R03 Zuo 2022 Ruyi | User-preference QoE source | Strong yes; VMAF/quality vector term | Strong yes; rebuffer vector term | Strong yes; smoothness/switch vector term | Not central in A1 evidence | Strong yes; VMAF in preference vector | Not central | Preference-aware objective; not current training reward | User weights `w_i`; VMAF [0,100], rebuffer in frames | Useful to justify fixed-weight reproducibility limits | Supports statement that weights vary; does not open preference-aware ABR |
+| QOE-R04 Alsader 2025 | QoE-driven streaming survey/future context | Yes in broad QoE-driven taxonomy | Yes in broad QoE-driven taxonomy | Yes in broad QoE-driven taxonomy | Contextual | Contextual | Strong broader 6G/network-assisted context | Context/future-work source, not local reward | No local weights | Useful for future-work framing | Does not pull A1 toward 6G, network slicing, XR or IA/RL |
 
 ## Reading rule
 
-Do not close the primary QoE metric until every mandatory source has been carded and this matrix has been filled.
+Do not close the QoE selection, reward definition or evaluation gates until the A2 documents explicitly interpret this matrix.

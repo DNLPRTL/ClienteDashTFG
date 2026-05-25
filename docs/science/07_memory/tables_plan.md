@@ -45,6 +45,7 @@
 | Phase 3.3B TraceLoader API | 6 | Show `TraceSample`, `LoadedTrace`, loader functions and future-sample boundary | `02_traces_replay/phase3_3b_trace_loader.md` |
 | Phase 3.4C dry-run artifact flags | 6 | Show non-benchmark, no-final-reward, no-ranking and row-gate labels for dry-run artifacts | `02_traces_replay/phase3_4c_controlled_dry_runs.md` |
 | Phase 3.4D Mahimahi/tc method roles | 6 | Show Python primary path, Mahimahi secondary role, `tc/netem` fallback role and non-benchmark status | `02_traces_replay/phase3_4d_mahimahi_tc_decision.md` |
+| Phase 3.5A1 QoE evidence matrix | 6 | Compare QoE/reward sources by quality, rebuffering, smoothness, startup, perceptual quality, roles, units and local decision implications | `03_qoe_reward/qoe_evidence_matrix.md` |
 
 ## Conversion Rule
 
