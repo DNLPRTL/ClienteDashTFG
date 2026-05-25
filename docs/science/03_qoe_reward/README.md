@@ -16,6 +16,7 @@ Phase 3.5 closes the QoE/reward metric semantics needed before any formal evalua
 | Phase 3.5A2.1 | closed | schema marker validation hotfix |
 | Phase 3.5B | closed | pure QoE calculator and synthetic `unittest` coverage |
 | Phase 3.5C | closed | isolated QoE artifact post-processing from dry-run outputs |
+| Phase 3.5D | closed | controlled QoE smoke runs and no-ranking validation |
 
 ## A2 Decision Summary
 
@@ -66,6 +67,12 @@ Phase 3.5 closes the QoE/reward metric semantics needed before any formal evalua
    - `qoe_artifact_computation_spec.md`
    - `run_summary_schema.md`
    - `qoe_summary_schema.md`
+11. Phase 3.5D controlled QoE smoke validation:
+   - `scripts/run_qoe_smoke_scenarios.py`
+   - `tests/test_qoe_smoke_scenarios.py`
+   - `controlled_qoe_smoke_runbook.md`
+   - `phase3_5_results_boundary.md`
+   - `no_ranking_policy.md`
 
 ## Phase 3.5B Implementation Summary
 
@@ -87,6 +94,19 @@ Phase 3.5C adds an isolated post-processor from dry-run artifacts to QoE artifac
 
 The post-processor is not a benchmark runner and does not rank controllers.
 
-## Next After C
+## Phase 3.5D Smoke Summary
 
-The next expected block is Phase 3.5D: controlled QoE smoke runs and no-ranking validation, while preserving A2/C gates and avoiding benchmark claims.
+Phase 3.5D adds a controlled smoke runner that generates synthetic dry-run-like artifacts outside the repository, invokes the Phase 3.5C QoE post-processor and writes an external `qoe_smoke_report.json`.
+
+The smoke runner:
+
+- uses only synthetic inputs;
+- rejects output roots inside the repository;
+- preserves `outputs_are_benchmark_results=false`;
+- preserves `no_final_ranking=true`;
+- validates gates for complete, legacy, incomplete and source-conflicting scenarios;
+- performs no real dry-run, no controller ranking, no benchmark and no IA/RL.
+
+## Next After D
+
+The next expected block is Phase 3.5E: closure and transition gate for Phase 3.5.

@@ -32,6 +32,7 @@
 | QoE artifact boundary | 6 | Show telemetry -> QoE terms -> run summary -> benchmark aggregate boundary, with gates controlling promotion | `03_qoe_reward/benchmark_result_schema.md`, `03_qoe_reward/evaluation_gate_policy.md` | planned |
 | Pure QoE calculator boundary | 6 | Show synthetic SegmentQoEInput -> pure calculator -> QoEResult, separated from runners and benchmark artifacts | `03_qoe_reward/qoe_calculator_implementation_spec.md` | planned |
 | QoE artifact post-processor boundary | 6 | Show dry-run artifacts -> isolated QoE post-processor -> QoE summaries, with no benchmark/ranking promotion | `03_qoe_reward/qoe_artifact_computation_spec.md`, `dry_run_to_qoe_mapping.md` | planned |
+| Controlled QoE smoke boundary | 6 | Show synthetic dry-run-like artifacts -> QoE post-processor -> smoke report -> no-ranking boundary | `03_qoe_reward/controlled_qoe_smoke_runbook.md`, `phase3_5_results_boundary.md` | planned |
 
 ## Figure Policy
 

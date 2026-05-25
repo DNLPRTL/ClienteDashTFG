@@ -52,6 +52,7 @@
 | Phase 3.5A2 benchmark result schema table | 6 | Separate segment telemetry, run-level summary and future benchmark aggregate | `03_qoe_reward/benchmark_result_schema.md` |
 | Phase 3.5B synthetic QoE test cases | 6 | Show synthetic inputs, expected formula outputs and validation errors for the pure calculator | `03_qoe_reward/qoe_calculator_acceptance_tests.md` |
 | Phase 3.5C QoE run summary fields | 6 | Define `qoe_run_summary.json` fields, gates and non-benchmark flags | `03_qoe_reward/run_summary_schema.md` |
+| Phase 3.5D controlled QoE smoke scenarios | 6 | Show fixed synthetic scenarios, expected gates and no-ranking/no-benchmark checks | `03_qoe_reward/controlled_qoe_smoke_runbook.md` |
 
 ## Conversion Rule
 

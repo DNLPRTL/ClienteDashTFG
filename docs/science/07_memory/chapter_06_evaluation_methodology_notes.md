@@ -202,3 +202,15 @@ Chapter 6 can now describe an isolated post-processing step that reads existing 
 - outputs keep `outputs_are_benchmark_results=false` and `no_final_ranking=true`.
 
 This still does not modify or execute the dry-run runner, does not aggregate controllers, does not create a benchmark and does not open IA/RL.
+
+## Phase 3.5D Controlled QoE Smoke Update
+
+Chapter 6 can now describe a controlled smoke-validation step for the QoE artifact path:
+
+- synthetic dry-run-like artifacts are generated outside the repository;
+- the Phase 3.5C post-processor is invoked without modifying or executing the real dry-run runner;
+- the smoke report validates `qoe_run_summary.json`, `qoe_segment_rewards.csv` and `qoe_artifact_manifest.json`;
+- gates are checked for complete, legacy, incomplete and source-conflicting scenarios;
+- `outputs_are_benchmark_results=false` and `no_final_ranking=true` are preserved.
+
+This supports artifact-contract validation only. It does not support controller ranking, benchmark claims, real dry-run execution, player/runtime/media changes or IA/RL.
