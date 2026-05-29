@@ -34,6 +34,11 @@ def main(argv: list[str] | None = None) -> int:
         "--docs-dir",
         help="Optional docs directory override, primarily for tests. Defaults to docs/science/04_neural_abr.",
     )
+    parser.add_argument(
+        "--check-repo-hygiene",
+        action="store_true",
+        help="Explicitly scan the repository for forbidden generated artifacts and protected-path changes.",
+    )
     args = parser.parse_args(argv)
 
     output_dir = ensure_outside_repo(args.output_dir, purpose="candidate assessment output")
@@ -48,6 +53,7 @@ def main(argv: list[str] | None = None) -> int:
         phase=args.phase,
         docs_dir=docs_dir,
         repo_root=REPO_ROOT,
+        check_repo_hygiene=args.check_repo_hygiene,
     )
     _write_docs(first_report, docs_dir, args.phase)
     report = assess_candidate_readiness(
@@ -57,6 +63,7 @@ def main(argv: list[str] | None = None) -> int:
         phase=args.phase,
         docs_dir=docs_dir,
         repo_root=REPO_ROOT,
+        check_repo_hygiene=args.check_repo_hygiene,
     )
     _write_outputs(report, output_dir, docs_dir, args.phase)
 
@@ -66,6 +73,7 @@ def main(argv: list[str] | None = None) -> int:
     print("dataset_trace_count: {0}".format(report["dataset_summary"]["trace_count"]))
     print("correctness_failures: {0}".format(json.dumps(report["correctness_failures"], sort_keys=True)))
     print("candidate_failures: {0}".format(json.dumps(report["candidate_failures"], sort_keys=True)))
+    print("environmental_failures: {0}".format(json.dumps(report["environmental_failures"], sort_keys=True)))
     print("diagnostic_only: true")
     if report["decision"] == PHASE4E2_DECISION_BLOCKED:
         return 1

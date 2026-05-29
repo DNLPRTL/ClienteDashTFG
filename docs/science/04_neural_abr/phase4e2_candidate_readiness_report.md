@@ -2,6 +2,8 @@
 
 Decision: `PHASE4E2_EXPANDED_CORPUS_CANDIDATE_READY_FOR_PHASE4F`
 
+R2 note: this report now distinguishes hard correctness gates, candidate-readiness gates, and environmental or external gates. Small but valid unit-test fixtures fail candidate-readiness gates as `PASS_NOT_CANDIDATE`, not `BLOCKED_NEEDS_FIX`; repo artifact scans are `UNKNOWN` unless explicitly supplied or explicitly checked.
+
 This report is an offline diagnostic gate for NeuralABR-Lite. It is not a formal benchmark, ranking, SOTA claim, or real-world validation.
 
 ## Corpus and dataset

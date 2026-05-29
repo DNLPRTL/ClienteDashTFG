@@ -35,6 +35,9 @@ class NeuralAbrCandidateReadinessTest(unittest.TestCase):
             self.assertEqual(PHASE4E2_DECISION_PASS_NOT_CANDIDATE, report["decision"])
             self.assertEqual("PASS", report["gates"]["dataset_validation_pass"]["status"])
             self.assertEqual("FAIL", report["gates"]["trace_count_at_least_30"]["status"])
+            self.assertEqual("UNKNOWN", report["gates"]["no_forbidden_repo_artifacts"]["status"])
+            self.assertNotIn("no_forbidden_repo_artifacts", report["correctness_failures"])
+            self.assertIn("trace_count_at_least_30", report["candidate_failures"])
 
     def test_leakage_overlap_blocks_candidate_readiness(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -53,6 +56,41 @@ class NeuralAbrCandidateReadinessTest(unittest.TestCase):
             self.assertEqual(PHASE4E2_DECISION_BLOCKED, report["decision"])
             self.assertEqual("FAIL", report["gates"]["dataset_validation_pass"]["status"])
             self.assertEqual("FAIL", report["gates"]["no_leakage_group_overlap"]["status"])
+
+    def test_invalid_actions_block_candidate_readiness(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            dataset_dir, run_dir, validation_dir, docs_dir = _write_assessment_fixture(root)
+            _inject_invalid_action(dataset_dir)
+
+            report = assess_candidate_readiness(
+                dataset_dir=dataset_dir,
+                run_dir=run_dir,
+                validation_dir=validation_dir,
+                phase="phase4e2",
+                docs_dir=docs_dir,
+            )
+
+            self.assertEqual(PHASE4E2_DECISION_BLOCKED, report["decision"])
+            self.assertEqual("FAIL", report["gates"]["no_invalid_labels"]["status"])
+
+    def test_explicit_forbidden_artifact_failure_blocks(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            dataset_dir, run_dir, validation_dir, docs_dir = _write_assessment_fixture(root)
+
+            report = assess_candidate_readiness(
+                dataset_dir=dataset_dir,
+                run_dir=run_dir,
+                validation_dir=validation_dir,
+                phase="phase4e2",
+                docs_dir=docs_dir,
+                no_forbidden_repo_artifacts=False,
+            )
+
+            self.assertEqual(PHASE4E2_DECISION_BLOCKED, report["decision"])
+            self.assertEqual("FAIL", report["gates"]["no_forbidden_repo_artifacts"]["status"])
+            self.assertIn("no_forbidden_repo_artifacts", report["environmental_failures"])
 
     def test_cli_accepts_phase4e2_and_exits_zero_for_pass_not_candidate(self):
         repo_root = Path(__file__).resolve().parents[1]
@@ -177,6 +215,17 @@ def _inject_leakage_overlap(dataset_dir: Path) -> None:
     ood_rows[0]["metadata"]["leakage_group"] = train_leakage_group
     with ood_path.open("w", encoding="utf-8") as handle:
         for row in ood_rows:
+            handle.write(json.dumps(row, sort_keys=True) + "\n")
+
+
+def _inject_invalid_action(dataset_dir: Path) -> None:
+    validation_path = dataset_dir / "validation.jsonl"
+    validation_rows = list(read_jsonl(validation_path))
+    validation_rows[0] = dict(validation_rows[0])
+    validation_rows[0]["label"] = dict(validation_rows[0]["label"])
+    validation_rows[0]["label"]["teacher_action"] = len(validation_rows[0]["action_mask"])
+    with validation_path.open("w", encoding="utf-8") as handle:
+        for row in validation_rows:
             handle.write(json.dumps(row, sort_keys=True) + "\n")
 
 
