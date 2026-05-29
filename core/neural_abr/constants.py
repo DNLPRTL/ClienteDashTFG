@@ -17,6 +17,7 @@ TRAIN_SPLIT = "train"
 VALIDATION_SPLIT = "validation"
 OOD_SPLIT = "ood_diagnostic"
 SPLITS = (TRAIN_SPLIT, VALIDATION_SPLIT, OOD_SPLIT)
+PHASE4E1_SPLIT_POLICY = "phase4e1_trace_level_regime_v1"
 
 REWARD_VERSION = "qoe_linear_v1"
 PRIMARY_TEACHER = "robust_mpc"
@@ -25,6 +26,30 @@ BOUNDED_ORACLE_TEACHER = "bounded_oracle_diagnostic_only"
 
 DEFAULT_SEGMENT_DURATION_S = 4.0
 DEFAULT_MAX_BUFFER_S = 20.0
+PHASE4E1_DEFAULT_REPRESENTATION_KBPS = (300, 750, 1200, 1850, 2850)
+
+EXTERNAL_TRACE_METADATA_FIELDS = (
+    "trace_id",
+    "dataset_id",
+    "leakage_group",
+    "mean_throughput_kbps",
+    "min_throughput_kbps",
+    "max_throughput_kbps",
+    "sample_count",
+    "mobility_tags",
+    "network_tags",
+    "scenario_tags",
+    "source_url_or_reference",
+    "converter_name",
+    "converter_version_or_commit",
+    "checksum_sha256",
+    "source_dataset",
+    "source_file",
+    "mobility_label",
+    "network_type",
+    "scenario_label",
+    "notes",
+)
 
 CONTEXT_ARRAY_FEATURES = (
     "throughput_history_bps",

@@ -35,6 +35,7 @@ def validate_dataset_dir(dataset_dir: object, write_report: bool = False) -> Map
         raise ValidationError("leakage audit is blocked")
 
     trace_to_split = {}
+    leakage_group_to_split = {}
     split_reports = {}
     all_errors = []
     for split in SPLITS:
@@ -50,6 +51,10 @@ def validate_dataset_dir(dataset_dir: object, write_report: bool = False) -> Map
             previous = trace_to_split.setdefault(trace_id, split)
             if previous != split:
                 all_errors.append("trace_id appears in multiple splits: {0}".format(trace_id))
+            leakage_group = sample["metadata"].get("leakage_group") or trace_id
+            previous_group_split = leakage_group_to_split.setdefault(leakage_group, split)
+            if previous_group_split != split:
+                all_errors.append("leakage_group appears in multiple splits: {0}".format(leakage_group))
             label_counts[str(sample["label"]["teacher_action"])] += 1
         split_reports[split] = {
             "sample_count": len(samples),
@@ -65,6 +70,7 @@ def validate_dataset_dir(dataset_dir: object, write_report: bool = False) -> Map
         "errors": all_errors,
         "splits": split_reports,
         "trace_level_split_disjoint": not all_errors,
+        "leakage_group_split_disjoint": not all_errors,
         "normalization_scope": "not_fit_during_dataset_validation",
     }
     if write_report:

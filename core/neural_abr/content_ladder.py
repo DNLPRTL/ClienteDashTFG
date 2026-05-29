@@ -103,6 +103,47 @@ def synthetic_smoke_ladder(segment_count: int = 12) -> ContentLadder:
     )
 
 
+def bitrate_ladder_from_kbps(
+    representation_kbps: Sequence[int],
+    segment_duration_s: float = DEFAULT_SEGMENT_DURATION_S,
+    segment_count: int = 1,
+    max_buffer_s: float = DEFAULT_MAX_BUFFER_S,
+) -> ContentLadder:
+    bitrates_bps = tuple(_kbps_to_bps(value) for value in representation_kbps)
+    return ContentLadder(
+        representations=tuple(
+            Representation(representation_index=index, bitrate_bps=bitrate_bps)
+            for index, bitrate_bps in enumerate(bitrates_bps)
+        ),
+        segment_duration_s=float(segment_duration_s),
+        segment_count=int(segment_count),
+        max_buffer_s=float(max_buffer_s),
+        segment_size_table=None,
+    )
+
+
+def ladder_with_segment_count(ladder: ContentLadder, segment_count: int) -> ContentLadder:
+    return ContentLadder(
+        representations=ladder.representations,
+        segment_duration_s=ladder.segment_duration_s,
+        segment_count=int(segment_count),
+        max_buffer_s=ladder.max_buffer_s,
+        segment_size_table=None,
+    )
+
+
+def _kbps_to_bps(value: int) -> int:
+    if isinstance(value, bool):
+        raise ContentLadderError("representation kbps values must be positive integers")
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError) as exc:
+        raise ContentLadderError("representation kbps values must be positive integers") from exc
+    if parsed <= 0:
+        raise ContentLadderError("representation kbps values must be positive integers")
+    return parsed * 1000
+
+
 def _validate_ladder(ladder: ContentLadder) -> None:
     if not ladder.representations:
         raise ContentLadderError("content ladder must not be empty")
