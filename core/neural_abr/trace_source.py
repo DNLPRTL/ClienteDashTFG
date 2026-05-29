@@ -1,4 +1,4 @@
-"""Trace loading helpers for Phase 4D/4E.1.
+"""Trace loading helpers for Phase 4D/4E.1/4E.2.
 
 The loader delegates normalized trace validation/loading to Phase 3 modules and
 does not define a parallel raw trace schema.
@@ -16,6 +16,7 @@ from core.neural_abr.constants import (
     EXTERNAL_TRACE_METADATA_FIELDS,
     OOD_SPLIT,
     PHASE4E1_SPLIT_POLICY,
+    PHASE4E2_SPLIT_POLICY,
     SPLITS,
     TRAIN_SPLIT,
     VALIDATION_SPLIT,
@@ -24,9 +25,14 @@ from core.neural_abr.artifacts import read_json
 from core.trace_replay.loader import LoadedTrace, load_normalized_trace_csv, load_normalized_trace_rows
 from core.trace_replay.schema import TRACE_SCHEMA_VERSION
 
+SUPPORTED_EXTERNAL_SPLIT_POLICIES = (
+    PHASE4E1_SPLIT_POLICY,
+    PHASE4E2_SPLIT_POLICY,
+)
+
 
 class TraceSourceError(ValueError):
-    """Raised when trace source manifests violate Phase 4D rules."""
+    """Raised when trace source manifests violate Phase 4D/4E rules."""
 
 
 @dataclass(frozen=True)
@@ -103,7 +109,7 @@ def load_external_trace_records(
     seed: int = 123,
     segment_duration_s: float = 4.0,
 ) -> Tuple[TraceRecord, ...]:
-    if split_policy != PHASE4E1_SPLIT_POLICY:
+    if split_policy not in SUPPORTED_EXTERNAL_SPLIT_POLICIES:
         raise TraceSourceError("unsupported split policy: {0}".format(split_policy))
 
     csv_root = Path(trace_csv_root).expanduser().resolve()
@@ -141,6 +147,7 @@ def load_external_trace_records(
             manifest=manifest,
             manifest_path=manifest_path,
             segment_duration_s=segment_duration_s,
+            split_policy=split_policy,
         )
         source_dataset = _text(metadata.get("dataset_id")) or _text(metadata.get("source_dataset")) or csv_path.parent.name
         leakage_group = _text(metadata.get("leakage_group")) or trace_id
@@ -157,6 +164,9 @@ def load_external_trace_records(
                 manifest_missing=bool(metadata.get("manifest_missing")),
             )
         )
+
+    if split_policy == PHASE4E2_SPLIT_POLICY:
+        return _apply_phase4e2_regime_balanced_split(unsplit_records, seed=seed)
 
     return _apply_phase4e1_split(unsplit_records, seed=seed)
 
@@ -237,6 +247,7 @@ def _external_trace_metadata(
     manifest: Mapping[str, object],
     manifest_path: Path | None,
     segment_duration_s: float,
+    split_policy: str,
 ) -> Mapping[str, object]:
     stats = _trace_stats(trace)
     csv_metadata = _first_sample_metadata(trace)
@@ -252,7 +263,7 @@ def _external_trace_metadata(
         "csv_path": str(csv_path),
         "csv_relative_path": str(csv_path.relative_to(csv_root)),
         "trace_schema_version": TRACE_SCHEMA_VERSION,
-        "split_policy": PHASE4E1_SPLIT_POLICY,
+        "split_policy": split_policy,
         "split_key": leakage_group or trace_id,
         "segment_count": _segment_count_for_trace(trace, segment_duration_s),
         **stats,
@@ -263,6 +274,13 @@ def _external_trace_metadata(
             metadata[field_name] = manifest[field_name]
         elif field_name in csv_metadata:
             metadata[field_name] = csv_metadata[field_name]
+
+    for field_name in ("regime_bucket", "regime"):
+        if field_name not in metadata:
+            if field_name in manifest:
+                metadata[field_name] = manifest[field_name]
+            elif field_name in csv_metadata:
+                metadata[field_name] = csv_metadata[field_name]
 
     if metadata["manifest_missing"]:
         metadata["source_url_or_reference"] = metadata.get("source_url_or_reference") or "missing_manifest_conservative_metadata"
@@ -316,7 +334,7 @@ def _apply_phase4e1_split(records: Sequence[TraceRecord], seed: int) -> Tuple[Tr
             assignments[ordered[0][0]] = TRAIN_SPLIT
             reasons[ordered[0][0]] = "phase4e1_single_trace_dataset_train:{0}".format(dataset_id)
 
-    _ensure_required_splits(groups, assignments, reasons, seed)
+    _ensure_required_splits(groups, assignments, reasons, seed, reason_prefix="phase4e1")
 
     split_records = []
     for record in records:
@@ -325,13 +343,152 @@ def _apply_phase4e1_split(records: Sequence[TraceRecord], seed: int) -> Tuple[Tr
         reason = reasons[key]
         metadata = dict(record.trace_metadata)
         metadata["split"] = split
+        metadata["split_policy"] = PHASE4E1_SPLIT_POLICY
         metadata["split_reason"] = reason
         metadata["ood_diagnostic_not_for_tuning"] = split == OOD_SPLIT
         split_records.append(replace(record, split=split, split_reason=reason, trace_metadata=metadata))
     return tuple(sorted(split_records, key=lambda record: (record.split, record.source_dataset, record.trace.trace_id)))
 
 
-def _ensure_required_splits(groups, assignments, reasons, seed: int) -> None:
+def _apply_phase4e2_regime_balanced_split(records: Sequence[TraceRecord], seed: int) -> Tuple[TraceRecord, ...]:
+    groups = {}
+    for record in records:
+        key = record.split_key or record.leakage_group or record.trace.trace_id
+        groups.setdefault(key, []).append(record)
+
+    strata = {}
+    for split_key, group_records in groups.items():
+        first = group_records[0]
+        dataset_id = _text(first.trace_metadata.get("dataset_id")) or first.source_dataset or "unknown_dataset"
+        regime_bucket = (
+            _text(first.trace_metadata.get("regime_bucket"))
+            or _text(first.trace_metadata.get("regime"))
+            or "unknown_regime"
+        )
+        strata.setdefault((dataset_id, regime_bucket), []).append((split_key, tuple(group_records)))
+
+    assignments = {}
+    reasons = {}
+
+    for (dataset_id, regime_bucket), grouped_records in sorted(strata.items()):
+        ordered = sorted(
+            grouped_records,
+            key=lambda item: _stable_tiebreaker(
+                "phase4e2:{0}:{1}:{2}:{3}".format(seed, dataset_id, regime_bucket, item[0])
+            ),
+        )
+
+        count = len(ordered)
+        stratum_label = "{0}/{1}".format(dataset_id, regime_bucket)
+
+        if count >= 3:
+            validation_count = max(1, int(round(count * 0.15)))
+            ood_count = max(1, int(round(count * 0.15)))
+
+            if validation_count + ood_count >= count:
+                validation_count = 1
+                ood_count = 1
+
+            for index, (split_key, _records) in enumerate(ordered):
+                if index < validation_count:
+                    assignments[split_key] = VALIDATION_SPLIT
+                    reasons[split_key] = "phase4e2_stratum_balanced_validation:{0}".format(stratum_label)
+                elif index < validation_count + ood_count:
+                    assignments[split_key] = OOD_SPLIT
+                    reasons[split_key] = "phase4e2_stratum_balanced_ood:{0}".format(stratum_label)
+                else:
+                    assignments[split_key] = TRAIN_SPLIT
+                    reasons[split_key] = "phase4e2_stratum_balanced_train:{0}".format(stratum_label)
+
+        elif count == 2:
+            assignments[ordered[0][0]] = TRAIN_SPLIT
+            assignments[ordered[1][0]] = VALIDATION_SPLIT
+            reasons[ordered[0][0]] = "phase4e2_small_stratum_train:{0}".format(stratum_label)
+            reasons[ordered[1][0]] = "phase4e2_small_stratum_validation:{0}".format(stratum_label)
+
+        elif count == 1:
+            assignments[ordered[0][0]] = TRAIN_SPLIT
+            reasons[ordered[0][0]] = "phase4e2_single_trace_stratum_train:{0}".format(stratum_label)
+
+    _ensure_required_splits(groups, assignments, reasons, seed, reason_prefix="phase4e2")
+    split_summary = _phase4e2_split_summary(groups, assignments)
+    split_limitations = _phase4e2_split_limitations(strata, split_summary)
+
+    split_records = []
+    for record in records:
+        key = record.split_key or record.leakage_group or record.trace.trace_id
+        split = assignments[key]
+        reason = reasons[key]
+
+        metadata = dict(record.trace_metadata)
+        metadata["split"] = split
+        metadata["split_policy"] = PHASE4E2_SPLIT_POLICY
+        metadata["split_reason"] = reason
+        metadata["ood_diagnostic_not_for_tuning"] = split == OOD_SPLIT
+        metadata["phase4e2_split_summary"] = split_summary
+        metadata["phase4e2_split_limitations"] = split_limitations
+
+        split_records.append(
+            replace(
+                record,
+                split=split,
+                split_reason=reason,
+                trace_metadata=metadata,
+            )
+        )
+
+    return tuple(
+        sorted(
+            split_records,
+            key=lambda record: (record.split, record.source_dataset, record.trace.trace_id),
+        )
+    )
+
+
+def _phase4e2_split_summary(groups, assignments) -> Mapping[str, object]:
+    summary = {
+        split: {
+            "trace_group_count": 0,
+            "dataset_id_counts": {},
+            "regime_bucket_counts": {},
+        }
+        for split in SPLITS
+    }
+    for split_key, group_records in groups.items():
+        split = assignments[split_key]
+        first = group_records[0]
+        dataset_id = _text(first.trace_metadata.get("dataset_id")) or first.source_dataset or "unknown_dataset"
+        regime_bucket = (
+            _text(first.trace_metadata.get("regime_bucket"))
+            or _text(first.trace_metadata.get("regime"))
+            or "unknown_regime"
+        )
+        split_entry = summary[split]
+        split_entry["trace_group_count"] += 1
+        _increment_count(split_entry["dataset_id_counts"], dataset_id)
+        _increment_count(split_entry["regime_bucket_counts"], regime_bucket)
+    return summary
+
+
+def _phase4e2_split_limitations(strata, split_summary: Mapping[str, object]) -> Tuple[str, ...]:
+    limitations = []
+    small_strata = [
+        "{0}/{1}:{2}".format(dataset_id, regime_bucket, len(grouped_records))
+        for (dataset_id, regime_bucket), grouped_records in sorted(strata.items())
+        if len(grouped_records) < 3
+    ]
+    if small_strata:
+        limitations.append(
+            "some dataset/regime strata have fewer than 3 trace groups, so perfect train/validation/OOD balance is impossible"
+        )
+    for split in SPLITS:
+        split_entry = split_summary[split]
+        if not split_entry["dataset_id_counts"]:
+            limitations.append("{0} split is empty".format(split))
+    return tuple(limitations)
+
+
+def _ensure_required_splits(groups, assignments, reasons, seed: int, reason_prefix: str) -> None:
     if len(groups) < 3:
         return
     for required_split in (VALIDATION_SPLIT, OOD_SPLIT):
@@ -341,11 +498,23 @@ def _ensure_required_splits(groups, assignments, reasons, seed: int) -> None:
         if not train_keys:
             return
         if required_split == OOD_SPLIT:
-            chosen = min(train_keys, key=lambda key: (_group_mean_throughput(groups[key]), _stable_tiebreaker(str(seed) + key)))
-            reasons[chosen] = "phase4e1_global_low_mean_ood_backfill"
+            chosen = min(
+                train_keys,
+                key=lambda key: (
+                    _group_mean_throughput(groups[key]),
+                    _stable_tiebreaker(str(seed) + key),
+                ),
+            )
+            reasons[chosen] = "{0}_global_low_mean_ood_backfill".format(reason_prefix)
         else:
-            chosen = sorted(train_keys, key=lambda key: (_group_mean_throughput(groups[key]), _stable_tiebreaker(str(seed) + key)))[len(train_keys) // 2]
-            reasons[chosen] = "phase4e1_global_validation_backfill"
+            chosen = sorted(
+                train_keys,
+                key=lambda key: (
+                    _group_mean_throughput(groups[key]),
+                    _stable_tiebreaker(str(seed) + key),
+                ),
+            )[len(train_keys) // 2]
+            reasons[chosen] = "{0}_global_validation_backfill".format(reason_prefix)
         assignments[chosen] = required_split
 
 
@@ -417,6 +586,10 @@ def _group_mean_throughput(records: Sequence[TraceRecord]) -> float:
 
 def _stable_tiebreaker(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _increment_count(counts, key: str) -> None:
+    counts[key] = counts.get(key, 0) + 1
 
 
 def _population_stdev(values: Sequence[float], mean: float) -> float:

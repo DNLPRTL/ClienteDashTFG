@@ -10,6 +10,8 @@ MODEL_CONFIG_VERSION = "neural_abr_lite_model_config_v1"
 NORMALIZATION_SCHEMA_VERSION = "neural_abr_lite_normalization_v1"
 TRAINING_REPORT_VERSION = "neural_abr_lite_training_report_v1"
 OFFLINE_VALIDATION_REPORT_VERSION = "neural_abr_lite_offline_validation_report_v1"
+TRACE_CORPUS_SCHEMA_VERSION = "phase4e2_trace_corpus_v1"
+CANDIDATE_READINESS_REPORT_VERSION = "phase4e2_candidate_readiness_report_v1"
 
 K_CONTEXT = 5
 
@@ -18,6 +20,11 @@ VALIDATION_SPLIT = "validation"
 OOD_SPLIT = "ood_diagnostic"
 SPLITS = (TRAIN_SPLIT, VALIDATION_SPLIT, OOD_SPLIT)
 PHASE4E1_SPLIT_POLICY = "phase4e1_trace_level_regime_v1"
+PHASE4E2_SPLIT_POLICY = "phase4e2_regime_balanced_trace_v1"
+
+PHASE4E2_DECISION_CANDIDATE_READY = "PHASE4E2_EXPANDED_CORPUS_CANDIDATE_READY_FOR_PHASE4F"
+PHASE4E2_DECISION_PASS_NOT_CANDIDATE = "PHASE4E2_EXPANDED_CORPUS_PASS_NOT_CANDIDATE"
+PHASE4E2_DECISION_BLOCKED = "PHASE4E2_BLOCKED_NEEDS_FIX"
 
 REWARD_VERSION = "qoe_linear_v1"
 PRIMARY_TEACHER = "robust_mpc"
@@ -43,6 +50,11 @@ EXTERNAL_TRACE_METADATA_FIELDS = (
     "converter_name",
     "converter_version_or_commit",
     "checksum_sha256",
+    "source_kind",
+    "converter",
+    "coefficient_of_variation",
+    "regime_bucket",
+    "checksum_or_source_fingerprint",
     "source_dataset",
     "source_file",
     "mobility_label",
