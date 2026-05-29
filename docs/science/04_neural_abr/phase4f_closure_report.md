@@ -1,8 +1,8 @@
 # Phase 4F Closure Report
 
-Decision: `PHASE4F_EXPORT_BUNDLE_READY_FOR_PHASE4G`
+Decision: `PHASE4F_R1_REPAIR_PENDING_CROSS_PLATFORM_CONFIRMATION`
 
-All Phase 4F export/inference gates passed.
+Phase 4F export/inference passed on the real Windows bundle, but Ubuntu exposed a validation-gate classification bug in the temporary unit fixture path. The R1 repair separates correctness gates from environmental/repo hygiene gates.
 
 - Phase 4F scope: export/inference only.
 - Client integration: `false`.
@@ -10,6 +10,7 @@ All Phase 4F export/inference gates passed.
 - Benchmark/ranking: `false`.
 - SOTA or real-world claim: `false`.
 - Bundle artifacts local-only outside repo: `true`.
-- Bundle dir: `C:\Users\danie\Documents\TFG\_models\phase4_AI\neural_abr_lite\phase4F\bundle_20260529_091652`
+- Default repo hygiene in pure bundle validation: `NOT_CHECKED`.
+- Explicit repo hygiene flag: `--check-repo-hygiene`.
 
-Phase 4G will decide whether Phase 5 integration is allowed.
+Phase 4G is allowed only after the repaired Phase 4F tests and readiness checks pass on both Windows and Ubuntu.

@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import torch
 
+import scripts.validate_neural_abr_bundle as bundle_validator
 from core.neural_abr.bundle import REQUIRED_BUNDLE_FILES, write_json_file
 from core.neural_abr.constants import CANDIDATE_VECTOR_NAMES, CONTEXT_VECTOR_NAMES, NORMALIZATION_SCHEMA_VERSION, TRAIN_SPLIT
 from core.neural_abr.dataset_builder import build_synthetic_smoke_dataset
@@ -88,6 +91,80 @@ class NeuralAbrExportTest(unittest.TestCase):
             self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
             self.assertTrue((output_dir / "bundle_validation_report.json").is_file())
             self.assertTrue((docs_dir / "phase4f_bundle_validation_report.md").is_file())
+            report = json.loads((output_dir / "bundle_validation_report.json").read_text(encoding="utf-8"))
+            self.assertEqual("NOT_CHECKED", report["gates"]["no_repo_artifacts"]["status"])
+            self.assertNotIn("no_repo_artifacts", report["hard_failures"])
+
+    def test_validate_cli_blocks_missing_required_bundle_file(self):
+        repo_root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            dataset_dir, run_dir, validation_dir, assessment_dir = _write_phase4e2_source_fixture(root)
+            bundle_dir = root / "bundle"
+            export_neural_abr_bundle(
+                dataset_dir=dataset_dir,
+                run_dir=run_dir,
+                validation_dir=validation_dir,
+                assessment_dir=assessment_dir,
+                output_dir=bundle_dir,
+                phase="phase4f",
+                overwrite=True,
+                docs_dir=root / "export_docs",
+            )
+            (bundle_dir / "fallback_policy.json").unlink()
+            output_dir = root / "bundle_validation"
+
+            command = [
+                sys.executable,
+                "scripts/validate_neural_abr_bundle.py",
+                "--bundle-dir",
+                str(bundle_dir),
+                "--dataset-dir",
+                str(dataset_dir),
+                "--output-dir",
+                str(output_dir),
+                "--phase",
+                "phase4f",
+                "--docs-dir",
+                str(root / "validation_docs"),
+            ]
+            completed = subprocess.run(command, cwd=repo_root, text=True, capture_output=True, check=False)
+
+            self.assertEqual(1, completed.returncode, completed.stdout + completed.stderr)
+            self.assertIn("PHASE4F_BLOCKED_NEEDS_FIX", completed.stdout)
+
+    def test_explicit_repo_hygiene_failure_blocks_only_when_requested(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            dataset_dir, run_dir, validation_dir, assessment_dir = _write_phase4e2_source_fixture(root)
+            bundle_dir = root / "bundle"
+            export_neural_abr_bundle(
+                dataset_dir=dataset_dir,
+                run_dir=run_dir,
+                validation_dir=validation_dir,
+                assessment_dir=assessment_dir,
+                output_dir=bundle_dir,
+                phase="phase4f",
+                overwrite=True,
+                docs_dir=root / "export_docs",
+            )
+
+            with mock.patch.object(bundle_validator, "_forbidden_repo_artifacts", return_value=["model.pt"]), mock.patch.object(
+                bundle_validator,
+                "_protected_git_changes",
+                return_value=[],
+            ):
+                report = bundle_validator.validate_phase4f_bundle(
+                    bundle_dir=bundle_dir,
+                    dataset_dir=dataset_dir,
+                    output_dir=root / "bundle_validation",
+                    docs_dir=root / "validation_docs",
+                    check_repo_hygiene=True,
+                )
+
+            self.assertEqual(bundle_validator.DECISION_BLOCKED, report["decision"])
+            self.assertIn("no_repo_artifacts", report["hard_failures"])
+            self.assertIn("no_repo_artifacts", report["environmental_failures"])
 
 
 def _write_phase4e2_source_fixture(root: Path):

@@ -369,6 +369,10 @@ def render_defense_talking_points_markdown(report: Mapping[str, object]) -> str:
             "- The latency report is a safety feasibility check only, not a benchmark against ABR controllers.",
             "- No benchmark/ranking, SOTA, or real-world validation claim is made.",
             "- Phase 4G remains the gate that decides whether Phase 5 integration is allowed.",
+            "- Phase 4F-R1 separates correctness gates from environmental/repo hygiene gates.",
+            "- Pure temporary bundle fixtures report repo hygiene as not checked unless `--check-repo-hygiene` is supplied.",
+            "- Explicit repo hygiene validation remains blocking when requested.",
+            "- Phase 4G is allowed only after Windows and Ubuntu both pass the repaired Phase 4F validation commands.",
             "",
             "Bundle dir: `{0}`".format(report.get("bundle_dir")),
             "",
@@ -388,6 +392,8 @@ def render_open_limitations_markdown() -> str:
             "- OOD diagnostics remain diagnostic-only and must not be tuned on.",
             "- Future Phase 4G must decide whether Phase 5 integration is allowed.",
             "- Future integration must retain a classical safe fallback for invalid, slow, missing, or non-finite neural inference.",
+            "- Default pure bundle validation does not scan repository hygiene. Run `scripts/validate_neural_abr_bundle.py --check-repo-hygiene` or external validation/commit checks when repo artifact hygiene must be blocking.",
+            "- Phase 4G is allowed only after the repaired Phase 4F validation passes on both Windows and Ubuntu.",
             "",
         ]
     )
@@ -410,7 +416,7 @@ def render_closure_report_markdown(decision: str, reason: str, bundle_dir: str |
             "- Bundle artifacts local-only outside repo: `true`.",
             "- Bundle dir: `{0}`".format(bundle_dir or ""),
             "",
-            "Phase 4G will decide whether Phase 5 integration is allowed.",
+            "Phase 4G is allowed only after Windows and Ubuntu both pass the repaired Phase 4F validation commands. Phase 4G will decide whether Phase 5 integration is allowed.",
             "",
         ]
     )
@@ -454,7 +460,7 @@ def _assert_source_files(source_files: Mapping[str, Path]) -> None:
 
 def _load_checkpoint_cpu(path: Path) -> Mapping[str, object]:
     try:
-        checkpoint = torch.load(path, map_location="cpu")
+        checkpoint = _torch_load_cpu(path)
     except Exception as exc:  # noqa: BLE001 - preserve clear export failure.
         raise ExportError("failed to load checkpoint on CPU: {0}".format(path)) from exc
     if not isinstance(checkpoint, Mapping):
@@ -462,6 +468,15 @@ def _load_checkpoint_cpu(path: Path) -> Mapping[str, object]:
     if "model_state_dict" not in checkpoint:
         raise ExportError("checkpoint missing model_state_dict: {0}".format(path))
     return checkpoint
+
+
+def _torch_load_cpu(path: Path) -> object:
+    try:
+        return torch.load(path, map_location="cpu", weights_only=True)
+    except TypeError:
+        return torch.load(path, map_location="cpu")
+    except Exception:
+        return torch.load(path, map_location="cpu", weights_only=False)
 
 
 def _model_config_from_checkpoint(checkpoint: Mapping[str, object], file_config: Mapping[str, object]) -> Mapping[str, object]:

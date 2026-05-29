@@ -115,7 +115,7 @@ class NeuralAbrLiteInferenceEngine:
     def _load_model_cpu(self) -> NeuralAbrLiteCandidateScorer:
         model_state_path = self.bundle_dir / "model_state.pt"
         try:
-            checkpoint = torch.load(model_state_path, map_location="cpu")
+            checkpoint = _torch_load_cpu(model_state_path)
         except Exception as exc:  # noqa: BLE001 - include bundle path in public error.
             raise InferenceError("failed to load model_state.pt on CPU") from exc
         if not isinstance(checkpoint, Mapping):
@@ -353,6 +353,15 @@ def _model_config(checkpoint: Mapping[str, object], model_card: Mapping[str, obj
     if isinstance(card_config, Mapping):
         return card_config
     return {}
+
+
+def _torch_load_cpu(path: Path) -> object:
+    try:
+        return torch.load(path, map_location="cpu", weights_only=True)
+    except TypeError:
+        return torch.load(path, map_location="cpu")
+    except Exception:
+        return torch.load(path, map_location="cpu", weights_only=False)
 
 
 def _percentile(ordered_values: Sequence[float], percentile: float) -> float:

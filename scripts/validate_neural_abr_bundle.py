@@ -74,6 +74,11 @@ def main(argv: list[str] | None = None) -> int:
         "--docs-dir",
         help="Optional docs directory override for tests. Defaults to docs/science/04_neural_abr.",
     )
+    parser.add_argument(
+        "--check-repo-hygiene",
+        action="store_true",
+        help="Explicitly scan repository artifacts and protected-path changes as blocking Phase 4F gates.",
+    )
     args = parser.parse_args(argv)
 
     docs_dir = Path(args.docs_dir).resolve() if args.docs_dir else REPO_ROOT / "docs" / "science" / "04_neural_abr"
@@ -82,6 +87,7 @@ def main(argv: list[str] | None = None) -> int:
         dataset_dir=args.dataset_dir,
         output_dir=args.output_dir,
         docs_dir=docs_dir,
+        check_repo_hygiene=args.check_repo_hygiene,
     )
 
     print("NeuralABR-Lite Phase 4F bundle validation summary")
@@ -99,6 +105,7 @@ def validate_phase4f_bundle(
     dataset_dir: object,
     output_dir: object,
     docs_dir: object,
+    check_repo_hygiene: bool = False,
 ) -> Mapping[str, object]:
     output_path = ensure_outside_repo(output_dir, purpose="Phase 4F bundle validation output")
     output_path.mkdir(parents=True, exist_ok=True)
@@ -180,10 +187,20 @@ def validate_phase4f_bundle(
         ):
             gates.setdefault(name, _gate(False, "bundle validation did not complete"))
 
-    forbidden_artifacts = _forbidden_repo_artifacts(REPO_ROOT)
-    protected_changes = _protected_git_changes(REPO_ROOT)
-    gates["no_repo_artifacts"] = _gate(not forbidden_artifacts, forbidden_artifacts)
-    gates["no_controller_player_runtime_media_main_changes"] = _gate(not protected_changes, protected_changes)
+    environmental_gate_names = [
+        "no_repo_artifacts",
+        "no_controller_player_runtime_media_main_changes",
+    ]
+    if check_repo_hygiene:
+        forbidden_artifacts = _forbidden_repo_artifacts(REPO_ROOT)
+        protected_changes = _protected_git_changes(REPO_ROOT)
+        gates["no_repo_artifacts"] = _gate(not forbidden_artifacts, forbidden_artifacts)
+        gates["no_controller_player_runtime_media_main_changes"] = _gate(not protected_changes, protected_changes)
+    else:
+        gates["no_repo_artifacts"] = _gate_not_checked("repo artifact hygiene requires --check-repo-hygiene")
+        gates["no_controller_player_runtime_media_main_changes"] = _gate_not_checked(
+            "protected git path hygiene requires --check-repo-hygiene"
+        )
 
     hard_gate_names = [
         "required_files_present",
@@ -198,10 +215,20 @@ def validate_phase4f_bundle(
         "sample_inference_valid_action_rate",
         "no_nan_inf_scores",
         "deterministic_inference",
-        "no_repo_artifacts",
-        "no_controller_player_runtime_media_main_changes",
     ]
-    hard_failures = [name for name in hard_gate_names if gates.get(name, {}).get("status") != "PASS"]
+    bundle_readiness_gate_names = [
+        "p95_latency_ms",
+    ]
+    blocking_gate_names = list(hard_gate_names)
+    if check_repo_hygiene:
+        blocking_gate_names.extend(environmental_gate_names)
+    hard_correctness_failures = [
+        name for name in hard_gate_names if gates.get(name, {}).get("status") != "PASS"
+    ]
+    environmental_failures = [
+        name for name in environmental_gate_names if gates.get(name, {}).get("status") == "FAIL"
+    ]
+    hard_failures = [name for name in blocking_gate_names if gates.get(name, {}).get("status") != "PASS"]
     if hard_failures:
         decision = DECISION_BLOCKED
     elif gates.get("p95_latency_ms", {}).get("status") != "PASS":
@@ -217,6 +244,12 @@ def validate_phase4f_bundle(
         "dataset_dir": str(Path(dataset_dir).resolve()),
         "output_dir": str(output_path),
         "gates": gates,
+        "hard_correctness_gates": hard_gate_names,
+        "bundle_readiness_gates": bundle_readiness_gate_names,
+        "environmental_repo_hygiene_gates": environmental_gate_names,
+        "repo_hygiene_checked": bool(check_repo_hygiene),
+        "hard_correctness_failures": hard_correctness_failures,
+        "environmental_failures": environmental_failures,
         "hard_failures": hard_failures,
         "warnings": warnings,
         "sample_inference_report": sample_report,
@@ -249,6 +282,8 @@ def render_bundle_validation_markdown(report: Mapping[str, object]) -> str:
         "",
         "- Bundle dir: `{0}`".format(report.get("bundle_dir")),
         "- Hard failures: `{0}`".format(report.get("hard_failures")),
+        "- Repo hygiene checked: `{0}`".format(report.get("repo_hygiene_checked")),
+        "- Environmental failures: `{0}`".format(report.get("environmental_failures")),
         "- Warnings: `{0}`".format(report.get("warnings")),
         "",
         "## Gates",
@@ -318,6 +353,14 @@ def _gate(passed: bool, details: object) -> Mapping[str, object]:
     return {
         "status": "PASS" if bool(passed) else "FAIL",
         "passed": bool(passed),
+        "details": details,
+    }
+
+
+def _gate_not_checked(details: object) -> Mapping[str, object]:
+    return {
+        "status": "NOT_CHECKED",
+        "passed": None,
         "details": details,
     }
 
