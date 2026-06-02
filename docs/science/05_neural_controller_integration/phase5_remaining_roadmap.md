@@ -2,11 +2,11 @@
 
 ## Phase 5C: implementation prompt/spec finalization
 
-Convert these contracts into a narrow implementation prompt. Confirm allowed files, fallback behavior, telemetry fields and no-benchmark boundary.
+Status after Phase 5C: documentation/specification finalized. The Phase 5D prompt, file plan, runtime feature spec, bundle loading spec, telemetry hook decision and test plan are ready for review.
 
 ## Phase 5D: controller implementation
 
-Implement the guarded neural scorer controller and helper modules only after the readiness gate passes. Keep the implementation CPU-first, local-only and fallback-protected.
+Implement the guarded neural scorer controller and helper modules only after Phase 5C review and Ubuntu validation. Keep the implementation CPU-first, local-only, fail-closed and fallback-protected.
 
 ## Phase 5E: structural smoke
 

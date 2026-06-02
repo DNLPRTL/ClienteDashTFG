@@ -93,6 +93,21 @@ Phase 5B:
 - `phase5b_acceptance_tests.md`
 - `phase5b_codex_implementation_readiness_gate.md`
 
+Phase 5C:
+
+- `phase5c_scope_and_gate.md`
+- `phase5c_current_code_mapping.md`
+- `phase5c_offline_runtime_boundary_spec.md`
+- `phase5c_file_change_plan.md`
+- `phase5c_controller_api_mapping.md`
+- `phase5c_bundle_runtime_spec.md`
+- `phase5c_runtime_feature_spec.md`
+- `phase5c_action_mask_safety_fallback_spec.md`
+- `phase5c_telemetry_hook_decision.md`
+- `phase5c_test_plan_phase5d.md`
+- `phase5c_phase5d_codex_prompt.md`
+- `phase5c_closure_report.md`
+
 Memory and roadmap:
 
 - `notes_for_memory.md`
@@ -106,6 +121,8 @@ Implementation may only start after:
 - integration evidence matrices exist and are reviewed;
 - the guarded scorer decision is accepted;
 - all Phase 5B contracts exist;
+- all Phase 5C implementation specs exist;
+- the Phase 5D Codex prompt is ready;
 - no runtime code has been touched in this documentation block;
 - `python -m unittest discover` passes;
 - `python scripts/check_client_readiness.py --strict` passes;
