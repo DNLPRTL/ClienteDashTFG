@@ -1,4 +1,4 @@
-# Phase 5 closure roadmap
+﻿# Phase 5 closure roadmap
 
 ## Phase 5C: implementation prompt/spec finalization
 
@@ -31,7 +31,7 @@ Phase 5F hardened missing bundle, invalid manifest, schema mismatch, non-finite 
 Status:
 
 ```text
-ACCEPTED_PENDING_FINAL_POST_HARDENING_SMOKE
+ACCEPTED_AS_INTEGRATED_GUARDED_CONTROLLER
 ```
 
 Phase 5G is documentation-only closure. It records final integration status and preserves the no-benchmark/no-ranking/no-claim boundary.
@@ -39,9 +39,10 @@ Phase 5G is documentation-only closure. It records final integration status and 
 The final post-hardening real-bundle regression smoke for HEAD `72681b6` is:
 
 ```text
-PENDING_USER_EXECUTION
+PASS_RECORDED_AFTER_USER_EXECUTION
 ```
 
 ## Later phase boundary
 
 No later phase is opened, scoped, or planned in this roadmap update.
+

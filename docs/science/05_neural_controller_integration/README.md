@@ -1,4 +1,4 @@
-# Phase 5 NeuralABR-Lite controller integration
+﻿# Phase 5 NeuralABR-Lite controller integration
 
 This directory records Phase 5 of the NeuralABR-Lite work: integration of the Phase 4 Candidate Scorer as a guarded controller in DashClientModular4.
 
@@ -9,13 +9,13 @@ Phase 5 is integration work only. It does not benchmark, rank controllers, claim
 Phase 5G decision:
 
 ```text
-ACCEPTED_PENDING_FINAL_POST_HARDENING_SMOKE
+ACCEPTED_AS_INTEGRATED_GUARDED_CONTROLLER
 ```
 
 The final post-hardening real-bundle regression smoke for HEAD `72681b6` was not provided in the Phase 5G input and is recorded as:
 
 ```text
-PENDING_USER_EXECUTION
+PASS_RECORDED_AFTER_USER_EXECUTION
 ```
 
 No later phase is opened by this directory update.
@@ -47,7 +47,7 @@ No later phase is opened by this directory update.
 | Phase 5D | Closed | `neural_abr_lite` implemented and registered with focused tests. |
 | Phase 5E | Closed | Structural smokes recorded: no-bundle fake, real-bundle fake, optional Ubuntu/GStreamer structural/demo. |
 | Phase 5F | Closed locally | Fallback/error/telemetry hardening validated with 471 tests and readiness strict. |
-| Phase 5G | Accepted pending final smoke | Documentation-only closure; final post-hardening real-bundle regression smoke pending user execution. |
+| Phase 5G | Accepted final smoke passed | Documentation-only closure; final post-hardening real-bundle regression smoke pending user execution. |
 
 ## Key documents
 
@@ -83,3 +83,4 @@ No model files, run outputs, logs, CSVs, datasets, zips, PDFs, or media artifact
 ## Non-claim boundary
 
 Phase 5 proves structural integration and safety hardening only. It does not establish comparative performance.
+

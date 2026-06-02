@@ -1,4 +1,4 @@
-# Phase 5G scope and gate
+﻿# Phase 5G scope and gate
 
 ## Scope
 
@@ -32,15 +32,16 @@ Phase 5G closure requires:
 The final post-hardening real-bundle regression smoke result was not provided in the Phase 5G input. Therefore it is recorded as:
 
 ```text
-PENDING_USER_EXECUTION
+PASS_RECORDED_AFTER_USER_EXECUTION
 ```
 
 The conservative Phase 5G decision is:
 
 ```text
-ACCEPTED_PENDING_FINAL_POST_HARDENING_SMOKE
+ACCEPTED_AS_INTEGRATED_GUARDED_CONTROLLER
 ```
 
 ## Later phase boundary
 
 No later phase is opened in this document.
+

@@ -1,4 +1,4 @@
-# Phase 5G repository release checklist
+﻿# Phase 5G repository release checklist
 
 ## Checklist
 
@@ -22,7 +22,8 @@
 At document creation, the final post-hardening real-bundle regression smoke for HEAD `72681b6` is:
 
 ```text
-PENDING_USER_EXECUTION
+PASS_RECORDED_AFTER_USER_EXECUTION
 ```
 
 Phase 5G validation commands passed. The targeted staged-file artifact check was performed before commit and returned no matches.
+
