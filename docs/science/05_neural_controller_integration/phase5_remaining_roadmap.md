@@ -10,11 +10,11 @@ Status after Phase 5D: guarded scorer controller implemented and registered as `
 
 ## Phase 5E: structural smoke
 
-Run real structural integration smoke, including the next GStreamer boundary checks where available, to verify bundle load/fail-closed behavior, feature building, action mask, safety guard, fallback and diagnostic telemetry. This is not a benchmark.
+Status after Phase 5E documentation: structural smoke gates, fake-engine real-bundle runbook, artifact inspection checklist and optional Ubuntu/GStreamer runbook are prepared. Synthetic temporary-bundle smoke remains covered by tests. Real local Phase 4F bundle and Ubuntu/GStreamer smoke require user-provided bundle/MPD paths and remain structural-only, not benchmark evidence.
 
 ## Phase 5F: fallback/error/telemetry hardening
 
-Exercise missing bundle, invalid manifest, schema mismatch, non-finite output, masked action, safety rejection, timeout and runtime exception paths.
+After Phase 5E smoke acceptance, exercise missing bundle, invalid manifest, schema mismatch, non-finite output, masked action, safety rejection, timeout and runtime exception paths.
 
 ## Phase 5G: closure and handoff to Phase 6
 
