@@ -6,11 +6,11 @@ Status after Phase 5C: documentation/specification finalized. The Phase 5D promp
 
 ## Phase 5D: controller implementation
 
-Implement the guarded neural scorer controller and helper modules only after Phase 5C review and Ubuntu validation. Keep the implementation CPU-first, local-only, fail-closed and fallback-protected.
+Status after Phase 5D: guarded scorer controller implemented and registered as `neural_abr_lite`, with CPU-only local bundle loading, action mask, safety guard, fallback chain, diagnostic telemetry, and fake-engine structural tests. This remains diagnostic-only and not benchmark evidence.
 
 ## Phase 5E: structural smoke
 
-Run fake-engine structural smoke to verify bundle load/fail-closed behavior, feature building, action mask, safety guard, fallback and diagnostic telemetry. This is not a benchmark.
+Run real structural integration smoke, including the next GStreamer boundary checks where available, to verify bundle load/fail-closed behavior, feature building, action mask, safety guard, fallback and diagnostic telemetry. This is not a benchmark.
 
 ## Phase 5F: fallback/error/telemetry hardening
 

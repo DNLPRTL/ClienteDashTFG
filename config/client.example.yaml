@@ -18,6 +18,17 @@ controller:
   params:
     level: 0
 
+# Optional Phase 5D structural integration example only. Keep bundles outside
+# the repository and keep the default controller above unchanged.
+# controller:
+#   name: "neural_abr_lite"
+#   params:
+#     bundle_dir: "/absolute/path/outside/repo/neural_abr_lite_bundle"
+#     enabled: true
+#     fallback_controller: "robust_mpc"
+#     diagnostic_telemetry: true
+#     fail_closed: true
+
 playback:
   initial_quality: 0
   initial_controller_decision: false

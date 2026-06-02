@@ -716,6 +716,23 @@ class Player:
         setcol('is_upswitch', int(is_up))
         setcol('is_downswitch', int(is_down))
         setcol('switch_magnitude', int(magnitude))
+        self._copy_post_decision_feedback_telemetry(row)
+
+    def _copy_post_decision_feedback_telemetry(self, row):
+        hook = getattr(self.controller, "get_last_decision_telemetry", None)
+        if not callable(hook):
+            return
+        try:
+            telemetry = hook()
+            if not isinstance(telemetry, dict):
+                return
+            for key, value in telemetry.items():
+                column = "feedback_{0}".format(key)
+                i = self._col_index.get(column)
+                if i is not None and i < len(row):
+                    row[i] = value
+        except Exception:
+            return
 
     def _flush_segment_row(self, seg_idx: int):
         if not getattr(self, "_csv_writer", None):

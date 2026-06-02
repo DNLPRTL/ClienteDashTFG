@@ -7,6 +7,7 @@ from .bba import BbaController
 from .fixed_quality import FixedQualityController
 from .max_quality_controller import MaxQualityController
 from .mpc import MpcController
+from .neural_abr_lite import NeuralAbrLiteController
 from .rate_based import RateBasedController
 from .robust_mpc import RobustMpcController
 from .sanity_rate import FixedRateController, MaxRateController, MinRateController
@@ -60,6 +61,11 @@ CONTROLLER_REGISTRY = {
         key="robust_mpc",
         label="RobustMPC conservative planning baseline",
         factory=RobustMpcController,
+    ),
+    "neural_abr_lite": ControllerSpec(
+        key="neural_abr_lite",
+        label="NeuralABR-Lite guarded scorer controller",
+        factory=NeuralAbrLiteController,
     ),
     "fixed_quality": ControllerSpec(
         key="fixed_quality",
