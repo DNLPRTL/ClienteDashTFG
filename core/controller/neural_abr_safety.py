@@ -59,20 +59,31 @@ def apply_safety_guard(
     margin = max(float(safety_buffer_margin_s), 0.0)
     deadline_s = max(float(buffer_s) - margin, float(fragment_duration_s))
 
-    if _is_action_feasible(raw_action, rates, conservative_throughput_Bps, fragment_duration_s, deadline_s):
+    raw_estimated_download_time_s = _estimated_download_time_s(raw_action, rates, conservative_throughput_Bps, fragment_duration_s)
+    if raw_estimated_download_time_s is None:
+        return SafetyDecision(None, None, True, True, "safety_guard_rejected")
+    if raw_estimated_download_time_s <= float(deadline_s):
         return SafetyDecision(raw_action, float(rates[raw_action]), False, False, "success_neural")
 
     for action in range(raw_action - 1, -1, -1):
-        if bool(action_mask[action]) and _is_action_feasible(
+        estimated_download_time_s = _estimated_download_time_s(
             action,
             rates,
             conservative_throughput_Bps,
             fragment_duration_s,
-            deadline_s,
-        ):
+        )
+        if bool(action_mask[action]) and estimated_download_time_s is not None and estimated_download_time_s <= float(deadline_s):
             return SafetyDecision(action, float(rates[action]), True, False, "success_neural")
 
     lowest = lowest_valid_action(action_mask)
+    lowest_estimated_download_time_s = _estimated_download_time_s(
+        lowest,
+        rates,
+        conservative_throughput_Bps,
+        fragment_duration_s,
+    )
+    if lowest_estimated_download_time_s is None:
+        return SafetyDecision(None, None, True, True, "safety_guard_rejected")
     return SafetyDecision(
         lowest,
         float(rates[lowest]),
@@ -143,16 +154,17 @@ def lowest_valid_action(action_mask: Sequence[bool]) -> int:
     raise ValueError("action_mask must contain at least one valid action")
 
 
-def _is_action_feasible(
+def _estimated_download_time_s(
     action: int,
     rates_Bps: Sequence[float],
     conservative_throughput_Bps: float,
     fragment_duration_s: float,
-    deadline_s: float,
-) -> bool:
+) -> float | None:
     candidate_size_bytes = float(rates_Bps[action]) * float(fragment_duration_s)
     estimated_download_time_s = candidate_size_bytes / conservative_throughput_Bps
-    return math.isfinite(estimated_download_time_s) and estimated_download_time_s <= float(deadline_s)
+    if not math.isfinite(estimated_download_time_s):
+        return None
+    return float(estimated_download_time_s)
 
 
 def _create_fallback_controller(name: str, params: Mapping[str, object] | None):

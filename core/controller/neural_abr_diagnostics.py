@@ -89,18 +89,33 @@ class NeuralAbrDecisionTelemetry:
         if base:
             for key in DIAGNOSTIC_KEYS:
                 if key in base:
-                    values[key] = csv_safe_value(base[key])
+                    values[key] = diagnostic_safe_value(key, base[key])
         values["neural_diagnostic_only"] = 1
         return cls(values)
 
     def update(self, **values: object) -> None:
         for key, value in values.items():
             if key in DIAGNOSTIC_KEYS:
-                self.values[key] = csv_safe_value(value)
+                self.values[key] = diagnostic_safe_value(key, value)
         self.values["neural_diagnostic_only"] = 1
 
     def to_dict(self) -> dict[str, object]:
-        return {key: csv_safe_value(self.values.get(key, default_diagnostics()[key])) for key in DIAGNOSTIC_KEYS}
+        return {key: diagnostic_safe_value(key, self.values.get(key, default_diagnostics()[key])) for key in DIAGNOSTIC_KEYS}
+
+
+def diagnostic_safe_value(key: str, value: object) -> object:
+    if key == "neural_fallback_reason":
+        return fallback_reason_label(value)
+    return csv_safe_value(value)
+
+
+def fallback_reason_label(value: object) -> str:
+    text = str(csv_safe_value(value)).strip()
+    if text == "":
+        return ""
+    if text in FALLBACK_REASONS:
+        return text
+    return "inference_failed"
 
 
 def csv_safe_value(value: object) -> object:
@@ -109,6 +124,8 @@ def csv_safe_value(value: object) -> object:
     if isinstance(value, bool):
         return 1 if value else 0
     if isinstance(value, (int, float, str)):
+        if isinstance(value, str):
+            return value.replace("\r", " ").replace("\n", " ")
         return value
     if isinstance(value, (list, tuple)):
         return ",".join(str(csv_safe_value(item)) for item in value)

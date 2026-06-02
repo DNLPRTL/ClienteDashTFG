@@ -44,7 +44,7 @@ Runs and artifacts are outside repo. No generated artifacts were committed.
 | `check_client_readiness.py --strict` | PASS | User reported strict readiness passed. |
 | No-bundle fake-engine smoke | PASS | Fallback path completed structurally without crashing and recorded diagnostic fallback state. |
 | Real-bundle fake-engine smoke | PASS | Real bundle path completed structurally with the bundle-loaded path available for diagnostics. |
-| Ubuntu GStreamer structural smoke | OPTIONAL_PENDING | No concrete passed GStreamer smoke result was provided in this closure input. This is not blocking fake-engine structural acceptance. |
+| Ubuntu GStreamer structural smoke | PASS (optional structural/demo) | The user later reported that the optional Ubuntu/GStreamer structural smoke was executed successfully. This is supplemental structural/demo validation only, not benchmark evidence. |
 
 ## Artifact inspection result
 
@@ -74,9 +74,9 @@ It does not mean the neural controller is better than any baseline.
 
 ## Ubuntu GStreamer status
 
-Ubuntu/GStreamer structural smoke remains optional pending for this closure because no concrete passed GStreamer run result was provided. This is not blocking fake-engine structural acceptance.
+Ubuntu/GStreamer structural smoke was later reported by the user as successfully executed. This report records that later update as optional structural/demo validation only.
 
-If run later, it must remain structural/demo validation only, not benchmark evidence. Relevant runbook:
+It is not benchmark evidence, not ranking evidence, not a controller comparison, and not an improvement claim. Relevant runbook:
 
 - `phase5e_ubuntu_gstreamer_smoke_runbook.md`
 

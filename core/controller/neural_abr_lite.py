@@ -140,6 +140,8 @@ class NeuralAbrLiteController(BaseController):
             if not _scores_are_finite(decision.scores):
                 telemetry.update(neural_nan_inf_detected=1)
                 return self._fallback_decision(feedback, rates, action_mask, telemetry, "non_finite_scores")
+            if not _scores_match_action_mask(decision.scores, action_mask):
+                return self._fallback_decision(feedback, rates, action_mask, telemetry, "inference_failed")
             raw_action = int(decision.raw_action)
             if raw_action < 0 or raw_action >= len(rates) or not bool(action_mask[raw_action]):
                 telemetry.update(neural_invalid_action_detected=1)
@@ -340,6 +342,8 @@ def _is_configured(value: object) -> bool:
 
 def _rates_from_feedback(feedback: Mapping[str, object]) -> tuple[float, ...]:
     raw_rates = feedback.get("rates")
+    if raw_rates is None:
+        raise RuntimeFeatureError("missing_required_feature", "feedback missing rates", ("rates",))
     try:
         values = tuple(raw_rates)  # type: ignore[arg-type]
     except TypeError as exc:
@@ -365,6 +369,15 @@ def _scores_are_finite(scores: Sequence[object]) -> bool:
     except (TypeError, ValueError):
         return False
     return True
+
+
+def _scores_match_action_mask(scores: Sequence[object], action_mask: Sequence[object]) -> bool:
+    try:
+        score_count = len(tuple(scores))
+        mask_count = len(tuple(action_mask))
+    except TypeError:
+        return False
+    return score_count > 0 and score_count == mask_count
 
 
 def _sample_key(feedback: Mapping[str, object], sample):

@@ -111,6 +111,7 @@ class NeuralAbrRuntimeEngine:
         latency_ms = (time.perf_counter() - start) * 1000.0
 
         scores = _finite_scores(scores_tensor.tolist())
+        _validate_score_shape(scores, mask)
         selected_position = _select_candidate_position(scores, mask)
         raw_action = candidate_indices[selected_position]
         try:
@@ -342,6 +343,11 @@ def _finite_scores(scores: Sequence[object]) -> list[float]:
             raise NeuralAbrRuntimeError("non_finite_scores", "score {0} must be finite".format(index))
         parsed_scores.append(score)
     return parsed_scores
+
+
+def _validate_score_shape(scores: Sequence[float], action_mask: Sequence[bool]) -> None:
+    if not scores or len(scores) != len(action_mask):
+        raise NeuralAbrRuntimeError("inference_failed", "score length must match action mask")
 
 
 def _select_candidate_position(scores: Sequence[float], action_mask: Sequence[bool]) -> int:
