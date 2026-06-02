@@ -1,29 +1,47 @@
-# Phase 5 remaining roadmap
+# Phase 5 closure roadmap
 
 ## Phase 5C: implementation prompt/spec finalization
 
-Status after Phase 5C: documentation/specification finalized. The Phase 5D prompt, file plan, runtime feature spec, bundle loading spec, telemetry hook decision and test plan are ready for review.
+Status: closed.
+
+Phase 5C finalized the documentation/specification package for implementation.
 
 ## Phase 5D: controller implementation
 
-Status after Phase 5D: guarded scorer controller implemented and registered as `neural_abr_lite`, with CPU-only local bundle loading, action mask, safety guard, fallback chain, diagnostic telemetry, and fake-engine structural tests. This remains diagnostic-only and not benchmark evidence.
+Status: closed.
+
+Phase 5D implemented and registered the guarded `neural_abr_lite` controller with CPU-only local bundle loading, action mask, safety guard, fallback chain, diagnostic telemetry, and focused tests.
 
 ## Phase 5E: structural smoke
 
-Status after Phase 5E closure: `ACCEPTED_FOR_PHASE5F`.
+Status: closed.
 
-User-reported Ubuntu fake-engine structural smokes were recorded for both no-bundle fallback and real-bundle execution, with run roots and artifacts kept outside the repository. Artifact inspection passed: canonical run files existed, legacy dataset outputs were absent, `segment_telemetry.csv` contained `feedback_neural_*` diagnostic fields, `evaluation_segments.csv` contained no neural diagnostic fields, `feedback_neural_diagnostic_only` was true/`1`, and no benchmark/ranking/improvement fields were reported.
+Phase 5E recorded user-reported Ubuntu fake-engine structural smokes for both no-bundle fallback and real-bundle execution. Artifact inspection recorded canonical run files, absence of legacy dataset outputs, diagnostic `feedback_neural_*` fields in `segment_telemetry.csv`, no neural diagnostic fields in `evaluation_segments.csv`, and no benchmark/ranking/improvement fields.
 
-The optional Ubuntu/GStreamer structural smoke was later reported by the user as successfully executed. Fake/GStreamer smokes are diagnostic structural validation only, not benchmark evidence. No formal controller comparison was performed; Phase 6 remains the only phase for ranking/comparison.
+The optional Ubuntu/GStreamer structural smoke was later reported by the user as successfully executed. Fake/GStreamer smokes are diagnostic structural validation only, not benchmark evidence.
 
 ## Phase 5F: fallback/error/telemetry hardening
 
-Phase 5F hardens missing bundle, invalid manifest, schema mismatch, non-finite output, masked action, safety rejection, timeout, runtime exception, fallback-controller failure, and telemetry stability paths. It remains diagnostic-only and not benchmark evidence.
+Status: closed locally.
 
-## Phase 5G: closure and handoff to Phase 6
+Phase 5F hardened missing bundle, invalid manifest, schema mismatch, non-finite output, masked action, safety rejection, timeout, runtime exception, fallback-controller failure, and telemetry stability paths. Validation recorded 471 tests passing, strict readiness passing, unsafe-loading static checks passing, and no artifacts committed.
 
-Close Phase 5 only after structural integration is stable, Phase 5F Ubuntu validation is recorded, and no benchmark claims have been made.
+## Phase 5G: final closure
 
-## Phase 6: formal comparative validation
+Status:
 
-Define evaluation traces, baselines, metrics, statistical handling and reporting rules before any ranking, winner or improvement claim.
+```text
+ACCEPTED_PENDING_FINAL_POST_HARDENING_SMOKE
+```
+
+Phase 5G is documentation-only closure. It records final integration status and preserves the no-benchmark/no-ranking/no-claim boundary.
+
+The final post-hardening real-bundle regression smoke for HEAD `72681b6` is:
+
+```text
+PENDING_USER_EXECUTION
+```
+
+## Later phase boundary
+
+No later phase is opened, scoped, or planned in this roadmap update.
