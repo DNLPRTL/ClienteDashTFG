@@ -2,15 +2,29 @@
 
 ## Status
 
-Phase 5E structural smoke documentation is prepared and local validation passed.
+Phase 5E structural smoke validation is closed with decision:
 
-This closure is diagnostic-only. It is not benchmark evidence, not controller ranking, not Phase 6 comparative validation, and not an improvement claim.
+```text
+ACCEPTED_FOR_PHASE5F
+```
+
+This closure is diagnostic-only. Fake/GStreamer smokes are diagnostic structural validation, not benchmark evidence, not controller ranking, not Phase 6 comparative validation, and not an improvement claim. No formal controller comparison was performed. Phase 6 remains the only phase for ranking/comparison.
 
 ## Starting point
 
-- Required starting HEAD: `9bf35f6 feat(neural-abr): integrate guarded NeuralABR-Lite controller`
-- Starting branch: `main`
-- Starting working tree: clean
+- Verified starting HEAD: `2f17dd7 docs(neural-abr): prepare Phase 5E structural smoke validation`
+- Verified branch: `main`
+- Verified starting working tree: clean
+- Phase 5D implementation state: `neural_abr_lite` already implemented.
+- Phase 5E documentation/runbooks state: prepared before this closure update.
+
+## Evidence source
+
+The real structural smoke runs were executed by the user on Ubuntu outside the repository. Codex did not import, generate, copy, or commit run artifacts from those external roots.
+
+The Windows checkout used for this documentation-only closure could not directly inspect the Ubuntu run directories. The results below record the user-provided smoke and artifact inspection summary.
+
+Runs and artifacts are outside repo. No generated artifacts were committed.
 
 ## What was validated by Codex
 
@@ -21,34 +35,54 @@ This closure is diagnostic-only. It is not benchmark evidence, not controller ra
 - Full unittest discovery still passes with 441 tests.
 - Strict client readiness still passes with 78 OK / 0 WARN / 0 FAIL.
 
+## User-reported Ubuntu smoke results
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| Ubuntu repository state | PASS | User reported `main` at `2f17dd7` with clean working tree before real smoke recording. |
+| Unit test validation | PASS | User reported unit validation passed before/with the smoke block. |
+| `check_client_readiness.py --strict` | PASS | User reported strict readiness passed. |
+| No-bundle fake-engine smoke | PASS | Fallback path completed structurally without crashing and recorded diagnostic fallback state. |
+| Real-bundle fake-engine smoke | PASS | Real bundle path completed structurally with the bundle-loaded path available for diagnostics. |
+| Ubuntu GStreamer structural smoke | OPTIONAL_PENDING | No concrete passed GStreamer smoke result was provided in this closure input. This is not blocking fake-engine structural acceptance. |
+
+## Artifact inspection result
+
+The user-reported artifact inspection passed for the external fake-engine structural smoke roots:
+
+- `run_manifest.json` exists.
+- `config.resolved.json` exists.
+- `environment.json` exists.
+- `run.log` exists.
+- `segment_telemetry.csv` exists.
+- `evaluation_segments.csv` exists.
+- `dataset.csv` does not exist.
+- `dataset_training.csv` does not exist.
+- `segment_telemetry.csv` contains `feedback_neural_*` diagnostic columns.
+- `evaluation_segments.csv` contains no neural diagnostic columns.
+- `feedback_neural_diagnostic_only` is present as true/`1`.
+- Bundle-loaded and fallback-reason diagnostics were inspected and matched the expected structural role for no-bundle fallback and real-bundle smoke.
+- No benchmark, ranking, winner, p-value, or improvement fields were reported.
+
 ## Real bundle smoke status
 
-A real local Phase 4F bundle path was not available to Codex in this session. The real-bundle fake-engine smoke was not run by Codex and remains pending user execution with:
+The real-bundle fake-engine smoke is recorded as structurally successful based on the user-provided Ubuntu result and artifact inspection summary.
 
-- `phase5e_real_bundle_smoke_runbook.md`
-- `phase5e_artifact_inspection_checklist.md`
+This acceptance means the client run path can select `neural_abr_lite`, load the external bundle path, write canonical artifacts, keep neural details in diagnostic telemetry, and keep evaluation telemetry uncontaminated by neural diagnostic columns.
 
-This is intentional. Codex did not fake a completed real-bundle smoke.
+It does not mean the neural controller is better than any baseline.
 
 ## Ubuntu GStreamer status
 
-Ubuntu/GStreamer structural smoke was not run in this Windows-local documentation block. It remains optional and pending user execution with:
+Ubuntu/GStreamer structural smoke remains optional pending for this closure because no concrete passed GStreamer run result was provided. This is not blocking fake-engine structural acceptance.
+
+If run later, it must remain structural/demo validation only, not benchmark evidence. Relevant runbook:
 
 - `phase5e_ubuntu_gstreamer_smoke_runbook.md`
 
-The Ubuntu path remains structural/demo validation only.
+## Files updated in this closure
 
-## Files created
-
-- `phase5e_scope_and_gate.md`
-- `phase5e_structural_smoke_plan.md`
-- `phase5e_real_bundle_smoke_runbook.md`
-- `phase5e_artifact_inspection_checklist.md`
-- `phase5e_ubuntu_gstreamer_smoke_runbook.md`
 - `phase5e_closure_report.md`
-
-## Files updated
-
 - `phase5_remaining_roadmap.md`
 
 ## Code and artifact status
@@ -95,6 +129,8 @@ PASS - 78 OK / 0 WARN / 0 FAIL
 
 ## Closure decision
 
-Phase 5E documentation and local structural validation are complete. Real-bundle and optional Ubuntu/GStreamer smokes are ready for user execution with local bundle/MPD paths outside the repository.
+`ACCEPTED_FOR_PHASE5F`
 
-Next recommended phase after smoke acceptance: Phase 5F fallback/error/telemetry hardening.
+Rationale: the real-bundle fake-engine smoke succeeded, artifact inspection passed, generated outputs remained outside the repository, no runtime code changed, and no benchmark/comparison/improvement claim was introduced.
+
+Next phase: Phase 5F fallback/error/telemetry hardening.
