@@ -18,15 +18,21 @@ feedback runtime -> online features -> bundle/schema validation -> train stats n
 
 Phase 5 was integration and hardening only. It did not run a benchmark, produce plots, rank controllers, retrain NeuralABR-Lite, or claim that `neural_abr_lite` improves QoE over any baseline.
 
-The active maintenance state is:
+The active validation documentation state is:
 
 ```text
-Phase 6P - Pre-validation workspace normalization, documentation hygiene and evidence-integrity audit
+Phase 6A0 - Validation documentation scaffold and evidence consolidation
 ```
 
-Phase 6A0 validation has not opened yet. `docs/science/06_validation/` should remain absent until Phase 6A0 explicitly opens it.
+Phase 6A0 is open as documentation/protocol intake only. No benchmark, ranking, plots, results table, winner declaration, retraining, or QoE improvement claim is allowed yet.
 
-Phase 6P2 re-cohesion is documented in `docs/maintenance/phase6p2_workspace_recohesion_report.md`. It reorganizes closed-phase documentation and local-only workspaces without changing runtime logic or producing validation evidence.
+The active validation documentation path is:
+
+```text
+docs/science/06_validation/
+```
+
+Phase 6P closed at commit `1a753f1` with trace eligibility audit and evidence hygiene. Phase 6P2 closed at commit `d3d45cc` with documentation re-cohesion and external workspace cleanup. Phase 6P2 is documented in `docs/maintenance/phase6p2_workspace_recohesion_report.md`.
 
 ## Workspace Layout
 
@@ -82,7 +88,7 @@ See `docs/runbooks/run_client.md` and `docs/runbooks/run_layout.md` for usage an
 
 ## Validation Commands
 
-Recommended local validation before Phase 6A0 work:
+Recommended local validation during Phase 6A0 documentation work:
 
 ```powershell
 python -m unittest discover
@@ -113,6 +119,7 @@ python scripts\audit_phase6_trace_eligibility.py `
 - `docs/architecture`: client contracts and implementation architecture.
 - `docs/runbooks`: operator and environment runbooks.
 - `docs/science`: phase-indexed scientific documentation.
+- `docs/science/06_validation`: active Phase 6A0 validation documentation and evidence scaffold.
 - `docs/maintenance`: workspace hygiene and pre-validation guardrails.
 - `docs/roadmap`: future work.
 

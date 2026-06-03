@@ -64,7 +64,7 @@ Phase 4 diagnostics are not formal Phase 6 performance evidence because checksum
 - `docs/science/05_neural_controller_integration/phase5g_final_integration_closure_report.md`
 - `docs/science/05_neural_controller_integration/phase5g_limitations_and_non_claims.md`
 
-## Phase 6P - Pre-validation Hygiene
+## Phase 6P/P2 - Closed Pre-validation Hygiene
 
 - `docs/maintenance/pre_phase6_cleanup_report.md`
 - `docs/maintenance/pre_phase6_workspace_layout_policy.md`
@@ -73,6 +73,22 @@ Phase 4 diagnostics are not formal Phase 6 performance evidence because checksum
 - `docs/maintenance/phase6p2_workspace_recohesion_report.md`
 - `scripts/audit_phase6_trace_eligibility.py`
 - `tests/test_phase6_trace_eligibility_audit.py`
+
+## Phase 6A0 - Validation Documentation Scaffold
+
+- `docs/science/06_validation/README.md`
+- `docs/science/06_validation/phase6a0_no_benchmark_yet.md`
+- `docs/science/06_validation/phase6a0_search_protocol.md`
+- `docs/science/06_validation/phase6a0_source_inventory.md`
+- `docs/science/06_validation/phase6a0_source_triage_decision.md`
+- `docs/science/06_validation/evaluation_evidence_matrix.md`
+- `docs/science/06_validation/dataset_evidence_matrix.md`
+- `docs/science/06_validation/threats_matrix.md`
+- `docs/science/06_validation/protocol_decision_traceability.md`
+- `docs/science/06_validation/ubuntu_evidence_package_spec.md`
+- `docs/science/06_validation/phase6a0_open_gaps_for_phase6b.md`
+
+Phase 6A0 is documentation/protocol intake only. It does not run a benchmark, create rankings, produce plots, declare a winner, retrain NeuralABR-Lite, or claim QoE improvement.
 
 ## Thesis Memory
 

@@ -10,16 +10,16 @@ This file maps project phases to their effective documentation paths.
 | `03_qoe_reward/` | Phase 3.5 | Closed | QoE/reward contract and artifact boundary. |
 | `04_neural_abr/` | Phase 4 | Closed as diagnostic/training trail | NeuralABR-Lite candidate scorer, dataset, teacher, training, and export work. |
 | `05_neural_controller_integration/` | Phase 5 | Closed | Canonical effective path for guarded `neural_abr_lite` integration. Do not rename. |
-| `06_validation/` | Phase 6 | Not opened | Future validation path. It should not exist before Phase 6A0 opens it. |
+| `06_validation/` | Phase 6A0/A1 | Open documentation/protocol intake | Active validation documentation scaffold and evidence consolidation. No benchmark authorization. |
 | `07_memory/` | Thesis/memory | Active reference | Thesis integration, defense, tables, figures, and memory notes. |
 
 ## Phase 6 Boundary
 
-Phase 6P is pre-validation hygiene. It is not a benchmark phase.
+Phase 6P and Phase 6P2 are closed pre-validation hygiene. They were not benchmark phases.
 
-Phase 6P2 reorganizes closed-phase documentation into `_historical/`, `_handoffs/`, and `_templates/` folders inside existing phase directories. This is documentation hygiene only and does not open Phase 6 validation.
+Phase 6A0 is now open as validation documentation and protocol intake only. It opens `docs/science/06_validation/`, but it does not open benchmark execution.
 
-Before Phase 6A0 opens:
+During Phase 6A0:
 
 - no benchmark runs;
 - no plots;

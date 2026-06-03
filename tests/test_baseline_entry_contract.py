@@ -54,7 +54,8 @@ class BaselineEntryContractTest(unittest.TestCase):
         self.assertIn("Phase 1 client hardening ready to close: YES", report)
         self.assertIn("Ready as technical base for Phase 0: YES", report)
         self.assertIn("Phase 5 is closed", readme)
-        self.assertIn("Phase 6P - Pre-validation workspace normalization", readme)
+        self.assertIn("Phase 6A0 - Validation documentation scaffold", readme)
+        self.assertIn("docs/science/06_validation/", readme)
         self.assertIn("did not run a benchmark", readme)
         self.assertIn("does mean Phase 6 must exclude, by checksum", readme)
 
