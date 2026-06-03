@@ -36,6 +36,7 @@ This index is the human entry point for DashClientModular4 documentation. It is 
 - `docs/maintenance/pre_phase6_workspace_layout_policy.md`: expected TFG workspace layout and artifact policy.
 - `docs/maintenance/pre_phase6_evidence_integrity_risks.md`: pre-Phase6 evidence risks and mitigations.
 - `docs/maintenance/pre_phase6_trace_leakage_audit.md`: checksum leakage guardrail and script usage.
+- `docs/maintenance/phase6p2_workspace_recohesion_report.md`: Phase 6P2 documentation re-cohesion, external cleanup, and manifest map.
 
 ## Tests And Scripts
 

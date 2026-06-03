@@ -98,3 +98,13 @@ No raw datasets, model artifacts, runs, PDFs, CSVs, JSONL files, logs, zips, med
 - No QoE improvement claim was made.
 - No NeuralABR-Lite retraining was performed.
 - No runtime code was changed.
+
+## Phase 6P2 Follow-up
+
+The later workspace re-cohesion and strong cleanup pass is recorded in:
+
+```text
+docs/maintenance/phase6p2_workspace_recohesion_report.md
+```
+
+That follow-up keeps this Phase 6P1 report as provenance and records its own external audit and cleanup manifests.

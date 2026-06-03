@@ -26,6 +26,8 @@ Phase 6P - Pre-validation workspace normalization, documentation hygiene and evi
 
 Phase 6A0 validation has not opened yet. `docs/science/06_validation/` should remain absent until Phase 6A0 explicitly opens it.
 
+Phase 6P2 re-cohesion is documented in `docs/maintenance/phase6p2_workspace_recohesion_report.md`. It reorganizes closed-phase documentation and local-only workspaces without changing runtime logic or producing validation evidence.
+
 ## Workspace Layout
 
 The expected TFG root is outside the repository:
