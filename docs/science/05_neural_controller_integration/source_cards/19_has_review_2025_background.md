@@ -1,4 +1,4 @@
-# Source card 19: HAS review 2025 background
+﻿# Source card 19: HAS review 2025 background
 
 ## Title
 
@@ -56,7 +56,7 @@ No direct CPU model loading contract.
 ## Phase 5 docs affected
 
 - `README.md`
-- `notes_for_memory.md`
+- `_historical/notes_for_memory.md`
 - `phase5b_controller_integration_contract.md`
 
 ## Memory/defense usage
@@ -66,3 +66,4 @@ Use in the background chapter to place ABR inside HAS/DASH.
 ## Final decision
 
 Use as background only.
+

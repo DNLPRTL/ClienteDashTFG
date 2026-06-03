@@ -70,6 +70,7 @@ Phase 4 diagnostics are not formal Phase 6 performance evidence because checksum
 - `docs/maintenance/pre_phase6_workspace_layout_policy.md`
 - `docs/maintenance/pre_phase6_evidence_integrity_risks.md`
 - `docs/maintenance/pre_phase6_trace_leakage_audit.md`
+- `docs/maintenance/phase6p2_workspace_recohesion_report.md`
 - `scripts/audit_phase6_trace_eligibility.py`
 - `tests/test_phase6_trace_eligibility_audit.py`
 

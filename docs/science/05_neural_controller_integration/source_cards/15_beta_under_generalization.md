@@ -1,4 +1,4 @@
-# Source card 15: BETA under-generalization
+﻿# Source card 15: BETA under-generalization
 
 ## Title
 
@@ -60,7 +60,7 @@ Runtime model switching adds complexity and is deferred.
 
 - `phase5a1_telemetry_contamination_matrix.md`
 - `phase5a2_rejected_alternatives.md`
-- `notes_for_memory.md`
+- `_historical/notes_for_memory.md`
 
 ## Memory/defense usage
 
@@ -69,3 +69,4 @@ Use this source to explain why Phase 5 does not claim robust generalization.
 ## Final decision
 
 Transfer under-generalization risk. Defer multi-model switching.
+

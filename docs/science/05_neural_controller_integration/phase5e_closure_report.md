@@ -1,4 +1,4 @@
-# Phase 5E closure report
+﻿# Phase 5E closure report
 
 ## Status
 
@@ -78,12 +78,12 @@ Ubuntu/GStreamer structural smoke was later reported by the user as successfully
 
 It is not benchmark evidence, not ranking evidence, not a controller comparison, and not an improvement claim. Relevant runbook:
 
-- `phase5e_ubuntu_gstreamer_smoke_runbook.md`
+- `_historical/phase5e_ubuntu_gstreamer_smoke_runbook.md`
 
 ## Files updated in this closure
 
 - `phase5e_closure_report.md`
-- `phase5_remaining_roadmap.md`
+- `_historical/phase5_remaining_roadmap.md`
 
 ## Code and artifact status
 
@@ -134,3 +134,5 @@ PASS - 78 OK / 0 WARN / 0 FAIL
 Rationale: the real-bundle fake-engine smoke succeeded, artifact inspection passed, generated outputs remained outside the repository, no runtime code changed, and no benchmark/comparison/improvement claim was introduced.
 
 Next phase: Phase 5F fallback/error/telemetry hardening.
+
+

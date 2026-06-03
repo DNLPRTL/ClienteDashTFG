@@ -1,4 +1,4 @@
-# Memory and defense traceability for Phase 4D
+﻿# Memory and defense traceability for Phase 4D
 
 Every Codex/code implementation run in Phase 4D must leave thesis-ready documentation.
 
@@ -7,11 +7,11 @@ Every Codex/code implementation run in Phase 4D must leave thesis-ready document
 Codex must create or update:
 
 ```text
-docs/science/04_neural_abr/phase4d_implementation_report.md
+docs/science/04_neural_abr/_historical/phase4d_implementation_report.md
 docs/science/04_neural_abr/phase4d_code_traceability_matrix.md
-docs/science/04_neural_abr/phase4d_test_report.md
-docs/science/04_neural_abr/phase4d_defense_talking_points.md
-docs/science/04_neural_abr/phase4d_open_limitations.md
+docs/science/04_neural_abr/_historical/phase4d_test_report.md
+docs/science/04_neural_abr/_historical/phase4d_defense_talking_points.md
+docs/science/04_neural_abr/_historical/phase4d_open_limitations.md
 ```
 
 ## Traceability matrix columns
@@ -39,3 +39,4 @@ The implementation must be explainable as student-built:
 - clear mapping from papers to design;
 - clear mapping from design to code;
 - clear limitations.
+

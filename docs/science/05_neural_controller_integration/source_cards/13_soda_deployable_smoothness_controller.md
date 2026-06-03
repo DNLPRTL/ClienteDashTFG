@@ -1,4 +1,4 @@
-# Source card 13: SODA deployable smoothness controller
+﻿# Source card 13: SODA deployable smoothness controller
 
 ## Title
 
@@ -59,7 +59,7 @@ SODA reduces runtime complexity and avoids sophisticated expensive throughput pr
 
 - `phase5b_cpu_inference_contract.md`
 - `phase5a2_rejected_alternatives.md`
-- `notes_for_memory.md`
+- `_historical/notes_for_memory.md`
 
 ## Memory/defense usage
 
@@ -68,3 +68,4 @@ Use this source to defend CPU-first design and the rejection of heavy planning i
 ## Final decision
 
 Transfer deployability constraints. Do not implement SODA.
+

@@ -1,4 +1,4 @@
-# Source card 10: Into the Wild real-world testing gap
+﻿# Source card 10: Into the Wild real-world testing gap
 
 ## Title
 
@@ -57,8 +57,8 @@ Broader real-world testing is deferred to future validation work.
 ## Phase 5 docs affected
 
 - `phase5b_no_benchmark_policy.md`
-- `notes_for_memory.md`
-- `phase5_remaining_roadmap.md`
+- `_historical/notes_for_memory.md`
+- `_historical/phase5_remaining_roadmap.md`
 
 ## Memory/defense usage
 
@@ -67,3 +67,5 @@ Use this source to defend the TFG limitation that local validation is not real-w
 ## Final decision
 
 Transfer the real-world testing caution. Defer ABR-Arena-style validation.
+
+

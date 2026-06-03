@@ -49,53 +49,53 @@ The methodology must preserve the existing separation between parser, segment do
 | `search_protocol.md` | Repeatable literature and dataset search methodology. |
 | `trace_dataset_selection.md` | Dataset selection criteria and decision workflow. |
 | `trace_dataset_matrix.md` | Candidate dataset matrix with risk and split columns. |
-| `trace_dataset_card_template.md` | Template for future per-dataset cards. |
-| `method_card_template.md` | Template for future replay/emulation method cards. |
+| `_templates/trace_dataset_card_template.md` | Template for future per-dataset cards. |
+| `_templates/method_card_template.md` | Template for future replay/emulation method cards. |
 | `replay_emulation_decision.md` | Decision criteria for replay, emulation and fake trace-driven execution. |
 | `mahimahi_or_alternatives.md` | Comparison of Mahimahi, `tc/netem` and a custom fake runner. |
 | `generalization_protocol.md` | Generalization and OOD evaluation planning rules. |
 | `evaluation_network_scenarios.md` | Scenario taxonomy for later evaluation design. |
 | `train_validation_test_ood_policy.md` | Split policy for future tuning, learning and reporting. |
 | `leakage_prevention_policy.md` | Controls against trace, parameter and artifact leakage. |
-| `replay_runner_requirements.md` | Requirements for a future runner without implementing it. |
-| `synthetic_trace_test_plan.md` | Synthetic trace plan for future runner validation. |
+| `_historical/replay_runner_requirements.md` | Requirements for a future runner without implementing it. |
+| `_historical/synthetic_trace_test_plan.md` | Synthetic trace plan for future runner validation. |
 | `run_artifact_expectations.md` | Expected future run artifacts and repository hygiene. |
-| `phase3_memory_notes.md` | Thesis memory and defense usage notes. |
+| `_historical/phase3_memory_notes.md` | Thesis memory and defense usage notes. |
 | `common_trace_schema.md` | Phase 3.2B normalized trace schema v1. |
 | `trace_units_and_normalization.md` | Unit conversion and normalization policy. |
 | `trace_manifest_schema.md` | `trace_manifest_v1` metadata schema. |
 | `trace_directory_layout.md` | External raw/normalized/manifest storage policy. |
-| `trace_conversion_plan.md` | Conversion priority and implementation readiness gate. |
-| `dataset_download_plan.md` | Future external download policy; no downloads in Phase 3.2B. |
+| `_historical/trace_conversion_plan.md` | Conversion priority and implementation readiness gate. |
+| `_historical/dataset_download_plan.md` | Future external download policy; no downloads in Phase 3.2B. |
 | `trace_source_to_internal_mapping.md` | Dataset/source card mapping to the internal schema. |
 | `trace_split_manifest_policy.md` | `split_manifest_v1` schema and split leakage rules. |
 | `trace_schema_acceptance_tests.md` | Future `unittest` acceptance plan for schema validation. |
 | `trace_schema_risks_and_open_decisions.md` | Remaining schema and conversion risks. |
-| `phase3_2b_closure_report.md` | Phase 3.2B closure record. |
+| `_historical/phase3_2b_closure_report.md` | Phase 3.2B closure record. |
 | `phase3_2c_local_dataset_acquisition.md` | Local raw acquisition status for first real trace candidates. |
-| `phase3_2c_dataset_audit_summary.md` | Audit summary and risks from local acquisition. |
-| `phase3_2c_closure_report.md` | Phase 3.2C closure record. |
+| `_historical/phase3_2c_dataset_audit_summary.md` | Audit summary and risks from local acquisition. |
+| `_historical/phase3_2c_closure_report.md` | Phase 3.2C closure record. |
 | `phase3_3a_synthetic_trace_schema_validation.md` | Synthetic-only implementation of normalized trace schema validation. |
-| `phase3_3a_closure_report.md` | Phase 3.3A closure record. |
+| `_historical/phase3_3a_closure_report.md` | Phase 3.3A closure record. |
 | `phase3_3b_trace_loader.md` | Minimal loader for already-normalized schema-v1 traces. |
-| `phase3_3b_closure_report.md` | Phase 3.3B closure record. |
+| `_historical/phase3_3b_closure_report.md` | Phase 3.3B closure record. |
 | `phase3_4a_dataset_converters.md` | Dataset converter architecture, assumptions, API and CLI. |
-| `phase3_4a_local_conversion_smoke_runbook.md` | Local outside-repo smoke procedure for real raw candidates. |
-| `phase3_4a_closure_report.md` | Phase 3.4A closure record. |
+| `_historical/phase3_4a_local_conversion_smoke_runbook.md` | Local outside-repo smoke procedure for real raw candidates. |
+| `_historical/phase3_4a_closure_report.md` | Phase 3.4A closure record. |
 | `phase3_4b_trace_driven_network_model.md` | Deterministic network model semantics and API. |
 | `phase3_4b_fake_replay_adapter.md` | Small fake replay adapter boundary around the network model. |
-| `phase3_4b_local_model_smoke_runbook.md` | Local outside-repo smoke procedure for the model. |
-| `phase3_4b_closure_report.md` | Phase 3.4B closure record. |
+| `_historical/phase3_4b_local_model_smoke_runbook.md` | Local outside-repo smoke procedure for the model. |
+| `_historical/phase3_4b_closure_report.md` | Phase 3.4B closure record. |
 | `phase3_4c_controlled_dry_runs.md` | Controlled dry-run harness semantics and artifact boundary. |
 | `phase3_4c_controller_adapter.md` | Existing-controller adapter contract and anti-leakage boundary. |
-| `phase3_4c_local_dry_run_smoke_runbook.md` | Local outside-repo smoke procedure for dry-run artifacts. |
-| `phase3_4c_closure_report.md` | Phase 3.4C closure record. |
+| `_historical/phase3_4c_local_dry_run_smoke_runbook.md` | Local outside-repo smoke procedure for dry-run artifacts. |
+| `_historical/phase3_4c_closure_report.md` | Phase 3.4C closure record. |
 | `phase3_4d_mahimahi_tc_decision.md` | Mahimahi/tc decision: Python primary, Mahimahi secondary, tc fallback. |
-| `phase3_4d_mahimahi_runbook.md` | Ubuntu-only Mahimahi probe/runbook boundary. |
-| `phase3_4d_tc_netem_runbook.md` | Linux-only `tc/netem` probe/runbook boundary. |
+| `_historical/phase3_4d_mahimahi_runbook.md` | Ubuntu-only Mahimahi probe/runbook boundary. |
+| `_historical/phase3_4d_tc_netem_runbook.md` | Linux-only `tc/netem` probe/runbook boundary. |
 | `phase3_4d_environment_probe_policy.md` | Local/audit-only probe policy and artifact boundary. |
 | `phase3_4d_validation_boundaries.md` | Smoke, dry-run, validation, benchmark and final-evaluation boundaries. |
-| `phase3_4d_closure_report.md` | Phase 3.4D closure record. |
+| `_historical/phase3_4d_closure_report.md` | Phase 3.4D closure record. |
 | `trace_dataset_cards/` | Placeholder for later dataset cards. |
 | `method_cards/` | Placeholder for later method cards. |
 
@@ -158,3 +158,13 @@ Phase 3.4D closes the method decision for external emulation tools. The custom P
 Mahimahi is retained as a secondary Ubuntu-only validation/runbook candidate. Linux `tc/netem` is retained as a Linux fallback/sanity/runbook candidate. Neither tool is required for Phase 3.5, and neither produces benchmark evidence in Phase 3.4D.
 
 This update is documentation only: no installation, no emulation execution, no qdisc or namespace changes, no final QoE/reward, no ranking and no runtime/controller/player/media changes.
+
+
+## Phase 6P2 Navigation
+
+Phase 6P2 keeps canonical and support documents in this directory root, while older working material is grouped below:
+
+- `_historical/`: preserved intermediate records and superseded notes.
+- `_templates/`: reusable templates, not current project state.
+
+Use the phase README and `docs/science/CANONICAL_DOCUMENTS.md` before opening historical material.

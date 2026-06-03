@@ -1,4 +1,4 @@
-# Phase 2.3 Baseline Implementation Closure Report
+﻿# Phase 2.3 Baseline Implementation Closure Report
 
 ## Starting Point
 
@@ -36,10 +36,10 @@ It does not duplicate algorithm fixtures from the controller-specific tests.
 ## Documents Added By This Closure Audit
 
 - `baseline_implementation_summary.md`
-- `baseline_registry_audit.md`
-- `baseline_testing_summary.md`
-- `baseline_smoke_summary.md`
-- `baseline_limitations.md`
+- `_historical/baseline_registry_audit.md`
+- `_historical/baseline_testing_summary.md`
+- `_historical/baseline_smoke_summary.md`
+- `_historical/baseline_limitations.md`
 - `baseline_phase2_3_closure_report.md`
 - `chapter_05_baseline_implementation_notes.md`
 - `chapter_06_pre_evaluation_boundary.md`
@@ -84,6 +84,13 @@ Required validation run in this closure audit:
 
 ## Next Phase Recommendation
 
-Phase 2.4 formal closure documentation is now represented by `phase2_baseline_closure.md`, `phase2_controller_inventory.md`, `phase2_test_validation_summary.md`, `phase2_academic_validity_statement.md`, `phase2_open_limitations_and_deferred_work.md` and `phase2_transition_to_phase3.md`.
+Phase 2.4 formal closure documentation is now represented by `phase2_baseline_closure.md`, `phase2_controller_inventory.md`, `_historical/phase2_test_validation_summary.md`, `phase2_academic_validity_statement.md`, `_historical/phase2_open_limitations_and_deferred_work.md` and `_handoffs/phase2_transition_to_phase3.md`.
 
 After Phase 2 closure, proceed to Phase 3 traces/replay/emulation. Comparative controller evaluation should wait until the replay/trace path and final QoE/reward methodology are defined.
+
+
+
+
+
+
+

@@ -1,0 +1,79 @@
+# Historical Documents
+
+Preserved provenance from closed or intermediate work. Read only after the phase README and canonical documents; do not treat these files as current instructions if a later closure or index supersedes them.
+
+Generated during Phase 6P2 documentation re-cohesion. The old path to new path mapping is recorded outside Git in the Phase 6P2 audit workspace.
+
+## Files
+
+- `neural_abr_lite_module_plan.md`
+- `notes_for_memory.md`
+- `phase4_remaining_roadmap.md`
+- `phase4a0_literature_intake_report.md`
+- `phase4a1_closure_report.md`
+- `phase4a1_package1_report.md`
+- `phase4a1_package2_report.md`
+- `phase4a1_package3_report.md`
+- `phase4a1_source_card_report.md`
+- `phase4a2_closure_report.md`
+- `phase4a2_method_decision_report.md`
+- `phase4a2_notes_for_memory.md`
+- `phase4b_closure_report.md`
+- `phase4b_contracts_report.md`
+- `phase4b_notes_for_memory.md`
+- `phase4c_closure_report.md`
+- `phase4c_notes_for_memory.md`
+- `phase4c_training_environment_report.md`
+- `phase4d_defense_talking_points.md`
+- `phase4d_implementation_report.md`
+- `phase4d_offline_pipeline_specs_report.md`
+- `phase4d_open_limitations.md`
+- `phase4d_test_report.md`
+- `phase4e_artifact_manifest.md`
+- `phase4e_closure_report.md`
+- `phase4e_defense_material_requirements.md`
+- `phase4e_defense_talking_points.md`
+- `phase4e_model_card_draft.md`
+- `phase4e_model_selection_notes.md`
+- `phase4e_offline_validation_report.md`
+- `phase4e_open_limitations.md`
+- `phase4e_trace_usage_plan.md`
+- `phase4e_training_commands_windows.md`
+- `phase4e_training_runbook_plain_language.md`
+- `phase4e_training_smoke_plan.md`
+- `phase4e_training_smoke_report.md`
+- `phase4e_validation_commands_ubuntu.md`
+- `phase4e1_closure_report.md`
+- `phase4e1_dataset_manifest_summary.md`
+- `phase4e1_defense_talking_points.md`
+- `phase4e1_external_trace_smoke_report.md`
+- `phase4e1_external_trace_split_plan.md`
+- `phase4e1_external_trace_validation_report.md`
+- `phase4e1_open_limitations.md`
+- `phase4e1_trace_data_intake_report.md`
+- `phase4e1_validation_commands_ubuntu.md`
+- `phase4e1_windows_commands.md`
+- `phase4e2_candidate_readiness_report.md`
+- `phase4e2_closure_report.md`
+- `phase4e2_defense_material_requirements.md`
+- `phase4e2_expanded_corpus_plan.md`
+- `phase4e2_open_limitations.md`
+- `phase4e2_repair_report.md`
+- `phase4e2_trace_corpus_requirements.md`
+- `phase4e2_training_runbook_plain_language.md`
+- `phase4e2_validation_commands_ubuntu.md`
+- `phase4e2_validation_report.md`
+- `phase4e2_windows_commands.md`
+- `phase4f_bundle_validation_report.md`
+- `phase4f_closure_report.md`
+- `phase4f_defense_talking_points.md`
+- `phase4f_export_report.md`
+- `phase4f_export_validation_plan.md`
+- `phase4f_inference_latency_report.md`
+- `phase4f_inference_smoke_report.md`
+- `phase4f_memory_defense_requirements.md`
+- `phase4f_open_limitations.md`
+- `phase4f_repair_report.md`
+- `phase4g_final_limitations.md`
+- `phase4g_memory_defense_summary.md`
+- `phase5a0_literature_delta_plan.md`

@@ -1,4 +1,4 @@
-# Source card 16: ANT network dynamics detection
+﻿# Source card 16: ANT network dynamics detection
 
 ## Title
 
@@ -58,7 +58,7 @@ Dedicated model switching is deferred to future work.
 
 - `phase5a1_runtime_feature_availability_matrix.md`
 - `phase5b_telemetry_contract.md`
-- `notes_for_memory.md`
+- `_historical/notes_for_memory.md`
 
 ## Memory/defense usage
 
@@ -67,3 +67,4 @@ Use this source to justify limitations around network characterization.
 ## Final decision
 
 Transfer diagnostics caution. Defer ANT-style detection.
+

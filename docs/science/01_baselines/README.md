@@ -9,10 +9,10 @@ The scaffold now includes implemented sanity controllers, `rate_based`, `bba`, `
 The Phase 2.3 closure audit is documented in:
 
 - `baseline_implementation_summary.md`
-- `baseline_registry_audit.md`
-- `baseline_testing_summary.md`
-- `baseline_smoke_summary.md`
-- `baseline_limitations.md`
+- `_historical/baseline_registry_audit.md`
+- `_historical/baseline_testing_summary.md`
+- `_historical/baseline_smoke_summary.md`
+- `_historical/baseline_limitations.md`
 - `baseline_phase2_3_closure_report.md`
 
 ## Phase 2.4 Formal Closure
@@ -21,10 +21,10 @@ The formal Phase 2 closure and transition package is documented in:
 
 - `phase2_baseline_closure.md`
 - `phase2_controller_inventory.md`
-- `phase2_test_validation_summary.md`
+- `_historical/phase2_test_validation_summary.md`
 - `phase2_academic_validity_statement.md`
-- `phase2_open_limitations_and_deferred_work.md`
-- `phase2_transition_to_phase3.md`
+- `_historical/phase2_open_limitations_and_deferred_work.md`
+- `_handoffs/phase2_transition_to_phase3.md`
 
 ## Initial Baseline Set
 
@@ -49,3 +49,14 @@ For every academic baseline implementation, create and review:
 - `notes_for_memory.md`
 
 Each implementation block must update the controller-specific docs, tests, traceability matrices and memory notes without creating benchmark claims.
+
+
+## Phase 6P2 Navigation
+
+Phase 6P2 keeps canonical and support documents in this directory root, while older working material is grouped below:
+
+- `_historical/`: preserved intermediate records and superseded notes.
+- `_handoffs/`: closed prompts, handoffs, and transition instructions.
+- `_templates/`: reusable templates, not current project state.
+
+Use the phase README and `docs/science/CANONICAL_DOCUMENTS.md` before opening historical material.

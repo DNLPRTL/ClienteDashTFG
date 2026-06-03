@@ -1,4 +1,4 @@
-# Phase 5D implementation report
+﻿# Phase 5D implementation report
 
 ## Scope
 
@@ -25,7 +25,7 @@ Phase 5D implements the guarded NeuralABR-Lite scorer controller for structural 
 - `player.py`
 - `config/client.example.yaml`
 - `docs/architecture/telemetry_column_provenance.md`
-- `docs/science/05_neural_controller_integration/phase5_remaining_roadmap.md`
+- `docs/science/05_neural_controller_integration/_historical/phase5_remaining_roadmap.md`
 
 ## Controller registration
 
@@ -69,3 +69,4 @@ The new tests cover registry import safety, safe runtime loading, safe-load fail
 - No training pipeline changes.
 - No model artifacts committed.
 - No run outputs, logs, CSVs, datasets, checkpoints, zips, PDFs, `.pt`, `.pth`, `.onnx`, `.pkl`, `.joblib`, `.npz`, or `.npy` files added to Git.
+

@@ -1,4 +1,4 @@
-# Source card 05: Ahaggar bitrate guidance and hybrid boundary
+﻿# Source card 05: Ahaggar bitrate guidance and hybrid boundary
 
 ## Title
 
@@ -59,7 +59,7 @@ The source highlights low-resource deployment concerns. Phase 5 therefore keeps 
 
 - `phase5a2_neural_as_guarded_scorer_decision.md`
 - `phase5b_fallback_policy_contract.md`
-- `phase5_remaining_roadmap.md`
+- `_historical/phase5_remaining_roadmap.md`
 
 ## Memory/defense usage
 
@@ -68,3 +68,4 @@ Use this source to explain why the future controller is a bounded scorer instead
 ## Final decision
 
 Transfer the advisory boundary. Defer server guidance and protocol-level metadata.
+

@@ -1,4 +1,4 @@
-# Source card 12: Oboe runtime network state autotuning
+﻿# Source card 12: Oboe runtime network state autotuning
 
 ## Title
 
@@ -58,7 +58,7 @@ The autotuning engine and change-point implementation are not part of Phase 5.
 
 - `phase5a1_runtime_feature_availability_matrix.md`
 - `phase5b_telemetry_contract.md`
-- `notes_for_memory.md`
+- `_historical/notes_for_memory.md`
 
 ## Memory/defense usage
 
@@ -67,3 +67,4 @@ Use this source to explain why the project records diagnostics but does not over
 ## Final decision
 
 Transfer regime-awareness as future diagnostic context. Do not implement Oboe.
+

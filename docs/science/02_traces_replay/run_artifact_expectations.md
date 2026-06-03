@@ -1,4 +1,4 @@
-# Run Artifact Expectations
+﻿# Run Artifact Expectations
 
 This document defines expected future artifacts. Phase 3.1 creates none of them.
 
@@ -86,7 +86,7 @@ Do not commit:
 - benchmark telemetry;
 - plots or run summaries produced by tools.
 
-Authored Markdown summaries such as `phase3_2c_dataset_audit_summary.md` are allowed.
+Authored Markdown summaries such as `_historical/phase3_2c_dataset_audit_summary.md` are allowed.
 
 ## Phase 3.3A Synthetic Validation Update
 
@@ -140,3 +140,4 @@ Do not commit:
 - media.
 
 Future Mahimahi/tc validation artifacts must carry method-specific labels and must not be mixed with Python dry-run outputs as equivalent benchmark results.
+

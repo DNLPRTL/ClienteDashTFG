@@ -1,4 +1,4 @@
-# Phase 5E scope and gate
+﻿# Phase 5E scope and gate
 
 ## Scope
 
@@ -21,12 +21,12 @@ The working tree must be clean before starting. Phase 5D must already be impleme
 Phase 5E is documentation and validation only. The expected changed files are:
 
 - `phase5e_scope_and_gate.md`
-- `phase5e_structural_smoke_plan.md`
-- `phase5e_real_bundle_smoke_runbook.md`
+- `_historical/phase5e_structural_smoke_plan.md`
+- `_historical/phase5e_real_bundle_smoke_runbook.md`
 - `phase5e_artifact_inspection_checklist.md`
-- `phase5e_ubuntu_gstreamer_smoke_runbook.md`
+- `_historical/phase5e_ubuntu_gstreamer_smoke_runbook.md`
 - `phase5e_closure_report.md`
-- `phase5_remaining_roadmap.md`
+- `_historical/phase5_remaining_roadmap.md`
 
 Runtime code, tests, config defaults, media engine behavior, downloader behavior, and registry wiring should not change in this phase.
 
@@ -46,3 +46,7 @@ Phase 5E may close when:
 ## Acceptance boundary
 
 Passing Phase 5E means the client integration path is structurally ready for broader fallback/error/telemetry hardening. It does not mean the neural controller is better than any baseline.
+
+
+
+

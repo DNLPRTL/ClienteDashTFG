@@ -1,4 +1,4 @@
-# Source card 11: Comyco lifelong imitation learning
+﻿# Source card 11: Comyco lifelong imitation learning
 
 ## Title
 
@@ -60,7 +60,7 @@ Server-side update loops and model servers are not adopted. Phase 5 stays local-
 
 - `phase5a2_rejected_alternatives.md`
 - `phase5b_artifact_policy.md`
-- `notes_for_memory.md`
+- `_historical/notes_for_memory.md`
 
 ## Memory/defense usage
 
@@ -69,3 +69,4 @@ Use this source to connect the Phase 4 imitation learning choice to a known neur
 ## Final decision
 
 Transfer imitation learning support. Defer lifelong/online training.
+

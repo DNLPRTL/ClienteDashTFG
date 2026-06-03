@@ -1,4 +1,4 @@
-# Source card 21: MetaABR meta-learning background
+﻿# Source card 21: MetaABR meta-learning background
 
 ## Title
 
@@ -57,7 +57,7 @@ Meta-learning complexity is deferred.
 ## Phase 5 docs affected
 
 - `phase5a2_rejected_alternatives.md`
-- `notes_for_memory.md`
+- `_historical/notes_for_memory.md`
 
 ## Memory/defense usage
 
@@ -66,3 +66,4 @@ Use to explain why Phase 5 integration is intentionally narrower than modern met
 ## Final decision
 
 Use as background only; defer meta-learning.
+

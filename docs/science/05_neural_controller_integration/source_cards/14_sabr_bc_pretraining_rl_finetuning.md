@@ -1,4 +1,4 @@
-# Source card 14: SABR BC pretraining and RL fine-tuning
+﻿# Source card 14: SABR BC pretraining and RL fine-tuning
 
 ## Title
 
@@ -59,8 +59,8 @@ RL fine-tuning and benchmark datasets are not adopted in this integration block.
 ## Phase 5 docs affected
 
 - `phase5a2_rejected_alternatives.md`
-- `notes_for_memory.md`
-- `phase5_remaining_roadmap.md`
+- `_historical/notes_for_memory.md`
+- `_historical/phase5_remaining_roadmap.md`
 
 ## Memory/defense usage
 
@@ -69,3 +69,5 @@ Use this source to explain that Phase 4 chose a smaller BC subset rather than tr
 ## Final decision
 
 Transfer BC and OOD context only. Do not add RL fine-tuning.
+
+

@@ -16,6 +16,12 @@ The current state is:
 - `CANONICAL_DOCUMENTS.md`: shortest canonical reading path.
 - `HISTORICAL_DOCUMENT_POLICY.md`: how to interpret historical, handoff, closure, template, memory-feed, and local-only references.
 
+## Phase 6P2 Navigation
+
+Phase directories keep canonical and support documents in their root. Closed-phase working material is grouped into `_historical/`, `_handoffs/`, and `_templates/` folders inside the same phase.
+
+Read `CANONICAL_DOCUMENTS.md` and the phase `README.md` first. Open historical folders only for provenance, reconstruction, or thesis traceability.
+
 ## Directory Map
 
 | path | phase | purpose |

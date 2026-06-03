@@ -1,4 +1,4 @@
-# Baseline Acceptance Matrix
+﻿# Baseline Acceptance Matrix
 
 | controller | invariants | edge_cases | minimum_input | expected_output | invalidating_failures | unit_tests | smoke_tests | windows_validation | ubuntu_validation |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -29,4 +29,5 @@ The Phase 2.3 closure report accepts the mandatory implementation set only at th
 
 ## Phase 2.4 Formal Closure
 
-The acceptance evidence is summarized for final Phase 2 closure in `phase2_test_validation_summary.md` and `phase2_academic_validity_statement.md`.
+The acceptance evidence is summarized for final Phase 2 closure in `_historical/phase2_test_validation_summary.md` and `phase2_academic_validity_statement.md`.
+

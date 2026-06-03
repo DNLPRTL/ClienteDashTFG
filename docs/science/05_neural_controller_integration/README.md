@@ -1,4 +1,4 @@
-﻿# Phase 5 NeuralABR-Lite controller integration
+# Phase 5 NeuralABR-Lite controller integration
 
 This directory records Phase 5 of the NeuralABR-Lite work: integration of the Phase 4 Candidate Scorer as a guarded controller in DashClientModular4.
 
@@ -56,25 +56,25 @@ Phase 5A0/A1/A2/B/C documents remain as the evidence, contract, and implementati
 Phase 5D/E/F/G closure documents:
 
 - `phase5d_implementation_report.md`
-- `phase5d_structural_smoke_runbook.md`
+- `_historical/phase5d_structural_smoke_runbook.md`
 - `phase5e_closure_report.md`
 - `phase5e_artifact_inspection_checklist.md`
 - `phase5f_scope_and_gate.md`
-- `phase5f_fault_injection_plan.md`
+- `_historical/phase5f_fault_injection_plan.md`
 - `phase5f_error_fallback_matrix.md`
 - `phase5f_telemetry_hardening_matrix.md`
-- `phase5f_hardening_report.md`
+- `_historical/phase5f_hardening_report.md`
 - `phase5f_closure_report.md`
 - `phase5g_scope_and_gate.md`
 - `phase5g_final_integration_closure_report.md`
 - `phase5g_validation_register.md`
-- `phase5g_controller_status_summary.md`
-- `phase5g_safety_fallback_closure.md`
-- `phase5g_telemetry_artifact_closure.md`
+- `_historical/phase5g_controller_status_summary.md`
+- `_historical/phase5g_safety_fallback_closure.md`
+- `_historical/phase5g_telemetry_artifact_closure.md`
 - `phase5g_limitations_and_non_claims.md`
-- `phase5g_memory_notes.md`
+- `_historical/phase5g_memory_notes.md`
 - `phase5g_repository_release_checklist.md`
-- `phase5g_closed_phase_handoff_stub.md`
+- `_handoffs/phase5g_closed_phase_handoff_stub.md`
 
 ## Artifact policy
 
@@ -84,3 +84,12 @@ No model files, run outputs, logs, CSVs, datasets, zips, PDFs, or media artifact
 
 Phase 5 proves structural integration and safety hardening only. It does not establish comparative performance.
 
+
+## Phase 6P2 Navigation
+
+Phase 6P2 keeps canonical and support documents in this directory root, while older working material is grouped below:
+
+- `_historical/`: preserved intermediate records and superseded notes.
+- `_handoffs/`: closed prompts, handoffs, and transition instructions.
+
+Use the phase README and `docs/science/CANONICAL_DOCUMENTS.md` before opening historical material.

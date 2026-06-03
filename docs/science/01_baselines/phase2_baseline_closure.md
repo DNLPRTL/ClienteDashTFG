@@ -1,4 +1,4 @@
-# Phase 2 Baseline Closure
+﻿# Phase 2 Baseline Closure
 
 ## Closure Verdict
 
@@ -49,7 +49,7 @@ The implementation modules are:
 - `core/controller/mpc.py`
 - `core/controller/robust_mpc.py`
 
-The registry surface is documented in `baseline_registry_audit.md` and exposed by `core/controller/registry.py`. The implementations follow the current dict-based controller API, return target rates in bytes per second, and use representation indices as quality levels.
+The registry surface is documented in `_historical/baseline_registry_audit.md` and exposed by `core/controller/registry.py`. The implementations follow the current dict-based controller API, return target rates in bytes per second, and use representation indices as quality levels.
 
 ## What Was Not Implemented
 
@@ -121,3 +121,4 @@ Phase 3 must define the trace, replay and emulation methodology before any final
 - keep final QoE/reward and ranking claims deferred until the methodology is complete.
 
 Phase 2.4 does not implement any of those Phase 3 items.
+

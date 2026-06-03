@@ -17,6 +17,8 @@ This file maps project phases to their effective documentation paths.
 
 Phase 6P is pre-validation hygiene. It is not a benchmark phase.
 
+Phase 6P2 reorganizes closed-phase documentation into `_historical/`, `_handoffs/`, and `_templates/` folders inside existing phase directories. This is documentation hygiene only and does not open Phase 6 validation.
+
 Before Phase 6A0 opens:
 
 - no benchmark runs;

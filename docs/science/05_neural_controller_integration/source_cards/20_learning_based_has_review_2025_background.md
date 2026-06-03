@@ -1,4 +1,4 @@
-# Source card 20: Learning-based HAS review 2025 background
+﻿# Source card 20: Learning-based HAS review 2025 background
 
 ## Title
 
@@ -56,8 +56,8 @@ Deployment gaps and real-world degradation are relevant background.
 
 ## Phase 5 docs affected
 
-- `notes_for_memory.md`
-- `phase5a0_literature_delta_report.md`
+- `_historical/notes_for_memory.md`
+- `_historical/phase5a0_literature_delta_report.md`
 
 ## Memory/defense usage
 
@@ -66,3 +66,5 @@ Use in the state-of-the-art chapter and limitations discussion.
 ## Final decision
 
 Use as background only.
+
+

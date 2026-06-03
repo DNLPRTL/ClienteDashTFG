@@ -71,18 +71,18 @@ Phase 3.5 closes the QoE/reward metric semantics needed before any formal evalua
 11. Phase 3.5D controlled QoE smoke validation:
    - `scripts/run_qoe_smoke_scenarios.py`
    - `tests/test_qoe_smoke_scenarios.py`
-   - `controlled_qoe_smoke_runbook.md`
+   - `_historical/controlled_qoe_smoke_runbook.md`
    - `phase3_5_results_boundary.md`
    - `no_ranking_policy.md`
 12. Phase 3.5E closure and transition:
-   - `phase3_5_closure_report.md`
-   - `phase3_5_open_limitations.md`
-   - `phase3_5_transition_to_phase4.md`
+   - `_historical/phase3_5_closure_report.md`
+   - `_historical/phase3_5_open_limitations.md`
+   - `_handoffs/phase3_5_transition_to_phase4.md`
    - `phase3_5_final_artifact_index.md`
-   - `phase3_5_validation_summary.md`
-   - `phase3_5_defense_talking_points.md`
-   - `phase3_5_to_phase4_context_prompt.md`
-   - `phase3_5_to_phase4_master_handoff.md`
+   - `_historical/phase3_5_validation_summary.md`
+   - `_historical/phase3_5_defense_talking_points.md`
+   - `_handoffs/phase3_5_to_phase4_context_prompt.md`
+   - `_handoffs/phase3_5_to_phase4_master_handoff.md`
 
 ## Phase 3.5B Implementation Summary
 
@@ -130,3 +130,14 @@ Phase 3.5E closes this directory as the QoE/reward methodology block. It consoli
 ## Next After E
 
 The next expected block is Phase 4A0: IA/RL ABR literature intake and algorithm triage.
+
+
+## Phase 6P2 Navigation
+
+Phase 6P2 keeps canonical and support documents in this directory root, while older working material is grouped below:
+
+- `_historical/`: preserved intermediate records and superseded notes.
+- `_handoffs/`: closed prompts, handoffs, and transition instructions.
+- `_templates/`: reusable templates, not current project state.
+
+Use the phase README and `docs/science/CANONICAL_DOCUMENTS.md` before opening historical material.

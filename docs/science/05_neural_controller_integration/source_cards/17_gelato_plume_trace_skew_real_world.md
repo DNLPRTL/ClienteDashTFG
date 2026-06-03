@@ -1,4 +1,4 @@
-# Source card 17: Gelato/Plume trace skew and real-world caution
+﻿# Source card 17: Gelato/Plume trace skew and real-world caution
 
 ## Title
 
@@ -59,8 +59,8 @@ Real-world validation scale is outside Phase 5.
 ## Phase 5 docs affected
 
 - `phase5b_no_benchmark_policy.md`
-- `notes_for_memory.md`
-- `phase5_remaining_roadmap.md`
+- `_historical/notes_for_memory.md`
+- `_historical/phase5_remaining_roadmap.md`
 
 ## Memory/defense usage
 
@@ -69,3 +69,5 @@ Use this source in limitations and threats to validity.
 ## Final decision
 
 Transfer trace-skew caution. Do not implement Gelato/Plume.
+
+

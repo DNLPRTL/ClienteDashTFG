@@ -1,4 +1,4 @@
-# Source card 23: ONNX Runtime reference
+﻿# Source card 23: ONNX Runtime reference
 
 ## Title
 
@@ -58,7 +58,7 @@ CPU inference is possible, but adding ONNX now would add conversion and dependen
 
 - `phase5a1_model_loading_matrix.md`
 - `phase5a2_rejected_alternatives.md`
-- `phase5_remaining_roadmap.md`
+- `_historical/phase5_remaining_roadmap.md`
 
 ## Memory/defense usage
 
@@ -67,3 +67,4 @@ Use as future-work material for possible inference backend migration.
 ## Final decision
 
 Defer ONNX. Phase 5 uses local PyTorch state_dict loading.
+

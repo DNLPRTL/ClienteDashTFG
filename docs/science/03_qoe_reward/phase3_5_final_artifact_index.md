@@ -1,4 +1,4 @@
-# Phase 3.5 Final Artifact Index
+﻿# Phase 3.5 Final Artifact Index
 
 This index consolidates the Phase 3.5 artifacts for thesis writing, future maintenance and Phase 4 handoff.
 
@@ -11,8 +11,8 @@ This index consolidates the Phase 3.5 artifacts for thesis writing, future maint
 - `qoe_evidence_matrix.md`
 - `qoe_terms_crosswalk.md`
 - `qoe_formula_candidates.md`
-- `phase3_5a0_intake_report.md`
-- `phase3_5a1_source_card_distillation_report.md`
+- `_historical/phase3_5a0_intake_report.md`
+- `_historical/phase3_5a1_source_card_distillation_report.md`
 
 ## 2. Decision Docs
 
@@ -22,7 +22,7 @@ This index consolidates the Phase 3.5 artifacts for thesis writing, future maint
 - `metric_formula_catalog.md`
 - `evaluation_gate_policy.md`
 - `benchmark_result_schema.md`
-- `phase3_5a2_qoe_reward_decision_report.md`
+- `_historical/phase3_5a2_qoe_reward_decision_report.md`
 
 ## 3. Implementation Docs
 
@@ -48,31 +48,31 @@ This index consolidates the Phase 3.5 artifacts for thesis writing, future maint
 
 ## 6. Smoke And Runbooks
 
-- `controlled_qoe_smoke_runbook.md`
+- `_historical/controlled_qoe_smoke_runbook.md`
 - `phase3_5_results_boundary.md`
 - `no_ranking_policy.md`
-- `phase3_5b_qoe_calculator_report.md`
-- `phase3_5c_qoe_artifact_report.md`
-- `phase3_5d_controlled_smoke_report.md`
+- `_historical/phase3_5b_qoe_calculator_report.md`
+- `_historical/phase3_5c_qoe_artifact_report.md`
+- `_historical/phase3_5d_controlled_smoke_report.md`
 
 ## 7. Memory Docs
 
-- `docs/science/07_memory/chapter_06_evaluation_methodology_notes.md`
-- `docs/science/07_memory/tables_plan.md`
-- `docs/science/07_memory/figures_plan.md`
+- `docs/science/07_memory/_historical/chapter_06_evaluation_methodology_notes.md`
+- `docs/science/07_memory/_historical/tables_plan.md`
+- `docs/science/07_memory/_historical/figures_plan.md`
 - `docs/science/07_memory/figures_tables_register.md`
-- `docs/science/07_memory/bibliography_plan.md`
-- `docs/science/07_memory/phase3_defense_talking_points.md`
+- `docs/science/07_memory/_historical/bibliography_plan.md`
+- `docs/science/07_memory/_historical/phase3_defense_talking_points.md`
 
 ## 8. Transition Docs
 
-- `phase3_5_closure_report.md`
-- `phase3_5_open_limitations.md`
-- `phase3_5_transition_to_phase4.md`
-- `phase3_5_validation_summary.md`
-- `phase3_5_defense_talking_points.md`
-- `phase3_5_to_phase4_context_prompt.md`
-- `phase3_5_to_phase4_master_handoff.md`
+- `_historical/phase3_5_closure_report.md`
+- `_historical/phase3_5_open_limitations.md`
+- `_handoffs/phase3_5_transition_to_phase4.md`
+- `_historical/phase3_5_validation_summary.md`
+- `_historical/phase3_5_defense_talking_points.md`
+- `_handoffs/phase3_5_to_phase4_context_prompt.md`
+- `_handoffs/phase3_5_to_phase4_master_handoff.md`
 
 ## Validation markers
 
@@ -84,3 +84,18 @@ This index consolidates the Phase 3.5 artifacts for thesis writing, future maint
 - tests/test_qoe_metrics.py
 - tests/test_qoe_artifacts.py
 - tests/test_qoe_smoke_scenarios.py
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

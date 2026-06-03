@@ -24,6 +24,16 @@ Use these entry points before opening deep historical paths:
 - phase-specific `README.md` files
 - latest closure reports for closed phases
 
+## Phase 6P2 Layout
+
+Phase 6P2 groups non-canonical closed-phase working material inside the phase where it belongs:
+
+- `_historical/`: intermediate reports, notes, local runbooks, superseded plans, and closure trail fragments.
+- `_handoffs/`: prompts, handoffs, transition notes, and next-step records.
+- `_templates/`: reusable templates.
+
+Canonical and support documents remain in the phase directory root. Do not treat `_historical/` or `_handoffs/` files as current instructions unless a current index explicitly points to them for provenance.
+
 ## Supersession Rules
 
 - A closure report supersedes implementation prompts from the same block.
