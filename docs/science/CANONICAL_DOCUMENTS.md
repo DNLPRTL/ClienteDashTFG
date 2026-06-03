@@ -90,6 +90,22 @@ Phase 4 diagnostics are not formal Phase 6 performance evidence because checksum
 
 Phase 6A0 is documentation/protocol intake only. It does not run a benchmark, create rankings, produce plots, declare a winner, retrain NeuralABR-Lite, or claim QoE improvement.
 
+## Phase 6A2 - Experimental Protocol Freeze
+
+- `docs/science/06_validation/phase6a2_protocol_freeze.md`
+- `docs/science/06_validation/evaluation_protocol.md`
+- `docs/science/06_validation/controller_matrix.md`
+- `docs/science/06_validation/trace_selection_policy.md`
+- `docs/science/06_validation/media_profile_decision.md`
+- `docs/science/06_validation/metrics_schema.md`
+- `docs/science/06_validation/statistical_comparison.md`
+- `docs/science/06_validation/results_tables_plan.md`
+- `docs/science/06_validation/reproducibility_checklist.md`
+- `docs/science/06_validation/threats_to_validity.md`
+- `docs/science/06_validation/phase6_memory_and_defense_plan.md`
+
+Phase 6A2 freezes the protocol for the next technical readiness phase. It still does not run a benchmark, create rankings, produce plots from real data, generate result CSVs, declare a winner, retrain NeuralABR-Lite, or claim QoE improvement.
+
 ## Thesis Memory
 
 - `docs/science/07_memory/memory_structure_professor.md`

@@ -4,7 +4,7 @@ Status: binding non-results boundary for this documentation block.
 
 ## Explicit Statement
 
-No benchmark has been executed in Phase 6A0.
+No benchmark has been executed in Phase 6A0, Phase 6A1 or Phase 6A2.
 
 This directory contains protocol evidence only. It does not contain performance evidence.
 
@@ -14,8 +14,8 @@ This directory contains protocol evidence only. It does not contain performance 
 - No controller winner exists.
 - No plot or result table from real runs exists.
 - No `neural_abr_lite` QoE improvement claim exists.
-- No Phase 6A0 document authorizes retraining NeuralABR-Lite.
-- No Phase 6A0 document changes `qoe_linear_v1` or `reward_n`.
+- No Phase 6A0/A1/A2 document authorizes retraining NeuralABR-Lite.
+- No Phase 6A0/A1/A2 document changes `qoe_linear_v1` or `reward_n`.
 
 ## Smoke And Dry-Run Boundary
 
@@ -47,4 +47,4 @@ They are not:
 
 ## Future Authorization Requirement
 
-Any future Phase 6 benchmark must first have a finalized protocol, eligible trace manifest, gates, command plan, evidence package contract and no-overlap audit. Until then, `docs/science/06_validation/` is documentation/protocol intake only.
+Any future Phase 6 benchmark must first have a finalized protocol, eligible trace manifest, gates, command plan, evidence package contract and no-overlap audit. Phase 6A2 freezes the protocol, but execution remains blocked until a later explicit technical execution block references the final manifest, commands, commit and evidence package destination.

@@ -21,10 +21,10 @@ Phase 5 was integration and hardening only. It did not run a benchmark, produce 
 The active validation documentation state is:
 
 ```text
-Phase 6A0 - Validation documentation scaffold and evidence consolidation
+Phase 6A2 - Final experimental protocol decision
 ```
 
-Phase 6A0 is open as documentation/protocol intake only. No benchmark, ranking, plots, results table, winner declaration, retraining, or QoE improvement claim is allowed yet.
+Phase 6A2 freezes the final experimental protocol and authorizes the next technical readiness phase. It still does not authorize benchmark execution, ranking, plots from real data, result CSVs, winner declaration, retraining, or QoE improvement claims.
 
 The active validation documentation path is:
 
@@ -88,7 +88,7 @@ See `docs/runbooks/run_client.md` and `docs/runbooks/run_layout.md` for usage an
 
 ## Validation Commands
 
-Recommended local validation during Phase 6A0 documentation work:
+Recommended local validation during Phase 6A2 documentation/protocol work:
 
 ```powershell
 python -m unittest discover
@@ -119,7 +119,7 @@ python scripts\audit_phase6_trace_eligibility.py `
 - `docs/architecture`: client contracts and implementation architecture.
 - `docs/runbooks`: operator and environment runbooks.
 - `docs/science`: phase-indexed scientific documentation.
-- `docs/science/06_validation`: active Phase 6A0 validation documentation and evidence scaffold.
+- `docs/science/06_validation`: active Phase 6A2 validation protocol and evidence scaffold.
 - `docs/maintenance`: workspace hygiene and pre-validation guardrails.
 - `docs/roadmap`: future work.
 

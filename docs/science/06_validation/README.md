@@ -1,6 +1,6 @@
-# Phase 6A0 Validation Documentation
+# Phase 6 Validation Documentation
 
-Phase 6A0 is open.
+Phase 6A2 protocol freeze is complete.
 
 This directory is the active validation documentation path for DashClientModular4:
 
@@ -8,7 +8,9 @@ This directory is the active validation documentation path for DashClientModular
 docs/science/06_validation/
 ```
 
-Phase 6A0/A1 is documentation, literature intake, protocol consolidation and evidence-scaffold work only. It does not authorize benchmark execution, controller ranking, plots, winner declarations, retraining, or any claim that `neural_abr_lite` improves QoE over a baseline.
+Phase 6A0/A1 opened the validation documentation scaffold and consolidated literature/source evidence. Phase 6A2 freezes the final experimental protocol for the next technical readiness phase.
+
+Phase 6A2 still does not authorize benchmark execution, controller ranking, plots, result CSVs, winner declarations, retraining, or any claim that `neural_abr_lite` improves QoE over a baseline.
 
 ## Current Boundary
 
@@ -21,6 +23,20 @@ Phase 6A0/A1 is documentation, literature intake, protocol consolidation and evi
 - VMAF and MOS claims are deferred until the required artifacts exist.
 - Gates remain mandatory: `use_for_eval`, `diagnostic_only`, `do_not_use_for_eval`.
 - Phase 4E2 teacher agreement/OOD material remains diagnostic history, not strong generalization evidence.
+
+## Frozen Phase 6A2 Protocol
+
+- `evaluation_protocol.md`: final experimental protocol boundary.
+- `controller_matrix.md`: controllers in scope and classification.
+- `trace_selection_policy.md`: trace groups, leakage gates and final manifest rule.
+- `media_profile_decision.md`: frozen media profile policy.
+- `metrics_schema.md`: primary/secondary metrics and gates.
+- `statistical_comparison.md`: statistical unit, summaries, CI and pairwise plan.
+- `results_tables_plan.md`: planned figures/tables, not generated outputs.
+- `reproducibility_checklist.md`: future evidence checklist.
+- `threats_to_validity.md`: final threats narrative.
+- `phase6a2_protocol_freeze.md`: protocol-freeze decision.
+- `phase6_memory_and_defense_plan.md`: thesis and defense integration plan.
 
 ## Entry Documents
 

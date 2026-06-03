@@ -25,7 +25,7 @@ This index is the human entry point for DashClientModular4 documentation. It is 
 - `docs/science/PHASE_INDEX.md`: phase-to-directory map.
 - `docs/science/CANONICAL_DOCUMENTS.md`: shortest path through the canonical scientific trail.
 - `docs/science/HISTORICAL_DOCUMENT_POLICY.md`: how to interpret historical, handoff, closure, and template docs.
-- `docs/science/06_validation/README.md`: active Phase 6A0 validation documentation scaffold and evidence consolidation.
+- `docs/science/06_validation/README.md`: active Phase 6A2 validation protocol freeze and evidence scaffold.
 
 ## Roadmap
 

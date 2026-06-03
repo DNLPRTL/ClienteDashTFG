@@ -8,9 +8,10 @@ The current state is:
 - `neural_abr_lite` is integrated as a guarded neural scorer controller.
 - Phase 5 did not run benchmarks, create rankings, or claim QoE improvement.
 - Phase 6P and Phase 6P2 are closed as pre-validation workspace and evidence hygiene.
-- Phase 6A0 is open as documentation/protocol intake only.
+- Phase 6A0/A1 opened the validation documentation scaffold.
+- Phase 6A2 freezes the final experimental protocol for the next technical readiness phase.
 - `docs/science/06_validation/` is the active validation documentation path.
-- No Phase 6A0 benchmark, ranking, plot, result, winner or QoE improvement claim exists.
+- No Phase 6A2 benchmark, ranking, plot from real data, result CSV, winner or QoE improvement claim exists.
 
 ## Entry Points
 
@@ -34,7 +35,7 @@ Read `CANONICAL_DOCUMENTS.md` and the phase `README.md` first. Open historical f
 | `03_qoe_reward/` | Phase 3.5 | QoE/reward definition and artifact boundary. |
 | `04_neural_abr/` | Phase 4 | NeuralABR-Lite dataset, teacher, training, export, and diagnostic records. |
 | `05_neural_controller_integration/` | Phase 5 | canonical integration path for `neural_abr_lite`. |
-| `06_validation/` | Phase 6A0 | active validation documentation scaffold and evidence consolidation; no benchmark authorization. |
+| `06_validation/` | Phase 6A2 | active validation protocol freeze and evidence scaffold; no benchmark authorization. |
 | `07_memory/` | Thesis | memory, defense, figures, tables, and thesis integration notes. |
 
 ## Source Handling Rules

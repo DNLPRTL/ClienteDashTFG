@@ -16,14 +16,22 @@ Status: open hardening and protocol tasks. No code is changed in this block.
 | Statistical comparison plan | No final ranking/winner can exist without a planned comparison method | Draft Phase 6A2 statistical comparison before benchmark authorization |
 | Evidence ZIP procedure | Future run artifacts need a strict external package contract | Use `ubuntu_evidence_package_spec.md` before any execution |
 
-## Protocol Gaps
+## Protocol Gaps Closed By Phase 6A2
 
-- Final trace split policy for HSDPA/Ghent remains open.
-- Minimum sample counts and uncertainty method remain open.
-- Controller matrix for future benchmark remains open.
-- Media_profile matrix remains open.
-- Results table layout remains open.
-- Exclusion/gate semantics must be reviewed before execution.
+- Controller matrix is frozen in `controller_matrix.md`.
+- Trace group policy is frozen in `trace_selection_policy.md`.
+- Media profile policy is frozen in `media_profile_decision.md`.
+- Metrics and gate semantics are frozen in `metrics_schema.md`.
+- Statistical comparison policy is frozen in `statistical_comparison.md`.
+- Results table and figure plan is frozen in `results_tables_plan.md`.
+
+## Remaining Readiness Gaps
+
+- Final trace IDs remain open until `phase6_trace_manifest_final.json` exists after eligibility audit.
+- HSDPA/Ghent materialization still requires local-only access/license/format checks.
+- OOD materialization still requires Raca 4G, Raca 5G and Lumos5G access/license/format checks.
+- Lancaster remains unauthorized for primary final evaluation until a source card/source note exists and eligibility audit proves no overlap.
+- Evidence package wiring remains future technical readiness work.
 
 ## Non-Action In This Block
 
