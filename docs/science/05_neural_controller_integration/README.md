@@ -12,10 +12,10 @@ Phase 5G decision:
 ACCEPTED_AS_INTEGRATED_GUARDED_CONTROLLER
 ```
 
-The final post-hardening real-bundle regression smoke for HEAD `72681b6` was not provided in the Phase 5G input and is recorded as:
+The final Phase 5G smoke acceptance is recorded at HEAD `0c1018d`:
 
 ```text
-PASS_RECORDED_AFTER_USER_EXECUTION
+docs(neural-abr): record final Phase 5G smoke acceptance
 ```
 
 No later phase is opened by this directory update.
@@ -47,7 +47,7 @@ No later phase is opened by this directory update.
 | Phase 5D | Closed | `neural_abr_lite` implemented and registered with focused tests. |
 | Phase 5E | Closed | Structural smokes recorded: no-bundle fake, real-bundle fake, optional Ubuntu/GStreamer structural/demo. |
 | Phase 5F | Closed locally | Fallback/error/telemetry hardening validated with 471 tests and readiness strict. |
-| Phase 5G | Accepted final smoke passed | Documentation-only closure; final post-hardening real-bundle regression smoke pending user execution. |
+| Phase 5G | Accepted final smoke passed | Documentation-only closure; final smoke acceptance recorded at HEAD `0c1018d`. |
 
 ## Key documents
 

@@ -47,14 +47,16 @@ class BaselineEntryContractTest(unittest.TestCase):
         ]:
             self.assertIn(phrase, text)
 
-    def test_phase1_closure_docs_are_present_but_bounded(self):
+    def test_phase_closure_docs_are_present_but_bounded(self):
         report = (ROOT / "docs/architecture/client_readiness_report.md").read_text(encoding="utf-8")
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
         self.assertIn("Phase 1 client hardening ready to close: YES", report)
         self.assertIn("Ready as technical base for Phase 0: YES", report)
-        self.assertIn("Phase 1 client hardening is ready to close", readme)
-        self.assertIn("final QoE/reward definitions", readme)
+        self.assertIn("Phase 5 is closed", readme)
+        self.assertIn("Phase 6P - Pre-validation workspace normalization", readme)
+        self.assertIn("did not run a benchmark", readme)
+        self.assertIn("does mean Phase 6 must exclude, by checksum", readme)
 
 
 if __name__ == "__main__":

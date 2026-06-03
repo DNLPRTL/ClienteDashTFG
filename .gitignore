@@ -19,3 +19,32 @@ tmp_runs/
 media/
 dash_media/
 config/client.local.yaml
+
+# TFG external workspaces must stay outside the repo.
+/_datasets/
+/_runs/
+/_models/
+/_literature/
+/_local_configs/
+/_archive/
+/_audits/
+
+# ML/model artifacts.
+*.pt
+*.pth
+*.onnx
+*.npy
+*.npz
+*.pkl
+*.joblib
+*.jsonl
+
+# Evaluation/generated artifacts.
+trace_dry_run_segments.csv
+trace_dry_run_summary.json
+trace_dry_run_manifest.json
+qoe_segment_rewards.csv
+qoe_run_summary.json
+qoe_artifact_manifest.json
+segment_telemetry.csv
+evaluation_segments.csv
