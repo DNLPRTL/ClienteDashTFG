@@ -1,0 +1,103 @@
+﻿# Trace Conversion Plan
+
+This document defines the Phase 3 conversion plan. Phase 3.4A now implements the first converter code, but it still does not download datasets or create repository-stored trace artifacts.
+
+## Conversion Goal
+
+Every usable external trace source must be converted into `normalized_trace_schema_v1` before a future runner sees it.
+
+The runner must consume the normalized schema, not raw dataset-specific files. This keeps dataset quirks out of controllers, player code, media engines and metric definitions.
+
+## Conversion Priority
+
+First real integration candidates:
+
+1. HSDPA Norway / Riiser MMSys 2013
+2. Ghent 4G/LTE Bandwidth Logs
+3. Lancaster ABR-Throughput-Traces
+
+Modern/OOD candidates:
+
+4. Raca 4G LTE channel/context
+5. Raca 5G channel/context
+6. Lumos5G
+
+Reference-only / metadata-only:
+
+7. FCC MBA: reference-only, no raw download yet.
+8. Puffer archive: metadata-only, no raw daily download yet.
+
+## Generic Conversion Stages
+
+1. Confirm dataset card and license/terms.
+2. Download raw data outside the repository only when a later block authorizes it.
+3. Record raw provenance and source file ids.
+4. Parse raw samples with a dataset-specific converter.
+5. Normalize time to `timestamp_s` and `duration_s`.
+6. Normalize throughput to `throughput_kbps`.
+7. Preserve optional context fields without making them runner requirements.
+8. Validate schema rules.
+9. Write normalized traces outside the repository.
+10. Write `trace_manifest_v1` outside the repository.
+11. Assign split candidates through `split_manifest_v1` policy.
+
+## Implementation Readiness Gate
+
+Replay implementation is not authorized until these docs are closed:
+
+- `../common_trace_schema.md`
+- `../trace_manifest_schema.md`
+- `../_historical/trace_conversion_plan.md`
+- `../trace_split_manifest_policy.md`
+- `../trace_schema_acceptance_tests.md`
+
+Phase 3.4A is that later implementation block for the first three dataset converters only. It authorizes code under `core/trace_replay/converters/`, `scripts/convert_trace_dataset.py` and synthetic temporary-directory tests. It does not authorize replay, benchmark runs, final splits, controller changes, player/runtime changes, real CSV fixtures, real manifests in git, or raw datasets in git.
+
+## Dataset-Specific Conversion Notes
+
+| dataset | initial conversion direction |
+| --- | --- |
+| HSDPA Norway | Convert plain ASCII throughput logs to `timestamp_s`, inferred `duration_s` and `throughput_kbps`; preserve route/trace leakage group. |
+| Ghent 4G/LTE | Convert log intervals to normalized time and throughput; preserve mobility/mode labels where available. |
+| Lancaster HAS | Convert throughput traces already reported in kbps where confirmed; group by service/day/source trace. |
+| Raca 4G | Convert throughput column first; preserve channel/context KPIs as optional metadata only. |
+| Raca 5G | Convert DL bitrate fields to `throughput_kbps`; preserve app, operator/device and KPI context for leakage grouping. |
+| Lumos5G | Convert throughput samples to `throughput_kbps`; protect repeated trajectory/location groups. |
+| FCC MBA | Do not convert until a raw-download and derived-throughput plan exists. |
+| Puffer archive | Do not convert until storage, schema and causal plans distinguish achieved throughput logs from exogenous capacity traces. |
+
+## Phase 3.2C Local Acquisition Update
+
+Local raw availability is now documented for the first three conversion priorities:
+
+1. HSDPA Norway / Riiser MMSys 2013: acquired outside repo, 98 files, 4.494 MB.
+2. Ghent 4G/LTE Bandwidth Logs: acquired outside repo, 9 files, 0.773 MB.
+3. Lancaster ABR-Throughput-Traces: acquired outside repo, 2 files, 2.13 MB.
+
+This does not implement converters and does not normalize traces. Converter implementation remains blocked until Phase 3.2C closes and Phase 3.3A synthetic trace fixtures/schema validation establishes the first validation layer.
+
+Raca 4G, Raca 5G and Lumos5G remain second-wave/OOD acquisition candidates. FCC and Puffer remain non-conversion sources in this phase.
+
+## Phase 3.3A Synthetic Validation Update
+
+Converters are still not implemented. The new validator defines the first target check that future converters must satisfy after producing `normalized_trace_schema_v1` rows.
+
+Future converter work must not read real raw datasets in unit tests unless explicitly authorized and must not commit real traces.
+
+## Phase 3.3B TraceLoader Update
+
+The loader is ready to receive converter outputs in a later phase, but converters are still not implemented.
+
+Future converters must produce rows accepted by the validator and structurally loadable by `load_normalized_trace_rows` or `load_normalized_trace_csv`.
+
+## Phase 3.4A Dataset Converter Update
+
+Converters are implemented for:
+
+1. HSDPA Norway / Riiser MMSys 2013.
+2. Ghent 4G/LTE Bandwidth Logs.
+3. Lancaster ABR-Throughput-Traces.
+
+The converters produce `normalized_trace_schema_v1` CSVs and one local `trace_manifest_v1` JSON per converted trace. They validate every emitted CSV. Real normalized traces and generated manifests are local artifacts outside the repository and are not benchmark results.
+
+Phase 3.4A still does not define final split assignment, final QoE/reward, replay runner behavior, Mahimahi or `tc/netem` execution, benchmark ranking, IA/RL, controller changes, player changes or media-engine changes.

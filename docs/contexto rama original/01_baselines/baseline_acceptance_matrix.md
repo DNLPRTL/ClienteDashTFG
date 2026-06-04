@@ -1,0 +1,32 @@
+﻿﻿# Baseline Acceptance Matrix
+
+| controller | invariants | edge_cases | minimum_input | expected_output | invalidating_failures | unit_tests | smoke_tests | windows_validation | ubuntu_validation |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| sanity_controllers | never select outside ladder; deterministic for same feedback; no QoE claims | one-level ladder, invalid fixed target, empty/missing/malformed rates, non-positive rates | rates plus optional fixed level/rate | target rate in bytes/s and quantized level, or safe `0.0` fallback for invalid ladder | out-of-range level, nondeterminism, runtime metric mutation, benchmark claim | implemented | fake engine required for `min_rate`, `fixed_rate`, `max_rate` | `python -m unittest discover`; strict readiness | same commands when available |
+| rate_based | application-layer throughput estimate only; target rates are bytes/s; buffer is only a guard; step rules are deterministic | zero/none download time, direct bytes/time, explicit bps conversion, high throughput, low throughput, low buffer, one-level ladder, invalid ladder, forbidden extra fields | `rates`, `level`, measured throughput or `last_fragment_size`/`last_download_time`, `queued_time` | highest safe target rate in bytes/s, quantized to representation index; safe `0.0` only when ladder is invalid | using TCP RTT/loss/cwnd, server state, external oracle, console text, final QoE/reward, or benchmark claims | implemented in `tests/test_rate_based_controller.py` | stable fake CLI smoke required; low/drop smoke deferred until controlled capacity support | `python -m unittest discover`; strict readiness; py_compile | same commands when available |
+| bba | buffer is the primary signal; reservoir/cushion map respected; target rates are bytes/s; deterministic monotonic map | missing/negative/non-finite buffer, exact reservoir/high threshold, mid cushion, high buffer, one-level ladder, invalid ladder, invalid reservoir/cushion params, forbidden extra fields | `rates`, `max_level`, `queued_time`, `reservoir_s`, `cushion_s` | buffer-derived target rate in bytes/s, quantized to representation index; safe `0.0` only when ladder is invalid | throughput-primary decision, TCP/server/oracle/text dependency, Netflix production claim, benchmark claim | implemented in `tests/test_bba_controller.py` | standard fake CLI smoke required; low/cushion scenario deferred until controlled fake support | `python -m unittest discover`; strict readiness; py_compile | same commands when available |
+| bola | BOLA-basic utility/buffer score documented; no bandwidth prediction dependency; target rates are bytes/s | low buffer, higher buffer, all non-positive scores, missing/invalid buffer, invalid duration, exact/approx sizes, one-level ladder, invalid ladder, invalid params, forbidden extra fields | `rates`, `queued_time`, `fragment_duration`, optional exact per-level segment sizes | objective-selected target rate in bytes/s and quantized representation index; safe `0.0` only when ladder is invalid | silent dash.js variant mixing, DYNAMIC/FAST SWITCHING/BOLA-E behavior, throughput-primary decision, missing utility/parameter disclosure, benchmark claim | implemented in `tests/test_bola_controller.py` | standard fake CLI smoke required; richer low/high buffer scenario deferred until controlled fake support | `python -m unittest discover`; strict readiness; py_compile | same validation when available |
+| mpc | enumerates horizon candidates deterministically; harmonic prediction and buffer simulation documented; internal provisional objective only; target rates are bytes/s | empty ladder, one-level ladder, no throughput history, invalid throughput, invalid buffer, invalid duration, exact/approx sizes, horizon cap, invalid params, forbidden extra fields | `rates`, `queued_time`, `fragment_duration`, throughput history or measured throughput, internal weights | first action of best internal-score sequence, quantized to representation index; safe `0.0` only when ladder is invalid | treating internal objective as final QoE, future oracle use, FastMPC/RobustMPC scope creep, missing predictor spec, benchmark claim | implemented in `tests/test_mpc_controller.py` | standard fake CLI smoke required; low-capacity scenario deferred until controlled fake support | `python -m unittest discover`; strict readiness; py_compile | same validation when available |
+| robust_mpc | same MPC invariants plus documented prediction-error normalization; no Pensieve/RL path; target rates are bytes/s | empty ladder, one-level ladder, no actual throughput history, no prediction-error history, high prediction error, zero actual throughput, invalid buffer/duration, horizon cap, invalid params, forbidden extra fields | `rates`, `queued_time`, `fragment_duration`, actual throughput history or measured throughput, optional prediction/error history, internal weights | first action of best robust internal-score sequence, quantized to representation index; safe `0.0` only when ladder is invalid | missing past-error handling, future oracle use, incompatible with MPC tests, accidental Pensieve/RL implementation, benchmark claim | implemented in `tests/test_robust_mpc_controller.py` | standard fake CLI smoke required; low/unstable capacity scenario deferred until controlled fake support | `python -m unittest discover`; strict readiness; py_compile | same validation when available |
+
+## Protocol Binding
+
+Acceptance evidence must be interpreted through `baseline_result_interpretation_policy.md`:
+
+- unit tests validate decision logic;
+- fake smoke validates integration and artifact production;
+- readiness validates that client neutrality remains intact;
+- none of these alone validates paper-level performance, final QoE, real-network superiority or benchmark ranking.
+
+## Phase 2.3 Acceptance Closure
+
+The Phase 2.3 closure report accepts the mandatory implementation set only at the implementation-contract level:
+
+- all canonical controller names are registered;
+- all mandatory controller modules import and have dedicated unit tests;
+- fake smoke evidence remains integration/artifact evidence only;
+- no final QoE/reward, replay/traces, benchmark ranking or paper-level comparison is claimed.
+
+## Phase 2.4 Formal Closure
+
+The acceptance evidence is summarized for final Phase 2 closure in `_historical/phase2_test_validation_summary.md` and `phase2_academic_validity_statement.md`.

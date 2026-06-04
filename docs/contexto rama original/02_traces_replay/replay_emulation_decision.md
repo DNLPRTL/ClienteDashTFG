@@ -1,0 +1,92 @@
+﻿# Replay Emulation Decision
+
+This document defines decision criteria. It does not select or implement a final runner.
+
+## Decision Question
+
+Which mechanism should DashClientModular4 use later to expose the Phase 2 controllers to reproducible network behavior?
+
+## Candidate Mechanisms
+
+| candidate | role | current Phase 3.1 decision |
+| --- | --- | --- |
+| Mahimahi | Established HTTP record-and-replay method candidate. | Mandatory method card; not mandatory implementation. |
+| Linux `tc/netem` | Kernel network emulation candidate. | Mandatory method card; fallback or complementary option. |
+| Custom fake trace-driven runner | Deterministic Python-side replay candidate. | Primary likely implementation candidate for reproducible tests, but not implemented in this block. |
+| Hybrid approach | Fake runner for tests plus external emulator for selected validation. | Possible later decision. |
+
+## Decision Criteria
+
+| criterion | why it matters |
+| --- | --- |
+| Reproducibility | Runs must be repeatable across controllers and dates. |
+| Controller neutrality | The mechanism must not require controller-specific changes. |
+| Python 3.8 compatibility | Future implementation must fit the current project environment. |
+| CI/local practicality | The mechanism should work without fragile root/network setup for basic tests. |
+| Scientific credibility | Method should be explainable and, where possible, tied to published systems methodology. |
+| Trace fidelity | It should preserve time-varying throughput behavior without inventing hidden signals. |
+| Platform risk | Windows development and Linux emulation constraints must be explicit. |
+| Storage hygiene | Raw traces and run outputs must stay out of git. |
+| Artifact clarity | Future runs must produce manifests and summaries that can be interpreted later. |
+
+## Current Likely Direction
+
+The primary likely implementation candidate is a custom fake trace-driven runner because it can support deterministic Python tests and avoid privileged network manipulation. Mahimahi remains important as a method reference and possible external validation tool. `tc/netem` remains a practical Linux fallback for latency/loss/rate emulation when platform constraints allow it.
+
+This is not a final selection. The final decision requires method cards, platform checks and a small synthetic-trace validation plan.
+
+## Final Method Gate
+
+Before implementation, the selected method must have:
+
+1. a completed method card;
+2. explicit input trace schema;
+3. deterministic clock or scheduling assumptions;
+4. artifact contract;
+5. leakage controls;
+6. platform and dependency notes;
+7. confirmation that controllers, player, media engines and metrics remain unchanged.
+
+## Phase 3.2A Source-Triage Update
+
+Primary path after this documentation block: custom Python trace-driven fake/replay runner.
+
+Reason: it is deterministic, can be covered by `unittest`, runs on Windows/Ubuntu, avoids privileged network setup, and can emit canonical run artifacts.
+
+Secondary path: Mahimahi on Ubuntu after the trace schema and Python runner are stable.
+
+Fallback path: Linux `tc/netem` for controlled impairment tests, only with an isolated runbook.
+
+### Causal Caveat
+
+CausalSim and Veritas require a strict distinction between exogenous capacity or availability traces and achieved-throughput logs influenced by ABR decisions. Final claims must not say that replaying an observed throughput trace proves real-world superiority under arbitrary alternate ABR algorithms.
+
+### Not Implemented Now
+
+No runner, converter, Mahimahi wrapper or netem wrapper is implemented in Phase 3.2A.
+
+## Phase 3.2B Schema Update
+
+The likely primary runner remains a custom Python trace-driven fake/replay runner. Its future input contract is `normalized_trace_schema_v1`, not raw dataset files.
+
+Reasons:
+
+- deterministic execution;
+- `unittest` coverage without external networking;
+- Windows/Ubuntu compatibility;
+- compatibility with future IA training loops;
+- canonical artifact and manifest generation.
+
+Mahimahi remains a secondary Ubuntu validation candidate after the Python runner and trace schema are stable. Linux `tc/netem` remains a Linux fallback or isolated runbook candidate. Phase 3.2B does not implement or select either as the final benchmark path.
+
+QoE/reward remains deferred to Phase 3.5.
+
+## Phase 3.4D Decision Update
+
+The decision is now closed for the current phase:
+
+- primary path: custom Python trace-driven pipeline;
+- secondary optional path: Mahimahi on Ubuntu for future validation/runbook use;
+- fallback/sanity optional path: Linux `tc/netem` for future isolated impairment checks.
+
+Mahimahi and `tc/netem` are not required for Phase 3.5. They are not installed or executed in Phase 3.4D. Their future outputs must be method-labeled and must not be treated as equivalent to Python dry-run outputs unless a later benchmark protocol explicitly authorizes that comparison.
