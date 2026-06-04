@@ -27,6 +27,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--seed", default="phase3_rebuild_v1")
     parser.add_argument("--train-ratio", type=float, default=0.7)
     parser.add_argument("--test-ratio", type=float, default=0.15)
+    parser.add_argument("--artifact-set", default=None)
+    parser.add_argument("--split-strategy", default="stratified_by_semantics_and_leakage_group")
     args = parser.parse_args(argv)
 
     conversion_manifest = json.loads(args.input.read_text(encoding="utf-8"))
@@ -35,6 +37,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         seed=args.seed,
         train_ratio=args.train_ratio,
         test_ratio=args.test_ratio,
+        artifact_set=args.artifact_set or str(conversion_manifest.get("artifact_set", "smoke")),
+        split_strategy=args.split_strategy,
+        puffer_sampling_policy=conversion_manifest.get("puffer_sampling_policy", {}),
     )
     manifest["source_conversion_manifest"] = str(args.input)
     args.output.parent.mkdir(parents=True, exist_ok=True)

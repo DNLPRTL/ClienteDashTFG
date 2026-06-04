@@ -68,12 +68,17 @@ Splits are assigned by `leakage_group`, never by rows. The final manifest keeps 
 - GAViST5G: packet `Length` is aggregated per second and marked as `observed_application_traffic`.
 - Puffer: joined streaming delivery samples are marked as `real_streaming_delivery_rate`.
 
-## Smoke Status
+## Final Closure Status
 
-Windows smoke generated a sample-hash raw inventory and one normalized trace per non-Puffer dataset. The resulting external final manifest validated 10 traces with split counts:
+The final Windows closure generated and validated:
 
 ```text
-train=7, test=2, eval=1
+trace_count=5957
+train=4139
+test=904
+eval=914
 ```
 
-Those outputs are technical smoke artifacts only.
+The final corpus is `phase3_trace_manifest_final.json`; normalized CSVs excluded as duplicates are not part of the final accepted corpus.
+
+The technical replay smoke loaded one trace per semantics and produced `success_count=5`, `failure_count=0`. Those outputs remain technical smoke artifacts only.

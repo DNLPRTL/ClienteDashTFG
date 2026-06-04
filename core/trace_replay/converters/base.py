@@ -77,6 +77,7 @@ class BaseTraceConverter:
             rows, group_id, leakage_group, warnings = self.rows_for_source(source_path)
             if not rows:
                 continue
+            rows = sorted(rows, key=lambda row: float(row["timestamp_s"]))
             trace_id = stable_id(self.dataset_id, group_id, source_path.name, prefix="trace")
             normalized_path = normalized_base / "{0}.csv".format(trace_id)
             stats = write_normalized_csv(rows, normalized_path)

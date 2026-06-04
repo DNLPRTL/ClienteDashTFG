@@ -6,6 +6,7 @@ does not expose dataset metadata to controllers.
 """
 
 from core.trace_replay.loader import LoadedTrace, TraceSample, load_normalized_trace_csv
+from core.trace_replay.network_model import TraceDrivenNetworkModel
 from core.trace_replay.schema import NORMALIZED_TRACE_SCHEMA_ID, REQUIRED_COLUMNS
 
 __all__ = [
@@ -13,5 +14,6 @@ __all__ = [
     "NORMALIZED_TRACE_SCHEMA_ID",
     "REQUIRED_COLUMNS",
     "TraceSample",
+    "TraceDrivenNetworkModel",
     "load_normalized_trace_csv",
 ]

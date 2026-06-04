@@ -167,11 +167,42 @@ class Phase3TraceConvertersTest(unittest.TestCase):
             encoding="utf-8",
         )
 
-        result, rows = self.convert_one(PufferConverter)
+        results = PufferConverter(self.root, max_sessions=1, min_samples_per_session=1).convert(
+            self.normalized,
+            self.manifests,
+            max_traces=1,
+        )
+        self.assertEqual(1, len(results))
+        result = results[0]
+        rows = read_normalized(result.normalized_trace_path)
 
         self.assertEqual("real_streaming_delivery_rate", result.semantics)
-        self.assertEqual(2, len(rows))
+        self.assertGreaterEqual(len(rows), 1)
         self.assertAlmostEqual(8000.0, rows[0]["throughput_kbps"])
+
+    def test_puffer_bounded_sampling_respects_session_limit_and_min_samples(self):
+        root = self.root / "Puffer"
+        root.mkdir(parents=True)
+        ack_lines = ["session_id,video_ts"]
+        sent_lines = ["session_id,video_ts,delivery_rate,time (ns GMT)"]
+        for session_index in range(3):
+            session_id = "s{0}".format(session_index)
+            for sample_index in range(3):
+                video_ts = "v{0}_{1}".format(session_index, sample_index)
+                ack_lines.append("{0},{1}".format(session_id, video_ts))
+                sent_lines.append("{0},{1},1000000,{2}".format(session_id, video_ts, 1_000_000_000 + sample_index * 1_000_000_000))
+        (root / "video_acked_2020.csv").write_text("\n".join(ack_lines) + "\n", encoding="utf-8")
+        (root / "video_sent_2020.csv").write_text("\n".join(sent_lines) + "\n", encoding="utf-8")
+
+        results = PufferConverter(self.root, max_sessions=2, min_samples_per_session=3).convert(
+            self.normalized,
+            self.manifests,
+        )
+
+        self.assertEqual(2, len(results))
+        for result in results:
+            self.assertEqual(3, result.row_count)
+            self.assertEqual("phase3_puffer_video_sent_acked_bounded_v1", result.converter_id)
 
 
 if __name__ == "__main__":

@@ -53,14 +53,22 @@ class Phase3InventoryAndSplitsTest(unittest.TestCase):
         duplicate = dict(entries[0])
         duplicate["trace_id"] = "trace_duplicate"
         entries.append(duplicate)
+        same_group_distinct_trace = dict(entries[0])
+        same_group_distinct_trace["trace_id"] = "trace_same_group_distinct"
+        same_group_distinct_trace["source_sha256"] = "different_raw_hash"
+        same_group_distinct_trace["content_fingerprint_sha256"] = "different_fingerprint"
+        entries.append(same_group_distinct_trace)
 
-        manifest = build_phase3_trace_manifest(entries, seed="unit-test")
+        manifest = build_phase3_trace_manifest(entries, seed="unit-test", artifact_set="final")
 
         self.assertEqual("phase3_trace_manifest_final_v1", manifest["schema_id"])
+        self.assertEqual("final", manifest["artifact_set"])
+        self.assertEqual("stratified_by_semantics_and_leakage_group", manifest["split_strategy"])
         self.assertFalse(manifest["ready_for_benchmark"])
         self.assertFalse(manifest["benchmark_authorized"])
-        self.assertEqual(5, manifest["trace_count"])
+        self.assertEqual(6, manifest["trace_count"])
         self.assertEqual(1, manifest["excluded_duplicate_count"])
+        self.assertEqual({"available_bandwidth": 6}, manifest["semantics_counts"])
 
         group_to_split = {}
         for trace in manifest["traces"]:

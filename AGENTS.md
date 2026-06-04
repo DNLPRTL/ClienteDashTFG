@@ -20,13 +20,14 @@ archive/current-before-phase3-rebuild
 La fase activa es:
 
 ```text
-Phase 3 Rebuild - traces, normalization and splits
+Phase 3 Rebuild - final corpus generated on Windows; Ubuntu validation pending
 ```
 
-Phase 1 y Phase 2 se consideran cerradas. Phase 3 se esta rehaciendo desde el
-cierre real de Phase 2 por errores detectados en configuracion de trazas, trace
-replay, seleccion de datasets y dependencias posteriores. No hay benchmark,
-training IA, ranking, ganador ni afirmacion de mejora de QoE autorizados.
+Phase 1 y Phase 2 se consideran cerradas. Phase 3 Rebuild ya tiene corpus final
+externo generado y validado en Windows. Antes de avanzar operativamente, la VM
+cliente Ubuntu debe sincronizar la rama y validar el manifest final. No hay
+benchmark, training IA, ranking, ganador ni afirmacion de mejora de QoE
+autorizados.
 
 ## Documentos obligatorios por ejecucion
 

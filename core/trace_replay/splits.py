@@ -1,24 +1,24 @@
 from __future__ import annotations
 
 import hashlib
-from collections import Counter
+from collections import Counter, defaultdict
 from typing import Iterable, Mapping
 
 
 SPLIT_NAMES = ("train", "test", "eval")
+DEFAULT_SPLIT_SEED = "phase3_rebuild_v1"
+DEFAULT_SPLIT_STRATEGY = "stratified_by_semantics_and_leakage_group"
 
 
-def stable_group_sort_key(group: str, seed: str) -> str:
-    return hashlib.sha256("{0}|{1}".format(seed, group).encode("utf-8")).hexdigest()
+def stable_group_sort_key(group: str, seed: str, namespace: str = "") -> str:
+    return hashlib.sha256("{0}|{1}|{2}".format(seed, namespace, group).encode("utf-8")).hexdigest()
 
 
-def assign_splits_by_leakage_group(
-    entries: Iterable[Mapping[str, object]],
-    train_ratio: float = 0.7,
-    test_ratio: float = 0.15,
-    seed: str = "phase3_rebuild_v1",
+def _split_group_names(
+    groups: list[str],
+    train_ratio: float,
+    test_ratio: float,
 ) -> dict[str, str]:
-    groups = sorted({str(entry["leakage_group"]) for entry in entries}, key=lambda group: stable_group_sort_key(group, seed))
     if not groups:
         return {}
 
@@ -45,6 +45,36 @@ def assign_splits_by_leakage_group(
     return mapping
 
 
+def assign_splits_by_leakage_group(
+    entries: Iterable[Mapping[str, object]],
+    train_ratio: float = 0.7,
+    test_ratio: float = 0.15,
+    seed: str = DEFAULT_SPLIT_SEED,
+) -> dict[str, str]:
+    groups = sorted({str(entry["leakage_group"]) for entry in entries}, key=lambda group: stable_group_sort_key(group, seed))
+    return _split_group_names(groups, train_ratio=train_ratio, test_ratio=test_ratio)
+
+
+def assign_stratified_splits_by_semantics(
+    entries: Iterable[Mapping[str, object]],
+    train_ratio: float = 0.7,
+    test_ratio: float = 0.15,
+    seed: str = DEFAULT_SPLIT_SEED,
+) -> dict[str, str]:
+    groups_by_semantics: dict[str, set[str]] = defaultdict(set)
+    for entry in entries:
+        groups_by_semantics[str(entry["semantics"])].add(str(entry["leakage_group"]))
+
+    split_by_group: dict[str, str] = {}
+    for semantics in sorted(groups_by_semantics):
+        groups = sorted(
+            groups_by_semantics[semantics],
+            key=lambda group: stable_group_sort_key(group, seed=seed, namespace=semantics),
+        )
+        split_by_group.update(_split_group_names(groups, train_ratio=train_ratio, test_ratio=test_ratio))
+    return split_by_group
+
+
 def split_counts(entries: Iterable[Mapping[str, object]]) -> dict[str, int]:
     counts = Counter(str(entry.get("split", "unassigned")) for entry in entries)
     return {name: counts.get(name, 0) for name in SPLIT_NAMES}
@@ -55,38 +85,31 @@ def group_counts(entries: Iterable[Mapping[str, object]]) -> dict[str, int]:
     return dict(sorted(counts.items()))
 
 
+def semantics_counts(entries: Iterable[Mapping[str, object]]) -> dict[str, int]:
+    counts = Counter(str(entry["semantics"]) for entry in entries)
+    return dict(sorted(counts.items()))
+
+
 def mark_duplicates(entries: Iterable[Mapping[str, object]]) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
-    seen_source_group: dict[str, str] = {}
-    seen_content: dict[str, str] = {}
-    seen_dataset_group: dict[str, str] = {}
+    seen_source_fingerprint: dict[str, str] = {}
     accepted: list[dict[str, object]] = []
     excluded: list[dict[str, object]] = []
 
     for raw_entry in entries:
         entry = dict(raw_entry)
         trace_id = str(entry["trace_id"])
-        source_group_key = "{0}|{1}".format(entry.get("source_sha256", ""), entry.get("group_id", ""))
-        content_key = str(entry.get("content_fingerprint_sha256", ""))
-        dataset_group_key = "{0}|{1}".format(entry.get("dataset_id", ""), entry.get("group_id", ""))
+        duplicate_key = "{0}|{1}".format(
+            entry.get("source_sha256", ""),
+            entry.get("content_fingerprint_sha256", ""),
+        )
 
-        reasons: list[str] = []
-        for label, key, seen in (
-            ("duplicate_source_hash_group", source_group_key, seen_source_group),
-            ("duplicate_normalized_fingerprint", content_key, seen_content),
-            ("duplicate_dataset_group", dataset_group_key, seen_dataset_group),
-        ):
-            if key and key in seen:
-                reasons.append("{0}:{1}".format(label, seen[key]))
-
-        if reasons:
+        if duplicate_key and duplicate_key in seen_source_fingerprint:
             entry["excluded_from_final_manifest"] = True
-            entry["exclusion_reasons"] = reasons
+            entry["exclusion_reasons"] = ["duplicate_source_hash_and_normalized_fingerprint:{0}".format(seen_source_fingerprint[duplicate_key])]
             excluded.append(entry)
             continue
 
-        seen_source_group[source_group_key] = trace_id
-        seen_content[content_key] = trace_id
-        seen_dataset_group[dataset_group_key] = trace_id
+        seen_source_fingerprint[duplicate_key] = trace_id
         entry["excluded_from_final_manifest"] = False
         entry["exclusion_reasons"] = []
         accepted.append(entry)
@@ -96,12 +119,21 @@ def mark_duplicates(entries: Iterable[Mapping[str, object]]) -> tuple[list[dict[
 
 def build_phase3_trace_manifest(
     conversion_entries: Iterable[Mapping[str, object]],
-    seed: str = "phase3_rebuild_v1",
+    seed: str = DEFAULT_SPLIT_SEED,
     train_ratio: float = 0.7,
     test_ratio: float = 0.15,
+    artifact_set: str = "smoke",
+    split_strategy: str = DEFAULT_SPLIT_STRATEGY,
+    puffer_sampling_policy: Mapping[str, object] | None = None,
 ) -> dict[str, object]:
     accepted, excluded = mark_duplicates(conversion_entries)
-    split_by_group = assign_splits_by_leakage_group(accepted, train_ratio=train_ratio, test_ratio=test_ratio, seed=seed)
+    if split_strategy == DEFAULT_SPLIT_STRATEGY:
+        split_by_group = assign_stratified_splits_by_semantics(accepted, train_ratio=train_ratio, test_ratio=test_ratio, seed=seed)
+    elif split_strategy == "by_leakage_group":
+        split_by_group = assign_splits_by_leakage_group(accepted, train_ratio=train_ratio, test_ratio=test_ratio, seed=seed)
+    else:
+        raise ValueError("unknown split_strategy: {0}".format(split_strategy))
+
     final_entries: list[dict[str, object]] = []
     for entry in accepted:
         normalized = dict(entry)
@@ -111,8 +143,10 @@ def build_phase3_trace_manifest(
     return {
         "schema_id": "phase3_trace_manifest_final_v1",
         "phase": "phase3_rebuild",
+        "artifact_set": artifact_set,
         "normalized_schema_id": "normalized_trace_schema_v1",
         "split_policy": "by_leakage_group",
+        "split_strategy": split_strategy,
         "split_seed": seed,
         "train_ratio": train_ratio,
         "test_ratio": test_ratio,
@@ -125,9 +159,11 @@ def build_phase3_trace_manifest(
             "controllers must not receive trace_id, dataset_id, source_id, split, group_id, "
             "leakage_group, OOD flags, or future throughput"
         ),
+        "puffer_sampling_policy": dict(puffer_sampling_policy or {}),
         "trace_count": len(final_entries),
         "excluded_duplicate_count": len(excluded),
         "split_counts": split_counts(final_entries),
+        "semantics_counts": semantics_counts(final_entries),
         "leakage_group_counts": group_counts(final_entries),
         "traces": sorted(final_entries, key=lambda item: str(item["trace_id"])),
         "excluded_duplicates": sorted(excluded, key=lambda item: str(item["trace_id"])),

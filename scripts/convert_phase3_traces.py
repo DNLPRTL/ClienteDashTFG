@@ -13,6 +13,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from core.trace_replay.converters.registry import available_converters, converter_by_id
+from core.trace_replay.converters.puffer import PufferConverter
 
 TFG_ROOT = REPO_ROOT.parent
 DEFAULT_RAW_ROOT = TFG_ROOT / "dataset en bruto"
@@ -29,12 +30,26 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--output", type=Path, default=DEFAULT_CONVERSION_MANIFEST)
     parser.add_argument("--datasets", nargs="*", choices=available_converters(), default=list(available_converters()))
     parser.add_argument("--max-traces-per-dataset", type=int, default=None)
+    parser.add_argument("--artifact-set", default="smoke")
+    parser.add_argument("--puffer-max-sessions", type=int, default=100)
+    parser.add_argument("--puffer-min-samples-per-session", type=int, default=30)
+    parser.add_argument("--puffer-max-acked-rows", type=int, default=1_000_000)
+    parser.add_argument("--puffer-max-sent-rows", type=int, default=2_000_000)
     args = parser.parse_args(argv)
 
     entries: list[dict[str, object]] = []
     dataset_summaries: list[dict[str, object]] = []
     for dataset_id in args.datasets:
-        converter = converter_by_id(dataset_id)(args.raw_root)
+        if dataset_id == PufferConverter.dataset_id:
+            converter = PufferConverter(
+                args.raw_root,
+                max_sessions=args.puffer_max_sessions,
+                min_samples_per_session=args.puffer_min_samples_per_session,
+                max_acked_rows=args.puffer_max_acked_rows,
+                max_sent_rows=args.puffer_max_sent_rows,
+            )
+        else:
+            converter = converter_by_id(dataset_id)(args.raw_root)
         results = converter.convert(
             normalized_root=args.normalized_root,
             metadata_root=args.manifest_root,
@@ -54,10 +69,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     manifest = {
         "schema_id": "phase3_trace_conversion_manifest_v1",
         "phase": "phase3_rebuild",
+        "artifact_set": args.artifact_set,
         "normalized_schema_id": "normalized_trace_schema_v1",
         "raw_root": str(args.raw_root),
         "normalized_root": str(args.normalized_root),
         "manifest_root": str(args.manifest_root),
+        "puffer_sampling_policy": PufferConverter(
+            args.raw_root,
+            max_sessions=args.puffer_max_sessions,
+            min_samples_per_session=args.puffer_min_samples_per_session,
+            max_acked_rows=args.puffer_max_acked_rows,
+            max_sent_rows=args.puffer_max_sent_rows,
+        ).sampling_policy.as_dict(),
         "ready_for_benchmark": False,
         "benchmark_authorized": False,
         "outputs_are_benchmark_results": False,
