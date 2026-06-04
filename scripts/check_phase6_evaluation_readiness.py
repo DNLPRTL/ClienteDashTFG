@@ -23,6 +23,10 @@ REQUIRED_DOCS = (
     "docs/science/06_validation/controller_matrix.md",
     "docs/science/06_validation/trace_selection_policy.md",
     "docs/science/06_validation/media_profile_decision.md",
+    "docs/science/06_validation/phase6d_media_profile_contract.md",
+    "docs/science/06_validation/phase6d_mpd_extraction_runbook.md",
+    "docs/science/06_validation/phase6d_media_profile_freeze_report.md",
+    "docs/science/06_validation/phase6d_no_benchmark_boundary.md",
     "docs/science/06_validation/ubuntu_evidence_package_spec.md",
 )
 
@@ -39,6 +43,15 @@ REQUIRED_SCRIPTS = (
     "scripts/build_phase6_candidate_manifest.py",
     "scripts/freeze_phase6_trace_manifest.py",
     "scripts/run_phase6c_trace_materialization.py",
+    "scripts/extract_phase6_media_profile_from_mpd.py",
+    "scripts/validate_phase6_media_profile.py",
+    "scripts/check_phase6_media_profile_compatibility.py",
+    "scripts/freeze_phase6_media_profile.py",
+    "scripts/run_phase6d_media_profile_freeze.py",
+)
+
+REQUIRED_CONFIGS = (
+    "configs/phase6/media_profile_phase6_v1_policy.json",
 )
 
 REQUIRED_CONTROLLERS = (
@@ -112,12 +125,14 @@ def build_report(
     errors: List[str] = []
     warnings: List[str] = []
     notes: List[str] = [
-        "Phase 6B/6C readiness and materialization automation do not authorize benchmark execution.",
+        "Phase 6B/6C/6D readiness and materialization automation do not authorize benchmark execution.",
+        "Phase 6D media-profile freeze does not authorize benchmark execution.",
         "ready_for_phase6c is not ready_for_benchmark.",
     ]
 
     check_required_paths(REQUIRED_DOCS, "required_doc", checks, errors)
     check_required_paths(REQUIRED_SCRIPTS, "required_script", checks, errors)
+    check_required_paths(REQUIRED_CONFIGS, "required_config", checks, errors)
     check_required_controllers(checks, errors)
     check_required_imports(checks, errors)
     check_forbidden_generated_artifacts(checks, errors)

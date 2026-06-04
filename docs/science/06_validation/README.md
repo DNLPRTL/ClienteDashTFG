@@ -1,6 +1,6 @@
 # Phase 6 Validation Documentation
 
-Phase 6A2 protocol freeze is complete. Phase 6B added evaluation readiness gates, manifest schema validation and canonical content fingerprint audit hardening. Phase 6C adds automated trace acquisition, normalization and manifest freeze tooling.
+Phase 6A2 protocol freeze is complete. Phase 6B added evaluation readiness gates, manifest schema validation and canonical content fingerprint audit hardening. Phase 6C adds automated trace acquisition, normalization and manifest freeze tooling. Phase 6D adds MPD-derived media-profile extraction, validation, compatibility checking and external freeze tooling.
 
 This directory is the active validation documentation path for DashClientModular4:
 
@@ -8,9 +8,9 @@ This directory is the active validation documentation path for DashClientModular
 docs/science/06_validation/
 ```
 
-Phase 6A0/A1 opened the validation documentation scaffold and consolidated literature/source evidence. Phase 6A2 freezes the final experimental protocol. Phase 6B added readiness/audit code. Phase 6C automates real dataset materialization outside the repository.
+Phase 6A0/A1 opened the validation documentation scaffold and consolidated literature/source evidence. Phase 6A2 freezes the final experimental protocol. Phase 6B added readiness/audit code. Phase 6C automates real dataset materialization outside the repository. Phase 6D freezes the shared media profile from real MPD/content evidence outside the repository.
 
-Phase 6C still does not authorize benchmark execution, controller ranking, plots, result CSVs, winner declarations, retraining, or any claim that `neural_abr_lite` improves QoE over a baseline.
+Phase 6D still does not authorize benchmark execution, controller ranking, plots, result CSVs, winner declarations, retraining, or any claim that `neural_abr_lite` improves QoE over a baseline.
 
 ## Current Boundary
 
@@ -26,9 +26,18 @@ Phase 6C still does not authorize benchmark execution, controller ranking, plots
 - Phase 6B closes the `canonical_content_fingerprint` audit gap while continuing to report `checksum_sha256` separately.
 - Phase 6C is automated; the user should not manually create source configs or manifests.
 - Phase 6C-H1 makes live materialization primary-only by default and adds per-step logs, bounded output tails, progress files, timeouts, resume, skip-existing and clean-derived recovery.
-- Real datasets, normalized CSVs, receipts, local manifests and reports live outside the repo.
+- Phase 6D uses the user's real Ubuntu-server MPDs and representation folders as media-profile source material.
+- The VM server is an MPD/content/media_profile source and demo/integration surface, not the benchmark network.
+- Future benchmark network conditions remain Python trace-driven from normalized traces through `TraceDrivenNetworkModel`.
+- The provided MPD-derived profile is 60 s long, uses 4 s segments, yields 15 segments, and exposes a canonical ascending-bitrate ladder `300/750/1200/1850/2850/4300` kbps.
+- `representation_index` is canonical ascending bitrate and independent of MPD id order.
+- Real segment sizes are preferred via `--content-root` or `--base-url`; otherwise a documented bitrate estimate is used.
+- NeuralABR-Lite bundle compatibility is checked by JSON metadata/action count when a bundle path is provided.
+- If the full 6-representation ladder is incompatible with a 5-action bundle, the primary profile must use the common MPD-derived subset and retain the full ladder as diagnostic only.
+- Real datasets, normalized CSVs, receipts, local manifests, media-profile outputs, MPDs, segments, logs and reports live outside the repo.
 - `ready_for_phase6c` is not `ready_for_benchmark`; `benchmark_authorized` remains false.
 - Final Phase 6 trace IDs are frozen only by the external `phase6_trace_manifest_final.json` after acquisition, normalization, validation, eligibility audit and freeze.
+- Future Phase 6E planning requires both the external Phase 6C trace manifest and the external Phase 6D frozen media profile.
 
 ## Frozen Phase 6A2 Protocol
 
@@ -58,6 +67,13 @@ Phase 6C still does not authorize benchmark execution, controller ranking, plots
 - `phase6c_trace_manifest_freeze_contract.md`: final external manifest freeze preconditions.
 - `phase6c_no_benchmark_boundary.md`: explicit non-execution boundary.
 - `phase6c_live_materialization_troubleshooting.md`: live-output, timeout and interrupted-normalization recovery guidance.
+
+## Phase 6D Media Profile Contracts
+
+- `phase6d_media_profile_contract.md`: MPD-derived media-profile schema, ladder order, size policy and NeuralABR-Lite compatibility contract.
+- `phase6d_mpd_extraction_runbook.md`: one-command external media-profile freeze runbook.
+- `phase6d_media_profile_freeze_report.md`: committed report template and external freeze preconditions.
+- `phase6d_no_benchmark_boundary.md`: explicit non-execution boundary for media-profile freeze work.
 
 ## Entry Documents
 

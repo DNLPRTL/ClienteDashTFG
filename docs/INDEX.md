@@ -25,7 +25,7 @@ This index is the human entry point for DashClientModular4 documentation. It is 
 - `docs/science/PHASE_INDEX.md`: phase-to-directory map.
 - `docs/science/CANONICAL_DOCUMENTS.md`: shortest path through the canonical scientific trail.
 - `docs/science/HISTORICAL_DOCUMENT_POLICY.md`: how to interpret historical, handoff, closure, and template docs.
-- `docs/science/06_validation/README.md`: active Phase 6 validation protocol freeze plus Phase 6C automation.
+- `docs/science/06_validation/README.md`: active Phase 6 validation protocol freeze plus Phase 6C automation and Phase 6D media-profile freeze.
 - `docs/science/06_validation/phase6_manifest_schema.md`: Phase 6 trace manifest schema and gate aliases.
 - `docs/science/06_validation/phase6b_preflight_contract.md`: Phase 6B readiness preflight contract.
 - `docs/science/06_validation/phase6b_evaluation_readiness_report.md`: Phase 6B readiness report semantics.
@@ -35,6 +35,10 @@ This index is the human entry point for DashClientModular4 documentation. It is 
 - `docs/science/06_validation/phase6c_trace_manifest_freeze_contract.md`: final external manifest freeze contract.
 - `docs/science/06_validation/phase6c_no_benchmark_boundary.md`: Phase 6C non-execution boundary.
 - `docs/science/06_validation/phase6c_live_materialization_troubleshooting.md`: Phase 6C-H1 live normalization recovery and timeout guidance.
+- `docs/science/06_validation/phase6d_media_profile_contract.md`: MPD-derived media-profile freeze contract.
+- `docs/science/06_validation/phase6d_mpd_extraction_runbook.md`: one-command Phase 6D external media-profile freeze runbook.
+- `docs/science/06_validation/phase6d_media_profile_freeze_report.md`: Phase 6D freeze report template and external preconditions.
+- `docs/science/06_validation/phase6d_no_benchmark_boundary.md`: Phase 6D non-execution boundary.
 
 ## Roadmap
 
@@ -56,6 +60,7 @@ This index is the human entry point for DashClientModular4 documentation. It is 
 - `scripts/validate_phase6_trace_manifest.py`: Phase 6 trace manifest schema validation without benchmark execution.
 - `scripts/check_phase6_evaluation_readiness.py`: Phase 6B structural readiness preflight; `ready_for_benchmark=false`.
 - `configs/phase6/phase6c_public_sources.json`: Phase 6C committed public source metadata.
+- `configs/phase6/media_profile_phase6_v1_policy.json`: Phase 6D committed media-profile policy metadata.
 - `scripts/run_phase6c_trace_materialization.py`: one-command Phase 6C external acquisition/materialization orchestrator.
 - `scripts/download_phase6_trace_sources.py`: stdlib downloader with receipts and provider-block handling.
 - `scripts/extract_phase6_trace_archives.py`: safe archive extraction into the external root.
@@ -63,6 +68,11 @@ This index is the human entry point for DashClientModular4 documentation. It is 
 - `scripts/build_phase6_reference_manifest.py`: Phase 4 leakage reference manifest builder.
 - `scripts/build_phase6_candidate_manifest.py`: Phase 6 candidate manifest builder.
 - `scripts/freeze_phase6_trace_manifest.py`: external final manifest freeze gate.
+- `scripts/extract_phase6_media_profile_from_mpd.py`: MPD-derived media-profile extraction.
+- `scripts/validate_phase6_media_profile.py`: media-profile validation gate.
+- `scripts/check_phase6_media_profile_compatibility.py`: media-profile/controller compatibility report.
+- `scripts/freeze_phase6_media_profile.py`: external media-profile freeze gate.
+- `scripts/run_phase6d_media_profile_freeze.py`: one-command Phase 6D media-profile freeze orchestrator.
 - `scripts/validate_neural_abr_bundle.py`: local-only bundle validation helper.
 - `scripts/smoke_neural_abr_inference.py`: local-only structural inference smoke helper.
 

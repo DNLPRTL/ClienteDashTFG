@@ -1,6 +1,6 @@
 # Phase 6 Evaluation Protocol
 
-Status: final Phase 6A2 protocol decision with Phase 6B readiness hardening. This protocol authorizes readiness work, not benchmark execution.
+Status: final Phase 6A2 protocol decision with Phase 6B/6C/6D readiness hardening. This protocol authorizes readiness work, not benchmark execution.
 
 ## Objective
 
@@ -10,7 +10,7 @@ Phase 6 will compare technical controls, academic baselines and the guarded `neu
 
 The primary evaluation path remains Python trace-driven.
 
-VM/content/demo infrastructure may support media_profile/content work, but VM bridge networking is not benchmark evidence.
+VM/content/demo infrastructure may support media_profile/content work, but VM bridge networking is not benchmark evidence. In Phase 6D the server may supply the real MPD and representation folders used to freeze `media_profile_phase6_v1`.
 
 ## Controllers
 
@@ -48,7 +48,11 @@ Recommended groups:
 
 The primary media profile is `media_profile_phase6_v1`.
 
-It must be deterministic, shared by all controllers and use an identical representation ladder. `segment_duration_s = 2.0` unless a real extracted MPD profile is frozen before execution.
+It must be deterministic, shared by all controllers and use an identical representation ladder. `segment_duration_s = 2.0` is only a fallback unless a real extracted MPD profile is frozen before execution planning.
+
+Phase 6D supports a real MPD-derived profile with 60 s duration, 4 s segments, 15 segments and the canonical ascending-bitrate ladder `300/750/1200/1850/2850/4300` kbps. `representation_index` is sorted by bitrate, not by MPD id order.
+
+If NeuralABR-Lite bundle metadata supports only 5 candidates, the primary profile must use the common MPD-derived subset `300/750/1200/1850/2850` kbps and keep the full 6-representation ladder as diagnostic only. Controllers must not receive different primary ladders in a future benchmark.
 
 ## Metrics
 
@@ -72,4 +76,4 @@ Future execution must produce an external evidence package aligned with `ubuntu_
 
 This protocol does not run a benchmark, produce plots, generate CSV result outputs, rank controllers, declare a winner, or claim that `neural_abr_lite` improves QoE.
 
-In Phase 6C, materialization and external manifest freeze are not `ready_for_benchmark`; `benchmark_authorized` remains false.
+In Phase 6C/6D, trace materialization, external manifest freeze and media-profile freeze are not `ready_for_benchmark`; `benchmark_authorized` remains false.

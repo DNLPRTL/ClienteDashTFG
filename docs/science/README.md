@@ -13,8 +13,9 @@ The current state is:
 - Phase 6B adds manifest validation, readiness preflight and `canonical_content_fingerprint` audit hardening.
 - Phase 6C automates public trace acquisition, extraction, normalization, manifest building, validation, audit and external manifest freeze.
 - Phase 6C-H1 hardens live materialization with primary-only defaults, logs, bounded progress, timeouts, resume and skip-existing recovery.
+- Phase 6D adds MPD-derived media-profile extraction, validation, NeuralABR-Lite compatibility checking and external freeze tooling.
 - `docs/science/06_validation/` is the active validation documentation path.
-- No Phase 6C benchmark, ranking, plot from real data, result CSV, winner or QoE improvement claim exists.
+- No Phase 6C/6D benchmark, ranking, plot from real data, result CSV, winner or QoE improvement claim exists.
 
 ## Entry Points
 
@@ -38,7 +39,7 @@ Read `CANONICAL_DOCUMENTS.md` and the phase `README.md` first. Open historical f
 | `03_qoe_reward/` | Phase 3.5 | QoE/reward definition and artifact boundary. |
 | `04_neural_abr/` | Phase 4 | NeuralABR-Lite dataset, teacher, training, export, and diagnostic records. |
 | `05_neural_controller_integration/` | Phase 5 | canonical integration path for `neural_abr_lite`. |
-| `06_validation/` | Phase 6A2-6C-H1 | active validation protocol freeze, readiness gates and hardened external trace materialization automation; no benchmark authorization. |
+| `06_validation/` | Phase 6A2-6D | active validation protocol freeze, readiness gates, hardened external trace materialization automation and MPD-derived media-profile freeze; no benchmark authorization. |
 | `07_memory/` | Thesis | memory, defense, figures, tables, and thesis integration notes. |
 
 ## Source Handling Rules
@@ -48,10 +49,10 @@ Read `CANONICAL_DOCUMENTS.md` and the phase `README.md` first. Open historical f
 - Do not copy long passages, paper figures, or datasets into Git.
 - Keep implementation decisions traceable to source cards, specs, matrices, and closure reports.
 - Keep generated artifacts outside the repository.
-- Keep Phase 6C datasets, normalized CSVs, receipts, local manifests, reports, logs, zips and media outside the repository.
+- Keep Phase 6C/6D datasets, normalized CSVs, receipts, local manifests, media profiles, reports, logs, zips, MPDs, segments and media outside the repository.
 
 ## Evidence Boundary
 
 Phase 4 teacher agreement and OOD diagnostics are diagnostic evidence only. Because Phase 4 identity leakage risk includes checksum and content-level duplicates, Phase 6 must exclude Phase 4 overlap by `trace_id`, `leakage_group`, `checksum_sha256` and `canonical_content_fingerprint` from any fair `neural_abr_lite` evaluation split.
 
-`ready_for_phase6c` and Phase 6C external manifest freeze are not `ready_for_benchmark`; `benchmark_authorized=false` remains mandatory.
+`ready_for_phase6c`, Phase 6C external manifest freeze and Phase 6D media-profile freeze are not `ready_for_benchmark`; `benchmark_authorized=false` remains mandatory.

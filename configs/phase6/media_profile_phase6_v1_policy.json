@@ -1,0 +1,14 @@
+{
+  "artifact_boundary": "no_real_media_committed",
+  "benchmark_authorized": false,
+  "committed_real_media": false,
+  "committed_real_mpd": false,
+  "default_profile_id": "media_profile_phase6_v1",
+  "fallback_size_policy": "bitrate_estimate",
+  "perceptual_metrics_available": false,
+  "primary_source": "mpd",
+  "ready_for_benchmark": false,
+  "representation_order": "ascending_bitrate",
+  "schema_version": "phase6_media_profile_policy_v1",
+  "vmaf_available": false
+}

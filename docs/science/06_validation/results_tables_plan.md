@@ -1,6 +1,6 @@
 # Phase 6 Results Tables And Figures Plan
 
-Status: final Phase 6A2 protocol decision. This is a plan only; no plots or tables from real data are generated here.
+Status: final Phase 6A2 protocol decision extended by Phase 6D media-profile input planning. This is a plan only; no plots or tables from real data are generated here.
 
 ## Required Tables
 
@@ -8,6 +8,7 @@ Status: final Phase 6A2 protocol decision. This is a plan only; no plots or tabl
 | --- | --- | --- |
 | Controller matrix | Show controllers, classes and roles | `controller_matrix.md` and resolved config |
 | Trace manifest summary | Show dataset families, splits, counts and eligibility | `phase6_trace_manifest_final.json` and audit report |
+| Media profile summary | Show MPD duration, segment duration/count, ladder and size-source policy | `media_profile_phase6_v1.json` and Phase 6D reports |
 | Primary result table | Report `qoe_linear_mean` descriptive statistics and CI95 | Future QoE summaries |
 | Per-dataset result table | Show results by dataset family/evaluation group | Future QoE summaries |
 | Pairwise comparison vs `robust_mpc` and `neural_abr_lite` | Compare paired differences against key comparators | Future paired statistics |
@@ -39,10 +40,11 @@ flowchart LR
     A["Source cards and dataset cards"] --> B["Candidate trace materialization outside Git"]
     B --> C["Eligibility audit"]
     C --> D["phase6_trace_manifest_final.json"]
-    D --> E["Python trace-driven execution"]
-    E --> F["QoE and component summaries"]
-    F --> G["Statistical comparison over sessions/traces"]
-    G --> H["Evidence package and thesis tables"]
+    D --> E["media_profile_phase6_v1.json"]
+    E --> F["Python trace-driven execution"]
+    F --> G["QoE and component summaries"]
+    G --> H["Statistical comparison over sessions/traces"]
+    H --> I["Evidence package and thesis tables"]
 ```
 
 ## Gating Flow Draft
@@ -58,4 +60,4 @@ flowchart TD
 
 ## Non-Authorization
 
-Figures and tables listed here are planned outputs for future evidence work. They are not generated in Phase 6A2.
+Figures and tables listed here are planned outputs for future evidence work. They are not generated in Phase 6A2, Phase 6C or Phase 6D.
