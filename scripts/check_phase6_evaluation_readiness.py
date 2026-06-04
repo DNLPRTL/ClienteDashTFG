@@ -31,6 +31,14 @@ REQUIRED_SCRIPTS = (
     "scripts/compute_qoe_from_dry_run.py",
     "scripts/audit_phase6_trace_eligibility.py",
     "scripts/validate_phase6_trace_manifest.py",
+    "scripts/phase6c_source_registry.py",
+    "scripts/download_phase6_trace_sources.py",
+    "scripts/extract_phase6_trace_archives.py",
+    "scripts/normalize_phase6_trace_sources.py",
+    "scripts/build_phase6_reference_manifest.py",
+    "scripts/build_phase6_candidate_manifest.py",
+    "scripts/freeze_phase6_trace_manifest.py",
+    "scripts/run_phase6c_trace_materialization.py",
 )
 
 REQUIRED_CONTROLLERS = (
@@ -104,7 +112,7 @@ def build_report(
     errors: List[str] = []
     warnings: List[str] = []
     notes: List[str] = [
-        "Phase 6B is a readiness/audit phase only.",
+        "Phase 6B/6C readiness and materialization automation do not authorize benchmark execution.",
         "ready_for_phase6c is not ready_for_benchmark.",
     ]
 

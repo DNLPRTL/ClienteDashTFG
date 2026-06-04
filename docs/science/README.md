@@ -11,8 +11,9 @@ The current state is:
 - Phase 6A0/A1 opened the validation documentation scaffold.
 - Phase 6A2 freezes the final experimental protocol for the next technical readiness phase.
 - Phase 6B adds manifest validation, readiness preflight and `canonical_content_fingerprint` audit hardening.
+- Phase 6C automates public trace acquisition, extraction, normalization, manifest building, validation, audit and external manifest freeze.
 - `docs/science/06_validation/` is the active validation documentation path.
-- No Phase 6B benchmark, ranking, plot from real data, result CSV, winner or QoE improvement claim exists.
+- No Phase 6C benchmark, ranking, plot from real data, result CSV, winner or QoE improvement claim exists.
 
 ## Entry Points
 
@@ -36,7 +37,7 @@ Read `CANONICAL_DOCUMENTS.md` and the phase `README.md` first. Open historical f
 | `03_qoe_reward/` | Phase 3.5 | QoE/reward definition and artifact boundary. |
 | `04_neural_abr/` | Phase 4 | NeuralABR-Lite dataset, teacher, training, export, and diagnostic records. |
 | `05_neural_controller_integration/` | Phase 5 | canonical integration path for `neural_abr_lite`. |
-| `06_validation/` | Phase 6A2/6B | active validation protocol freeze and readiness gates; no benchmark authorization. |
+| `06_validation/` | Phase 6A2-6C | active validation protocol freeze, readiness gates and external trace materialization automation; no benchmark authorization. |
 | `07_memory/` | Thesis | memory, defense, figures, tables, and thesis integration notes. |
 
 ## Source Handling Rules
@@ -46,9 +47,10 @@ Read `CANONICAL_DOCUMENTS.md` and the phase `README.md` first. Open historical f
 - Do not copy long passages, paper figures, or datasets into Git.
 - Keep implementation decisions traceable to source cards, specs, matrices, and closure reports.
 - Keep generated artifacts outside the repository.
+- Keep Phase 6C datasets, normalized CSVs, receipts, local manifests, reports, logs, zips and media outside the repository.
 
 ## Evidence Boundary
 
 Phase 4 teacher agreement and OOD diagnostics are diagnostic evidence only. Because Phase 4 identity leakage risk includes checksum and content-level duplicates, Phase 6 must exclude Phase 4 overlap by `trace_id`, `leakage_group`, `checksum_sha256` and `canonical_content_fingerprint` from any fair `neural_abr_lite` evaluation split.
 
-`ready_for_phase6c` is not `ready_for_benchmark`; Phase 6B keeps `benchmark_authorized=false`.
+`ready_for_phase6c` and Phase 6C external manifest freeze are not `ready_for_benchmark`; `benchmark_authorized=false` remains mandatory.

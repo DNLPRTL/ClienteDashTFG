@@ -15,6 +15,8 @@ Phase 6B also hardens:
 
 - `scripts/audit_phase6_trace_eligibility.py`
 
+After Phase 6C, the same preflight also checks that the Phase 6C source registry and materialization scripts are present. This remains a structural check only.
+
 ## Readiness Checks
 
 `check_phase6_evaluation_readiness.py` verifies:
@@ -25,6 +27,7 @@ Phase 6B also hardens:
 - QoE modules and scripts are importable enough for readiness;
 - no obvious generated artifacts exist under validation `results`, `plots` or `generated` directories;
 - optional manifests pass strict schema validation and Phase 4 overlap audit.
+- Phase 6C automation scripts are present when the repository has advanced to materialization readiness.
 
 When manifests are missing, the script reports `manifest_audit_not_run`. This is a warning unless `--require-manifests` is set.
 

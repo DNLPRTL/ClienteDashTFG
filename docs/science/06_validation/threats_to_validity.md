@@ -31,5 +31,5 @@ Status: final Phase 6A2 protocol decision plus Phase 6B readiness hardening. Exp
 
 - No final winner should be declared from small or noisy samples.
 - No `neural_abr_lite` QoE improvement claim is allowed unless the frozen protocol and evidence package support it.
-- In Phase 6B, `ready_for_phase6c` is not `ready_for_benchmark` and `benchmark_authorized` remains false.
+- In Phase 6C, materialization and external manifest freeze are not `ready_for_benchmark` and `benchmark_authorized` remains false.
 - Mixed, negative or inconclusive results must be reported without narrative pressure.

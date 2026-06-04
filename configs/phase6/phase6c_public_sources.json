@@ -1,0 +1,115 @@
+{
+  "schema_version": "phase6c_public_source_registry_v1",
+  "notes": [
+    "Metadata only. Do not store downloaded archives, normalized traces, local manifests or run reports in Git.",
+    "Phase 6C materializes datasets outside the repository and does not authorize benchmark execution."
+  ],
+  "sources": [
+    {
+      "source_id": "raca_4g_lte",
+      "dataset_family": "raca_4g_lte",
+      "source_dataset": "Raca 4G LTE Dataset",
+      "role": "primary_ood_candidate",
+      "enabled_by_default": true,
+      "download_by_default": true,
+      "split": "ood_final",
+      "eval_gate": "use_for_eval",
+      "canonical_file": "LTE_Dataset.zip",
+      "urls": [
+        "https://zenodo.org/records/1219679/files/LTE_Dataset.zip?download=1"
+      ],
+      "expected_hashes": {
+        "md5": "27da16b90a94ded3511bad9682f2e166"
+      },
+      "license_status": "public_source_requires_local_review",
+      "citation_hint": "Raca et al. LTE dataset, Zenodo record 1219679."
+    },
+    {
+      "source_id": "raca_5g",
+      "dataset_family": "raca_5g",
+      "source_dataset": "Raca 5G Production Dataset",
+      "role": "primary_ood_candidate",
+      "enabled_by_default": true,
+      "download_by_default": true,
+      "split": "ood_final",
+      "eval_gate": "use_for_eval",
+      "canonical_file": "5G-production-dataset.zip",
+      "urls": [
+        "https://raw.githubusercontent.com/uccmisl/5Gdataset/master/5G-production-dataset.zip",
+        "https://github.com/uccmisl/5Gdataset/raw/master/5G-production-dataset.zip"
+      ],
+      "expected_hashes": {},
+      "license_status": "public_source_requires_local_review",
+      "citation_hint": "UCC MISL 5Gdataset repository."
+    },
+    {
+      "source_id": "lumos5g",
+      "dataset_family": "lumos5g",
+      "source_dataset": "Lumos5G",
+      "role": "optional_ood_candidate",
+      "enabled_by_default": true,
+      "download_by_default": true,
+      "split": "ood_final",
+      "eval_gate": "use_for_eval",
+      "canonical_file": "Lumos5G-v1.0.zip",
+      "google_drive_file_id": "1spFuxOe5VFyWOHdeJsBeHPHbHiGidw22",
+      "urls": [
+        "https://drive.google.com/uc?export=download&id=1spFuxOe5VFyWOHdeJsBeHPHbHiGidw22"
+      ],
+      "expected_hashes": {},
+      "license_status": "public_source_requires_local_review",
+      "citation_hint": "UMN Lumos5G public dataset page."
+    },
+    {
+      "source_id": "ghent_4g_lte",
+      "dataset_family": "ghent_4g_lte",
+      "source_dataset": "Ghent 4G/LTE bandwidth logs",
+      "role": "same_family_diagnostic",
+      "enabled_by_default": true,
+      "download_by_default": true,
+      "split": "same_family_candidate",
+      "eval_gate": "diagnostic_only",
+      "canonical_file": "logs_all.zip",
+      "urls": [
+        "https://users.ugent.be/~jvdrhoof/dataset-4g/logs/logs_all.zip"
+      ],
+      "expected_hashes": {},
+      "license_status": "public_source_requires_local_review",
+      "citation_hint": "Van der Hooft et al. Ghent 4G/LTE bandwidth logs.",
+      "ghent_policy": {
+        "default_download": "logs_all_only",
+        "do_not_combine_with_per_mobility_archives": true
+      }
+    },
+    {
+      "source_id": "hsdpa_norway",
+      "dataset_family": "hsdpa_norway",
+      "source_dataset": "HSDPA Norway MMSys 2013 path bandwidth",
+      "role": "same_family_diagnostic",
+      "enabled_by_default": true,
+      "download_by_default": true,
+      "split": "same_family_candidate",
+      "eval_gate": "diagnostic_only",
+      "source_base_url": "https://skulddata.cs.umass.edu/traces/mmsys/2013/pathbandwidth/",
+      "recursive_listing": true,
+      "file_pattern": "report.*",
+      "expected_hashes": {},
+      "license_status": "public_source_requires_local_review",
+      "citation_hint": "Riiser et al. MMSys 2013 HSDPA Norway path bandwidth traces."
+    },
+    {
+      "source_id": "lancaster_abr_throughput_traces",
+      "dataset_family": "lancaster_abr_throughput_traces",
+      "source_dataset": "Lancaster ABR throughput traces",
+      "role": "excluded_pending_source_note_and_audit",
+      "enabled_by_default": false,
+      "download_by_default": false,
+      "split": "excluded",
+      "eval_gate": "do_not_use_for_eval",
+      "expected_hashes": {},
+      "license_status": "not_authorized_for_phase6c_primary_eval",
+      "citation_hint": "Excluded from Phase 6C automated primary evaluation until a source note/card and eligibility audit authorize it.",
+      "exclusion_reason": "lancaster_excluded_pending_source_note_and_clean_eligibility_audit"
+    }
+  ]
+}

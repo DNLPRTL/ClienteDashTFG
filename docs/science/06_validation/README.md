@@ -1,6 +1,6 @@
 # Phase 6 Validation Documentation
 
-Phase 6A2 protocol freeze is complete. Phase 6B adds evaluation readiness gates, manifest schema validation and canonical content fingerprint audit hardening.
+Phase 6A2 protocol freeze is complete. Phase 6B added evaluation readiness gates, manifest schema validation and canonical content fingerprint audit hardening. Phase 6C adds automated trace acquisition, normalization and manifest freeze tooling.
 
 This directory is the active validation documentation path for DashClientModular4:
 
@@ -8,9 +8,9 @@ This directory is the active validation documentation path for DashClientModular
 docs/science/06_validation/
 ```
 
-Phase 6A0/A1 opened the validation documentation scaffold and consolidated literature/source evidence. Phase 6A2 freezes the final experimental protocol. Phase 6B is readiness/audit code only and prepares Phase 6C real dataset materialization outside the repository.
+Phase 6A0/A1 opened the validation documentation scaffold and consolidated literature/source evidence. Phase 6A2 freezes the final experimental protocol. Phase 6B added readiness/audit code. Phase 6C automates real dataset materialization outside the repository.
 
-Phase 6B still does not authorize benchmark execution, controller ranking, plots, result CSVs, winner declarations, retraining, or any claim that `neural_abr_lite` improves QoE over a baseline.
+Phase 6C still does not authorize benchmark execution, controller ranking, plots, result CSVs, winner declarations, retraining, or any claim that `neural_abr_lite` improves QoE over a baseline.
 
 ## Current Boundary
 
@@ -24,8 +24,10 @@ Phase 6B still does not authorize benchmark execution, controller ranking, plots
 - Gates remain mandatory: `use_for_eval`, `diagnostic_only`, `do_not_use_for_eval`.
 - Phase 4E2 teacher agreement/OOD material remains diagnostic history, not strong generalization evidence.
 - Phase 6B closes the `canonical_content_fingerprint` audit gap while continuing to report `checksum_sha256` separately.
+- Phase 6C is automated; the user should not manually create source configs or manifests.
+- Real datasets, normalized CSVs, receipts, local manifests and reports live outside the repo.
 - `ready_for_phase6c` is not `ready_for_benchmark`; `benchmark_authorized` remains false.
-- Final Phase 6 trace IDs are not frozen until `phase6_trace_manifest_final.json` exists after Phase 6C.
+- Final Phase 6 trace IDs are frozen only by the external `phase6_trace_manifest_final.json` after acquisition, normalization, validation, eligibility audit and freeze.
 
 ## Frozen Phase 6A2 Protocol
 
@@ -46,6 +48,14 @@ Phase 6B still does not authorize benchmark execution, controller ranking, plots
 - `phase6_manifest_schema.md`: manifest fields, gate aliases, fingerprint aliases and strict-final requirements.
 - `phase6b_preflight_contract.md`: structural readiness checks and non-benchmark boundary.
 - `phase6b_evaluation_readiness_report.md`: JSON report semantics for `ready_for_phase6c`, `ready_for_benchmark` and `benchmark_authorized`.
+
+## Phase 6C Automation Contracts
+
+- `phase6c_automated_acquisition_runbook.md`: one-command external materialization runbook.
+- `phase6c_public_source_registry.md`: committed public-source metadata and source roles.
+- `phase6c_normalization_contract.md`: normalized CSV schema and fingerprint contract.
+- `phase6c_trace_manifest_freeze_contract.md`: final external manifest freeze preconditions.
+- `phase6c_no_benchmark_boundary.md`: explicit non-execution boundary.
 
 ## Entry Documents
 
@@ -70,4 +80,4 @@ Phase 6B still does not authorize benchmark execution, controller ranking, plots
 
 Generated documents in this directory are protocol evidence only. They are not run outputs, benchmark evidence, rankings, plots, or performance results.
 
-Lancaster remains excluded from primary final evaluation unless a source note/card and eligibility audit authorize it. Ghent must use `logs_all` OR per-mobility folders, not both, unless deduplicated by checksum/fingerprint.
+Raca 4G and Raca 5G are the primary OOD candidates. Lumos5G is optional and may be blocked by Google Drive. Ghent and HSDPA are same-family diagnostic by default. Lancaster remains excluded from primary final evaluation unless a source note/card and eligibility audit authorize it. Ghent must use `logs_all` OR per-mobility folders, not both, unless deduplicated by checksum/fingerprint.

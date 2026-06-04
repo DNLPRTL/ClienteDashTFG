@@ -1,6 +1,6 @@
 # Phase 6 Trace Selection Policy
 
-Status: final Phase 6A2 protocol decision plus Phase 6B readiness hardening. No trace IDs are frozen in this document.
+Status: final Phase 6A2 protocol decision plus Phase 6B/6C readiness and materialization automation. No trace IDs are frozen in this document.
 
 ## Phase 4E2 Historical Usage
 
@@ -22,7 +22,7 @@ Final Phase 6 trace IDs must be frozen only by:
 phase6_trace_manifest_final.json
 ```
 
-Do not invent trace IDs in protocol documents. The final manifest must be produced only after Phase 6C real dataset materialization outside the repository and eligibility audit. It must include enough identity fields to block overlap with Phase 4.
+Do not invent trace IDs in protocol documents. The final manifest must be produced only by Phase 6C automation after acquisition, extraction, normalization, validation, eligibility audit and freeze outside the repository. It must include enough identity fields to block overlap with Phase 4.
 
 ## Required Eligibility Keys
 
@@ -39,9 +39,10 @@ Phase 6B closes the audit gap for `canonical_content_fingerprint`. `checksum_sha
 
 | Group | Candidate datasets | Authorization condition |
 | --- | --- | --- |
-| `same_family_clean` | HSDPA/Ghent | Allowed only for traces with no overlap with Phase 4 by `trace_id`, `leakage_group`, `checksum_sha256` or `canonical_content_fingerprint`. |
-| `OOD_final` | Raca 4G, Raca 5G, Lumos5G | Subject to access, license, format, conversion and eligibility checks. |
-| `Lancaster` | Lancaster ABR throughput traces | Excluded from primary final evaluation unless a source card/source note is added and eligibility audit proves no overlap; otherwise excluded or `diagnostic_only`. |
+| `OOD_final` | Raca 4G, Raca 5G | Primary OOD candidates; `use_for_eval` only after automatic acquisition, normalization, validation and clean eligibility audit. |
+| `OOD_final_optional` | Lumos5G | Optional OOD candidate; `use_for_eval` only if automatic Google Drive acquisition, normalization, validation and audit pass. Provider block is recorded, not patched manually. |
+| `same_family_candidate` | HSDPA/Ghent | Same-family diagnostic by default; `diagnostic_only` unless a future protocol explicitly changes the gate. |
+| `Lancaster` | Lancaster ABR throughput traces | Excluded from Phase 6C automated primary evaluation. Do not download, normalize or include as `use_for_eval` unless a future source card/source note and audit authorize it. |
 
 ## Ghent Duplicate Rule
 
@@ -60,3 +61,5 @@ If `eval_gate` is present, it dominates split-name heuristics. `use_for_eval` ma
 ## Non-Authorization
 
 This policy does not download datasets, create final manifests, execute runs, or generate results. `ready_for_phase6c` is not `ready_for_benchmark`, and `benchmark_authorized` remains false in Phase 6B.
+
+Phase 6C automation may download and normalize sources into an external root, but it still does not run benchmark execution. `ready_for_benchmark=false` and `benchmark_authorized=false` remain mandatory.

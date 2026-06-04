@@ -25,10 +25,15 @@ This index is the human entry point for DashClientModular4 documentation. It is 
 - `docs/science/PHASE_INDEX.md`: phase-to-directory map.
 - `docs/science/CANONICAL_DOCUMENTS.md`: shortest path through the canonical scientific trail.
 - `docs/science/HISTORICAL_DOCUMENT_POLICY.md`: how to interpret historical, handoff, closure, and template docs.
-- `docs/science/06_validation/README.md`: active Phase 6 validation protocol freeze plus Phase 6B readiness gates.
+- `docs/science/06_validation/README.md`: active Phase 6 validation protocol freeze plus Phase 6C automation.
 - `docs/science/06_validation/phase6_manifest_schema.md`: Phase 6 trace manifest schema and gate aliases.
 - `docs/science/06_validation/phase6b_preflight_contract.md`: Phase 6B readiness preflight contract.
 - `docs/science/06_validation/phase6b_evaluation_readiness_report.md`: Phase 6B readiness report semantics.
+- `docs/science/06_validation/phase6c_automated_acquisition_runbook.md`: one-command Phase 6C external materialization runbook.
+- `docs/science/06_validation/phase6c_public_source_registry.md`: public source registry and dataset roles.
+- `docs/science/06_validation/phase6c_normalization_contract.md`: normalized trace schema and fingerprint contract.
+- `docs/science/06_validation/phase6c_trace_manifest_freeze_contract.md`: final external manifest freeze contract.
+- `docs/science/06_validation/phase6c_no_benchmark_boundary.md`: Phase 6C non-execution boundary.
 
 ## Roadmap
 
@@ -49,6 +54,14 @@ This index is the human entry point for DashClientModular4 documentation. It is 
 - `scripts/audit_phase6_trace_eligibility.py`: Phase 6 trace eligibility audit.
 - `scripts/validate_phase6_trace_manifest.py`: Phase 6 trace manifest schema validation without benchmark execution.
 - `scripts/check_phase6_evaluation_readiness.py`: Phase 6B structural readiness preflight; `ready_for_benchmark=false`.
+- `configs/phase6/phase6c_public_sources.json`: Phase 6C committed public source metadata.
+- `scripts/run_phase6c_trace_materialization.py`: one-command Phase 6C external acquisition/materialization orchestrator.
+- `scripts/download_phase6_trace_sources.py`: stdlib downloader with receipts and provider-block handling.
+- `scripts/extract_phase6_trace_archives.py`: safe archive extraction into the external root.
+- `scripts/normalize_phase6_trace_sources.py`: normalized trace CSV and per-trace metadata builder.
+- `scripts/build_phase6_reference_manifest.py`: Phase 4 leakage reference manifest builder.
+- `scripts/build_phase6_candidate_manifest.py`: Phase 6 candidate manifest builder.
+- `scripts/freeze_phase6_trace_manifest.py`: external final manifest freeze gate.
 - `scripts/validate_neural_abr_bundle.py`: local-only bundle validation helper.
 - `scripts/smoke_neural_abr_inference.py`: local-only structural inference smoke helper.
 

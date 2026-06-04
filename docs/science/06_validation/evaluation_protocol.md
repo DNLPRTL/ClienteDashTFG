@@ -72,4 +72,4 @@ Future execution must produce an external evidence package aligned with `ubuntu_
 
 This protocol does not run a benchmark, produce plots, generate CSV result outputs, rank controllers, declare a winner, or claim that `neural_abr_lite` improves QoE.
 
-In Phase 6B, `ready_for_phase6c` is not `ready_for_benchmark`; `benchmark_authorized` remains false.
+In Phase 6C, materialization and external manifest freeze are not `ready_for_benchmark`; `benchmark_authorized` remains false.

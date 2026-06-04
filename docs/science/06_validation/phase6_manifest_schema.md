@@ -1,6 +1,6 @@
 # Phase 6 Trace Manifest Schema
 
-Status: Phase 6B readiness contract. No trace IDs are frozen by this document.
+Status: Phase 6B/6C readiness and materialization contract. No trace IDs are frozen by this document.
 
 Canonical manifest schema version:
 
@@ -111,4 +111,15 @@ Final Phase 6 trace IDs are still not frozen. They become frozen only when the p
 phase6_trace_manifest_final.json
 ```
 
-Phase 6B validates schema readiness and audit readiness only. Phase 6C is the next phase for real dataset materialization outside the repository.
+Phase 6C automation produces the external final manifest only after acquisition, extraction, normalization, validation, eligibility audit and freeze. The user should not manually write the source registry, candidate manifest or final manifest.
+
+The final manifest remains external and must keep:
+
+```json
+{
+  "ready_for_benchmark": false,
+  "benchmark_authorized": false
+}
+```
+
+Phase 6C materialization is not benchmark authorization.

@@ -21,10 +21,10 @@ Phase 5 was integration and hardening only. It did not run a benchmark, produce 
 The active validation documentation state is:
 
 ```text
-Phase 6B - Evaluation readiness gates, manifest schema and fingerprint hardening
+Phase 6C - Automated trace acquisition, normalization and manifest freeze
 ```
 
-Phase 6A2 freezes the final experimental protocol. Phase 6B adds manifest validation, structural readiness preflight and `canonical_content_fingerprint` audit hardening for the next materialization phase. It still does not authorize benchmark execution, ranking, plots from real data, result CSVs, winner declaration, retraining, or QoE improvement claims.
+Phase 6A2 freezes the final experimental protocol. Phase 6B adds manifest validation, structural readiness preflight and `canonical_content_fingerprint` audit hardening. Phase 6C automates source registry loading, public acquisition, safe extraction, normalization, reference/candidate manifest building, validation, eligibility audit and external final manifest freeze. It still does not authorize benchmark execution, ranking, plots from real data, result CSVs, winner declaration, retraining, or QoE improvement claims.
 
 The active validation documentation path is:
 
@@ -66,7 +66,7 @@ The local marker is:
 _models/phase4_AI/neural_abr_lite/phase4F/CURRENT_BUNDLE.txt
 ```
 
-No datasets, models, run outputs, logs, PDFs, CSVs, JSONL files, archives, videos, segments, or media files belong in this repository.
+No datasets, models, run outputs, logs, PDFs, CSVs, JSONL files, archives, videos, segments, media files, Phase 6C normalized traces, receipts or external manifests belong in this repository.
 
 ## Run Path
 
@@ -88,13 +88,31 @@ See `docs/runbooks/run_client.md` and `docs/runbooks/run_layout.md` for usage an
 
 ## Validation Commands
 
-Recommended local validation during Phase 6B readiness/protocol work:
+Recommended local validation during Phase 6C automation/protocol work:
 
 ```powershell
 python -m unittest discover
 python scripts\check_client_readiness.py --strict
-python -m py_compile scripts\audit_phase6_trace_eligibility.py scripts\validate_phase6_trace_manifest.py scripts\check_phase6_evaluation_readiness.py
+python scripts\check_phase6_evaluation_readiness.py --strict
+python -m py_compile scripts\audit_phase6_trace_eligibility.py scripts\validate_phase6_trace_manifest.py scripts\check_phase6_evaluation_readiness.py scripts\run_phase6c_trace_materialization.py
 Get-ChildItem core,scripts,tests -Recurse -Filter *.py | ForEach-Object { python -m py_compile $_.FullName }
+```
+
+The Phase 6C materialization path is automated. The user should not manually create source config JSON files or manifests:
+
+```powershell
+python scripts\run_phase6c_trace_materialization.py `
+  --external-root C:\Users\danie\Documents\TFG\_datasets\phase6_validation `
+  --phase4-dataset-manifest C:\Users\danie\Documents\TFG\_datasets\phase4_AI\neural_abr_lite\phase4E2_expanded_candidate_20260529_080755\dataset_manifest.json `
+  --download `
+  --extract `
+  --normalize `
+  --build-reference `
+  --build-candidate `
+  --validate `
+  --audit `
+  --freeze `
+  --strict
 ```
 
 The Phase 6 trace eligibility guardrail can be run with external manifests:
@@ -112,7 +130,7 @@ The Phase 6B structural preflight can be run without manifests:
 python scripts\check_phase6_evaluation_readiness.py --strict
 ```
 
-Without manifests it reports `manifest_audit_not_run`. With manifests, it validates the Phase 6 candidate schema and audits Phase 4 overlap by `trace_id`, `leakage_group`, `checksum_sha256` and `canonical_content_fingerprint`. In Phase 6B, `ready_for_benchmark=false` and `benchmark_authorized=false` always remain in force.
+Without manifests it reports `manifest_audit_not_run`. With manifests, it validates the Phase 6 candidate schema and audits Phase 4 overlap by `trace_id`, `leakage_group`, `checksum_sha256` and `canonical_content_fingerprint`. In Phase 6C, `ready_for_benchmark=false` and `benchmark_authorized=false` always remain in force.
 
 ## Main Repository Structure
 
@@ -127,7 +145,8 @@ Without manifests it reports `manifest_audit_not_run`. With manifests, it valida
 - `docs/architecture`: client contracts and implementation architecture.
 - `docs/runbooks`: operator and environment runbooks.
 - `docs/science`: phase-indexed scientific documentation.
-- `docs/science/06_validation`: active Phase 6 validation protocol plus Phase 6B readiness gates.
+- `configs/phase6`: committed Phase 6C source registry metadata only.
+- `docs/science/06_validation`: active Phase 6 validation protocol plus Phase 6C automation contracts.
 - `docs/maintenance`: workspace hygiene and pre-validation guardrails.
 - `docs/roadmap`: future work.
 
@@ -135,4 +154,4 @@ Without manifests it reports `manifest_audit_not_run`. With manifests, it valida
 
 Phase 4 teacher agreement and OOD diagnostics are not formal performance evidence because the final Phase 4 dataset contains identity leakage risk across splits. That does not invalidate Phase 5 integration. It does mean Phase 6 must exclude every trace seen by Phase 4 by `trace_id`, `leakage_group`, `checksum_sha256` and `canonical_content_fingerprint` when evaluating `neural_abr_lite` against baselines.
 
-Final Phase 6 trace IDs are not frozen until `phase6_trace_manifest_final.json` exists after Phase 6C materialization outside the repository.
+Final Phase 6 trace IDs are frozen only when the external `phase6_trace_manifest_final.json` exists after Phase 6C acquisition, normalization, validation, eligibility audit and freeze. The frozen manifest still keeps `ready_for_benchmark=false` and `benchmark_authorized=false`.

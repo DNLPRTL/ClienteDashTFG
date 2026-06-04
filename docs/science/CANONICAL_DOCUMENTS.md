@@ -120,6 +120,31 @@ Phase 6A2 freezes the protocol for the next technical readiness phase. It still 
 
 Phase 6B closes the `canonical_content_fingerprint` audit gap and adds structural readiness gates for Phase 6C. It still does not run a benchmark, create rankings, produce plots from real data, generate result CSVs, declare a winner, retrain NeuralABR-Lite, or claim QoE improvement. `ready_for_phase6c` is not `ready_for_benchmark`, and `benchmark_authorized` remains false.
 
+## Phase 6C - Automated Trace Materialization
+
+- `configs/phase6/phase6c_public_sources.json`
+- `docs/science/06_validation/phase6c_automated_acquisition_runbook.md`
+- `docs/science/06_validation/phase6c_public_source_registry.md`
+- `docs/science/06_validation/phase6c_normalization_contract.md`
+- `docs/science/06_validation/phase6c_trace_manifest_freeze_contract.md`
+- `docs/science/06_validation/phase6c_no_benchmark_boundary.md`
+- `scripts/run_phase6c_trace_materialization.py`
+- `scripts/download_phase6_trace_sources.py`
+- `scripts/extract_phase6_trace_archives.py`
+- `scripts/normalize_phase6_trace_sources.py`
+- `scripts/build_phase6_reference_manifest.py`
+- `scripts/build_phase6_candidate_manifest.py`
+- `scripts/freeze_phase6_trace_manifest.py`
+- `tests/test_phase6c_orchestrator.py`
+- `tests/test_phase6c_downloader.py`
+- `tests/test_phase6c_extract.py`
+- `tests/test_phase6c_normalization.py`
+- `tests/test_phase6_reference_manifest.py`
+- `tests/test_phase6_candidate_manifest.py`
+- `tests/test_phase6_manifest_freeze.py`
+
+Phase 6C automates acquisition, extraction, normalization, manifest building, validation, audit and external manifest freeze. It does not require manual user-created configs or manifests. It still does not run a benchmark, create rankings, produce plots from real data, generate result CSVs, declare a winner, retrain NeuralABR-Lite, or claim QoE improvement. `ready_for_benchmark=false` and `benchmark_authorized=false` remain mandatory.
+
 ## Thesis Memory
 
 - `docs/science/07_memory/memory_structure_professor.md`
