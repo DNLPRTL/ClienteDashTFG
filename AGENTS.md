@@ -24,10 +24,11 @@ Phase 3 Rebuild - final corpus generated on Windows; Ubuntu validation pending
 ```
 
 Phase 1 y Phase 2 se consideran cerradas. Phase 3 Rebuild ya tiene corpus final
-externo generado y validado en Windows. Antes de avanzar operativamente, la VM
-cliente Ubuntu debe sincronizar la rama y validar el manifest final. No hay
-benchmark, training IA, ranking, ganador ni afirmacion de mejora de QoE
-autorizados.
+externo generado y validado en Windows, mas una auditoria de calidad y un
+manifest curado recomendado para preparacion de entrenamiento/evaluacion. Antes
+de avanzar operativamente, la VM cliente Ubuntu debe sincronizar la rama y
+validar los manifests externos. No hay benchmark, training IA, ranking, ganador
+ni afirmacion de mejora de QoE autorizados.
 
 ## Documentos obligatorios por ejecucion
 

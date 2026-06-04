@@ -30,6 +30,14 @@ C:\Users\danie\Documents\TFG\runs_trazas\phase3\final\phase3_trace_replay_smoke_
 
 The final corpus is defined by `phase3_trace_manifest_final.json`, not by walking the normalized directory.
 
+After the quality audit, the recommended usable corpus for training/evaluation preparation is:
+
+```text
+C:\Users\danie\Documents\TFG\manifests_trazas\phase3\final\phase3_trace_manifest_curated.json
+```
+
+This curated manifest keeps bad/intermittent network traces when they have enough signal, and excludes only traces that are too short or all-zero.
+
 ## Final Counts
 
 Final accepted traces:
