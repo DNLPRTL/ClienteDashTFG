@@ -4,11 +4,12 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+HISTORICAL_CLIENT_DOC_ROOT = Path("docs/contexto rama original/0_desarrollo_del_cliente")
 
 
 class TelemetryColumnProvenanceDocsTest(unittest.TestCase):
     def setUp(self):
-        self.text = (ROOT / "docs/architecture/telemetry_column_provenance.md").read_text(encoding="utf-8")
+        self.text = (ROOT / HISTORICAL_CLIENT_DOC_ROOT / "telemetry_column_provenance.md").read_text(encoding="utf-8")
 
     def test_mentions_every_current_csv_column(self):
         from core.dataset_schema import build_default_segment_telemetry_header, build_evaluation_segments_header

@@ -5,11 +5,12 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+HISTORICAL_CLIENT_DOC_ROOT = Path("docs/contexto rama original/0_desarrollo_del_cliente")
 
 
 class RuntimeOutputContractDocsTest(unittest.TestCase):
     def setUp(self):
-        self.contract = (ROOT / "docs/architecture/runtime_console_output_contract.md").read_text(encoding="utf-8")
+        self.contract = (ROOT / HISTORICAL_CLIENT_DOC_ROOT / "runtime_console_output_contract.md").read_text(encoding="utf-8")
 
     def test_contract_marks_console_as_non_canonical(self):
         lower = self.contract.lower()

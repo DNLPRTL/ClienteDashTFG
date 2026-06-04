@@ -16,6 +16,7 @@ from core.dataset_schema import DEFAULT_SEGMENT_TELEMETRY_FEEDBACK_KEYS
 
 
 ROOT = Path(__file__).resolve().parents[1]
+HISTORICAL_CLIENT_DOC_ROOT = Path("docs/contexto rama original/0_desarrollo_del_cliente")
 
 
 class BaselineEntryContractTest(unittest.TestCase):
@@ -31,7 +32,7 @@ class BaselineEntryContractTest(unittest.TestCase):
         self.assertEqual("deprecated_compatibility_alias", FEEDBACK_SEMANTIC_STATUS["bwe"])
 
     def test_baseline_contract_doc_contains_required_boundaries(self):
-        text = (ROOT / "docs/architecture/baseline_entry_contract.md").read_text(encoding="utf-8").lower()
+        text = (ROOT / HISTORICAL_CLIENT_DOC_ROOT / "baseline_entry_contract.md").read_text(encoding="utf-8").lower()
 
         for phrase in [
             "target rates are bytes per second",
@@ -48,7 +49,7 @@ class BaselineEntryContractTest(unittest.TestCase):
             self.assertIn(phrase, text)
 
     def test_phase1_closure_docs_are_present_but_bounded(self):
-        report = (ROOT / "docs/architecture/client_readiness_report.md").read_text(encoding="utf-8")
+        report = (ROOT / HISTORICAL_CLIENT_DOC_ROOT / "client_readiness_report.md").read_text(encoding="utf-8")
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
         self.assertIn("Phase 1 client hardening ready to close: YES", report)

@@ -5,6 +5,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+HISTORICAL_CLIENT_DOC_ROOT = Path("docs/contexto rama original/0_desarrollo_del_cliente")
+MANDATORY_DOC_ROOT = Path("docs/arquitectura y procedimientos estandar tfg dash")
 
 
 def read_doc(relative_path):
@@ -14,17 +16,18 @@ def read_doc(relative_path):
 class Phase1AcceptanceDocsTest(unittest.TestCase):
     def test_acceptance_and_roadmap_docs_exist(self):
         required = [
-            "docs/architecture/phase1_acceptance.md",
-            "docs/architecture/telemetry_column_provenance.md",
-            "docs/architecture/runtime_console_output_contract.md",
-            "docs/roadmap/gui_frontend_dashboard.md",
+            HISTORICAL_CLIENT_DOC_ROOT / "phase1_acceptance.md",
+            HISTORICAL_CLIENT_DOC_ROOT / "telemetry_column_provenance.md",
+            HISTORICAL_CLIENT_DOC_ROOT / "runtime_console_output_contract.md",
+            MANDATORY_DOC_ROOT / "arquitectura_y_procedimientos_estandar_tfg_dash.md",
+            MANDATORY_DOC_ROOT / "TFG_PLAN_GENERICO.md",
         ]
 
         for relative_path in required:
             self.assertTrue((ROOT / relative_path).is_file(), relative_path)
 
     def test_phase1_acceptance_states_required_boundaries(self):
-        text = read_doc("docs/architecture/phase1_acceptance.md").lower()
+        text = read_doc(HISTORICAL_CLIENT_DOC_ROOT / "phase1_acceptance.md").lower()
 
         self.assertIn("6f36888", text)
         self.assertIn("13. phase 1 acceptance", text)
@@ -48,29 +51,29 @@ class Phase1AcceptanceDocsTest(unittest.TestCase):
         self.assertIn("gui/operator dashboard", text)
         self.assertIn("return to phase 0 methodology", text)
 
-    def test_gui_roadmap_is_registered_but_bounded(self):
-        text = read_doc("docs/roadmap/gui_frontend_dashboard.md").lower()
+    def test_phase3_rebuild_context_is_registered_but_bounded(self):
+        text = "\n".join(
+            [
+                read_doc("AGENTS.md").lower(),
+                read_doc(MANDATORY_DOC_ROOT / "arquitectura_y_procedimientos_estandar_tfg_dash.md").lower(),
+                read_doc(MANDATORY_DOC_ROOT / "TFG_PLAN_GENERICO.md").lower(),
+            ]
+        )
 
-        self.assertIn("roadmap document only", text)
-        self.assertIn("mpd url selection", text)
-        self.assertIn("controller selection", text)
-        self.assertIn("media engine selection", text)
-        self.assertIn("headless/visible playback", text)
-        self.assertIn("live human-readable progress", text)
-        self.assertIn("segment_telemetry.csv", text)
-        self.assertIn("evaluation_segments.csv", text)
-        self.assertIn("the gui is not benchmark authority", text)
-        self.assertIn("cli/config/run artifacts remain canonical", text)
-        self.assertIn("must not silently mix fake and gstreamer", text)
-        self.assertIn("must not train ai", text)
-        self.assertIn("must not define final qoe or reward", text)
+        self.assertIn("phase 3 rebuild", text)
+        self.assertIn("dataset en bruto", text)
+        self.assertIn("datasets_normalizados", text)
+        self.assertIn("manifests_trazas", text)
+        self.assertIn("throughput_kbps", text)
+        self.assertIn("no usar dry-runs legacy como training data", text)
+        self.assertIn("no producir rankings", text)
 
     def test_current_docs_do_not_make_legacy_dataset_names_canonical(self):
         current_docs = [
             "README.md",
-            "docs/architecture/phase1_acceptance.md",
-            "docs/architecture/output_artifact_contract.md",
-            "docs/runbooks/run_layout.md",
+            "AGENTS.md",
+            HISTORICAL_CLIENT_DOC_ROOT / "phase1_acceptance.md",
+            HISTORICAL_CLIENT_DOC_ROOT / "output_artifact_contract.md",
         ]
 
         for relative_path in current_docs:

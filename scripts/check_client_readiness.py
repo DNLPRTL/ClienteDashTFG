@@ -12,18 +12,22 @@ from typing import Callable, Iterable, List, Optional, Sequence, TextIO
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+MANDATORY_DOC_ROOT = "docs/arquitectura y procedimientos estandar tfg dash"
+HISTORICAL_CLIENT_DOC_ROOT = "docs/contexto rama original/0_desarrollo_del_cliente"
 
 REQUIRED_DOCS = (
-    "docs/architecture/phase1_acceptance.md",
-    "docs/architecture/telemetry_column_provenance.md",
-    "docs/architecture/runtime_console_output_contract.md",
-    "docs/architecture/output_artifact_contract.md",
-    "docs/architecture/client_architecture_audit.md",
-    "docs/architecture/baseline_entry_contract.md",
-    "docs/architecture/client_readiness_report.md",
-    "docs/architecture/hardening_step_14_client_readiness.md",
-    "docs/runbooks/gstreamer_playback.md",
-    "docs/roadmap/gui_frontend_dashboard.md",
+    "AGENTS.md",
+    "{0}/arquitectura_y_procedimientos_estandar_tfg_dash.md".format(MANDATORY_DOC_ROOT),
+    "{0}/TFG_PLAN_GENERICO.md".format(MANDATORY_DOC_ROOT),
+    "{0}/phase1_acceptance.md".format(HISTORICAL_CLIENT_DOC_ROOT),
+    "{0}/telemetry_column_provenance.md".format(HISTORICAL_CLIENT_DOC_ROOT),
+    "{0}/runtime_console_output_contract.md".format(HISTORICAL_CLIENT_DOC_ROOT),
+    "{0}/output_artifact_contract.md".format(HISTORICAL_CLIENT_DOC_ROOT),
+    "{0}/client_architecture_audit.md".format(HISTORICAL_CLIENT_DOC_ROOT),
+    "{0}/baseline_entry_contract.md".format(HISTORICAL_CLIENT_DOC_ROOT),
+    "{0}/client_readiness_report.md".format(HISTORICAL_CLIENT_DOC_ROOT),
+    "{0}/hardening_step_14_client_readiness.md".format(HISTORICAL_CLIENT_DOC_ROOT),
+    "{0}/hardening_step_12_gstreamer_integration.md".format(HISTORICAL_CLIENT_DOC_ROOT),
 )
 
 REQUIRED_IMPORTS = (
@@ -48,20 +52,19 @@ REQUIRED_IMPORTS = (
 
 CURRENT_DOCS = (
     "README.md",
-    "docs/architecture/phase1_acceptance.md",
-    "docs/architecture/output_artifact_contract.md",
-    "docs/architecture/telemetry_column_provenance.md",
-    "docs/architecture/runtime_console_output_contract.md",
-    "docs/architecture/client_architecture_audit.md",
-    "docs/architecture/baseline_entry_contract.md",
-    "docs/architecture/client_readiness_report.md",
-    "docs/architecture/hardening_step_14_client_readiness.md",
-    "docs/architecture/phase1_status.md",
-    "docs/runbooks/environment.md",
-    "docs/runbooks/gstreamer_playback.md",
-    "docs/runbooks/run_client.md",
-    "docs/runbooks/run_layout.md",
-    "docs/roadmap/gui_frontend_dashboard.md",
+    "AGENTS.md",
+    "{0}/arquitectura_y_procedimientos_estandar_tfg_dash.md".format(MANDATORY_DOC_ROOT),
+    "{0}/TFG_PLAN_GENERICO.md".format(MANDATORY_DOC_ROOT),
+    "{0}/phase1_acceptance.md".format(HISTORICAL_CLIENT_DOC_ROOT),
+    "{0}/output_artifact_contract.md".format(HISTORICAL_CLIENT_DOC_ROOT),
+    "{0}/telemetry_column_provenance.md".format(HISTORICAL_CLIENT_DOC_ROOT),
+    "{0}/runtime_console_output_contract.md".format(HISTORICAL_CLIENT_DOC_ROOT),
+    "{0}/client_architecture_audit.md".format(HISTORICAL_CLIENT_DOC_ROOT),
+    "{0}/baseline_entry_contract.md".format(HISTORICAL_CLIENT_DOC_ROOT),
+    "{0}/client_readiness_report.md".format(HISTORICAL_CLIENT_DOC_ROOT),
+    "{0}/hardening_step_14_client_readiness.md".format(HISTORICAL_CLIENT_DOC_ROOT),
+    "{0}/phase1_status.md".format(HISTORICAL_CLIENT_DOC_ROOT),
+    "{0}/hardening_step_12_gstreamer_integration.md".format(HISTORICAL_CLIENT_DOC_ROOT),
 )
 
 FORBIDDEN_POSITIVE_CLAIMS = (
@@ -105,7 +108,7 @@ def run_checks(strict: bool = False, stream: Optional[TextIO] = None) -> int:
         check_controller_baseline_entry,
         check_runtime_console_contract,
         check_gstreamer_boundary,
-        check_gui_boundary,
+        check_phase3_rebuild_boundary,
         check_forbidden_premature_claims,
     )
 
@@ -231,7 +234,7 @@ def check_legacy_artifact_boundaries() -> List[Result]:
             continue
         text = _read_lower(path)
         if "dataset.csv" in text or "dataset_training.csv" in text:
-            if "deprecated" in text or "historical" in text or "compatibility" in text:
+            if "deprecated" in text or "historical" in text or "compatibility" in text or "legacy" in text:
                 results.append(Result("OK", "legacy_doc_boundary", "{0} classifies legacy dataset names".format(relative_path)))
             else:
                 results.append(Result("FAIL", "legacy_doc_boundary", "{0} mentions legacy dataset names without classification".format(relative_path)))
@@ -254,8 +257,8 @@ def check_telemetry_provenance() -> List[Result]:
 
     docs = []
     for relative_path in (
-        "docs/architecture/telemetry_column_provenance.md",
-        "docs/architecture/metric_catalog.md",
+        "{0}/telemetry_column_provenance.md".format(HISTORICAL_CLIENT_DOC_ROOT),
+        "{0}/metric_catalog.md".format(HISTORICAL_CLIENT_DOC_ROOT),
     ):
         path = REPO_ROOT / relative_path
         if path.exists():
@@ -322,7 +325,7 @@ def check_controller_baseline_entry() -> List[Result]:
     else:
         results.append(Result("FAIL", "controller_legacy_aliases", "bwe legacy alias missing"))
 
-    text = _read_lower(REPO_ROOT / "docs/architecture/baseline_entry_contract.md")
+    text = _read_lower(REPO_ROOT / HISTORICAL_CLIENT_DOC_ROOT / "baseline_entry_contract.md")
     required_phrases = (
         "target rates are bytes per second",
         "quality levels are representation indices",
@@ -343,7 +346,7 @@ def check_controller_baseline_entry() -> List[Result]:
 
 def check_runtime_console_contract() -> List[Result]:
     results = []
-    contract = _read_lower(REPO_ROOT / "docs/architecture/runtime_console_output_contract.md")
+    contract = _read_lower(REPO_ROOT / HISTORICAL_CLIENT_DOC_ROOT / "runtime_console_output_contract.md")
     progress = (REPO_ROOT / "progress_bar.py").read_text(encoding="utf-8")
     if "human-facing diagnostics" in contract and "must not be parsed by benchmark scripts" in contract:
         results.append(Result("OK", "runtime_console_contract", "console/progress is non-canonical"))
@@ -357,27 +360,40 @@ def check_runtime_console_contract() -> List[Result]:
 
 
 def check_gstreamer_boundary() -> List[Result]:
-    text = _read_lower(REPO_ROOT / "docs/runbooks/gstreamer_playback.md")
+    text = "\n".join(
+        [
+            _read_lower(REPO_ROOT / HISTORICAL_CLIENT_DOC_ROOT / "hardening_step_12_gstreamer_integration.md"),
+            _read_lower(REPO_ROOT / HISTORICAL_CLIENT_DOC_ROOT / "phase1_acceptance.md"),
+        ]
+    )
     required = (
         "integration/demo",
-        "not benchmark-grade",
-        "structural validation only",
+        "does not make gstreamer benchmark-grade",
+        "fakesink",
         "faster than real time",
-        "do not compare fake and gst",
+        "must not be mixed with fake-engine output",
     )
     return _phrase_results("gstreamer_boundary", text, required)
 
 
-def check_gui_boundary() -> List[Result]:
-    text = _read_lower(REPO_ROOT / "docs/roadmap/gui_frontend_dashboard.md")
-    required = (
-        "roadmap document only",
-        "the gui is not benchmark authority",
-        "cli/config/run artifacts remain canonical",
-        "must not train ai",
-        "must not define final qoe or reward",
+def check_phase3_rebuild_boundary() -> List[Result]:
+    text = "\n".join(
+        [
+            _read_lower(REPO_ROOT / "AGENTS.md"),
+            _read_lower(REPO_ROOT / MANDATORY_DOC_ROOT / "arquitectura_y_procedimientos_estandar_tfg_dash.md"),
+            _read_lower(REPO_ROOT / MANDATORY_DOC_ROOT / "TFG_PLAN_GENERICO.md"),
+        ]
     )
-    return _phrase_results("gui_boundary", text, required)
+    required = (
+        "phase 3 rebuild",
+        "dataset en bruto",
+        "datasets_normalizados",
+        "manifests_trazas",
+        "throughput_kbps",
+        "no hay benchmark",
+        "no usar dry-runs legacy como training data",
+    )
+    return _phrase_results("phase3_rebuild_boundary", text, required)
 
 
 def check_forbidden_premature_claims() -> List[Result]:
