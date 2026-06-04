@@ -10,6 +10,8 @@ The final Phase 6 trace manifest is:
 
 It is produced by automation only. The user should not manually write or edit it.
 
+The recommended first live freeze attempt uses `--sources primary`, so only Raca 4G LTE and Raca 5G are materialized as primary OOD candidates. Lumos5G, Ghent and HSDPA are added only by explicit source selection flags. This keeps the first materialization small enough to audit and resume.
+
 ## Freeze Preconditions
 
 `freeze_phase6_trace_manifest.py` freezes a candidate only when:
@@ -39,6 +41,8 @@ The frozen manifest includes:
 - `benchmark_authorized=false`
 
 Final trace IDs are frozen only after acquisition, extraction, normalization, candidate manifest build, validation, eligibility audit and freeze.
+
+If materialization is interrupted before freeze, rerun the orchestrator with `--resume --skip-existing --clean-derived`. The automation rebuilds selected-source derived outputs and reports; the user should not manually create or edit candidate/final manifests.
 
 ## Dataset Gate Meaning
 

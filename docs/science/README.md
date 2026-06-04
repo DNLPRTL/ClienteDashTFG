@@ -12,6 +12,7 @@ The current state is:
 - Phase 6A2 freezes the final experimental protocol for the next technical readiness phase.
 - Phase 6B adds manifest validation, readiness preflight and `canonical_content_fingerprint` audit hardening.
 - Phase 6C automates public trace acquisition, extraction, normalization, manifest building, validation, audit and external manifest freeze.
+- Phase 6C-H1 hardens live materialization with primary-only defaults, logs, bounded progress, timeouts, resume and skip-existing recovery.
 - `docs/science/06_validation/` is the active validation documentation path.
 - No Phase 6C benchmark, ranking, plot from real data, result CSV, winner or QoE improvement claim exists.
 
@@ -37,7 +38,7 @@ Read `CANONICAL_DOCUMENTS.md` and the phase `README.md` first. Open historical f
 | `03_qoe_reward/` | Phase 3.5 | QoE/reward definition and artifact boundary. |
 | `04_neural_abr/` | Phase 4 | NeuralABR-Lite dataset, teacher, training, export, and diagnostic records. |
 | `05_neural_controller_integration/` | Phase 5 | canonical integration path for `neural_abr_lite`. |
-| `06_validation/` | Phase 6A2-6C | active validation protocol freeze, readiness gates and external trace materialization automation; no benchmark authorization. |
+| `06_validation/` | Phase 6A2-6C-H1 | active validation protocol freeze, readiness gates and hardened external trace materialization automation; no benchmark authorization. |
 | `07_memory/` | Thesis | memory, defense, figures, tables, and thesis integration notes. |
 
 ## Source Handling Rules

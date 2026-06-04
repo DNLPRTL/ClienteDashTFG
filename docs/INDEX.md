@@ -34,6 +34,7 @@ This index is the human entry point for DashClientModular4 documentation. It is 
 - `docs/science/06_validation/phase6c_normalization_contract.md`: normalized trace schema and fingerprint contract.
 - `docs/science/06_validation/phase6c_trace_manifest_freeze_contract.md`: final external manifest freeze contract.
 - `docs/science/06_validation/phase6c_no_benchmark_boundary.md`: Phase 6C non-execution boundary.
+- `docs/science/06_validation/phase6c_live_materialization_troubleshooting.md`: Phase 6C-H1 live normalization recovery and timeout guidance.
 
 ## Roadmap
 

@@ -9,11 +9,100 @@ import unittest
 import zipfile
 from pathlib import Path
 
+from scripts.phase6c_source_registry import DEFAULT_REGISTRY_PATH, load_source_registry
+from scripts.run_phase6c_trace_materialization import build_parser, effective_source_ids, run_step
+
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "run_phase6c_trace_materialization.py"
 
 
 class Phase6COrchestratorTest(unittest.TestCase):
+    def test_default_sources_resolve_to_primary_only(self):
+        args = build_parser().parse_args(
+            [
+                "--external-root",
+                "C:/tmp/phase6c",
+                "--phase4-dataset-manifest",
+                "C:/tmp/phase4.json",
+            ]
+        )
+
+        selected = effective_source_ids(args, registry=load_source_registry(DEFAULT_REGISTRY_PATH))
+
+        self.assertEqual(["raca_4g_lte", "raca_5g"], selected)
+
+    def test_all_sources_include_diagnostic_but_not_lancaster(self):
+        args = build_parser().parse_args(
+            [
+                "--external-root",
+                "C:/tmp/phase6c",
+                "--phase4-dataset-manifest",
+                "C:/tmp/phase4.json",
+                "--sources",
+                "all",
+            ]
+        )
+
+        selected = effective_source_ids(args, registry=load_source_registry(DEFAULT_REGISTRY_PATH))
+
+        self.assertIn("ghent_4g_lte", selected)
+        self.assertIn("hsdpa_norway", selected)
+        self.assertIn("lumos5g", selected)
+        self.assertNotIn("lancaster_abr_throughput_traces", selected)
+
+    def test_run_step_streams_to_log_and_keeps_bounded_tail(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            commands = []
+            steps = []
+            errors = []
+            run_step(
+                "tail_test",
+                [
+                    sys.executable,
+                    "-c",
+                    "for i in range(350): print('line-{0}'.format(i), flush=True)",
+                ],
+                commands,
+                steps,
+                errors,
+                strict=True,
+                log_dir=Path(temp_dir),
+                timeout_s=10,
+            )
+
+            self.assertEqual([], errors)
+            self.assertEqual(300, len(steps[0]["stdout_tail"]))
+            self.assertNotIn("line-0", steps[0]["stdout_tail"])
+            self.assertIn("line-349", steps[0]["stdout_tail"])
+            log_text = Path(steps[0]["log_path"]).read_text(encoding="utf-8")
+            self.assertIn("line-0", log_text)
+            self.assertIn("line-349", log_text)
+            self.assertEqual("-u", commands[0][1])
+
+    def test_run_step_timeout_records_failure(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            commands = []
+            steps = []
+            errors = []
+            run_step(
+                "timeout_test",
+                [
+                    sys.executable,
+                    "-c",
+                    "import time; print('start', flush=True); time.sleep(5)",
+                ],
+                commands,
+                steps,
+                errors,
+                strict=True,
+                log_dir=Path(temp_dir),
+                timeout_s=1,
+            )
+
+            self.assertTrue(steps[0]["timed_out"])
+            self.assertNotEqual(0, steps[0]["returncode"])
+            self.assertIn("timed out", errors[0])
+
     def test_synthetic_local_only_end_to_end_pipeline(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

@@ -24,6 +24,10 @@ EXTERNAL_SUBDIRS = (
     "logs",
     "_local_inventory",
 )
+PRIMARY_SOURCE_IDS = ("raca_4g_lte", "raca_5g")
+DIAGNOSTIC_SOURCE_IDS = ("ghent_4g_lte", "hsdpa_norway")
+OPTIONAL_SOURCE_IDS = ("lumos5g",)
+EXCLUDED_SOURCE_IDS = ("lancaster_abr_throughput_traces",)
 
 
 class Phase6CError(RuntimeError):
@@ -80,17 +84,20 @@ def sources_by_id(registry: Mapping[str, Any]) -> Dict[str, Dict[str, Any]]:
     return {str(source["source_id"]): dict(source) for source in registry.get("sources", [])}
 
 
-def selected_sources(registry: Mapping[str, Any], source_spec: str = "all") -> List[Dict[str, Any]]:
+def selected_sources(
+    registry: Mapping[str, Any],
+    source_spec: str = "primary",
+    *,
+    include_lumos: bool = False,
+    include_diagnostic: bool = False,
+) -> List[Dict[str, Any]]:
     by_id = sources_by_id(registry)
-    if source_spec == "all":
-        requested = [
-            source_id
-            for source_id, source in by_id.items()
-            if source.get("enabled_by_default", False) and source.get("download_by_default", False)
-        ]
-    else:
-        requested = [item.strip() for item in source_spec.split(",") if item.strip()]
-
+    requested = resolve_source_ids(
+        registry,
+        source_spec=source_spec,
+        include_lumos=include_lumos,
+        include_diagnostic=include_diagnostic,
+    )
     missing = [source_id for source_id in requested if source_id not in by_id]
     if missing:
         raise Phase6CError("unknown Phase 6C source id(s): {0}".format(", ".join(missing)))
@@ -100,6 +107,53 @@ def selected_sources(registry: Mapping[str, Any], source_spec: str = "all") -> L
     if forbidden:
         raise Phase6CError("excluded sources cannot be selected for download: {0}".format(", ".join(forbidden)))
     return selected
+
+
+def resolve_source_ids(
+    registry: Mapping[str, Any],
+    *,
+    source_spec: str = "primary",
+    include_lumos: bool = False,
+    include_diagnostic: bool = False,
+) -> List[str]:
+    by_id = sources_by_id(registry)
+    normalized = (source_spec or "primary").strip().lower()
+    if normalized == "primary":
+        requested = list(PRIMARY_SOURCE_IDS)
+    elif normalized == "all":
+        requested = [
+            source_id
+            for source_id, source in by_id.items()
+            if source.get("enabled_by_default", False)
+            and source.get("download_by_default", False)
+            and source_id not in EXCLUDED_SOURCE_IDS
+        ]
+    else:
+        requested = [item.strip() for item in source_spec.split(",") if item.strip()]
+
+    if include_lumos:
+        requested.extend(source_id for source_id in OPTIONAL_SOURCE_IDS if source_id not in requested)
+    if include_diagnostic:
+        requested.extend(source_id for source_id in DIAGNOSTIC_SOURCE_IDS if source_id not in requested)
+
+    missing = [source_id for source_id in requested if source_id not in by_id]
+    if missing:
+        raise Phase6CError("unknown Phase 6C source id(s): {0}".format(", ".join(missing)))
+    forbidden = [source_id for source_id in requested if source_id in EXCLUDED_SOURCE_IDS]
+    if forbidden:
+        raise Phase6CError("excluded sources cannot be selected: {0}".format(", ".join(forbidden)))
+    return list(dict.fromkeys(requested))
+
+
+def source_arg_from_ids(source_ids: Sequence[str]) -> str:
+    return ",".join(source_ids)
+
+
+def source_id_for_dataset_family(registry: Mapping[str, Any], dataset_family: str) -> str:
+    for source in registry.get("sources", []):
+        if source.get("dataset_family") == dataset_family:
+            return str(source.get("source_id", dataset_family))
+    return dataset_family
 
 
 def create_external_layout(external_root: Path, *, allow_repo_output: bool = False) -> Dict[str, Path]:
@@ -182,7 +236,9 @@ def status_is_success(status: str) -> bool:
         "downloaded",
         "copied_from_local_file",
         "already_present",
+        "skipped_existing",
         "extracted",
+        "skipped_existing_extraction",
         "copied_plain_report",
         "normalized",
     }

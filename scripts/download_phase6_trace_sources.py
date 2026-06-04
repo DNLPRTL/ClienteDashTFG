@@ -59,9 +59,12 @@ class LinkParser(html.parser.HTMLParser):
 def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Download public Phase 6C trace sources into an external root.")
     parser.add_argument("--external-root", required=True, type=Path)
-    parser.add_argument("--sources", default="all")
+    parser.add_argument("--sources", default="primary")
     parser.add_argument("--source-registry", type=Path, default=DEFAULT_REGISTRY_PATH)
+    parser.add_argument("--include-lumos", action="store_true")
+    parser.add_argument("--include-diagnostic", action="store_true")
     parser.add_argument("--require-lumos", action="store_true")
+    parser.add_argument("--force-download", action="store_true")
     parser.add_argument("--offline", action="store_true")
     parser.add_argument("--strict", action="store_true")
     parser.add_argument("--allow-repo-output", action="store_true", help=argparse.SUPPRESS)
@@ -72,7 +75,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             external_root=args.external_root,
             sources=args.sources,
             registry_path=args.source_registry,
+            include_lumos=args.include_lumos,
+            include_diagnostic=args.include_diagnostic,
             require_lumos=args.require_lumos,
+            force_download=args.force_download,
             offline=args.offline,
             strict=args.strict,
             allow_repo_output=args.allow_repo_output,
@@ -92,16 +98,24 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 def download_phase6_sources(
     *,
     external_root: Path,
-    sources: str = "all",
+    sources: str = "primary",
     registry_path: Path = DEFAULT_REGISTRY_PATH,
+    include_lumos: bool = False,
+    include_diagnostic: bool = False,
     require_lumos: bool = False,
+    force_download: bool = False,
     offline: bool = False,
     strict: bool = False,
     allow_repo_output: bool = False,
 ) -> Dict[str, Any]:
     paths = create_external_layout(external_root, allow_repo_output=allow_repo_output)
     registry = load_source_registry(registry_path)
-    selected = selected_sources(registry, sources)
+    selected = selected_sources(
+        registry,
+        sources,
+        include_lumos=include_lumos,
+        include_diagnostic=include_diagnostic,
+    )
 
     receipts: List[Dict[str, Any]] = []
     errors: List[str] = []
@@ -111,9 +125,9 @@ def download_phase6_sources(
         source_id = source["source_id"]
         try:
             if source_id == "hsdpa_norway":
-                source_receipts = download_hsdpa_source(source, paths["archives"], offline=offline)
+                source_receipts = download_hsdpa_source(source, paths["archives"], offline=offline, force_download=force_download)
             else:
-                source_receipts = [download_single_source(source, paths["archives"], offline=offline)]
+                source_receipts = [download_single_source(source, paths["archives"], offline=offline, force_download=force_download)]
         except Exception as exc:
             source_receipts = [
                 base_receipt(source, "failed", error="{0}: {1}".format(exc.__class__.__name__, exc))
@@ -123,7 +137,7 @@ def download_phase6_sources(
     for receipt in receipts:
         source_id = receipt["source_id"]
         status = receipt["status"]
-        if status in ("downloaded", "copied_from_local_file", "already_present"):
+        if status in ("downloaded", "copied_from_local_file", "already_present", "skipped_existing"):
             continue
         message = "{0}: {1}".format(source_id, status)
         if receipt.get("error"):
@@ -141,6 +155,7 @@ def download_phase6_sources(
         "offline": offline,
         "strict": strict,
         "require_lumos": require_lumos,
+        "force_download": force_download,
         "receipts": receipts,
         "errors": errors,
         "warnings": warnings,
@@ -160,10 +175,13 @@ def download_phase6_sources(
     }
 
 
-def download_single_source(source: Mapping[str, Any], archive_root: Path, *, offline: bool) -> Dict[str, Any]:
-    if offline:
-        return base_receipt(source, "offline_skipped", error="offline mode enabled")
-
+def download_single_source(
+    source: Mapping[str, Any],
+    archive_root: Path,
+    *,
+    offline: bool,
+    force_download: bool = False,
+) -> Dict[str, Any]:
     source_id = str(source["source_id"])
     target_dir = archive_root / source_id
     target_dir.mkdir(parents=True, exist_ok=True)
@@ -173,12 +191,20 @@ def download_single_source(source: Mapping[str, Any], archive_root: Path, *, off
     if not urls:
         return base_receipt(source, "failed", error="no URL configured")
 
+    if target.exists() and not force_download:
+        receipt = existing_file_receipt(source, target)
+        if receipt["status"] == "skipped_existing":
+            return receipt
+
+    if offline:
+        return base_receipt(source, "offline_skipped", path=target, error="offline mode enabled")
+
     if source.get("google_drive_file_id") and not is_local_url(urls[0]):
         receipt = download_google_drive(source, target)
     else:
         receipt = download_file_from_urls(source, urls, target)
 
-    if receipt["status"] in ("downloaded", "copied_from_local_file", "already_present"):
+    if receipt["status"] in ("downloaded", "copied_from_local_file", "already_present", "skipped_existing"):
         add_hashes_and_verify(source, target, receipt)
     return receipt
 
@@ -259,7 +285,13 @@ def google_drive_confirmation_token(html: str, headers: Mapping[str, str]) -> st
     return ""
 
 
-def download_hsdpa_source(source: Mapping[str, Any], archive_root: Path, *, offline: bool) -> List[Dict[str, Any]]:
+def download_hsdpa_source(
+    source: Mapping[str, Any],
+    archive_root: Path,
+    *,
+    offline: bool,
+    force_download: bool = False,
+) -> List[Dict[str, Any]]:
     if offline:
         return [base_receipt(source, "offline_skipped", error="offline mode enabled")]
     base_url = str(source.get("source_base_url", "")).strip()
@@ -277,12 +309,27 @@ def download_hsdpa_source(source: Mapping[str, Any], archive_root: Path, *, offl
     for url in urls:
         relative = hsdpa_relative_path(base_url, url)
         target = target_root / relative
+        if target.exists() and not force_download:
+            receipt = existing_file_receipt(source, target)
+            receipt["relative_path"] = str(relative).replace("\\", "/")
+            receipts.append(receipt)
+            continue
         receipt = download_file_from_urls(source, [url], target)
-        if receipt["status"] in ("downloaded", "copied_from_local_file", "already_present"):
+        if receipt["status"] in ("downloaded", "copied_from_local_file", "already_present", "skipped_existing"):
             add_hashes_and_verify(source, target, receipt)
         receipt["relative_path"] = str(relative).replace("\\", "/")
         receipts.append(receipt)
     return receipts
+
+
+def existing_file_receipt(source: Mapping[str, Any], target: Path) -> Dict[str, Any]:
+    if target.stat().st_size <= 0:
+        return base_receipt(source, "failed", path=target, error="existing file is empty")
+    receipt = base_receipt(source, "skipped_existing", path=target)
+    add_hashes_and_verify(source, target, receipt)
+    if receipt["status"] == "checksum_mismatch":
+        return receipt
+    return receipt
 
 
 def discover_hsdpa_report_urls(base_url: str, pattern: str) -> List[str]:
@@ -377,14 +424,13 @@ def should_fail_download_status(
     require_lumos: bool,
     sources: str,
 ) -> bool:
-    if status in ("downloaded", "copied_from_local_file", "already_present"):
+    if status in ("downloaded", "copied_from_local_file", "already_present", "skipped_existing"):
         return False
     if source_id == "lumos5g":
         return require_lumos
     if source_id in ("raca_4g_lte", "raca_5g"):
-        return strict
-    explicitly_selected = sources != "all" and source_id in {item.strip() for item in sources.split(",")}
-    return strict and explicitly_selected
+        return True
+    return False
 
 
 def copy_local_url(url: str, target: Path) -> None:
@@ -423,7 +469,7 @@ def write_download_report(path: Path, receipts: Sequence[Mapping[str, Any]], err
         "- errors: {0}".format(len(errors)),
         "- warnings: {0}".format(len(warnings)),
         "- downloaded_or_copied: {0}".format(
-            sum(1 for receipt in receipts if receipt.get("status") in ("downloaded", "copied_from_local_file", "already_present"))
+            sum(1 for receipt in receipts if receipt.get("status") in ("downloaded", "copied_from_local_file", "already_present", "skipped_existing"))
         ),
         "",
         "## Sources",

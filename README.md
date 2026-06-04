@@ -24,7 +24,7 @@ The active validation documentation state is:
 Phase 6C - Automated trace acquisition, normalization and manifest freeze
 ```
 
-Phase 6A2 freezes the final experimental protocol. Phase 6B adds manifest validation, structural readiness preflight and `canonical_content_fingerprint` audit hardening. Phase 6C automates source registry loading, public acquisition, safe extraction, normalization, reference/candidate manifest building, validation, eligibility audit and external final manifest freeze. It still does not authorize benchmark execution, ranking, plots from real data, result CSVs, winner declaration, retraining, or QoE improvement claims.
+Phase 6A2 freezes the final experimental protocol. Phase 6B adds manifest validation, structural readiness preflight and `canonical_content_fingerprint` audit hardening. Phase 6C automates source registry loading, public acquisition, safe extraction, normalization, reference/candidate manifest building, validation, eligibility audit and external final manifest freeze. Phase 6C-H1 hardens live materialization with primary-only defaults, live logs, bounded output tails, progress files, timeouts, resume and skip-existing behavior. It still does not authorize benchmark execution, ranking, plots from real data, result CSVs, winner declaration, retraining, or QoE improvement claims.
 
 The active validation documentation path is:
 
@@ -101,18 +101,23 @@ Get-ChildItem core,scripts,tests -Recurse -Filter *.py | ForEach-Object { python
 The Phase 6C materialization path is automated. The user should not manually create source config JSON files or manifests:
 
 ```powershell
-python scripts\run_phase6c_trace_materialization.py `
-  --external-root C:\Users\danie\Documents\TFG\_datasets\phase6_validation `
-  --phase4-dataset-manifest C:\Users\danie\Documents\TFG\_datasets\phase4_AI\neural_abr_lite\phase4E2_expanded_candidate_20260529_080755\dataset_manifest.json `
-  --download `
-  --extract `
-  --normalize `
-  --build-reference `
-  --build-candidate `
-  --validate `
-  --audit `
-  --freeze `
-  --strict
+python -u scripts\run_phase6c_trace_materialization.py ^
+  --external-root C:\Users\danie\Documents\TFG\_datasets\phase6_validation ^
+  --phase4-dataset-manifest C:\Users\danie\Documents\TFG\_datasets\phase4_AI\neural_abr_lite\phase4E2_expanded_candidate_20260529_080755\dataset_manifest.json ^
+  --sources primary ^
+  --download ^
+  --extract ^
+  --normalize ^
+  --build-reference ^
+  --build-candidate ^
+  --validate ^
+  --audit ^
+  --freeze ^
+  --strict ^
+  --resume ^
+  --skip-existing ^
+  --clean-derived ^
+  --progress-every 10
 ```
 
 The Phase 6 trace eligibility guardrail can be run with external manifests:

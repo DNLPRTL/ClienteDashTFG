@@ -17,6 +17,22 @@ Output location:
 
 These files are not committed.
 
+## Phase 6C-H1 Operational Bounds
+
+The normalizer is source-filtered and bounded for live materialization:
+
+- default source selection is `primary`, meaning Raca 4G LTE and Raca 5G only;
+- Lumos5G is included only with `--include-lumos` or an explicit source list;
+- Ghent and HSDPA are included only with `--include-diagnostic`, `--sources all` or an explicit source list;
+- Lancaster remains excluded;
+- candidate input scanning is limited to selected `extracted/<source_id>/` and `raw/<source_id>/` trees;
+- `archives/`, `normalized/`, `manifests/`, `reports/`, `receipts/` and `logs/` are not candidate input roots;
+- delimiter/header sniffing uses bounded byte samples instead of full-file reads;
+- binary, media, archive, HTML and unsupported files are skipped quickly;
+- `--max-files-per-source`, `--max-file-size-mb`, `--max-sniff-bytes` and `--progress-every` bound and expose work.
+
+The normalizer prints source start/end summaries and writes `reports/phase6c_normalization_progress.json` during the run. If a live run is interrupted, rerun the orchestrator with `--resume --skip-existing --clean-derived` so selected-source derived outputs are rebuilt without redownloading archives.
+
 ## Required Columns
 
 Normalized CSVs contain:

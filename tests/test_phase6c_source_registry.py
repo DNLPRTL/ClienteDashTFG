@@ -2,7 +2,13 @@ from __future__ import annotations
 
 import unittest
 
-from scripts.phase6c_source_registry import DEFAULT_REGISTRY_PATH, load_source_registry, selected_sources, sources_by_id
+from scripts.phase6c_source_registry import (
+    DEFAULT_REGISTRY_PATH,
+    load_source_registry,
+    resolve_source_ids,
+    selected_sources,
+    sources_by_id,
+)
 
 
 class Phase6CSourceRegistryTest(unittest.TestCase):
@@ -14,6 +20,10 @@ class Phase6CSourceRegistryTest(unittest.TestCase):
     def test_raca_4g_has_md5(self):
         source = sources_by_id(load_source_registry(DEFAULT_REGISTRY_PATH))["raca_4g_lte"]
         self.assertEqual("27da16b90a94ded3511bad9682f2e166", source["expected_hashes"]["md5"])
+
+    def test_default_source_selection_is_primary_only(self):
+        selected = resolve_source_ids(load_source_registry(DEFAULT_REGISTRY_PATH))
+        self.assertEqual(["raca_4g_lte", "raca_5g"], selected)
 
     def test_lancaster_is_excluded(self):
         source = sources_by_id(load_source_registry(DEFAULT_REGISTRY_PATH))["lancaster_abr_throughput_traces"]

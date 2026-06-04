@@ -10,9 +10,12 @@ try:
     from scripts.phase6c_source_registry import (
         DEFAULT_REGISTRY_PATH,
         Phase6CError,
+        PRIMARY_SOURCE_IDS,
         create_external_layout,
         load_source_registry,
         read_json,
+        resolve_source_ids,
+        source_id_for_dataset_family,
         sources_by_id,
         utc_now,
         write_json,
@@ -21,9 +24,12 @@ except ModuleNotFoundError:  # pragma: no cover - direct script execution
     from phase6c_source_registry import (
         DEFAULT_REGISTRY_PATH,
         Phase6CError,
+        PRIMARY_SOURCE_IDS,
         create_external_layout,
         load_source_registry,
         read_json,
+        resolve_source_ids,
+        source_id_for_dataset_family,
         sources_by_id,
         utc_now,
         write_json,
@@ -39,8 +45,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--external-root", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--source-registry", type=Path, default=DEFAULT_REGISTRY_PATH)
+    parser.add_argument("--sources", default="primary")
+    parser.add_argument("--include-lumos", action="store_true")
     parser.add_argument("--strict", action="store_true")
-    parser.add_argument("--include-diagnostic", action="store_true", help="Accepted for compatibility; diagnostics are included by default.")
+    parser.add_argument("--include-diagnostic", action="store_true")
     parser.add_argument("--allow-repo-output", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
 
@@ -49,8 +57,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             external_root=args.external_root,
             output=args.output,
             registry_path=args.source_registry,
+            sources=args.sources,
+            include_lumos=args.include_lumos,
+            include_diagnostic=args.include_diagnostic,
             strict=args.strict,
-            include_diagnostic=True,
             allow_repo_output=args.allow_repo_output,
         )
     except Phase6CError as exc:
@@ -70,13 +80,21 @@ def build_candidate_manifest(
     external_root: Path,
     output: Path,
     registry_path: Path = DEFAULT_REGISTRY_PATH,
+    sources: str = "primary",
+    include_lumos: bool = False,
     strict: bool = False,
-    include_diagnostic: bool = True,
+    include_diagnostic: bool = False,
     allow_repo_output: bool = False,
 ) -> Dict[str, Any]:
     paths = create_external_layout(external_root, allow_repo_output=allow_repo_output)
     registry = load_source_registry(registry_path)
     source_map = sources_by_id(registry)
+    selected_ids = resolve_source_ids(
+        registry,
+        source_spec=sources,
+        include_lumos=include_lumos,
+        include_diagnostic=include_diagnostic,
+    )
     records: List[Dict[str, Any]] = []
     errors: List[str] = []
     warnings: List[str] = []
@@ -85,16 +103,19 @@ def build_candidate_manifest(
         metadata = read_json(metadata_path)
         if metadata.get("dataset_family") == "lancaster_abr_throughput_traces" and metadata.get("eval_gate") == "use_for_eval":
             errors.append("Lancaster must not appear as use_for_eval in Phase 6C.")
-        record = candidate_record_from_metadata(metadata, source_map)
-        if record["eval_gate"] != "use_for_eval" and not include_diagnostic:
+        metadata_source_id = str(metadata.get("source_id") or "")
+        if not metadata_source_id:
+            metadata_source_id = source_id_for_dataset_family(registry, str(metadata.get("dataset_family", "")))
+        if metadata_source_id not in selected_ids:
             continue
+        record = candidate_record_from_metadata(metadata, source_map)
         if record.get("dataset_family") == "lancaster_abr_throughput_traces" and record.get("eval_gate") == "use_for_eval":
             errors.append("Lancaster must not appear as use_for_eval in Phase 6C.")
         records.append(record)
 
     use_for_eval = [record for record in records if record.get("eval_gate") == "use_for_eval"]
     raca_eval = [record for record in use_for_eval if record.get("dataset_family") in ("raca_4g_lte", "raca_5g")]
-    if not any(record.get("dataset_family") == "lumos5g" for record in records):
+    if "lumos5g" in selected_ids and not any(record.get("dataset_family") == "lumos5g" for record in records):
         warnings.append("lumos5g_absent_or_not_normalized")
     if strict and not use_for_eval:
         errors.append("strict mode requires at least one primary OOD use_for_eval trace.")
@@ -122,6 +143,7 @@ def build_candidate_manifest(
         "benchmark_authorized": False,
         "ready_for_benchmark": False,
         "phase6c_materialization_only": True,
+        "selected_sources": selected_ids,
         "trace_records": records,
         "counts": {
             "records": len(records),

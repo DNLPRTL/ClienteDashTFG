@@ -50,6 +50,30 @@ class Phase6CDownloaderTest(unittest.TestCase):
             self.assertFalse(report["valid"])
             self.assertIn("checksum_mismatch", "\n".join(report["errors"]))
 
+    def test_existing_valid_archive_is_skipped_by_default(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            payload = root / "source.zip"
+            payload.write_bytes(b"synthetic archive")
+            registry = _write_registry(root, "raca_4g_lte", payload.as_uri(), hashlib.md5(payload.read_bytes()).hexdigest())
+
+            first = download_phase6_sources(
+                external_root=root / "external",
+                registry_path=registry,
+                sources="raca_4g_lte",
+                strict=True,
+            )
+            second = download_phase6_sources(
+                external_root=root / "external",
+                registry_path=registry,
+                sources="raca_4g_lte",
+                strict=True,
+            )
+
+            self.assertTrue(first["valid"])
+            self.assertTrue(second["valid"])
+            self.assertEqual("skipped_existing", second["receipts"][0]["status"])
+
     def test_lumos_blocked_does_not_fail_unless_required(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

@@ -19,7 +19,12 @@ class Phase6CandidateManifestTest(unittest.TestCase):
             _write_metadata(root, "ghent_4g_lte", "ghent_trace", "fp-ghent")
             output = root / "manifests" / "candidate.json"
 
-            report = build_candidate_manifest(external_root=root, output=output, strict=True)
+            report = build_candidate_manifest(
+                external_root=root,
+                output=output,
+                strict=True,
+                include_diagnostic=True,
+            )
 
             self.assertTrue(report["valid"])
             records = {record["trace_id"]: record for record in json.loads(output.read_text(encoding="utf-8"))["trace_records"]}
@@ -58,7 +63,8 @@ class Phase6CandidateManifestTest(unittest.TestCase):
 
             self.assertFalse(report["valid"])
             records = json.loads(output.read_text(encoding="utf-8"))["trace_records"]
-            self.assertEqual("do_not_use_for_eval", records[0]["eval_gate"])
+            self.assertEqual([], [record for record in records if record.get("eval_gate") == "use_for_eval"])
+            self.assertIn("Lancaster must not appear", "\n".join(report["errors"]))
 
     def test_output_validates_with_phase6_manifest_validator(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -72,6 +78,33 @@ class Phase6CandidateManifestTest(unittest.TestCase):
 
             self.assertTrue(report["valid"])
             self.assertTrue(validation["valid"])
+
+    def test_default_primary_selection_excludes_diagnostic_metadata(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir) / "external"
+            create_external_layout(root)
+            _write_metadata(root, "raca_4g_lte", "raca_trace", "fp-raca")
+            _write_metadata(root, "ghent_4g_lte", "ghent_trace", "fp-ghent")
+            output = root / "manifests" / "candidate.json"
+
+            report = build_candidate_manifest(external_root=root, output=output, strict=True)
+
+            self.assertTrue(report["valid"])
+            records = json.loads(output.read_text(encoding="utf-8"))["trace_records"]
+            self.assertEqual(["raca_trace"], [record["trace_id"] for record in records])
+
+    def test_primary_strict_does_not_require_lumos_or_diagnostics(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir) / "external"
+            create_external_layout(root)
+            _write_metadata(root, "raca_5g", "raca_trace", "fp-raca")
+            output = root / "manifests" / "candidate.json"
+
+            report = build_candidate_manifest(external_root=root, output=output, strict=True)
+
+            self.assertTrue(report["valid"])
+            manifest = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(["raca_4g_lte", "raca_5g"], manifest["selected_sources"])
 
 
 def _write_metadata(

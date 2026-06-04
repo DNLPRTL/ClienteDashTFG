@@ -128,6 +128,7 @@ Phase 6B closes the `canonical_content_fingerprint` audit gap and adds structura
 - `docs/science/06_validation/phase6c_normalization_contract.md`
 - `docs/science/06_validation/phase6c_trace_manifest_freeze_contract.md`
 - `docs/science/06_validation/phase6c_no_benchmark_boundary.md`
+- `docs/science/06_validation/phase6c_live_materialization_troubleshooting.md`
 - `scripts/run_phase6c_trace_materialization.py`
 - `scripts/download_phase6_trace_sources.py`
 - `scripts/extract_phase6_trace_archives.py`
@@ -143,7 +144,7 @@ Phase 6B closes the `canonical_content_fingerprint` audit gap and adds structura
 - `tests/test_phase6_candidate_manifest.py`
 - `tests/test_phase6_manifest_freeze.py`
 
-Phase 6C automates acquisition, extraction, normalization, manifest building, validation, audit and external manifest freeze. It does not require manual user-created configs or manifests. It still does not run a benchmark, create rankings, produce plots from real data, generate result CSVs, declare a winner, retrain NeuralABR-Lite, or claim QoE improvement. `ready_for_benchmark=false` and `benchmark_authorized=false` remain mandatory.
+Phase 6C automates acquisition, extraction, normalization, manifest building, validation, audit and external manifest freeze. Phase 6C-H1 hardens live materialization with primary-only defaults, source filtering, bounded normalizer sniffing, per-step logs, bounded output tails, timeouts, resume, skip-existing and clean-derived recovery. It does not require manual user-created configs or manifests. It still does not run a benchmark, create rankings, produce plots from real data, generate result CSVs, declare a winner, retrain NeuralABR-Lite, or claim QoE improvement. `ready_for_benchmark=false` and `benchmark_authorized=false` remain mandatory.
 
 ## Thesis Memory
 

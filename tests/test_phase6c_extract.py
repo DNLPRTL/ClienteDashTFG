@@ -24,6 +24,9 @@ class Phase6CExtractTest(unittest.TestCase):
             self.assertTrue(report["valid"])
             self.assertTrue((paths["extracted"] / "raca_4g_lte" / "nested" / "trace.csv").is_file())
 
+            second = extract_phase6_archives(external_root=root, strict=True)
+            self.assertEqual("skipped_existing_extraction", second["receipts"][0]["status"])
+
     def test_rejects_path_traversal_zip(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir) / "external"
@@ -47,7 +50,7 @@ class Phase6CExtractTest(unittest.TestCase):
             report_path.parent.mkdir(parents=True)
             report_path.write_text("0 0 1 2 1000 1000\n", encoding="utf-8")
 
-            report = extract_phase6_archives(external_root=root, strict=True)
+            report = extract_phase6_archives(external_root=root, sources="hsdpa_norway", strict=True)
 
             self.assertTrue(report["valid"])
             self.assertTrue((paths["extracted"] / "hsdpa_norway" / "route_a" / "report.1").is_file())

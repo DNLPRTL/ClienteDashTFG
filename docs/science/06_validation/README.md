@@ -25,6 +25,7 @@ Phase 6C still does not authorize benchmark execution, controller ranking, plots
 - Phase 4E2 teacher agreement/OOD material remains diagnostic history, not strong generalization evidence.
 - Phase 6B closes the `canonical_content_fingerprint` audit gap while continuing to report `checksum_sha256` separately.
 - Phase 6C is automated; the user should not manually create source configs or manifests.
+- Phase 6C-H1 makes live materialization primary-only by default and adds per-step logs, bounded output tails, progress files, timeouts, resume, skip-existing and clean-derived recovery.
 - Real datasets, normalized CSVs, receipts, local manifests and reports live outside the repo.
 - `ready_for_phase6c` is not `ready_for_benchmark`; `benchmark_authorized` remains false.
 - Final Phase 6 trace IDs are frozen only by the external `phase6_trace_manifest_final.json` after acquisition, normalization, validation, eligibility audit and freeze.
@@ -56,6 +57,7 @@ Phase 6C still does not authorize benchmark execution, controller ranking, plots
 - `phase6c_normalization_contract.md`: normalized CSV schema and fingerprint contract.
 - `phase6c_trace_manifest_freeze_contract.md`: final external manifest freeze preconditions.
 - `phase6c_no_benchmark_boundary.md`: explicit non-execution boundary.
+- `phase6c_live_materialization_troubleshooting.md`: live-output, timeout and interrupted-normalization recovery guidance.
 
 ## Entry Documents
 
