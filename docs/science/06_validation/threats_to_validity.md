@@ -1,10 +1,10 @@
 # Phase 6 Threats To Validity
 
-Status: final Phase 6A2 protocol decision. Expanded from `threats_matrix.md`.
+Status: final Phase 6A2 protocol decision plus Phase 6B readiness hardening. Expanded from `threats_matrix.md`.
 
 ## Internal Validity
 
-- Trace leakage from Phase 4 can invalidate fair `neural_abr_lite` comparison. Mitigation: block by `trace_id`, `leakage_group`, `checksum_sha256` and future `canonical_content_fingerprint`.
+- Trace leakage from Phase 4 can invalidate fair `neural_abr_lite` comparison. Mitigation: block by `trace_id`, `leakage_group`, `checksum_sha256` and `canonical_content_fingerprint`.
 - Ghent aggregate/per-mobility duplicates can create hidden split leakage. Mitigation: use `logs_all` OR per-mobility folders unless deduplicated by checksum/fingerprint before split.
 - Controller configuration drift can break comparability. Mitigation: freeze configs and include them in the evidence package.
 
@@ -31,4 +31,5 @@ Status: final Phase 6A2 protocol decision. Expanded from `threats_matrix.md`.
 
 - No final winner should be declared from small or noisy samples.
 - No `neural_abr_lite` QoE improvement claim is allowed unless the frozen protocol and evidence package support it.
+- In Phase 6B, `ready_for_phase6c` is not `ready_for_benchmark` and `benchmark_authorized` remains false.
 - Mixed, negative or inconclusive results must be reported without narrative pressure.

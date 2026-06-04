@@ -106,6 +106,20 @@ Phase 6A0 is documentation/protocol intake only. It does not run a benchmark, cr
 
 Phase 6A2 freezes the protocol for the next technical readiness phase. It still does not run a benchmark, create rankings, produce plots from real data, generate result CSVs, declare a winner, retrain NeuralABR-Lite, or claim QoE improvement.
 
+## Phase 6B - Manifest Readiness Gates
+
+- `docs/science/06_validation/phase6_manifest_schema.md`
+- `docs/science/06_validation/phase6b_preflight_contract.md`
+- `docs/science/06_validation/phase6b_evaluation_readiness_report.md`
+- `scripts/validate_phase6_trace_manifest.py`
+- `scripts/check_phase6_evaluation_readiness.py`
+- `scripts/audit_phase6_trace_eligibility.py`
+- `tests/test_phase6_trace_manifest_validation.py`
+- `tests/test_phase6_evaluation_readiness.py`
+- `tests/test_phase6_trace_eligibility_audit.py`
+
+Phase 6B closes the `canonical_content_fingerprint` audit gap and adds structural readiness gates for Phase 6C. It still does not run a benchmark, create rankings, produce plots from real data, generate result CSVs, declare a winner, retrain NeuralABR-Lite, or claim QoE improvement. `ready_for_phase6c` is not `ready_for_benchmark`, and `benchmark_authorized` remains false.
+
 ## Thesis Memory
 
 - `docs/science/07_memory/memory_structure_professor.md`

@@ -25,7 +25,10 @@ This index is the human entry point for DashClientModular4 documentation. It is 
 - `docs/science/PHASE_INDEX.md`: phase-to-directory map.
 - `docs/science/CANONICAL_DOCUMENTS.md`: shortest path through the canonical scientific trail.
 - `docs/science/HISTORICAL_DOCUMENT_POLICY.md`: how to interpret historical, handoff, closure, and template docs.
-- `docs/science/06_validation/README.md`: active Phase 6A2 validation protocol freeze and evidence scaffold.
+- `docs/science/06_validation/README.md`: active Phase 6 validation protocol freeze plus Phase 6B readiness gates.
+- `docs/science/06_validation/phase6_manifest_schema.md`: Phase 6 trace manifest schema and gate aliases.
+- `docs/science/06_validation/phase6b_preflight_contract.md`: Phase 6B readiness preflight contract.
+- `docs/science/06_validation/phase6b_evaluation_readiness_report.md`: Phase 6B readiness report semantics.
 
 ## Roadmap
 
@@ -44,6 +47,8 @@ This index is the human entry point for DashClientModular4 documentation. It is 
 - `tests/`: checked-in unit and smoke tests.
 - `scripts/check_client_readiness.py`: strict readiness gate.
 - `scripts/audit_phase6_trace_eligibility.py`: Phase 6 trace eligibility audit.
+- `scripts/validate_phase6_trace_manifest.py`: Phase 6 trace manifest schema validation without benchmark execution.
+- `scripts/check_phase6_evaluation_readiness.py`: Phase 6B structural readiness preflight; `ready_for_benchmark=false`.
 - `scripts/validate_neural_abr_bundle.py`: local-only bundle validation helper.
 - `scripts/smoke_neural_abr_inference.py`: local-only structural inference smoke helper.
 

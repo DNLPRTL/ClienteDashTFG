@@ -1,6 +1,6 @@
 # Phase 6 Validation Documentation
 
-Phase 6A2 protocol freeze is complete.
+Phase 6A2 protocol freeze is complete. Phase 6B adds evaluation readiness gates, manifest schema validation and canonical content fingerprint audit hardening.
 
 This directory is the active validation documentation path for DashClientModular4:
 
@@ -8,9 +8,9 @@ This directory is the active validation documentation path for DashClientModular
 docs/science/06_validation/
 ```
 
-Phase 6A0/A1 opened the validation documentation scaffold and consolidated literature/source evidence. Phase 6A2 freezes the final experimental protocol for the next technical readiness phase.
+Phase 6A0/A1 opened the validation documentation scaffold and consolidated literature/source evidence. Phase 6A2 freezes the final experimental protocol. Phase 6B is readiness/audit code only and prepares Phase 6C real dataset materialization outside the repository.
 
-Phase 6A2 still does not authorize benchmark execution, controller ranking, plots, result CSVs, winner declarations, retraining, or any claim that `neural_abr_lite` improves QoE over a baseline.
+Phase 6B still does not authorize benchmark execution, controller ranking, plots, result CSVs, winner declarations, retraining, or any claim that `neural_abr_lite` improves QoE over a baseline.
 
 ## Current Boundary
 
@@ -23,6 +23,9 @@ Phase 6A2 still does not authorize benchmark execution, controller ranking, plot
 - VMAF and MOS claims are deferred until the required artifacts exist.
 - Gates remain mandatory: `use_for_eval`, `diagnostic_only`, `do_not_use_for_eval`.
 - Phase 4E2 teacher agreement/OOD material remains diagnostic history, not strong generalization evidence.
+- Phase 6B closes the `canonical_content_fingerprint` audit gap while continuing to report `checksum_sha256` separately.
+- `ready_for_phase6c` is not `ready_for_benchmark`; `benchmark_authorized` remains false.
+- Final Phase 6 trace IDs are not frozen until `phase6_trace_manifest_final.json` exists after Phase 6C.
 
 ## Frozen Phase 6A2 Protocol
 
@@ -37,6 +40,12 @@ Phase 6A2 still does not authorize benchmark execution, controller ranking, plot
 - `threats_to_validity.md`: final threats narrative.
 - `phase6a2_protocol_freeze.md`: protocol-freeze decision.
 - `phase6_memory_and_defense_plan.md`: thesis and defense integration plan.
+
+## Phase 6B Readiness Contracts
+
+- `phase6_manifest_schema.md`: manifest fields, gate aliases, fingerprint aliases and strict-final requirements.
+- `phase6b_preflight_contract.md`: structural readiness checks and non-benchmark boundary.
+- `phase6b_evaluation_readiness_report.md`: JSON report semantics for `ready_for_phase6c`, `ready_for_benchmark` and `benchmark_authorized`.
 
 ## Entry Documents
 
@@ -60,3 +69,5 @@ Phase 6A2 still does not authorize benchmark execution, controller ranking, plot
 ## Non-Claim Boundary
 
 Generated documents in this directory are protocol evidence only. They are not run outputs, benchmark evidence, rankings, plots, or performance results.
+
+Lancaster remains excluded from primary final evaluation unless a source note/card and eligibility audit authorize it. Ghent must use `logs_all` OR per-mobility folders, not both, unless deduplicated by checksum/fingerprint.

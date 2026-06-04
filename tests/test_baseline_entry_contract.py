@@ -54,10 +54,10 @@ class BaselineEntryContractTest(unittest.TestCase):
         self.assertIn("Phase 1 client hardening ready to close: YES", report)
         self.assertIn("Ready as technical base for Phase 0: YES", report)
         self.assertIn("Phase 5 is closed", readme)
-        self.assertIn("Phase 6A2 - Final experimental protocol decision", readme)
+        self.assertIn("Phase 6B - Evaluation readiness gates, manifest schema and fingerprint hardening", readme)
         self.assertIn("docs/science/06_validation/", readme)
         self.assertIn("did not run a benchmark", readme)
-        self.assertIn("does mean Phase 6 must exclude, by checksum", readme)
+        self.assertIn("does mean Phase 6 must exclude every trace seen by Phase 4", readme)
 
 
 if __name__ == "__main__":

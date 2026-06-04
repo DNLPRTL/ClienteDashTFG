@@ -1,6 +1,6 @@
 # Phase 6 Reproducibility Checklist
 
-Status: final Phase 6A2 protocol decision. Checklist for future readiness/execution only.
+Status: final Phase 6A2 protocol decision plus Phase 6B readiness gates. Checklist for future readiness/execution only.
 
 ## Before Execution
 
@@ -8,10 +8,15 @@ Status: final Phase 6A2 protocol decision. Checklist for future readiness/execut
 - Record exact Git head.
 - Freeze controller matrix and controller configs.
 - Freeze `media_profile_phase6_v1`.
-- Freeze `phase6_trace_manifest_final.json` after eligibility audit.
-- Confirm no Phase 4 overlap by `trace_id`, `leakage_group`, `checksum_sha256` or `canonical_content_fingerprint` when available.
+- Complete Phase 6C real dataset materialization outside the repository.
+- Freeze `phase6_trace_manifest_final.json` after Phase 6C materialization and eligibility audit.
+- Validate the candidate manifest with `scripts/validate_phase6_trace_manifest.py --strict-final`.
+- Run `scripts/audit_phase6_trace_eligibility.py` against the Phase 4 dataset manifest and Phase 6 candidate manifest.
+- Confirm no Phase 4 overlap by `trace_id`, `leakage_group`, `checksum_sha256` or `canonical_content_fingerprint`.
+- Run `scripts/check_phase6_evaluation_readiness.py` and keep its report with the evidence package.
 - Confirm datasets, runs, logs, zips, CSVs and media stay outside Git.
 - Confirm `qoe_linear_v1` and `reward_n` are unchanged.
+- Confirm `ready_for_phase6c` has not been misread as benchmark authorization.
 
 ## Required Future Evidence Package Files
 
@@ -24,6 +29,8 @@ The future evidence package must align with `ubuntu_evidence_package_spec.md` an
 - environment;
 - artifact manifest;
 - trace manifest audit report;
+- trace manifest validation report;
+- Phase 6 evaluation readiness report;
 - controller matrix summary;
 - per-controller trace summary;
 - QoE summaries;
@@ -61,4 +68,4 @@ The package must allow review of:
 
 ## Non-Authorization
 
-This checklist does not execute a benchmark and does not create artifacts.
+This checklist does not execute a benchmark and does not create artifacts. In Phase 6B, `ready_for_benchmark=false` and `benchmark_authorized=false` remain mandatory.

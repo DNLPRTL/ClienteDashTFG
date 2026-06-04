@@ -1,6 +1,6 @@
 # Phase 6 Evaluation Protocol
 
-Status: final Phase 6A2 protocol decision. This protocol authorizes the next technical readiness phase, not benchmark execution.
+Status: final Phase 6A2 protocol decision with Phase 6B readiness hardening. This protocol authorizes readiness work, not benchmark execution.
 
 ## Objective
 
@@ -36,7 +36,7 @@ Final trace IDs are not defined in this document. They must be frozen only by:
 phase6_trace_manifest_final.json
 ```
 
-The final manifest must pass eligibility audit and must block overlap with Phase 4 by `trace_id`, `leakage_group`, `checksum_sha256` and `canonical_content_fingerprint` when available.
+The final manifest must pass schema validation and eligibility audit. It must block overlap with Phase 4 by `trace_id`, `leakage_group`, `checksum_sha256` and `canonical_content_fingerprint`.
 
 Recommended groups:
 
@@ -71,3 +71,5 @@ Future execution must produce an external evidence package aligned with `ubuntu_
 ## Non-Authorization
 
 This protocol does not run a benchmark, produce plots, generate CSV result outputs, rank controllers, declare a winner, or claim that `neural_abr_lite` improves QoE.
+
+In Phase 6B, `ready_for_phase6c` is not `ready_for_benchmark`; `benchmark_authorized` remains false.

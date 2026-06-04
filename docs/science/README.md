@@ -10,8 +10,9 @@ The current state is:
 - Phase 6P and Phase 6P2 are closed as pre-validation workspace and evidence hygiene.
 - Phase 6A0/A1 opened the validation documentation scaffold.
 - Phase 6A2 freezes the final experimental protocol for the next technical readiness phase.
+- Phase 6B adds manifest validation, readiness preflight and `canonical_content_fingerprint` audit hardening.
 - `docs/science/06_validation/` is the active validation documentation path.
-- No Phase 6A2 benchmark, ranking, plot from real data, result CSV, winner or QoE improvement claim exists.
+- No Phase 6B benchmark, ranking, plot from real data, result CSV, winner or QoE improvement claim exists.
 
 ## Entry Points
 
@@ -35,7 +36,7 @@ Read `CANONICAL_DOCUMENTS.md` and the phase `README.md` first. Open historical f
 | `03_qoe_reward/` | Phase 3.5 | QoE/reward definition and artifact boundary. |
 | `04_neural_abr/` | Phase 4 | NeuralABR-Lite dataset, teacher, training, export, and diagnostic records. |
 | `05_neural_controller_integration/` | Phase 5 | canonical integration path for `neural_abr_lite`. |
-| `06_validation/` | Phase 6A2 | active validation protocol freeze and evidence scaffold; no benchmark authorization. |
+| `06_validation/` | Phase 6A2/6B | active validation protocol freeze and readiness gates; no benchmark authorization. |
 | `07_memory/` | Thesis | memory, defense, figures, tables, and thesis integration notes. |
 
 ## Source Handling Rules
@@ -48,4 +49,6 @@ Read `CANONICAL_DOCUMENTS.md` and the phase `README.md` first. Open historical f
 
 ## Evidence Boundary
 
-Phase 4 teacher agreement and OOD diagnostics are diagnostic evidence only. Because the Phase 4 candidate dataset has checksum duplicates across splits, Phase 6 must exclude all Phase 4 checksums from any fair `neural_abr_lite` evaluation split.
+Phase 4 teacher agreement and OOD diagnostics are diagnostic evidence only. Because Phase 4 identity leakage risk includes checksum and content-level duplicates, Phase 6 must exclude Phase 4 overlap by `trace_id`, `leakage_group`, `checksum_sha256` and `canonical_content_fingerprint` from any fair `neural_abr_lite` evaluation split.
+
+`ready_for_phase6c` is not `ready_for_benchmark`; Phase 6B keeps `benchmark_authorized=false`.

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from collections import defaultdict
 from dataclasses import asdict, dataclass
@@ -11,7 +12,37 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 
 SCHEMA_VERSION = "phase6_trace_eligibility_audit_v1"
-PHASE6_EVAL_SPLIT_HINTS = ("validation", "val", "test", "ood", "eval")
+PHASE6_EVAL_SPLITS = frozenset(
+    (
+        "validation",
+        "val",
+        "test",
+        "ood",
+        "eval",
+        "same_family_clean",
+        "ood_final",
+        "primary_eval",
+        "phase6_eval",
+    )
+)
+PHASE6_EVAL_SPLIT_TOKENS = frozenset(("validation", "val", "test", "ood", "eval"))
+NON_EVAL_SPLITS = frozenset(("diagnostic_only", "do_not_use_for_eval"))
+EVAL_GATE_ALIASES = ("eval_gate", "row_eval_gate", "session_eval_gate", "use_for_eval", "eligibility_gate")
+FINGERPRINT_ALIASES = (
+    "canonical_content_fingerprint",
+    "content_fingerprint",
+    "content_sha256",
+    "canonical_sha256",
+    "trace_content_fingerprint",
+)
+CHECKSUM_ALIASES = (
+    "checksum_sha256",
+    "sha256",
+    "checksum",
+    "trace_checksum",
+    "checksum_or_source_fingerprint",
+)
+DUPLICATE_FIELDS = ("checksum_sha256", "canonical_content_fingerprint", "trace_id", "leakage_group")
 MISSING = "unspecified"
 
 
@@ -19,7 +50,9 @@ MISSING = "unspecified"
 class TraceRecord:
     role: str
     split: str
+    eval_gate: str
     checksum_sha256: str
+    canonical_content_fingerprint: str
     trace_id: str
     leakage_group: str
     source_path: str
@@ -65,9 +98,14 @@ def build_report(
     phase4_manifest: Path,
     phase6_manifest: Path,
 ) -> Dict[str, Any]:
-    phase6_eval_records = [record for record in phase6_records if is_phase6_eval_split(record.split)]
+    phase6_eval_records = [record for record in phase6_records if is_phase6_eval_record(record)]
     overlaps = {
         "checksum_sha256": overlap_groups(phase4_records, phase6_eval_records, "checksum_sha256"),
+        "canonical_content_fingerprint": overlap_groups(
+            phase4_records,
+            phase6_eval_records,
+            "canonical_content_fingerprint",
+        ),
         "trace_id": overlap_groups(phase4_records, phase6_eval_records, "trace_id"),
         "leakage_group": overlap_groups(phase4_records, phase6_eval_records, "leakage_group"),
     }
@@ -84,6 +122,8 @@ def build_report(
     reasons: List[str] = []
     if overlaps["checksum_sha256"]:
         reasons.append("Phase 6 evaluation split overlaps Phase 4 by checksum_sha256.")
+    if overlaps["canonical_content_fingerprint"]:
+        reasons.append("Phase 6 evaluation split overlaps Phase 4 by canonical_content_fingerprint.")
     if overlaps["trace_id"]:
         reasons.append("Phase 6 evaluation split overlaps Phase 4 by trace_id.")
     if overlaps["leakage_group"]:
@@ -92,6 +132,8 @@ def build_report(
     phase6_cross_split = internal_duplicates["phase6_candidate"]["cross_split"]
     if phase6_cross_split["checksum_sha256"]:
         reasons.append("Phase 6 candidate has checksum_sha256 duplicates across splits.")
+    if phase6_cross_split["canonical_content_fingerprint"]:
+        reasons.append("Phase 6 candidate has canonical_content_fingerprint duplicates across splits.")
     if phase6_cross_split["trace_id"]:
         reasons.append("Phase 6 candidate has trace_id duplicates across splits.")
     if phase6_cross_split["leakage_group"]:
@@ -100,6 +142,8 @@ def build_report(
     phase6_within_split = internal_duplicates["phase6_candidate"]["within_split"]
     if phase6_within_split["checksum_sha256"]:
         reasons.append("Phase 6 candidate has duplicate checksum_sha256 values within a split.")
+    if phase6_within_split["canonical_content_fingerprint"]:
+        reasons.append("Phase 6 candidate has duplicate canonical_content_fingerprint values within a split.")
 
     use_for_phase6_eval = not reasons
     return {
@@ -108,8 +152,9 @@ def build_report(
         "phase4_dataset_manifest": str(phase4_manifest),
         "phase6_candidate_manifest": str(phase6_manifest),
         "rule": (
-            "A checksum used in Phase 4 train/validation/OOD must not enter Phase 6 "
-            "evaluation splits for neural_abr_lite."
+            "A trace identity used in Phase 4 train/validation/OOD must not enter Phase 6 "
+            "evaluation splits for neural_abr_lite. Identity is checked separately by "
+            "checksum_sha256, canonical_content_fingerprint, trace_id and leakage_group."
         ),
         "use_for_phase6_eval": use_for_phase6_eval,
         "reasons": reasons,
@@ -119,6 +164,14 @@ def build_report(
             "phase6_eval_records": len(phase6_eval_records),
             "phase4_checksums": count_non_empty_unique(phase4_records, "checksum_sha256"),
             "phase6_eval_checksums": count_non_empty_unique(phase6_eval_records, "checksum_sha256"),
+            "phase4_content_fingerprints": count_non_empty_unique(
+                phase4_records,
+                "canonical_content_fingerprint",
+            ),
+            "phase6_eval_content_fingerprints": count_non_empty_unique(
+                phase6_eval_records,
+                "canonical_content_fingerprint",
+            ),
         },
         "splits": {
             "phase4": split_counts(phase4_records),
@@ -129,6 +182,7 @@ def build_report(
         "logs_all_specific_duplicates": logs_all_specific_duplicates,
         "notes": [
             "Phase 4 internal duplicates are reported but do not block eligibility by themselves.",
+            "checksum_sha256 and canonical_content_fingerprint are reported as separate identity fields.",
             "Blocked candidates may still be useful for separate classical-baseline diagnostics, not fair IA comparison.",
         ],
     }
@@ -146,18 +200,9 @@ def load_manifest(path: Path, *, role: str) -> List[TraceRecord]:
             TraceRecord(
                 role=role,
                 split=split,
-                checksum_sha256=normalized_checksum(
-                    first_value(
-                        raw,
-                        (
-                            "checksum_sha256",
-                            "sha256",
-                            "checksum",
-                            "trace_checksum",
-                            "checksum_or_source_fingerprint",
-                        ),
-                    )
-                ),
+                eval_gate=normalized_eval_gate(first_value(raw, EVAL_GATE_ALIASES, include_empty=True)),
+                checksum_sha256=normalized_checksum(first_value(raw, CHECKSUM_ALIASES)),
+                canonical_content_fingerprint=normalized_checksum(first_value(raw, FINGERPRINT_ALIASES)),
                 trace_id=normalized_value(first_value(raw, ("trace_id", "id", "trace_name", "name"))),
                 leakage_group=normalized_value(first_value(raw, ("leakage_group", "leakage_id", "source_group"))),
                 source_path=normalized_path(
@@ -214,10 +259,12 @@ def iter_raw_records(data: Any, default_split: Optional[str] = None) -> Iterable
                                 yield item, str(split_name)
 
 
-def first_value(raw: Mapping[str, Any], keys: Sequence[str]) -> Optional[Any]:
+def first_value(raw: Mapping[str, Any], keys: Sequence[str], *, include_empty: bool = False) -> Optional[Any]:
     for key in keys:
+        if key not in raw:
+            continue
         value = raw.get(key)
-        if value not in (None, ""):
+        if include_empty or value not in (None, ""):
             return value
     return None
 
@@ -229,6 +276,8 @@ def normalized_checksum(value: Optional[Any]) -> str:
 def normalized_value(value: Optional[Any]) -> str:
     if value is None:
         return ""
+    if isinstance(value, bool):
+        return "true" if value else "false"
     if isinstance(value, (list, tuple)):
         return ",".join(str(item) for item in value)
     return str(value).strip()
@@ -238,11 +287,39 @@ def normalized_path(value: Optional[Any]) -> str:
     return normalized_value(value).replace("\\", "/")
 
 
+def normalized_eval_gate(value: Optional[Any]) -> str:
+    raw = normalized_value(value).lower()
+    if raw in ("use_for_eval", "use", "eval", "true", "yes", "1"):
+        return "use_for_eval"
+    if raw in ("diagnostic_only", "diagnostic", "diag"):
+        return "diagnostic_only"
+    if raw in ("do_not_use_for_eval", "do-not-use-for-eval", "excluded", "exclude", "false", "no", "0"):
+        return "do_not_use_for_eval"
+    return raw
+
+
+def is_phase6_eval_record(record: TraceRecord) -> bool:
+    if record.eval_gate == "use_for_eval":
+        return True
+    if record.eval_gate in ("diagnostic_only", "do_not_use_for_eval"):
+        return False
+    return is_phase6_eval_split(record.split)
+
+
 def is_phase6_eval_split(split: str) -> bool:
-    normalized = split.lower()
+    normalized = normalized_split_name(split)
     if normalized in ("", MISSING):
         return True
-    return any(hint in normalized for hint in PHASE6_EVAL_SPLIT_HINTS)
+    if normalized in NON_EVAL_SPLITS:
+        return False
+    if normalized in PHASE6_EVAL_SPLITS:
+        return True
+    tokens = set(re.split(r"[^a-z0-9]+", normalized))
+    return bool(tokens & PHASE6_EVAL_SPLIT_TOKENS)
+
+
+def normalized_split_name(split: str) -> str:
+    return normalized_value(split).lower().replace("-", "_").replace(" ", "_")
 
 
 def overlap_groups(
@@ -268,11 +345,11 @@ def internal_duplicate_report(records: Sequence[TraceRecord]) -> Dict[str, Any]:
     return {
         "within_split": {
             field: duplicate_groups_within_split(records, field)
-            for field in ("checksum_sha256", "trace_id", "leakage_group")
+            for field in DUPLICATE_FIELDS
         },
         "cross_split": {
             field: duplicate_groups_cross_split(records, field)
-            for field in ("checksum_sha256", "trace_id", "leakage_group")
+            for field in DUPLICATE_FIELDS
         },
     }
 
@@ -315,18 +392,43 @@ def duplicate_groups_cross_split(records: Sequence[TraceRecord], field: str) -> 
 
 
 def logs_all_specific_duplicate_groups(records: Sequence[TraceRecord]) -> List[Dict[str, Any]]:
-    grouped = group_by_field(records, "checksum_sha256")
+    grouped: Dict[Tuple[str, str], List[TraceRecord]] = defaultdict(list)
+    for record in records:
+        identity_kind, content_identity = content_identity_for_ghent_grouping(record)
+        if content_identity:
+            grouped[(identity_kind, content_identity)].append(record)
+
     groups = []
-    for checksum, grouped_records in sorted(grouped.items()):
+    for (identity_kind, content_identity), grouped_records in sorted(grouped.items()):
         classes = {ghent_log_class(record.source_path) for record in grouped_records}
         if "logs_all" in classes and "specific" in classes:
-            groups.append(
+            group = {
+                "content_identity": content_identity,
+                "identity_kind": identity_kind,
+                "records": [public_record(record) for record in grouped_records],
+            }
+            checksum_values = sorted({record.checksum_sha256 for record in grouped_records if record.checksum_sha256})
+            fingerprint_values = sorted(
                 {
-                    "checksum_sha256": checksum,
-                    "records": [public_record(record) for record in grouped_records],
+                    record.canonical_content_fingerprint
+                    for record in grouped_records
+                    if record.canonical_content_fingerprint
                 }
             )
+            if identity_kind == "checksum_sha256":
+                group["checksum_sha256"] = content_identity
+            if checksum_values:
+                group["checksum_sha256_values"] = checksum_values
+            if fingerprint_values:
+                group["canonical_content_fingerprint_values"] = fingerprint_values
+            groups.append(group)
     return groups
+
+
+def content_identity_for_ghent_grouping(record: TraceRecord) -> Tuple[str, str]:
+    if record.canonical_content_fingerprint:
+        return "canonical_content_fingerprint", record.canonical_content_fingerprint
+    return "checksum_sha256", record.checksum_sha256
 
 
 def ghent_log_class(source_path: str) -> str:
