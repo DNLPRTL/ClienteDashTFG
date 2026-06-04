@@ -20,14 +20,16 @@ archive/current-before-phase3-rebuild
 La fase activa es:
 
 ```text
-Phase 3 Rebuild - final corpus generated on Windows; Ubuntu validation pending
+Phase 4 planning - training corpus and sampler contract
 ```
 
-Phase 1 y Phase 2 se consideran cerradas. Phase 3 Rebuild ya tiene corpus final
-externo generado y validado en Windows, mas una auditoria de calidad y un
-manifest curado recomendado para preparacion de entrenamiento/evaluacion. Antes
-de avanzar operativamente, la VM cliente Ubuntu debe sincronizar la rama y
-validar los manifests externos. No hay benchmark, training IA, ranking, ganador
+Phase 1 y Phase 2 se consideran cerradas. Phase 3 Rebuild esta cerrada en
+Windows con corpus externo, auditoria de calidad, replay tecnico y manifest
+curado recomendado para preparacion de entrenamiento/evaluacion. Phase 3.5
+Rebuild esta cerrada en Windows con contrato `qoe_linear_v1`, calculadora QoE
+pura, postprocesador QoE, gates y smokes sinteticos controlados. La VM cliente
+Ubuntu debe sincronizar la rama y validar los artifacts externos relevantes
+antes de avanzar operativamente. No hay benchmark, training IA, ranking, ganador
 ni afirmacion de mejora de QoE autorizados.
 
 ## Documentos obligatorios por ejecucion
@@ -42,6 +44,7 @@ docs/arquitectura y procedimientos estandar tfg dash/TFG_PLAN_GENERICO.md
 Usar tambien como contexto secundario, cuando haga falta:
 
 ```text
+docs/contexto rama nueva/
 docs/contexto rama original/
 docs/contexto del orquestador el chat web/
 docs/todos los estudios pdf convertidos a md/
@@ -66,6 +69,13 @@ C:\Users\danie\Documents\TFG\datasets_normalizados
 C:\Users\danie\Documents\TFG\manifests_trazas
 C:\Users\danie\Documents\TFG\runs_trazas
 C:\Users\danie\Documents\TFG\auditorias_trazas
+```
+
+Artifacts externos relevantes:
+
+```text
+C:\Users\danie\Documents\TFG\manifests_trazas\phase3\final\phase3_trace_manifest_curated.json
+C:\Users\danie\Documents\TFG\runs_trazas\phase3_5\smoke
 ```
 
 No commitear datasets, trazas normalizadas, manifests finales generados, runs,
@@ -124,6 +134,42 @@ semantico, nunca por filas.
 FCC, Puffer y GAViST pueden procesarse, pero sus semanticas deben quedar
 marcadas de forma explicita para no tratarlas sin control como equivalentes a
 trazas directas de ancho de banda disponible.
+
+## Phase 3.5 Rebuild guardrails
+
+La formula QoE/reward cerrada para esta rama es:
+
+```text
+qoe_formula_version=qoe_linear_v1
+reward_n = bitrate_mbps - 4.3 * rebuffer_s - smoothness_mbps
+primary_session_metric=qoe_linear_mean
+```
+
+`qoe_log_v1` queda como metrica secundaria de sensibilidad. `startup_delay_s`
+queda report-only. VMAF queda deferred/artifact-dependent.
+
+Los gates validos son:
+
+```text
+use_for_eval
+diagnostic_only
+do_not_use_for_eval
+```
+
+Los smokes de QoE son sinteticos y no consumen trazas reales. Sus salidas deben
+mantener:
+
+```text
+outputs_are_benchmark_results=false
+benchmark_performed=false
+ranking_performed=false
+no_final_ranking=true
+ia_training_performed=false
+```
+
+Phase 4 debera empezar por contrato de sampler/corpus de entrenamiento. No
+entrenar IA directamente con todo el split `train` sin balanceo por semantica,
+dataset y dificultad.
 
 ## Separacion tecnica
 
