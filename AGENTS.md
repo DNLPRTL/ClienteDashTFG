@@ -20,17 +20,17 @@ archive/current-before-phase3-rebuild
 La fase activa es:
 
 ```text
-Phase 4 planning - training corpus and sampler contract
+Phase 5 planning - integration of two NeuralABR-Lite controllers
 ```
 
 Phase 1 y Phase 2 se consideran cerradas. Phase 3 Rebuild esta cerrada en
 Windows con corpus externo, auditoria de calidad, replay tecnico y manifest
 curado recomendado para preparacion de entrenamiento/evaluacion. Phase 3.5
 Rebuild esta cerrada en Windows con contrato `qoe_linear_v1`, calculadora QoE
-pura, postprocesador QoE, gates y smokes sinteticos controlados. La VM cliente
-Ubuntu debe sincronizar la rama y validar los artifacts externos relevantes
-antes de avanzar operativamente. No hay benchmark, training IA, ranking, ganador
-ni afirmacion de mejora de QoE autorizados.
+pura, postprocesador QoE, gates y smokes sinteticos controlados. Phase 4 Rebuild
+esta cerrada en Ubuntu con dos bundles offline `NeuralABR-Lite`: uno entrenado
+con `robust_mpc` real y otro con `teacher_hibrido`. No hay benchmark, ranking,
+ganador ni afirmacion de mejora de QoE autorizados.
 
 ## Documentos obligatorios por ejecucion
 
@@ -167,9 +167,8 @@ no_final_ranking=true
 ia_training_performed=false
 ```
 
-Phase 4 debera empezar por contrato de sampler/corpus de entrenamiento. No
-entrenar IA directamente con todo el split `train` sin balanceo por semantica,
-dataset y dificultad.
+Phase 4 ya cerro el contrato de sampler/corpus y el entrenamiento offline. Phase
+5 debe integrar los bundles como controllers sin convertir smokes en benchmark.
 
 ## Synthetic controlled trace guardrails
 
