@@ -1,6 +1,6 @@
 # Phase 4 Rebuild - NeuralABR offline
 
-Status: phase4f_export_bundle_inferencia_in_progress.
+Status: phase4h_teacher_hibrido_sin_vmaf_in_progress.
 
 Phase 4 debera reconstruirse sobre:
 
@@ -49,3 +49,13 @@ phase4f_export_bundle_inferencia.md
 
 Este bloque exporta un bundle local de inferencia, valida hashes y ejecuta una
 prueba offline de inferencia CPU. No integra controller y no produce benchmark.
+
+Extension activa:
+
+```text
+phase4h_teacher_hibrido_sin_vmaf.md
+```
+
+Este bloque genera un segundo modelo offline con `teacher_hibrido`, seleccionando
+por ventana el mejor comportamiento entre controllers clasicos bajo
+`qoe_linear_v1`. No usa VMAF, no integra controller y no produce benchmark.

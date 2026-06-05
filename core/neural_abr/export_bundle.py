@@ -56,6 +56,7 @@ def export_phase4_inference_bundle(
     _model, _normalizer, checkpoint = load_phase4_candidate_model(model_path)
     source_checkpoint = model_path / CANDIDATE_MODEL_FILENAME
     source_checkpoint_hash = sha256_file(source_checkpoint)
+    label_teacher = str(training_report.get("label_teacher") or data_summary.get("label_teacher") or PRIMARY_TEACHER)
 
     inference_checkpoint = {
         "schema_id": PHASE4_INFERENCE_BUNDLE_SCHEMA_ID,
@@ -75,7 +76,10 @@ def export_phase4_inference_bundle(
     write_json(output_path / NORMALIZATION_STATS_FILENAME, normalization_stats)
     write_json(output_path / FEATURE_SCHEMA_FILENAME, build_feature_schema())
     write_json(output_path / BUNDLE_LADDER_SCHEMA_FILENAME, _build_ladder_schema(data_summary))
-    write_json(output_path / BUNDLE_MODEL_CARD_FILENAME, _build_model_card(training_report, candidate_review, data_summary, model_config))
+    write_json(
+        output_path / BUNDLE_MODEL_CARD_FILENAME,
+        _build_model_card(training_report, candidate_review, data_summary, model_config, label_teacher=label_teacher),
+    )
     write_json(output_path / BUNDLE_INFERENCE_CONTRACT_FILENAME, _build_inference_contract(model_config))
     write_json(output_path / BUNDLE_FALLBACK_POLICY_FILENAME, _build_fallback_policy())
 
@@ -92,7 +96,7 @@ def export_phase4_inference_bundle(
             "candidate_ready_for_phase4f": candidate_review.get("candidate_ready_for_phase4f"),
             "model_family": "NeuralABR-Lite Candidate Scorer",
             "training_method": "behavior_cloning",
-            "teacher": PRIMARY_TEACHER,
+            "teacher": label_teacher,
             "reward_version": REWARD_VERSION,
             "action_space": "representation_index",
             "segment_duration_s": data_summary.get("content_ladder", {}).get("segment_duration_s"),
@@ -112,6 +116,7 @@ def export_phase4_inference_bundle(
         "bundle_dir": str(output_path),
         "source_model_dir": str(model_path),
         "source_data_dir": str(data_path),
+        "label_teacher": label_teacher,
         "manifest": str(output_path / "manifiesto_bundle_inferencia.json"),
         "required_files": manifest["required_files"],
         "benchmark_performed": False,
@@ -163,13 +168,14 @@ def _build_model_card(
     candidate_review: Mapping[str, object],
     data_summary: Mapping[str, object],
     model_config: Mapping[str, object],
+    label_teacher: str = PRIMARY_TEACHER,
 ) -> Mapping[str, object]:
     return {
         "schema_id": "phase4_tarjeta_modelo_neural_abr_lite_v1",
         "human_readable_name": "Tarjeta del modelo NeuralABR-Lite exportado",
         "model_family": "NeuralABR-Lite Candidate Scorer",
         "training_method": "behavior_cloning",
-        "teacher": PRIMARY_TEACHER,
+        "teacher": label_teacher,
         "reward_version": REWARD_VERSION,
         "device": "cpu",
         "model_config": dict(model_config),

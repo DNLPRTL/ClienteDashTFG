@@ -13,6 +13,7 @@ from core.neural_abr.constants import (
     PHASE4_FEATURE_SCHEMA_ID,
     PHASE4_NORMALIZATION_SCHEMA_ID,
     PHASE4_TRAINING_DATA_SCHEMA_ID,
+    PRIMARY_TEACHER,
     REQUIRED_TRAINING_DATA_FILES,
     TRAINING_DATA_SUMMARY_FILENAME,
     TRAINING_ROLE,
@@ -25,7 +26,10 @@ class TrainingDataValidationError(ValueError):
     """Raised when Phase 4 training data artifacts are invalid."""
 
 
-def validate_phase4_training_data_dir(path: object) -> Mapping[str, object]:
+def validate_phase4_training_data_dir(
+    path: object,
+    allowed_teacher_policies: tuple[str, ...] = (PRIMARY_TEACHER,),
+) -> Mapping[str, object]:
     data_dir = ensure_existing_dir(path, purpose="phase4 training data")
     missing = [filename for filename in REQUIRED_TRAINING_DATA_FILES if not (data_dir / filename).is_file()]
     if missing:
@@ -50,14 +54,19 @@ def validate_phase4_training_data_dir(path: object) -> Mapping[str, object]:
     if leakage_audit.get("status") != "PASS":
         raise TrainingDataValidationError("leakage audit did not pass")
     label_schema = read_json(data_dir / LABEL_SCHEMA_FILENAME)
-    if label_schema.get("teacher_policy") != "robust_mpc":
-        raise TrainingDataValidationError("label teacher must be robust_mpc")
+    if label_schema.get("teacher_policy") not in allowed_teacher_policies:
+        raise TrainingDataValidationError(
+            "label teacher must be one of: {0}".format(", ".join(allowed_teacher_policies))
+        )
+    label_teacher = str(label_schema.get("teacher_policy"))
 
     counts = {}
     for role in (TRAINING_ROLE, VALIDATION_ROLE):
         samples = read_jsonl(data_dir / DATA_FILENAMES[role])
         for sample in samples:
-            validate_sample(sample, expected_role=role)
+            validate_sample(sample, expected_role=role, allowed_teacher_policies=allowed_teacher_policies)
+            if sample["label"]["teacher_policy"] != label_teacher:  # type: ignore[index]
+                raise TrainingDataValidationError("sample label teacher does not match label schema")
         counts[role] = len(samples)
     if counts[TRAINING_ROLE] <= 0 or counts[VALIDATION_ROLE] <= 0:
         raise TrainingDataValidationError("training and validation data must not be empty")
@@ -70,4 +79,3 @@ def validate_phase4_training_data_dir(path: object) -> Mapping[str, object]:
         "ia_training_performed": False,
         "ranking_performed": False,
     }
-

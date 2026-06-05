@@ -14,6 +14,7 @@ from core.neural_abr.constants import (
     PHASE4_CANDIDATE_REVIEW_SCHEMA_ID,
     PHASE4_FORMAL_TRAINING_SCHEMA_ID,
     PHASE4_NORMALIZATION_SCHEMA_ID,
+    PRIMARY_TEACHER,
     TRAINING_ROLE,
     VALIDATION_ROLE,
 )
@@ -33,6 +34,12 @@ def assess_phase4_candidate_model(
     min_validation_samples: int = 250,
     min_training_teacher_agreement: float = 0.85,
     min_validation_teacher_agreement: float = 0.80,
+    label_teacher: str = PRIMARY_TEACHER,
+    phase_name: str = "phase4e_entrenamiento_modelo_candidato_offline",
+    decision_ready: str = "PHASE4E_MODELO_CANDIDATO_READY_FOR_PHASE4F",
+    decision_not_candidate: str = "PHASE4E_ENTRENAMIENTO_PASS_NOT_CANDIDATE",
+    decision_blocked: str = "PHASE4E_MODELO_CANDIDATO_BLOCKED_NEEDS_FIX",
+    human_readable_name: str = "Revision del modelo candidato NeuralABR-Lite",
 ) -> Mapping[str, object]:
     model_path = ensure_existing_dir(model_dir, purpose="phase4 candidate model")
     report_path = model_path / FORMAL_TRAINING_REPORT_FILENAME
@@ -43,7 +50,7 @@ def assess_phase4_candidate_model(
     source_data_dir = data_dir if data_dir is not None else training_report.get("source_training_data_dir")
     if not source_data_dir:
         raise CandidateReadinessError("data_dir is required when training report has no source path")
-    data_validation = validate_phase4_training_data_dir(source_data_dir)
+    data_validation = validate_phase4_training_data_dir(source_data_dir, allowed_teacher_policies=(label_teacher,))
     output_path = ensure_outside_repo(output_dir or model_path, purpose="phase4 candidate review output")
     if output_path.exists() and not output_path.is_dir():
         raise CandidateReadinessError("candidate review output exists and is not a directory: {0}".format(output_path))
@@ -166,21 +173,20 @@ def assess_phase4_candidate_model(
     warnings = _prediction_warnings(training_metrics, validation_metrics)
     if hard_failures:
         status = "BLOCKED_NEEDS_FIX"
-        decision = "PHASE4E_MODELO_CANDIDATO_BLOCKED_NEEDS_FIX"
+        decision = decision_blocked
         ready = False
     elif candidate_failures:
         status = "PASS_NOT_CANDIDATE"
-        decision = "PHASE4E_ENTRENAMIENTO_PASS_NOT_CANDIDATE"
+        decision = decision_not_candidate
         ready = False
     else:
         status = "PASS"
-        decision = "PHASE4E_MODELO_CANDIDATO_READY_FOR_PHASE4F"
+        decision = decision_ready
         ready = True
-
     review = {
         "schema_id": PHASE4_CANDIDATE_REVIEW_SCHEMA_ID,
-        "human_readable_name": "Revision del modelo candidato NeuralABR-Lite",
-        "phase": "phase4e_entrenamiento_modelo_candidato_offline",
+        "human_readable_name": human_readable_name,
+        "phase": phase_name,
         "status": status,
         "decision": decision,
         "candidate_ready_for_phase4f": ready,
@@ -197,6 +203,7 @@ def assess_phase4_candidate_model(
         "training_metrics": dict(training_metrics),
         "validation_metrics": dict(validation_metrics),
         "sample_counts_used": dict(sample_counts),
+        "label_teacher": str(label_teacher),
         "benchmark_performed": False,
         "outputs_are_benchmark_results": False,
         "ranking_performed": False,

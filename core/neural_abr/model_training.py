@@ -24,6 +24,7 @@ from core.neural_abr.constants import (
     FORMAL_TRAINING_REPORT_FILENAME,
     NORMALIZATION_STATS_FILENAME,
     PHASE4_FORMAL_TRAINING_SCHEMA_ID,
+    PRIMARY_TEACHER,
     TRAINING_ROLE,
     VALIDATION_ROLE,
 )
@@ -50,6 +51,10 @@ def train_phase4_candidate_model(
     max_training_samples: int | None = None,
     max_validation_samples: int | None = None,
     hidden_sizes: Sequence[int] = (32, 16),
+    label_teacher: str = PRIMARY_TEACHER,
+    phase_name: str = "phase4e_entrenamiento_modelo_candidato_offline",
+    human_readable_name: str = "Entrenamiento formal offline del modelo candidato NeuralABR-Lite",
+    feature_source: str = "phase4B_datos_para_entrenamiento",
 ) -> Mapping[str, object]:
     if device != "cpu":
         raise CandidateModelTrainingError("Phase 4E formal training is CPU-only")
@@ -62,15 +67,15 @@ def train_phase4_candidate_model(
 
     data_path = ensure_existing_dir(training_data_dir, purpose="phase4 training data")
     output_path = prepare_output_dir(output_dir, overwrite=overwrite, purpose="phase4 candidate model")
-    data_validation = validate_phase4_training_data_dir(data_path)
+    data_validation = validate_phase4_training_data_dir(data_path, allowed_teacher_policies=(label_teacher,))
     set_training_determinism(seed)
 
     training_samples = tuple(read_jsonl(data_path / DATA_FILENAMES[TRAINING_ROLE], limit=max_training_samples))
     validation_samples = tuple(read_jsonl(data_path / DATA_FILENAMES[VALIDATION_ROLE], limit=max_validation_samples))
     for sample in training_samples:
-        validate_sample(sample, expected_role=TRAINING_ROLE)
+        validate_sample(sample, expected_role=TRAINING_ROLE, allowed_teacher_policies=(label_teacher,))
     for sample in validation_samples:
-        validate_sample(sample, expected_role=VALIDATION_ROLE)
+        validate_sample(sample, expected_role=VALIDATION_ROLE, allowed_teacher_policies=(label_teacher,))
     if not training_samples or not validation_samples:
         raise CandidateModelTrainingError("formal training requires training and validation samples")
 
@@ -118,8 +123,8 @@ def train_phase4_candidate_model(
         "model_state_dict": model.state_dict(),
         "model_config": model_config,
         "normalization_stats_file": NORMALIZATION_STATS_FILENAME,
-        "feature_source": "phase4B_datos_para_entrenamiento",
-        "teacher_policy": "robust_mpc",
+        "feature_source": str(feature_source),
+        "teacher_policy": str(label_teacher),
         "seed": int(seed),
         "device": "cpu",
     }
@@ -128,8 +133,8 @@ def train_phase4_candidate_model(
     duration_s = time.monotonic() - started
     report = {
         "schema_id": PHASE4_FORMAL_TRAINING_SCHEMA_ID,
-        "human_readable_name": "Entrenamiento formal offline del modelo candidato NeuralABR-Lite",
-        "phase": "phase4e_entrenamiento_modelo_candidato_offline",
+        "human_readable_name": human_readable_name,
+        "phase": phase_name,
         "status": "PASS",
         "generated_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
         "source_training_data_dir": str(data_path),
@@ -141,6 +146,7 @@ def train_phase4_candidate_model(
         "batch_size": int(batch_size),
         "learning_rate": float(learning_rate),
         "hidden_sizes": [int(value) for value in hidden_sizes],
+        "label_teacher": str(label_teacher),
         "max_training_samples": max_training_samples,
         "max_validation_samples": max_validation_samples,
         "sample_counts_used": {
