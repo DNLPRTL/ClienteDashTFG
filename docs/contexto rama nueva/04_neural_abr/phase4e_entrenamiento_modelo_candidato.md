@@ -1,6 +1,6 @@
 # Phase 4E - Entrenamiento del modelo candidato
 
-Status: validated_on_ubuntu_candidate_ready_for_phase4f.
+Status: robust_mpc_controller_real_rebuild_in_progress.
 
 ## Proposito
 
@@ -55,6 +55,8 @@ reporte_revision_modelo_candidato.json
 - Modelo: `NeuralABR-Lite Candidate Scorer`.
 - Metodo: behavior cloning.
 - Teacher: `robust_mpc`.
+- Fuente del teacher: controller real `core.controller.robust_mpc.RobustMpcController`
+  ejecutado dentro del entorno offline de replay.
 - Reward: `qoe_linear_v1`.
 - Dispositivo: CPU.
 - Segmento primario: `4s`.

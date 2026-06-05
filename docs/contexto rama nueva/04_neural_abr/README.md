@@ -29,8 +29,9 @@ phase4bcd_datos_y_prueba_rapida_offline.md
 ```
 
 Este bloque genera datos offline con labels `robust_mpc`, normalizacion
-train-only y una prueba rapida diagnostica de entrenamiento en CPU. No genera
-modelo candidato.
+train-only y una prueba rapida diagnostica de entrenamiento en CPU. Los labels
+`robust_mpc` se generan ejecutando el controller real de Phase 2 dentro del
+replay offline. No genera modelo candidato.
 
 Bloque activo:
 

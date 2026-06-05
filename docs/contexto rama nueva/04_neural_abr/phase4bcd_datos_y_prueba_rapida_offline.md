@@ -1,6 +1,6 @@
 # Phase 4B/C/D - Datos offline y prueba rapida
 
-Status: implemented_on_windows_pending_ubuntu_validation.
+Status: robust_mpc_controller_real_rebuild_in_progress.
 
 ## Proposito
 
@@ -54,6 +54,8 @@ reporte_prueba_rapida_entrenamiento.json
 ## Contrato tecnico
 
 - Teacher principal: `robust_mpc`.
+- Fuente del teacher: controller real de Phase 2 ejecutado en replay offline.
+- Modulo del teacher: `core.controller.robust_mpc.RobustMpcController`.
 - Reward version: `qoe_linear_v1`.
 - Accion: `representation_index`.
 - Segmento primario: `4s`.
@@ -92,6 +94,14 @@ benchmark_performed=false
 ia_training_performed=false
 ranking_performed=false
 candidate_model_created=false
+```
+
+El resumen del dataset debe declarar:
+
+```text
+label_teacher=robust_mpc
+label_teacher_source=phase2_controller_real_en_replay_offline
+label_teacher_controller_module=core.controller.robust_mpc.RobustMpcController
 ```
 
 ## Nota sobre mover artifacts a Ubuntu

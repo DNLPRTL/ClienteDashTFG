@@ -60,6 +60,12 @@ class Phase4DatosEntrenamientoTest(unittest.TestCase):
             self.assertEqual(30, len(validation_rows))
             self.assertEqual("PASS", leakage["status"])
             self.assertEqual(TRAINING_ROLE, normalization["fitted_on_data_role"])
+            self.assertEqual("phase2_controller_real_en_replay_offline", result["summary"]["label_teacher_source"])
+            self.assertEqual(
+                "core.controller.robust_mpc.RobustMpcController",
+                result["summary"]["label_teacher_controller_module"],
+            )
+            self.assertEqual("startup_fallback_no_valid_throughput", training_rows[0]["label"]["reason"])
             self.assertNotIn("trace_id", training_rows[0]["context_features"])
             self.assertNotIn("dataset_id", training_rows[0]["candidate_features"][0])
             self.assertIn("trace_id", training_rows[0]["metadata"])
@@ -177,4 +183,3 @@ def write_trace_record(root: Path, index: int, split: str, throughput_kbps: floa
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -17,6 +17,7 @@ from core.neural_abr.constants import (
     LEAKAGE_AUDIT_FILENAME,
     NORMALIZATION_STATS_FILENAME,
     PHASE4_TRAINING_DATA_SCHEMA_ID,
+    PRIMARY_TEACHER,
     REQUIRED_TRAINING_DATA_FILES,
     REWARD_VERSION,
     TRAINING_DATA_SUMMARY_FILENAME,
@@ -25,10 +26,10 @@ from core.neural_abr.constants import (
 )
 from core.neural_abr.content_ladder import default_training_ladder
 from core.neural_abr.features import build_candidate_features, build_context_features, build_feature_schema
+from core.neural_abr.hybrid_teacher import ClassicControllerTeacher, HybridTeacherError, qoe_linear_reward_for_replay_step
 from core.neural_abr.normalization import FeatureNormalizer
 from core.neural_abr.replay_environment import TraceReplayEnvironment
 from core.neural_abr.sample_schema import build_label_schema, validate_sample
-from core.neural_abr.teacher_policy import robust_mpc_teacher
 from core.trace_replay.loader import LoadedTrace, TraceLoadError, load_normalized_trace_rows
 from core.trace_replay.network_model import TraceReplayError
 
@@ -56,7 +57,7 @@ def build_phase4_training_data_from_plan(
         segment_count=segment_count,
         representation_kbps=representation_kbps,
     )
-    teacher = robust_mpc_teacher()
+    teacher = ClassicControllerTeacher(PRIMARY_TEACHER)
 
     samples_by_role: dict[str, list[Mapping[str, object]]] = {TRAINING_ROLE: [], VALIDATION_ROLE: []}
     skipped_windows = []
@@ -65,7 +66,7 @@ def build_phase4_training_data_from_plan(
             try:
                 loaded_trace = load_trace_window(window)
                 samples_by_role[data_role].extend(_samples_for_window(window, data_role, loaded_trace, ladder, teacher))
-            except (OSError, TraceLoadError, TraceReplayError, TrainingDataBuildError) as exc:
+            except (OSError, TraceLoadError, TraceReplayError, TrainingDataBuildError, HybridTeacherError) as exc:
                 skipped_windows.append(
                     {
                         "window_id": str(window.get("window_id")),
@@ -166,6 +167,7 @@ def _samples_for_window(
         context = build_context_features(state, ladder)
         candidates = build_candidate_features(ladder, state.segment_index, float(context["last_bitrate_bps"]))
         decision = teacher.select_action(state, ladder, action_mask)
+        step = env.step(decision.representation_index)
         sample = {
             "schema_id": PHASE4_TRAINING_DATA_SCHEMA_ID,
             "sample_id": "{0}__segment_{1:04d}".format(window["window_id"], state.segment_index),
@@ -176,7 +178,12 @@ def _samples_for_window(
             "label": {
                 "teacher_action": int(decision.representation_index),
                 "teacher_policy": decision.teacher_policy,
-                "teacher_reward_n": float(decision.teacher_reward_n),
+                "teacher_reward_n": qoe_linear_reward_for_replay_step(
+                    state,
+                    ladder,
+                    decision.representation_index,
+                    step.rebuffer_s,
+                ),
                 "reward_version": REWARD_VERSION,
                 "diagnostic_only": True,
                 "reason": decision.reason,
@@ -185,7 +192,6 @@ def _samples_for_window(
         }
         validate_sample(sample, expected_role=data_role)
         samples.append(sample)
-        env.step(decision.representation_index)
     return tuple(samples)
 
 
@@ -228,7 +234,10 @@ def _build_summary(
         "content_ladder": dict(ladder_manifest),
         "selected_window_counts": dict(selected_window_counts),
         "sample_counts": {role: len(samples_by_role[role]) for role in (TRAINING_ROLE, VALIDATION_ROLE)},
-        "label_teacher": "robust_mpc",
+        "label_teacher": PRIMARY_TEACHER,
+        "label_teacher_source": "phase2_controller_real_en_replay_offline",
+        "label_teacher_controller_module": "core.controller.robust_mpc.RobustMpcController",
+        "label_teacher_adapter": "core.neural_abr.hybrid_teacher.ClassicControllerTeacher",
         "reward_version": REWARD_VERSION,
         "normalization_fitted_on": "training samples only",
         "metadata_fields_are_model_features": False,

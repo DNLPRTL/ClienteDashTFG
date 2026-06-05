@@ -141,6 +141,27 @@ def build_hybrid_label_for_draft(
     }
 
 
+def qoe_linear_reward_for_replay_step(
+    state: ReplayState,
+    ladder: ContentLadder,
+    representation_index: int,
+    rebuffer_s: float,
+) -> float:
+    bitrate_bps = float(ladder.bitrate_bps(int(representation_index)))
+    previous_bitrate_bps = (
+        float(ladder.bitrate_bps(state.last_representation_index))
+        if state.last_representation_index >= 0
+        else 0.0
+    )
+    quality_mbps = bitrate_bps / 1_000_000.0
+    smoothness_mbps = (
+        abs(bitrate_bps - previous_bitrate_bps) / 1_000_000.0
+        if previous_bitrate_bps > 0.0
+        else 0.0
+    )
+    return float(quality_mbps - 4.3 * float(rebuffer_s) - smoothness_mbps)
+
+
 def hybrid_selection_audit(selection: HybridTeacherWindowSelection) -> Mapping[str, object]:
     return {
         "winner": selection.winner.source_teacher,
@@ -166,7 +187,6 @@ def _simulate_teacher_trajectory(loaded_trace, ladder: ContentLadder, teacher_na
     teacher = ClassicControllerTeacher(teacher_name)
     drafts = []
     qoe_inputs = []
-    previous_bitrate_kbps: float | None = None
     while not env.done:
         state = env.state
         action_mask = env.action_mask()
@@ -175,13 +195,7 @@ def _simulate_teacher_trajectory(loaded_trace, ladder: ContentLadder, teacher_na
         decision = teacher.select_action(state, ladder, action_mask)
         step = env.step(decision.representation_index)
         bitrate_kbps = ladder.bitrate_bps(decision.representation_index) / 1000.0
-        smoothness_mbps = (
-            abs(bitrate_kbps - previous_bitrate_kbps) / 1000.0
-            if previous_bitrate_kbps is not None
-            else 0.0
-        )
-        reward_n = (bitrate_kbps / 1000.0) - 4.3 * float(step.rebuffer_s) - smoothness_mbps
-        previous_bitrate_kbps = bitrate_kbps
+        reward_n = qoe_linear_reward_for_replay_step(state, ladder, decision.representation_index, step.rebuffer_s)
         qoe_inputs.append(SegmentQoEInput(bitrate_kbps=bitrate_kbps, rebuffer_s=float(step.rebuffer_s)))
         drafts.append(
             HybridTeacherSampleDraft(
