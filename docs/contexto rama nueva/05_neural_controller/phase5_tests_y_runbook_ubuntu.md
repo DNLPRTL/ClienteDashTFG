@@ -87,3 +87,19 @@ feedback_neural_diagnostic_only=1
 
 Estos smokes no son benchmark.
 
+## Resultado ejecutado
+
+Ubuntu cliente ejecuto los dos smokes con bundles reales el 2026-06-05:
+
+```text
+smoke_neural_robust_mpc/run_20260605_143034
+smoke_neural_teacher_hibrido/run_20260605_143136
+```
+
+Ambos quedaron `status=completed`, con bundle cargado, `success_neural`,
+telemetria `feedback_neural_*` solo en `segment_telemetry.csv` y sin artefactos
+legacy `dataset.csv` ni `dataset_training.csv`.
+
+La red del smoke fue la red rapida del adaptador puente entre VM cliente y VM
+servidor. Se acepta solo como smoke estructural de integracion. No autoriza
+benchmark, ranking, comparacion QoE ni claim de mejora.

@@ -1,6 +1,6 @@
 # Phase 5 - Integracion de dos controllers NeuralABR-Lite
 
-Status: implemented_on_windows_pending_ubuntu_real_bundle_smokes.
+Status: closed_on_ubuntu.
 
 Phase 5 integra los dos bundles offline cerrados en Phase 4 como controllers
 reales del cliente:
@@ -16,6 +16,23 @@ se valida la accion, y cualquier fallo cae a un controller clasico de respaldo.
 
 Esta fase no ejecuta benchmark, no hace ranking, no declara ganador y no afirma
 mejora de QoE. La comparacion formal queda reservada para Phase 6.
+
+## Cierre
+
+Ubuntu cliente valido:
+
+- `python -m unittest discover`: `333` tests OK.
+- `python scripts/check_client_readiness.py --strict`: `87 OK / 0 WARN / 0 FAIL`.
+- Smoke con bundle real `robust_mpc`: `status=completed`, bundle cargado,
+  telemetria neural en `segment_telemetry.csv`, sin columnas neural en
+  `evaluation_segments.csv`.
+- Smoke con bundle real `teacher_hibrido`: `status=completed`, bundle cargado,
+  telemetria neural en `segment_telemetry.csv`, sin columnas neural en
+  `evaluation_segments.csv`.
+
+Estos smokes usaron red rapida por adaptador puente. Eso es valido para Phase 5
+porque solo se verifica integracion estructural; no es valido como benchmark ni
+como evidencia de rendimiento ABR.
 
 ## Documentos
 
