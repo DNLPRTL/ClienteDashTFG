@@ -1,6 +1,6 @@
-# Phase 4 futura - NeuralABR offline
+# Phase 4 Rebuild - NeuralABR offline
 
-Status: not_started_in_rebuild_branch.
+Status: phase4a_training_corpus_sampler_in_progress.
 
 Phase 4 debera reconstruirse sobre:
 
@@ -9,3 +9,15 @@ Phase 4 debera reconstruirse sobre:
 - un sampler balanceado nuevo
 
 No reutilizar dry-runs legacy ni datasets de entrenamiento antiguos.
+
+## Phase 4A
+
+Primer bloque activo:
+
+```text
+phase4a_corpus_y_sampler_de_entrenamiento.md
+```
+
+Este bloque prepara un plan auditable de ventanas de traza para entrenamiento
+offline. No entrena IA, no genera labels de teacher y no produce resultados de
+benchmark.
