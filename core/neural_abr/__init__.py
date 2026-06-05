@@ -1,6 +1,6 @@
 """Offline NeuralABR-Lite helpers.
 
-This package is intentionally separate from the DASH runtime. Phase 4A only
-prepares a balanced trace-window plan for later offline training.
+This package is intentionally separate from the DASH runtime. Phase 4 builds
+trace plans, offline training data, CPU training runs, and candidate checks
+without registering a DASH controller.
 """
-

@@ -1,6 +1,6 @@
 # Phase 4 Rebuild - NeuralABR offline
 
-Status: phase4bcd_datos_y_prueba_rapida_offline_in_progress.
+Status: phase4e_entrenamiento_modelo_candidato_in_progress.
 
 Phase 4 debera reconstruirse sobre:
 
@@ -31,3 +31,12 @@ phase4bcd_datos_y_prueba_rapida_offline.md
 Este bloque genera datos offline con labels `robust_mpc`, normalizacion
 train-only y una prueba rapida diagnostica de entrenamiento en CPU. No genera
 modelo candidato.
+
+Bloque activo:
+
+```text
+phase4e_entrenamiento_modelo_candidato.md
+```
+
+Este bloque entrena un checkpoint externo de NeuralABR-Lite y revisa si queda
+listo para Phase 4F export. No integra controller y no produce benchmark.

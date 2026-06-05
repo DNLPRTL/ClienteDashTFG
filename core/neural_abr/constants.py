@@ -7,6 +7,8 @@ PHASE4_NORMALIZATION_SCHEMA_ID = "phase4_estadisticas_normalizacion_v1"
 PHASE4_LEAKAGE_AUDIT_SCHEMA_ID = "phase4_auditoria_no_contaminacion_v1"
 PHASE4_TRAINING_SMOKE_SCHEMA_ID = "phase4_prueba_rapida_entrenamiento_v1"
 PHASE4_MODEL_CONFIG_SCHEMA_ID = "phase4_neural_abr_lite_model_config_v1"
+PHASE4_FORMAL_TRAINING_SCHEMA_ID = "phase4_entrenamiento_modelo_candidato_v1"
+PHASE4_CANDIDATE_REVIEW_SCHEMA_ID = "phase4_revision_modelo_candidato_v1"
 
 TRAINING_ROLE = "training"
 VALIDATION_ROLE = "validation"
@@ -20,6 +22,10 @@ LABEL_SCHEMA_FILENAME = "esquema_labels_teacher.json"
 LEAKAGE_AUDIT_FILENAME = "auditoria_no_contaminacion.json"
 NORMALIZATION_STATS_FILENAME = "estadisticas_normalizacion_train_only.json"
 TRAINING_SMOKE_REPORT_FILENAME = "reporte_prueba_rapida_entrenamiento.json"
+CANDIDATE_MODEL_FILENAME = "modelo_candidato_neural_abr_lite.pt"
+CANDIDATE_MODEL_CONFIG_FILENAME = "configuracion_modelo.json"
+FORMAL_TRAINING_REPORT_FILENAME = "reporte_entrenamiento_modelo.json"
+CANDIDATE_REVIEW_REPORT_FILENAME = "reporte_revision_modelo_candidato.json"
 
 DATA_FILENAMES = {
     TRAINING_ROLE: TRAINING_DATA_FILENAME,
@@ -110,4 +116,3 @@ FORBIDDEN_MODEL_INPUT_FIELDS = frozenset(
         "controller_name",
     }
 )
-

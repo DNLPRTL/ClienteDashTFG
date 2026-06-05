@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import random
 from pathlib import Path
-from typing import Mapping, Sequence
+from typing import Mapping
 
 import torch
 
@@ -14,9 +14,10 @@ from core.neural_abr.constants import (
     TRAINING_SMOKE_REPORT_FILENAME,
     VALIDATION_ROLE,
 )
-from core.neural_abr.model import NeuralAbrLiteCandidateScorer, masked_cross_entropy, predict_actions
+from core.neural_abr.model import NeuralAbrLiteCandidateScorer, masked_cross_entropy
 from core.neural_abr.normalization import FeatureNormalizer
 from core.neural_abr.sample_schema import validate_sample
+from core.neural_abr.training_runtime import batch_to_tensors, evaluate_candidate_scorer, set_training_determinism
 
 
 class TrainingSmokeError(ValueError):
@@ -39,7 +40,7 @@ def run_phase4_training_smoke(
     data_path = ensure_existing_dir(training_data_dir, purpose="phase4 training data")
     output_path = Path(output_dir).expanduser().resolve()
     output_path.mkdir(parents=True, exist_ok=True)
-    _set_determinism(seed)
+    set_training_determinism(seed)
 
     training_samples = tuple(read_jsonl(data_path / DATA_FILENAMES[TRAINING_ROLE], limit=max_samples))
     validation_samples = tuple(read_jsonl(data_path / DATA_FILENAMES[VALIDATION_ROLE], limit=max_samples))
@@ -60,7 +61,7 @@ def run_phase4_training_smoke(
         rng.shuffle(order)
         for start in range(0, len(order), int(batch_size)):
             batch = [training_samples[index] for index in order[start : start + int(batch_size)]]
-            tensors = _batch_to_tensors(batch, normalizer)
+            tensors = batch_to_tensors(batch, normalizer)
             optimizer.zero_grad()
             scores = model(tensors["context"], tensors["candidates"], tensors["mask"])
             loss = masked_cross_entropy(scores, tensors["labels"], tensors["mask"])
@@ -68,8 +69,8 @@ def run_phase4_training_smoke(
             optimizer.step()
             losses.append(float(loss.detach().cpu().item()))
 
-    training_metrics = _evaluate(model, normalizer, training_samples, batch_size)
-    validation_metrics = _evaluate(model, normalizer, validation_samples, batch_size)
+    training_metrics = evaluate_candidate_scorer(model, normalizer, training_samples, batch_size)
+    validation_metrics = evaluate_candidate_scorer(model, normalizer, validation_samples, batch_size)
     report = {
         "schema_id": PHASE4_TRAINING_SMOKE_SCHEMA_ID,
         "human_readable_name": "Prueba rapida de entrenamiento diagnostica de NeuralABR-Lite",
@@ -94,67 +95,3 @@ def run_phase4_training_smoke(
     }
     write_json(output_path / TRAINING_SMOKE_REPORT_FILENAME, report)
     return report
-
-
-def _evaluate(
-    model: NeuralAbrLiteCandidateScorer,
-    normalizer: FeatureNormalizer,
-    samples: Sequence[Mapping[str, object]],
-    batch_size: int,
-) -> Mapping[str, object]:
-    model.eval()
-    valid_count = 0
-    agreement_count = 0
-    prediction_counts: dict[str, int] = {}
-    with torch.no_grad():
-        for start in range(0, len(samples), int(batch_size)):
-            batch = samples[start : start + int(batch_size)]
-            tensors = _batch_to_tensors(batch, normalizer)
-            scores = model(tensors["context"], tensors["candidates"], tensors["mask"])
-            predictions = predict_actions(scores)
-            for row_index, action in enumerate(predictions.tolist()):
-                if bool(tensors["mask"][row_index, action]):
-                    valid_count += 1
-                if int(action) == int(tensors["labels"][row_index].item()):
-                    agreement_count += 1
-                prediction_counts[str(int(action))] = prediction_counts.get(str(int(action)), 0) + 1
-    model.train()
-    return {
-        "sample_count": len(samples),
-        "valid_action_rate": valid_count / float(len(samples)),
-        "teacher_agreement": agreement_count / float(len(samples)),
-        "prediction_distribution": dict(sorted(prediction_counts.items())),
-    }
-
-
-def _batch_to_tensors(samples: Sequence[Mapping[str, object]], normalizer: FeatureNormalizer) -> Mapping[str, torch.Tensor]:
-    max_candidates = max(len(sample["candidate_features"]) for sample in samples)  # type: ignore[arg-type]
-    context_rows = []
-    candidate_rows = []
-    mask_rows = []
-    labels = []
-    for sample in samples:
-        context_vector, candidate_vectors = normalizer.normalize_sample(sample)
-        context_rows.append(context_vector)
-        candidate_width = len(candidate_vectors[0])
-        padded_candidates = [list(vector) for vector in candidate_vectors]
-        padded_mask = [bool(value) for value in sample["action_mask"]]  # type: ignore[index]
-        while len(padded_candidates) < max_candidates:
-            padded_candidates.append([0.0 for _ in range(candidate_width)])
-            padded_mask.append(False)
-        candidate_rows.append(padded_candidates)
-        mask_rows.append(padded_mask)
-        labels.append(int(sample["label"]["teacher_action"]))  # type: ignore[index]
-    return {
-        "context": torch.tensor(context_rows, dtype=torch.float32),
-        "candidates": torch.tensor(candidate_rows, dtype=torch.float32),
-        "mask": torch.tensor(mask_rows, dtype=torch.bool),
-        "labels": torch.tensor(labels, dtype=torch.long),
-    }
-
-
-def _set_determinism(seed: int) -> None:
-    random.seed(int(seed))
-    torch.manual_seed(int(seed))
-    torch.use_deterministic_algorithms(True)
-
