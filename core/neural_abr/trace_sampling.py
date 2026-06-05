@@ -11,14 +11,14 @@ from pathlib import Path
 from typing import Iterable, Mapping, Sequence
 
 
-PHASE4A_PHASE = "phase4a_training_corpus_sampler_contract"
+PHASE4A_PHASE = "phase4a_plan_de_trazas_para_entrenamiento"
 TRACE_WINDOW_INDEX_SCHEMA_ID = "phase4_trace_window_index_v1"
 TRAINING_TRACE_PLAN_SCHEMA_ID = "phase4_training_trace_plan_v1"
 SAMPLING_AUDIT_SCHEMA_ID = "phase4_sampling_audit_v1"
 
-TRACE_WINDOW_INDEX_FILENAME = "phase4_trace_window_index.json"
-TRAINING_TRACE_PLAN_FILENAME = "phase4_training_trace_plan.json"
-SAMPLING_AUDIT_FILENAME = "phase4_sampling_audit.json"
+TRACE_WINDOW_INDEX_FILENAME = "phase4_indice_de_ventanas_de_traza.json"
+TRAINING_TRACE_PLAN_FILENAME = "phase4_plan_de_trazas_para_entrenamiento.json"
+SAMPLING_AUDIT_FILENAME = "phase4_auditoria_de_seleccion_de_trazas.json"
 
 DEFAULT_SEED = "phase4a_training_trace_sampler_v1"
 
@@ -91,7 +91,7 @@ def build_phase4_training_trace_artifacts(
     window_index = {
         **common_contract,
         "schema_id": TRACE_WINDOW_INDEX_SCHEMA_ID,
-        "human_readable_name": "Phase 4A trace window index for offline training corpus planning",
+        "human_readable_name": "Phase 4A trace window index for offline training trace planning",
         "windows_are_model_features": False,
         "window_count": len(all_windows),
         "windows": all_windows,
@@ -123,7 +123,7 @@ def build_phase4_training_trace_artifacts(
     audit = {
         **common_contract,
         "schema_id": SAMPLING_AUDIT_SCHEMA_ID,
-        "human_readable_name": "Phase 4A sampling audit for corpus balance and leakage checks",
+        "human_readable_name": "Phase 4A sampling audit for trace balance and leakage checks",
         "candidate_window_summary": _summarize_windows(all_windows),
         "training_selection_summary": _selection_summary(selected_training, active_config.train_window_count, active_config),
         "validation_selection_summary": _selection_summary(

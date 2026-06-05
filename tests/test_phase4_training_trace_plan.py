@@ -26,8 +26,8 @@ class Phase4TrainingTracePlanTest(unittest.TestCase):
         )
 
         artifacts = build_phase4_training_trace_artifacts(manifest, config=config)
-        plan = artifacts["phase4_training_trace_plan.json"]
-        audit = artifacts["phase4_sampling_audit.json"]
+        plan = artifacts["phase4_plan_de_trazas_para_entrenamiento.json"]
+        audit = artifacts["phase4_auditoria_de_seleccion_de_trazas.json"]
         summary = validate_phase4_training_trace_plan(plan, config)
 
         self.assertEqual("PASS", summary["status"])
@@ -64,8 +64,12 @@ class Phase4TrainingTracePlanTest(unittest.TestCase):
             seed="same-seed",
         )
 
-        first = build_phase4_training_trace_artifacts(manifest, config=config)["phase4_training_trace_plan.json"]
-        second = build_phase4_training_trace_artifacts(manifest, config=config)["phase4_training_trace_plan.json"]
+        first = build_phase4_training_trace_artifacts(manifest, config=config)[
+            "phase4_plan_de_trazas_para_entrenamiento.json"
+        ]
+        second = build_phase4_training_trace_artifacts(manifest, config=config)[
+            "phase4_plan_de_trazas_para_entrenamiento.json"
+        ]
 
         self.assertEqual(
             [window["window_id"] for window in first["training_windows"]],
@@ -86,7 +90,7 @@ class Phase4TrainingTracePlanTest(unittest.TestCase):
 
     def test_model_feature_fields_cannot_include_metadata(self):
         manifest = build_manifest()
-        plan = build_phase4_training_trace_artifacts(manifest)["phase4_training_trace_plan.json"]
+        plan = build_phase4_training_trace_artifacts(manifest)["phase4_plan_de_trazas_para_entrenamiento.json"]
         plan["model_feature_fields"] = ["buffer_s", "trace_id"]
 
         with self.assertRaisesRegex(Phase4TraceSamplingError, "prohibited metadata"):

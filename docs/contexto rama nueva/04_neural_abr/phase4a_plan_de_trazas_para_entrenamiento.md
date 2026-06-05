@@ -1,10 +1,10 @@
-# Phase 4A - Corpus y sampler de entrenamiento
+# Phase 4A - Plan de trazas para entrenamiento
 
 Status: implemented_on_windows_pending_ubuntu_validation.
 
 ## Proposito
 
-Phase 4A prepara el corpus de trazas que se usara mas adelante para entrenar
+Phase 4A prepara el plan de trazas que se usara mas adelante para entrenar
 NeuralABR-Lite offline. Esta fase no entrena IA, no genera labels de teacher y
 no declara resultados.
 
@@ -17,15 +17,15 @@ C:\Users\danie\Documents\TFG\manifests_trazas\phase3\final\phase3_trace_manifest
 Salidas externas esperadas:
 
 ```text
-C:\Users\danie\Documents\TFG\manifests_trazas\phase4\phase4A_training_corpus_sampler\phase4_trace_window_index.json
-C:\Users\danie\Documents\TFG\manifests_trazas\phase4\phase4A_training_corpus_sampler\phase4_training_trace_plan.json
-C:\Users\danie\Documents\TFG\manifests_trazas\phase4\phase4A_training_corpus_sampler\phase4_sampling_audit.json
+C:\Users\danie\Documents\TFG\manifests_trazas\phase4\phase4A_plan_de_trazas_para_entrenamiento\phase4_indice_de_ventanas_de_traza.json
+C:\Users\danie\Documents\TFG\manifests_trazas\phase4\phase4A_plan_de_trazas_para_entrenamiento\phase4_plan_de_trazas_para_entrenamiento.json
+C:\Users\danie\Documents\TFG\manifests_trazas\phase4\phase4A_plan_de_trazas_para_entrenamiento\phase4_auditoria_de_seleccion_de_trazas.json
 ```
 
 En Ubuntu cliente, las mismas salidas deben quedar bajo:
 
 ```text
-$HOME/TFG/manifests_trazas/phase4/phase4A_training_corpus_sampler
+$HOME/TFG/manifests_trazas/phase4/phase4A_plan_de_trazas_para_entrenamiento
 ```
 
 ## Decisiones cerradas
@@ -77,7 +77,7 @@ benchmark_rank
 ## Comando Windows
 
 ```powershell
-python scripts/build_phase4_training_trace_plan.py --manifest "C:\Users\danie\Documents\TFG\manifests_trazas\phase3\final\phase3_trace_manifest_curated.json" --output-root "C:\Users\danie\Documents\TFG\manifests_trazas\phase4\phase4A_training_corpus_sampler" --segment-duration-s 4 --window-duration-s 120 --synthetic-max-fraction 0.15 --seed phase4a_training_trace_sampler_v1
+python scripts/build_phase4_training_trace_plan.py --manifest "C:\Users\danie\Documents\TFG\manifests_trazas\phase3\final\phase3_trace_manifest_curated.json" --output-root "C:\Users\danie\Documents\TFG\manifests_trazas\phase4\phase4A_plan_de_trazas_para_entrenamiento" --segment-duration-s 4 --window-duration-s 120 --synthetic-max-fraction 0.15 --seed phase4a_training_trace_sampler_v1
 ```
 
 ## Comando Ubuntu cliente
@@ -90,7 +90,7 @@ python scripts/check_client_readiness.py --strict
 python scripts/validate_phase3_trace_manifest.py --manifest "$HOME/TFG/manifests_trazas/phase3/final/phase3_trace_manifest_curated.json"
 python scripts/build_phase4_training_trace_plan.py \
   --manifest "$HOME/TFG/manifests_trazas/phase3/final/phase3_trace_manifest_curated.json" \
-  --output-root "$HOME/TFG/manifests_trazas/phase4/phase4A_training_corpus_sampler" \
+  --output-root "$HOME/TFG/manifests_trazas/phase4/phase4A_plan_de_trazas_para_entrenamiento" \
   --segment-duration-s 4 \
   --window-duration-s 120 \
   --synthetic-max-fraction 0.15 \
@@ -108,6 +108,6 @@ ranking_performed=false
 
 ## Limites
 
-Phase 4A no produce un training dataset final. Produce un plan de ventanas y un
-audit trail. El dataset con samples, labels de `robust_mpc`, normalizacion y
-smoke de entrenamiento pertenece a Phase 4B/C/D.
+Phase 4A no produce datos finales para entrenar. Produce un plan de ventanas y
+una auditoria. Los datos con muestras, labels de `robust_mpc`, normalizacion y
+prueba rapida de entrenamiento pertenecen a Phase 4B/C/D.

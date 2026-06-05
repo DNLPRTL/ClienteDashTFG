@@ -1,6 +1,6 @@
 # Phase 4 Rebuild - NeuralABR offline
 
-Status: phase4a_training_corpus_sampler_in_progress.
+Status: phase4bcd_datos_y_prueba_rapida_offline_in_progress.
 
 Phase 4 debera reconstruirse sobre:
 
@@ -15,9 +15,19 @@ No reutilizar dry-runs legacy ni datasets de entrenamiento antiguos.
 Primer bloque activo:
 
 ```text
-phase4a_corpus_y_sampler_de_entrenamiento.md
+phase4a_plan_de_trazas_para_entrenamiento.md
 ```
 
 Este bloque prepara un plan auditable de ventanas de traza para entrenamiento
 offline. No entrena IA, no genera labels de teacher y no produce resultados de
 benchmark.
+
+Siguiente bloque activo:
+
+```text
+phase4bcd_datos_y_prueba_rapida_offline.md
+```
+
+Este bloque genera datos offline con labels `robust_mpc`, normalizacion
+train-only y una prueba rapida diagnostica de entrenamiento en CPU. No genera
+modelo candidato.

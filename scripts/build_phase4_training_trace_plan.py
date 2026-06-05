@@ -21,7 +21,7 @@ from core.neural_abr.trace_sampling import (
 
 TFG_ROOT = REPO_ROOT.parent
 DEFAULT_MANIFEST = TFG_ROOT / "manifests_trazas" / "phase3" / "final" / "phase3_trace_manifest_curated.json"
-DEFAULT_OUTPUT_ROOT = TFG_ROOT / "manifests_trazas" / "phase4" / "phase4A_training_corpus_sampler"
+DEFAULT_OUTPUT_ROOT = TFG_ROOT / "manifests_trazas" / "phase4" / "phase4A_plan_de_trazas_para_entrenamiento"
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -61,8 +61,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         source_manifest_path=args.manifest,
     )
     written = write_phase4_training_trace_artifacts(args.output_root, artifacts)
-    training_plan = artifacts["phase4_training_trace_plan.json"]
-    sampling_audit = artifacts["phase4_sampling_audit.json"]
+    training_plan = artifacts["phase4_plan_de_trazas_para_entrenamiento.json"]
+    sampling_audit = artifacts["phase4_auditoria_de_seleccion_de_trazas.json"]
     print(
         json.dumps(
             {
