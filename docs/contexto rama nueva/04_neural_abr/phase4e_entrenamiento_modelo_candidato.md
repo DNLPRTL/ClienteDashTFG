@@ -1,6 +1,6 @@
 # Phase 4E - Entrenamiento del modelo candidato
 
-Status: implemented_on_windows_pending_ubuntu_training.
+Status: validated_on_ubuntu_candidate_ready_for_phase4f.
 
 ## Proposito
 

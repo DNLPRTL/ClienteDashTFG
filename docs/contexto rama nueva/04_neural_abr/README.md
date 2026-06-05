@@ -1,6 +1,6 @@
 # Phase 4 Rebuild - NeuralABR offline
 
-Status: phase4e_entrenamiento_modelo_candidato_in_progress.
+Status: phase4f_export_bundle_inferencia_in_progress.
 
 Phase 4 debera reconstruirse sobre:
 
@@ -40,3 +40,12 @@ phase4e_entrenamiento_modelo_candidato.md
 
 Este bloque entrena un checkpoint externo de NeuralABR-Lite y revisa si queda
 listo para Phase 4F export. No integra controller y no produce benchmark.
+
+Bloque activo:
+
+```text
+phase4f_export_bundle_inferencia.md
+```
+
+Este bloque exporta un bundle local de inferencia, valida hashes y ejecuta una
+prueba offline de inferencia CPU. No integra controller y no produce benchmark.
