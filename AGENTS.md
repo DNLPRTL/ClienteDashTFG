@@ -171,6 +171,35 @@ Phase 4 debera empezar por contrato de sampler/corpus de entrenamiento. No
 entrenar IA directamente con todo el split `train` sin balanceo por semantica,
 dataset y dificultad.
 
+## Synthetic controlled trace guardrails
+
+El addendum sintetico de Phase 3 usa:
+
+```text
+dataset_id=synthetic_controlled_network
+semantics=synthetic_available_bandwidth
+generator_id=phase3_synthetic_controlled_network_v1
+```
+
+Las trazas sinteticas pueden aparecer en `train`, `test` y `eval`, pero cualquier
+resultado futuro debe reportarse separado de trazas reales. No usar resultados
+sinteticos para afirmar generalizacion real-world. Phase 4 debe limitar su cuota
+en el sampler para evitar que dominen el aprendizaje.
+
+El manifest curado actualizado con sinteticas queda en:
+
+```text
+C:\Users\danie\Documents\TFG\manifests_trazas\phase3\final\phase3_trace_manifest_curated.json
+```
+
+Conteo esperado tras el addendum:
+
+```text
+trace_count=6768
+synthetic_trace_count=1024
+synthetic_split_counts=train:720,test:152,eval:152
+```
+
 ## Separacion tecnica
 
 Mantener separados:
