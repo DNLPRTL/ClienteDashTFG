@@ -45,6 +45,11 @@ REQUIRED_IMPORTS = (
     "core.controller.fixed_quality",
     "core.controller.scripted_quality",
     "core.controller.max_quality_controller",
+    "core.controller.neural_abr_diagnostics",
+    "core.controller.neural_abr_lite",
+    "core.controller.neural_abr_loader",
+    "core.controller.neural_abr_runtime_features",
+    "core.controller.neural_abr_safety",
     "core.media_engine.fake",
     "core.media_engine.gst_media_engine",
     "scripts.check_environment",
@@ -73,7 +78,11 @@ FORBIDDEN_POSITIVE_CLAIMS = (
     "final reward exists",
     "final training dataset exists",
     "academic baselines are implemented",
-    "ai controller is implemented",
+    "ai controller improves qoe",
+    "ai controller wins",
+    "ai controller benchmark winner",
+    "neural controller improves qoe",
+    "neural controller wins",
 )
 
 STRICT_ALLOWED_WARN_CODES = frozenset()

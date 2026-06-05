@@ -716,6 +716,24 @@ class Player:
         setcol('is_upswitch', int(is_up))
         setcol('is_downswitch', int(is_down))
         setcol('switch_magnitude', int(magnitude))
+        self._update_pending_neural_diagnostics(seg_idx)
+
+    def _update_pending_neural_diagnostics(self, seg_idx):
+        """Rellena diagnostico neural post-decision si el controller lo expone."""
+        row = self._pending_rows.get(seg_idx)
+        if not row or not self._header or not hasattr(self.controller, "get_neural_diagnostics"):
+            return
+        try:
+            diagnostics = self.controller.get_neural_diagnostics()
+        except Exception:
+            return
+        if not isinstance(diagnostics, dict):
+            return
+
+        for name, value in diagnostics.items():
+            index = self._col_index.get("feedback_{0}".format(name))
+            if index is not None and index < len(row):
+                row[index] = value
 
     def _flush_segment_row(self, seg_idx: int):
         if not getattr(self, "_csv_writer", None):

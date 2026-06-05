@@ -17,6 +17,14 @@ controller:
   name: "fixed_quality"
   params:
     level: 0
+    # Phase 5 neural controllers use the same public config shape:
+    # name: "neural_abr_lite_robust_mpc"
+    # name: "neural_abr_lite_teacher_hibrido"
+    # params:
+    #   bundle_dir: "/external/path/to/phase4_bundle"
+    #   fallback_controller: "robust_mpc"
+    #   verify_hashes: true
+    #   max_inference_latency_ms: 50.0
 
 playback:
   initial_quality: 0

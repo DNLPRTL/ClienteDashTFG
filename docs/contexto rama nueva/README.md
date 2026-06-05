@@ -9,8 +9,8 @@ La rama se reinicia desde el cierre real de Phase 2. Por tanto, las fases anteri
 ```text
 02_traces_replay     Phase 3 Rebuild: trazas, normalizacion, manifests y replay tecnico.
 03_qoe_reward        Phase 3.5 Rebuild: QoE, reward, gates y no-ranking.
-04_neural_abr        Phase 4 futura: modelo offline, sampler y entrenamiento.
-05_neural_controller Phase 5 futura: integracion del controlador IA.
+04_neural_abr        Phase 4 Rebuild: modelo offline, sampler y entrenamiento.
+05_neural_controller Phase 5 Rebuild: integracion de dos controllers IA.
 06_validation        Phase 6 futura: validacion formal y protocolo.
 07_memoria_defensa   Material futuro para memoria y defensa.
 ```
