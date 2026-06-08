@@ -85,9 +85,9 @@ mejora.
 
 Estado: pipeline implementado para ejecucion en Ubuntu cliente; benchmark solo se autoriza por gates del paquete generado.
 
-Objetivo actual: ejecutar comparacion formal con protocolo congelado, red controlada por trazas, QoE `qoe_linear_v1`, estadistica emparejada y paquete de evidencia externo. La seleccion formal compacta timestamps de traza a tiempo continuo, evalua 30 segmentos de media de 4 s y usa una ventana de replay de red con margen para rebuffering.
+Objetivo actual: ejecutar comparacion formal con protocolo congelado, red controlada por trazas, QoE `qoe_linear_v1`, estadistica emparejada y paquete de evidencia externo. La seleccion formal compacta timestamps de traza a tiempo continuo, evalua 30 segmentos de media de 4 s y usa una ventana de replay de red con margen para rebuffering. Existe ademas el preset `diagnostico`, de 6 segmentos por sesion, para verificar rapido que la maquinaria completa de Phase 6 funciona antes de lanzar presets largos.
 
-No significa: ganador automatico ni afirmacion de mejora QoE; `rapido` no autoriza ranking y `equilibrado`/`extendido` solo lo autorizan si pasan todos los gates.
+No significa: ganador automatico ni afirmacion de mejora QoE; `diagnostico` y `rapido` no autorizan ranking y `equilibrado`/`extendido` solo lo autorizan si pasan todos los gates y la verificacion automatica del paquete.
 
 ### Phase 7 - Memoria y defensa
 
@@ -191,6 +191,7 @@ Para bloques de validacion:
 - validar manifests;
 - validar leakage guards;
 - validar readiness;
+- validar paquetes Phase 6 con `scripts/verificar_paquete_phase6.py`;
 - mantener datasets y reportes fuera de Git;
 - no ejecutar benchmark si `benchmark_authorized=false`.
 

@@ -14,8 +14,10 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from core.phase6.catalog import PRESET_NAMES
 from core.phase6.config import load_phase6_config
 from core.phase6.selection import load_trace_manifest, select_trace_windows
+from scripts.run_phase6_validacion_comparativa import apply_preset_overrides
 from scripts.verificar_cliente_y_controllers_clasicos import (
     CLASSIC_CONTROLLERS,
     DEFAULT_MPD_URL,
@@ -31,7 +33,7 @@ OUTPUT_FOLDER_NAME = "verificacion_clasica_controlada"
 def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Verificacion clasica bajo trazas controladas.")
     parser.add_argument("--config", default=None)
-    parser.add_argument("--preset", choices=["rapido", "equilibrado", "extendido"], default="rapido")
+    parser.add_argument("--preset", choices=PRESET_NAMES, default="rapido")
     parser.add_argument("--output-root", default=None)
     parser.add_argument("--mpd-url", default=DEFAULT_MPD_URL)
     parser.add_argument("--controllers", nargs="*", default=list(CLASSIC_CONTROLLERS))
@@ -39,7 +41,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--timeout-seconds", type=float, default=240.0)
     args = parser.parse_args(argv)
 
-    config = load_phase6_config(args.config)
+    config = apply_preset_overrides(load_phase6_config(args.config), args.preset)
     if args.output_root:
         config.setdefault("paths", {})["output_root"] = args.output_root
     output_root = Path(str(config["paths"]["output_root"])) / OUTPUT_FOLDER_NAME / time.strftime("%Y%m%d_%H%M%S")
@@ -188,6 +190,7 @@ def build_client_config(
             "end_policy": str(network.get("end_policy", "fail")),
             "max_loops": int(network.get("max_loops", 0) or 0),
             "sleep": bool(network.get("sleep", True)),
+            "compact_timestamps": bool(network.get("compact_timestamps", True)),
         },
         "output": {
             "root_dir": output_root.as_posix(),

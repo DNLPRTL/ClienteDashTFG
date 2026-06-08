@@ -96,6 +96,18 @@ MEDIA_PROFILES = {
 }
 
 PRESET_SPECS = {
+    "diagnostico": {
+        "preset": "diagnostico",
+        "real_windows": 2,
+        "synthetic_windows": 1,
+        "media_profile_ids": ["paseo_10min_30fps_4s"],
+        "benchmark_capable": False,
+        "ranking_capable": False,
+        "max_media_segments": 6,
+        "network_window_duration_s": 90.0,
+        "timeout_seconds": 240.0,
+        "estimated_session_duration_s": 30.0,
+    },
     "rapido": {
         "preset": "rapido",
         "real_windows": 8,
@@ -103,6 +115,10 @@ PRESET_SPECS = {
         "media_profile_ids": ["paseo_10min_30fps_4s"],
         "benchmark_capable": False,
         "ranking_capable": False,
+        "max_media_segments": 30,
+        "network_window_duration_s": 300.0,
+        "timeout_seconds": 900.0,
+        "estimated_session_duration_s": 125.0,
     },
     "equilibrado": {
         "preset": "equilibrado",
@@ -111,6 +127,10 @@ PRESET_SPECS = {
         "media_profile_ids": ["paseo_10min_30fps_4s", "blender_10min_30fps_4s"],
         "benchmark_capable": True,
         "ranking_capable": True,
+        "max_media_segments": 30,
+        "network_window_duration_s": 300.0,
+        "timeout_seconds": 900.0,
+        "estimated_session_duration_s": 125.0,
     },
     "extendido": {
         "preset": "extendido",
@@ -124,8 +144,14 @@ PRESET_SPECS = {
         ],
         "benchmark_capable": True,
         "ranking_capable": True,
+        "max_media_segments": 30,
+        "network_window_duration_s": 300.0,
+        "timeout_seconds": 900.0,
+        "estimated_session_duration_s": 125.0,
     },
 }
+
+PRESET_NAMES = tuple(PRESET_SPECS.keys())
 
 
 def preset_spec(preset: str) -> Dict[str, Any]:

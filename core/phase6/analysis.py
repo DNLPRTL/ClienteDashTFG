@@ -19,6 +19,7 @@ from core.output_artifacts import (
 
 REFERENCE_CONTROLLER_ALIAS = "base_robust_mpc"
 PROPIOS_PREFIXES = ("propio_",)
+PLOT_MANIFEST_FILENAME = "plot_manifest.json"
 
 
 def analyze_phase6_run(package_root: str | Path, *, generate_plots: bool = True) -> Dict[str, Any]:
@@ -65,9 +66,13 @@ def analyze_phase6_run(package_root: str | Path, *, generate_plots: bool = True)
             "resultados_para_validar_json": str(results_dir / "resultados_para_validar.json"),
             "resultados_para_validar_md": str(results_dir / "resultados_para_validar.md"),
             "plots_dir": str(plots_dir),
+            "plot_manifest_json": str(plots_dir / PLOT_MANIFEST_FILENAME),
             "report_dir": str(report_dir),
         },
     }
+
+    if generate_plots:
+        generate_phase6_plots(raw_chunks, summaries, aggregates, plots_dir)
 
     (results_dir / "aggregates_by_controller.json").write_text(
         json.dumps(aggregates, indent=2, sort_keys=True),
@@ -85,9 +90,6 @@ def analyze_phase6_run(package_root: str | Path, *, generate_plots: bool = True)
         json.dumps(_evidence_manifest(root, package), indent=2, sort_keys=True),
         encoding="utf-8",
     )
-
-    if generate_plots:
-        generate_phase6_plots(raw_chunks, summaries, aggregates, plots_dir)
     return package
 
 
@@ -151,6 +153,14 @@ def summarize_session(
     rebuffer_ratio = total_rebuffer_s / (fragment_duration_sum + total_rebuffer_s) if fragment_duration_sum + total_rebuffer_s > 0 else 0.0
     decision_latencies = [_float(row.get("policy_decision_ms")) for row in evaluable_rows if _float(row.get("policy_decision_ms")) > 0]
     buffers = [_float(row.get("feedback_queued_time")) for row in evaluable_rows]
+    download_times = [_download_time_s(row) for row in evaluable_rows if _download_time_s(row) > 0.0]
+    chunk_sizes = [_chunk_size_bytes(row) for row in evaluable_rows if _chunk_size_bytes(row) > 0]
+    measured_throughputs = [
+        _measured_throughput_kbps(row)
+        for row in evaluable_rows
+        if _measured_throughput_kbps(row) > 0.0
+    ]
+    positive_smoothness, negative_smoothness = _signed_smoothness(linear.segment_quality_utilities)
     fallback_rows = sum(1 for row in evaluable_rows if _int(row.get("feedback_neural_fallback_used")) > 0)
     diagnostic_rows = sum(1 for row in evaluable_rows if _int(row.get("feedback_neural_diagnostic_only")) > 0)
     transitions = max(1, int(linear.segment_count) - 1)
@@ -169,11 +179,18 @@ def summarize_session(
             "rebuffer_ratio": float(rebuffer_ratio),
             "stall_event_count": int(linear.stall_event_count),
             "smoothness_penalty": float(linear.smoothness_penalty),
+            "positive_smoothness_mbps": float(positive_smoothness),
+            "negative_smoothness_mbps": float(negative_smoothness),
             "quality_switch_count": int(linear.quality_switch_count),
+            "up_switch_count": int(linear.up_switch_count),
+            "down_switch_count": int(linear.down_switch_count),
             "switching_rate": float(linear.quality_switch_count) / float(transitions),
             "avg_switch_magnitude_kbps": float(linear.avg_switch_magnitude_kbps),
             "avg_buffer_s": _mean(buffers),
             "low_buffer_ratio": _ratio_less_than(buffers, threshold=5.0),
+            "avg_download_time_s": _mean(download_times),
+            "avg_measured_throughput_kbps": _mean(measured_throughputs),
+            "avg_chunk_size_bytes": _mean(chunk_sizes),
             "decision_latency_ms_mean": _mean(decision_latencies),
             "decision_latency_ms_p95": _percentile(decision_latencies, 95.0),
             "fallback_row_count": int(fallback_rows),
@@ -204,10 +221,14 @@ def summarize_session(
                 "segment_index": _int(row.get("segment_index")),
                 "bitrate_kbps": _bitrate_kbps(row),
                 "quality_mbps": float(quality),
+                "chunk_size_bytes": _chunk_size_bytes(row),
+                "download_time_s": _download_time_s(row),
+                "measured_throughput_kbps": _measured_throughput_kbps(row),
                 "rebuffer_s": _float(row.get("stall_duration")),
                 "smoothness_mbps": float(smoothness),
                 "qoe_linear_reward": float(reward),
                 "buffer_s": _float(row.get("feedback_queued_time")),
+                "buffer_after_s": _float(row.get("feedback_queued_time")),
                 "decision_latency_ms": _float(row.get("policy_decision_ms")),
                 "fallback_used": _int(row.get("feedback_neural_fallback_used")),
             }
@@ -239,9 +260,14 @@ def aggregate_summaries(summaries: Sequence[Mapping[str, Any]]) -> List[Dict[str
                 "rebuffer_ratio_mean": _mean(_values(rows, "rebuffer_ratio")),
                 "stall_event_count_mean": _mean(_values(rows, "stall_event_count")),
                 "smoothness_penalty_mean": _mean(_values(rows, "smoothness_penalty")),
+                "positive_smoothness_mbps_mean": _mean(_values(rows, "positive_smoothness_mbps")),
+                "negative_smoothness_mbps_mean": _mean(_values(rows, "negative_smoothness_mbps")),
                 "switching_rate_mean": _mean(_values(rows, "switching_rate")),
                 "avg_buffer_s": _mean(_values(rows, "avg_buffer_s")),
                 "low_buffer_ratio_mean": _mean(_values(rows, "low_buffer_ratio")),
+                "avg_download_time_s": _mean(_values(rows, "avg_download_time_s")),
+                "avg_measured_throughput_kbps": _mean(_values(rows, "avg_measured_throughput_kbps")),
+                "avg_chunk_size_bytes": _mean(_values(rows, "avg_chunk_size_bytes")),
                 "decision_latency_ms_mean": _mean(_values(rows, "decision_latency_ms_mean")),
                 "decision_latency_ms_p95": _percentile(_values(rows, "decision_latency_ms_p95"), 95.0),
                 "fallback_row_count": int(sum(_int(row.get("fallback_row_count")) for row in rows)),
@@ -428,6 +454,8 @@ def generate_phase6_plots(
     aggregates: Sequence[Mapping[str, Any]],
     plots_dir: Path,
 ) -> None:
+    plots_dir.mkdir(parents=True, exist_ok=True)
+    manifest: List[Dict[str, Any]] = []
     try:
         import matplotlib
 
@@ -435,47 +463,187 @@ def generate_phase6_plots(
         import matplotlib.pyplot as plt
     except Exception as exc:
         (plots_dir / "graficas_no_generadas.txt").write_text(str(exc), encoding="utf-8")
+        (plots_dir / PLOT_MANIFEST_FILENAME).write_text(
+            json.dumps(
+                {
+                    "schema_version": "phase6_plot_manifest_v1",
+                    "plots": [
+                        {
+                            "plot_id": "all",
+                            "status": "error",
+                            "reason": str(exc),
+                            "path": str(plots_dir / "graficas_no_generadas.txt"),
+                        }
+                    ],
+                },
+                indent=2,
+                sort_keys=True,
+            ),
+            encoding="utf-8",
+        )
         return
 
     real_summaries = [row for row in summaries if _int(row.get("evaluable")) and not _bool(row.get("synthetic"))]
     synthetic_summaries = [row for row in summaries if _int(row.get("evaluable")) and _bool(row.get("synthetic"))]
-    _plot_cdf_by_controller(
-        real_summaries,
-        metric="qoe_linear_mean",
-        title="CDF QoE por sesion",
+    _run_plot(
+        manifest,
+        plot_id="cdf_qoe_linear",
         output_path=plots_dir / "cdf_qoe_linear.png",
-        plt=plt,
+        source_count=len(real_summaries),
+        plotter=lambda path: _plot_cdf_by_controller(
+            real_summaries,
+            metric="qoe_linear_mean",
+            title="CDF QoE linear por sesion",
+            output_path=path,
+            plt=plt,
+        ),
     )
-    _plot_components(aggregates, plots_dir / "componentes_qoe.png", plt)
-    _plot_quality_rebuffer(aggregates, plots_dir / "calidad_vs_rebuffering.png", plt)
-    _plot_cdf_by_controller(
-        real_summaries,
-        metric="total_rebuffer_s",
-        title="CDF rebuffering por sesion",
+    _run_plot(
+        manifest,
+        plot_id="cdf_qoe_log",
+        output_path=plots_dir / "cdf_qoe_log.png",
+        source_count=len(real_summaries),
+        plotter=lambda path: _plot_cdf_by_controller(
+            real_summaries,
+            metric="qoe_log_mean",
+            title="CDF QoE log por sesion",
+            output_path=path,
+            plt=plt,
+        ),
+    )
+    _run_plot(
+        manifest,
+        plot_id="componentes_qoe",
+        output_path=plots_dir / "componentes_qoe.png",
+        source_count=len(aggregates),
+        plotter=lambda path: _plot_components(aggregates, path, plt),
+    )
+    _run_plot(
+        manifest,
+        plot_id="calidad_vs_rebuffering",
+        output_path=plots_dir / "calidad_vs_rebuffering.png",
+        source_count=len(aggregates),
+        plotter=lambda path: _plot_quality_rebuffer(aggregates, path, plt),
+    )
+    _run_plot(
+        manifest,
+        plot_id="cdf_rebuffering",
         output_path=plots_dir / "cdf_rebuffering.png",
-        plt=plt,
+        source_count=len(real_summaries),
+        plotter=lambda path: _plot_cdf_by_controller(
+            real_summaries,
+            metric="total_rebuffer_s",
+            title="CDF rebuffering por sesion",
+            output_path=path,
+            plt=plt,
+        ),
     )
-    _plot_cdf_by_controller(
-        real_summaries,
-        metric="smoothness_penalty",
-        title="CDF smoothness por sesion",
+    _run_plot(
+        manifest,
+        plot_id="cdf_smoothness",
         output_path=plots_dir / "cdf_smoothness.png",
-        plt=plt,
+        source_count=len(real_summaries),
+        plotter=lambda path: _plot_cdf_by_controller(
+            real_summaries,
+            metric="smoothness_penalty",
+            title="CDF smoothness por sesion",
+            output_path=path,
+            plt=plt,
+        ),
     )
-    _plot_qoe_by_group(real_summaries, "difficulty_bucket", plots_dir / "qoe_por_dificultad_red.png", plt)
-    _plot_temporal_case(raw_chunks, plots_dir / "caso_temporal_bitrate_qoe.png", plt)
-    _plot_overhead(aggregates, plots_dir / "overhead_decision.png", plt)
-    _plot_cdf_by_controller(
-        synthetic_summaries,
-        metric="qoe_linear_mean",
-        title="CDF QoE sinteticas diagnosticas",
+    _run_plot(
+        manifest,
+        plot_id="cdf_bitrate",
+        output_path=plots_dir / "cdf_bitrate.png",
+        source_count=len(real_summaries),
+        plotter=lambda path: _plot_cdf_by_controller(
+            real_summaries,
+            metric="avg_bitrate_kbps",
+            title="CDF bitrate medio por sesion",
+            output_path=path,
+            plt=plt,
+        ),
+    )
+    _run_plot(
+        manifest,
+        plot_id="cdf_buffer",
+        output_path=plots_dir / "cdf_buffer.png",
+        source_count=len(real_summaries),
+        plotter=lambda path: _plot_cdf_by_controller(
+            real_summaries,
+            metric="avg_buffer_s",
+            title="CDF buffer medio por sesion",
+            output_path=path,
+            plt=plt,
+        ),
+    )
+    _run_plot(
+        manifest,
+        plot_id="qoe_por_dificultad_red",
+        output_path=plots_dir / "qoe_por_dificultad_red.png",
+        source_count=len(real_summaries),
+        plotter=lambda path: _plot_qoe_by_group(real_summaries, "difficulty_bucket", path, plt, title="QoE por dificultad de red"),
+    )
+    _run_plot(
+        manifest,
+        plot_id="qoe_por_dataset",
+        output_path=plots_dir / "qoe_por_dataset.png",
+        source_count=len(real_summaries),
+        plotter=lambda path: _plot_qoe_by_group(real_summaries, "dataset_id", path, plt, title="QoE por dataset"),
+    )
+    _run_plot(
+        manifest,
+        plot_id="qoe_por_condicion_red",
+        output_path=plots_dir / "qoe_por_condicion_red.png",
+        source_count=len(real_summaries),
+        plotter=lambda path: _plot_qoe_by_group(real_summaries, "network_condition", path, plt, title="QoE por condicion de red"),
+    )
+    _run_plot(
+        manifest,
+        plot_id="caso_temporal_bitrate_qoe",
+        output_path=plots_dir / "caso_temporal_bitrate_qoe.png",
+        source_count=len(raw_chunks),
+        plotter=lambda path: _plot_temporal_case(raw_chunks, path, plt),
+    )
+    _run_plot(
+        manifest,
+        plot_id="overhead_decision",
+        output_path=plots_dir / "overhead_decision.png",
+        source_count=len(aggregates),
+        plotter=lambda path: _plot_overhead(aggregates, path, plt),
+    )
+    _run_plot(
+        manifest,
+        plot_id="sinteticas_diagnostico",
         output_path=plots_dir / "sinteticas_diagnostico.png",
-        plt=plt,
+        source_count=len(synthetic_summaries),
+        plotter=lambda path: _plot_cdf_by_controller(
+            synthetic_summaries,
+            metric="qoe_linear_mean",
+            title="CDF QoE sinteticas diagnosticas",
+            output_path=path,
+            plt=plt,
+        ),
+    )
+    manifest.append(
+        {
+            "plot_id": "metricas_deferred",
+            "status": "deferred",
+            "reason": "VMAF, SSIM, P.1203 y fidelidad simulador-real requieren artifacts perceptuales o ejecucion emparejada adicional.",
+            "path": "",
+            "source_count": 0,
+            "bytes": 0,
+        }
+    )
+    (plots_dir / PLOT_MANIFEST_FILENAME).write_text(
+        json.dumps({"schema_version": "phase6_plot_manifest_v1", "plots": manifest}, indent=2, sort_keys=True),
+        encoding="utf-8",
     )
 
 
 def render_validation_markdown(package: Mapping[str, Any]) -> str:
     gates = package["gates"]
+    protocol = _mapping(package.get("protocol"))
     lines = [
         "# Resultados para validar",
         "",
@@ -488,23 +656,66 @@ def render_validation_markdown(package: Mapping[str, Any]) -> str:
         "- Gates superados: {0}".format(_yes_no(gates.get("all_gates_passed"))),
         "- Conclusion de ranking: {0}".format(package["ranking"]["conclusion"]),
         "",
-        "## Sesiones",
+        "## Veredicto tecnico del paquete",
+        "",
+        "- Estado: pendiente de verificacion automatica de paquete.",
         "",
     ]
+    if str(protocol.get("preset", "")) == "diagnostico":
+        lines.extend(
+            [
+                "## Aviso de preset diagnostico",
+                "",
+                "- Este paquete verifica cableado, metricas, graficas y auditoria.",
+                "- No es benchmark, no autoriza ranking y no debe usarse para conclusiones comparativas.",
+                "",
+            ]
+        )
+    runtime = _mapping(protocol.get("preset_runtime"))
+    if runtime:
+        lines.extend(
+            [
+                "## Configuracion de ejecucion",
+                "",
+                "- Segmentos maximos por sesion: {0}".format(runtime.get("max_media_segments", "")),
+                "- Ventana de replay de red: {0} s".format(runtime.get("network_window_duration_s", "")),
+                "- Timeout por sesion: {0} s".format(runtime.get("timeout_seconds", "")),
+                "- Duracion total estimada: {0:.1f} s".format(_float(runtime.get("estimated_total_duration_s"))),
+                "",
+            ]
+        )
+    lines.extend(
+        [
+        "## Sesiones",
+        "",
+        ]
+    )
     counts = package["session_counts"]
     for key in ("total", "real", "synthetic", "evaluable", "completed"):
         lines.append("- {0}: {1}".format(key, counts.get(key, 0)))
     lines.extend(["", "## Agregados por controller", ""])
     for row in package["aggregates"]:
         lines.append(
-            "- {0}: QoE={1:.4f}, bitrate={2:.1f} kbps, rebuffer={3:.3f}s, smoothness={4:.3f}".format(
+            "- {0}: QoE={1:.4f}, bitrate={2:.1f} kbps, rebuffer={3:.3f}s, smoothness={4:.3f}, switching={5:.3f}".format(
                 row.get("controller_display_name"),
                 _float(row.get("qoe_linear_mean")),
                 _float(row.get("avg_bitrate_kbps")),
                 _float(row.get("total_rebuffer_s_mean")),
                 _float(row.get("smoothness_penalty_mean")),
+                _float(row.get("switching_rate_mean")),
             )
         )
+    plot_rows = _plot_manifest_rows(package)
+    if plot_rows:
+        lines.extend(["", "## Graficas", ""])
+        for row in plot_rows:
+            lines.append(
+                "- {0}: {1} ({2} bytes)".format(
+                    row.get("plot_id", ""),
+                    row.get("status", ""),
+                    row.get("bytes", 0),
+                )
+            )
     lines.extend(["", "## Gates", ""])
     for name, ok in gates.get("gate_items", {}).items():
         lines.append("- {0}: {1}".format(name, _yes_no(ok)))
@@ -613,6 +824,13 @@ def _top_failure_reasons(package: Mapping[str, Any]) -> List[tuple[str, int]]:
     return [(reason, count) for reason, count in counter.most_common(8)]
 
 
+def _plot_manifest_rows(package: Mapping[str, Any]) -> List[Dict[str, Any]]:
+    path = Path(str(_mapping(package.get("artifacts")).get("plot_manifest_json", "")))
+    data = _read_json(path)
+    rows = data.get("plots", []) if isinstance(data, Mapping) else []
+    return [dict(row) for row in rows if isinstance(row, Mapping)]
+
+
 def _extract_failure_reason(command_log_path: Path) -> str:
     if not command_log_path.is_file():
         return ""
@@ -673,6 +891,34 @@ def _bitrate_kbps(row: Mapping[str, Any]) -> float:
     return max(0.0, _float(row.get("feedback_cur_bitrate"), _float(row.get("feedback_cur_rate"))) * 8.0 / 1000.0)
 
 
+def _chunk_size_bytes(row: Mapping[str, Any]) -> int:
+    return max(0, _int(row.get("feedback_last_fragment_size"), _int(row.get("last_fragment_size"))))
+
+
+def _download_time_s(row: Mapping[str, Any]) -> float:
+    return max(0.0, _float(row.get("feedback_last_download_time"), _float(row.get("last_download_time"))))
+
+
+def _measured_throughput_kbps(row: Mapping[str, Any]) -> float:
+    size = _chunk_size_bytes(row)
+    elapsed = _download_time_s(row)
+    if size <= 0 or elapsed <= 0.0:
+        return 0.0
+    return float(size) * 8.0 / elapsed / 1000.0
+
+
+def _signed_smoothness(quality_utilities: Sequence[float]) -> tuple[float, float]:
+    positive = 0.0
+    negative = 0.0
+    for previous, current in zip(quality_utilities, quality_utilities[1:]):
+        delta = float(current) - float(previous)
+        if delta > 0.0:
+            positive += delta
+        elif delta < 0.0:
+            negative += abs(delta)
+    return positive, negative
+
+
 def _session_counts(summaries: Sequence[Mapping[str, Any]]) -> Dict[str, int]:
     return {
         "total": len(summaries),
@@ -693,6 +939,7 @@ def _public_protocol(protocol: Mapping[str, Any]) -> Dict[str, Any]:
         "controller_count": len(protocol.get("controllers", [])),
         "benchmark_capable": bool(protocol.get("benchmark_capable")),
         "ranking_capable": bool(protocol.get("ranking_capable")),
+        "preset_runtime": dict(_mapping(protocol.get("preset_runtime"))),
     }
 
 
@@ -704,6 +951,52 @@ def _evidence_manifest(root: Path, package: Mapping[str, Any]) -> Dict[str, Any]
         "ranking_authorized": package["gates"]["ranking_authorized"],
         "required_files": package["artifacts"],
     }
+
+
+def _run_plot(
+    manifest: List[Dict[str, Any]],
+    *,
+    plot_id: str,
+    output_path: Path,
+    source_count: int,
+    plotter,
+) -> None:
+    if int(source_count) <= 0:
+        manifest.append(
+            {
+                "plot_id": plot_id,
+                "status": "skipped",
+                "reason": "sin datos evaluables",
+                "path": str(output_path),
+                "source_count": int(source_count),
+                "bytes": 0,
+            }
+        )
+        return
+    try:
+        plotter(output_path)
+        size = output_path.stat().st_size if output_path.is_file() else 0
+        manifest.append(
+            {
+                "plot_id": plot_id,
+                "status": "generated" if size > 0 else "missing",
+                "reason": "" if size > 0 else "archivo ausente o vacio",
+                "path": str(output_path),
+                "source_count": int(source_count),
+                "bytes": int(size),
+            }
+        )
+    except Exception as exc:
+        manifest.append(
+            {
+                "plot_id": plot_id,
+                "status": "error",
+                "reason": str(exc),
+                "path": str(output_path),
+                "source_count": int(source_count),
+                "bytes": 0,
+            }
+        )
 
 
 def _plot_cdf_by_controller(rows, metric, title, output_path, plt) -> None:
@@ -756,7 +1049,7 @@ def _plot_quality_rebuffer(aggregates, output_path, plt) -> None:
     plt.close()
 
 
-def _plot_qoe_by_group(rows, group_key, output_path, plt) -> None:
+def _plot_qoe_by_group(rows, group_key, output_path, plt, title="QoE por grupo") -> None:
     grouped: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(list))
     for row in rows:
         grouped[str(row.get(group_key, ""))][str(row.get("controller_display_name"))].append(_float(row.get("qoe_linear_mean")))
@@ -771,7 +1064,7 @@ def _plot_qoe_by_group(rows, group_key, output_path, plt) -> None:
         plt.bar(offsets, values, width=width, label=controller)
     plt.xticks([x + width * (len(controllers) - 1) / 2.0 for x in base_x], labels, rotation=25, ha="right")
     plt.ylabel("QoE medio")
-    plt.title("QoE por dificultad de red")
+    plt.title(title)
     plt.legend(fontsize=8)
     plt.tight_layout()
     plt.savefig(output_path, dpi=140)
@@ -787,17 +1080,25 @@ def _plot_temporal_case(raw_chunks, output_path, plt) -> None:
     by_controller: Dict[str, List[Mapping[str, Any]]] = defaultdict(list)
     for row in selected:
         by_controller[str(row.get("controller_display_name"))].append(row)
-    plt.figure(figsize=(10, 5))
+    fig, axes = plt.subplots(4, 1, figsize=(10, 9), sharex=True)
     for label, rows in sorted(by_controller.items()):
         rows = sorted(rows, key=lambda row: _int(row.get("chunk_index")))
-        plt.plot([_int(row.get("chunk_index")) for row in rows], [_float(row.get("bitrate_kbps")) for row in rows], label=label)
-    plt.xlabel("Chunk")
-    plt.ylabel("Bitrate kbps")
-    plt.title("Caso temporal: bitrate elegido")
-    plt.grid(True, alpha=0.3)
-    plt.legend(fontsize=8)
-    plt.tight_layout()
-    plt.savefig(output_path, dpi=140)
+        chunks = [_int(row.get("chunk_index")) for row in rows]
+        axes[0].plot(chunks, [_float(row.get("bitrate_kbps")) for row in rows], label=label)
+        axes[1].plot(chunks, [_float(row.get("buffer_after_s"), _float(row.get("buffer_s"))) for row in rows], label=label)
+        axes[2].plot(chunks, [_float(row.get("rebuffer_s")) for row in rows], label=label)
+        axes[3].plot(chunks, [_float(row.get("qoe_linear_reward")) for row in rows], label=label)
+    axes[0].set_ylabel("Bitrate kbps")
+    axes[1].set_ylabel("Buffer s")
+    axes[2].set_ylabel("Rebuffer s")
+    axes[3].set_ylabel("QoE chunk")
+    axes[3].set_xlabel("Chunk")
+    axes[0].set_title("Caso temporal: decisiones y QoE")
+    for axis in axes:
+        axis.grid(True, alpha=0.3)
+    axes[0].legend(fontsize=8, ncol=2)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=140)
     plt.close()
 
 

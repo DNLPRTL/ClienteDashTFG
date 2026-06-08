@@ -9,6 +9,7 @@ from pathlib import Path
 from core.phase6.analysis import analyze_phase6_run, sign_test_exact
 from core.phase6.config import DEFAULT_PHASE6_CONFIG
 from core.phase6.selection import select_trace_windows
+from core.phase6.verification import verify_phase6_package
 from core.trace_replay.controlled_downloader import (
     TraceControlledDownloader,
     clip_loaded_trace_window,
@@ -185,6 +186,41 @@ class Phase6AnalysisTest(unittest.TestCase):
             self.assertEqual(4, package["session_counts"]["evaluable"])
             self.assertGreater(package["aggregates"][0]["qoe_linear_mean"], package["aggregates"][1]["qoe_linear_mean"])
 
+    def test_analysis_writes_academic_metric_columns(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "phase6_metrics"
+            session = _session(root, alias="base_robust_mpc", synthetic=False)
+            _write_run(session, bitrate_Bps=100000.0, bitrates_Bps=[100000.0, 200000.0, 100000.0])
+            protocol_dir = root / "00_protocolo"
+            protocol_dir.mkdir(parents=True)
+            (protocol_dir / "protocolo_validacion.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": "phase6_validacion_comparativa_v1",
+                        "preset": "diagnostico",
+                        "benchmark_capable": False,
+                        "ranking_capable": False,
+                        "qoe_formula_version": "qoe_linear_v1",
+                        "preset_runtime": {"max_media_segments": 6, "network_window_duration_s": 90.0},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (protocol_dir / "session_plan.json").write_text(json.dumps({"sessions": [session]}), encoding="utf-8")
+
+            package = analyze_phase6_run(root, generate_plots=False)
+            summary_rows = _read_csv(root / "02_resultados" / "session_summary.csv")
+            raw_rows = _read_csv(root / "02_resultados" / "raw_chunks.csv")
+
+        self.assertGreater(_as_float(summary_rows[0]["positive_smoothness_mbps"]), 0.0)
+        self.assertGreater(_as_float(summary_rows[0]["negative_smoothness_mbps"]), 0.0)
+        self.assertGreater(_as_float(summary_rows[0]["avg_download_time_s"]), 0.0)
+        self.assertGreater(_as_float(summary_rows[0]["avg_measured_throughput_kbps"]), 0.0)
+        self.assertIn("chunk_size_bytes", raw_rows[0])
+        self.assertIn("download_time_s", raw_rows[0])
+        self.assertIn("buffer_after_s", raw_rows[0])
+        self.assertEqual("diagnostico", package["protocol"]["preset"])
+
     def test_sign_test_exact_handles_clear_direction(self):
         self.assertLess(sign_test_exact([1.0] * 8), 0.01)
 
@@ -246,6 +282,91 @@ class Phase6AnalysisTest(unittest.TestCase):
         self.assertEqual(0, package["session_counts"]["evaluable"])
         self.assertEqual([], package["aggregates"])
 
+    def test_plot_manifest_is_generated_with_minimal_dataset(self):
+        try:
+            import matplotlib  # noqa: F401
+        except Exception as exc:
+            self.skipTest("matplotlib unavailable: {0}".format(exc))
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "phase6_plots"
+            sessions = []
+            for alias, bitrate_Bps in (("base_robust_mpc", 100000.0), ("base_bba", 200000.0)):
+                session = _session(root, alias=alias, synthetic=False)
+                sessions.append(session)
+                _write_run(session, bitrate_Bps=bitrate_Bps)
+            protocol_dir = root / "00_protocolo"
+            protocol_dir.mkdir(parents=True)
+            (protocol_dir / "protocolo_validacion.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": "phase6_validacion_comparativa_v1",
+                        "preset": "diagnostico",
+                        "benchmark_capable": False,
+                        "ranking_capable": False,
+                        "qoe_formula_version": "qoe_linear_v1",
+                        "preset_runtime": {"max_media_segments": 6, "network_window_duration_s": 90.0},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (protocol_dir / "session_plan.json").write_text(json.dumps({"sessions": sessions}), encoding="utf-8")
+
+            analyze_phase6_run(root, generate_plots=True)
+            manifest = json.loads((root / "03_graficas" / "plot_manifest.json").read_text(encoding="utf-8"))
+
+        self.assertTrue(any(row["status"] == "generated" for row in manifest["plots"]))
+
+    def test_package_verifier_passes_correct_package_and_fails_failed_package(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "phase6_verify_ok"
+            session = _session(root, alias="base_robust_mpc", synthetic=False)
+            synthetic_session = _session(root, alias="base_robust_mpc", synthetic=True)
+            _write_run(session, bitrate_Bps=100000.0)
+            _write_run(synthetic_session, bitrate_Bps=100000.0)
+            protocol_dir = root / "00_protocolo"
+            protocol_dir.mkdir(parents=True)
+            (protocol_dir / "protocolo_validacion.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": "phase6_validacion_comparativa_v1",
+                        "preset": "diagnostico",
+                        "benchmark_capable": False,
+                        "ranking_capable": False,
+                        "qoe_formula_version": "qoe_linear_v1",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (protocol_dir / "session_plan.json").write_text(json.dumps({"sessions": [session, synthetic_session]}), encoding="utf-8")
+            analyze_phase6_run(root, generate_plots=False)
+
+            ok = verify_phase6_package(root, require_plots=False)
+
+            failed_root = Path(tmp) / "phase6_verify_failed"
+            failed_session = _session(failed_root, alias="base_robust_mpc", synthetic=False)
+            _write_run(failed_session, bitrate_Bps=100000.0, status="failed")
+            failed_protocol = failed_root / "00_protocolo"
+            failed_protocol.mkdir(parents=True)
+            (failed_protocol / "protocolo_validacion.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": "phase6_validacion_comparativa_v1",
+                        "preset": "diagnostico",
+                        "benchmark_capable": False,
+                        "ranking_capable": False,
+                        "qoe_formula_version": "qoe_linear_v1",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (failed_protocol / "session_plan.json").write_text(json.dumps({"sessions": [failed_session]}), encoding="utf-8")
+            analyze_phase6_run(failed_root, generate_plots=False)
+
+            bad = verify_phase6_package(failed_root, require_plots=False)
+
+        self.assertTrue(ok["all_checks_passed"])
+        self.assertFalse(bad["all_checks_passed"])
+
 
 class Phase6RunnerAndGuiTest(unittest.TestCase):
     def test_builds_protocol_and_client_config(self):
@@ -275,6 +396,32 @@ class Phase6RunnerAndGuiTest(unittest.TestCase):
         self.assertTrue(client_config["network_replay"]["compact_timestamps"])
         self.assertEqual(30, client_config["playback"]["max_media_segments"])
 
+    def test_diagnostico_preset_builds_short_full_pipeline_plan(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            manifest_path = tmp_path / "manifest.json"
+            trace_path = tmp_path / "trace.csv"
+            trace_path.write_text("timestamp_s,duration_s,throughput_kbps\n0,120,1000\n", encoding="utf-8")
+            traces = [_trace(index, split="eval", synthetic=False, path=trace_path.as_posix()) for index in range(2)]
+            traces += [_trace(100, split="eval", synthetic=True, path=trace_path.as_posix())]
+            manifest_path.write_text(json.dumps({"traces": traces}), encoding="utf-8")
+            config = dict(DEFAULT_PHASE6_CONFIG)
+            config["paths"] = dict(config["paths"])
+            config["paths"]["manifest_path"] = manifest_path.as_posix()
+            config["paths"]["output_root"] = (tmp_path / "out").as_posix()
+
+            protocol, sessions = build_phase6_protocol_and_plan(config, "diagnostico", tmp_path / "package")
+            client_config = build_client_config(config, sessions[0])
+
+        self.assertEqual(21, len(sessions))
+        self.assertFalse(protocol["benchmark_capable"])
+        self.assertFalse(protocol["ranking_capable"])
+        self.assertEqual(6, protocol["preset_runtime"]["max_media_segments"])
+        self.assertEqual(90.0, protocol["preset_runtime"]["network_window_duration_s"])
+        self.assertEqual(630.0, protocol["preset_runtime"]["estimated_total_duration_s"])
+        self.assertEqual(6, client_config["playback"]["max_media_segments"])
+        self.assertEqual(90.0, client_config["network_replay"]["window_duration_s"])
+
     def test_gui_command_builder_is_parameterized(self):
         command = build_phase6_command(
             config_path="config/phase6.local.yaml",
@@ -293,13 +440,14 @@ class Phase6RunnerAndGuiTest(unittest.TestCase):
 
     def test_gui_progress_line_parser(self):
         parsed = parse_phase6_progress_line(
-            "PHASE6_PROGRESS processed=7 total=70 percent=10.0 executed=7 failed=1 skipped=0 session=s00007\n"
+            "PHASE6_PROGRESS processed=7 total=70 percent=10.0 executed=7 failed=1 skipped=0 elapsed_s=120.5 last_session_s=20.0 avg_session_s=17.2 eta_s=1083.6 session=s00007\n"
         )
 
         self.assertEqual(7, parsed["processed"])
         self.assertEqual(70, parsed["total"])
         self.assertAlmostEqual(10.0, parsed["percent"])
         self.assertEqual(1, parsed["failed"])
+        self.assertAlmostEqual(1083.6, parsed["eta_s"])
 
 
 class FakeBaseDownloader:
@@ -360,11 +508,11 @@ def _session(root: Path, *, alias: str, synthetic: bool):
     }
 
 
-def _write_run(session, *, bitrate_Bps):
+def _write_run(session, *, bitrate_Bps, bitrates_Bps=None, status="completed"):
     run_root = Path(session["run_output_root"])
     run_dir = run_root / "run_20260101_000000"
     run_dir.mkdir(parents=True)
-    (run_dir / "run_manifest.json").write_text(json.dumps({"status": "completed"}), encoding="utf-8")
+    (run_dir / "run_manifest.json").write_text(json.dumps({"status": status}), encoding="utf-8")
     (run_dir / "evaluation_segments.csv").write_text("segment_index,is_init,eval_phase,use_for_eval,last_fragment_size,last_download_time,fragment_duration\n", encoding="utf-8")
     with (run_dir / "segment_telemetry.csv").open("w", newline="", encoding="utf-8") as handle:
         fieldnames = [
@@ -373,6 +521,8 @@ def _write_run(session, *, bitrate_Bps):
             "use_for_eval",
             "feedback_cur_bitrate",
             "feedback_cur_rate",
+            "feedback_last_fragment_size",
+            "feedback_last_download_time",
             "feedback_fragment_duration",
             "feedback_queued_time",
             "stall_duration",
@@ -384,14 +534,17 @@ def _write_run(session, *, bitrate_Bps):
         writer.writeheader()
         writer.writerow({"segment_index": 0, "is_init": 1, "use_for_eval": 0})
         writer.writerow({"segment_index": 1, "is_init": 0, "use_for_eval": 0, "feedback_cur_bitrate": bitrate_Bps})
-        for segment_index in (2, 3, 4):
+        values = list(bitrates_Bps or [bitrate_Bps, bitrate_Bps, bitrate_Bps])
+        for segment_index, selected_bitrate in zip((2, 3, 4), values):
             writer.writerow(
                 {
                     "segment_index": segment_index,
                     "is_init": 0,
                     "use_for_eval": 1,
-                    "feedback_cur_bitrate": bitrate_Bps,
-                    "feedback_cur_rate": bitrate_Bps,
+                    "feedback_cur_bitrate": selected_bitrate,
+                    "feedback_cur_rate": selected_bitrate,
+                    "feedback_last_fragment_size": 500000,
+                    "feedback_last_download_time": 4.0,
                     "feedback_fragment_duration": 4.0,
                     "feedback_queued_time": 8.0,
                     "stall_duration": 0.0,
@@ -400,6 +553,18 @@ def _write_run(session, *, bitrate_Bps):
                     "feedback_neural_diagnostic_only": 0,
                 }
             )
+
+
+def _read_csv(path: Path):
+    with path.open("r", newline="", encoding="utf-8") as handle:
+        return list(csv.DictReader(handle))
+
+
+def _as_float(value):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
 
 
 if __name__ == "__main__":

@@ -56,6 +56,7 @@ REQUIRED_IMPORTS = (
     "core.phase6.catalog",
     "core.phase6.config",
     "core.phase6.selection",
+    "core.phase6.verification",
     "core.trace_replay.controlled_downloader",
     "scripts.check_environment",
     "scripts.verificar_cliente_y_controllers_clasicos",
@@ -63,6 +64,7 @@ REQUIRED_IMPORTS = (
     "scripts.analyze_phase6_results",
     "scripts.phase6_gui",
     "scripts.run_phase6_verificacion_clasica_controlada",
+    "scripts.verificar_paquete_phase6",
 )
 
 CURRENT_DOCS = (

@@ -7,6 +7,7 @@ import json
 import subprocess
 import sys
 import time
+from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence
@@ -19,15 +20,22 @@ if str(REPO_ROOT) not in sys.path:
 from core.evaluation.qoe import LINEAR_QOE_VERSION
 from core.phase6 import PHASE6_SCHEMA_VERSION
 from core.phase6.analysis import analyze_phase6_run
-from core.phase6.catalog import controller_params, discover_comparable_controllers, media_profiles_for_preset, preset_spec
+from core.phase6.catalog import (
+    PRESET_NAMES,
+    controller_params,
+    discover_comparable_controllers,
+    media_profiles_for_preset,
+    preset_spec,
+)
 from core.phase6.config import load_phase6_config, write_phase6_example_config
 from core.phase6.selection import load_trace_manifest, select_trace_windows
+from core.phase6.verification import verify_phase6_package
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Ejecuta Phase 6 validacion comparativa formal.")
     parser.add_argument("--config", default=None, help="Config local Phase 6. Por defecto usa config/phase6.local.yaml si existe.")
-    parser.add_argument("--preset", choices=["rapido", "equilibrado", "extendido"], default=None)
+    parser.add_argument("--preset", choices=PRESET_NAMES, default=None)
     parser.add_argument("--output-root", default=None, help="Directorio externo de paquetes Phase 6.")
     parser.add_argument("--package-root", default=None, help="Carpeta Phase 6 existente para reanudar o analizar.")
     parser.add_argument("--dry-run", action="store_true", help="Genera protocolo y configs sin ejecutar sesiones.")
@@ -67,7 +75,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     print("Sessions executed: {0}".format(package["executed_count"]))
     if package.get("analysis_path"):
         print("Resultados para validar: {0}".format(package["analysis_path"]))
-    return 0 if package["failed_count"] == 0 else 1
+    if package.get("verification_path"):
+        print("Verificacion paquete: {0}".format(package["verification_path"]))
+    return 0 if package["failed_count"] == 0 and package.get("verification_passed", True) else 1
 
 
 def run_phase6(
@@ -78,6 +88,7 @@ def run_phase6(
     skip_analysis: bool = False,
 ) -> Dict[str, Any]:
     preset = str(_mapping(config.get("experiment")).get("preset", "rapido"))
+    config = apply_preset_overrides(config, preset)
     package_root = resolve_package_root(config, preset)
     existing = load_existing_protocol_package(package_root)
     if existing is None:
@@ -91,11 +102,17 @@ def run_phase6(
     skipped_count = 0
     if not dry_run and not only_plan and _bool(_mapping(config.get("execution")).get("run_sessions", True)):
         total_sessions = len(sessions)
+        run_started_s = time.perf_counter()
         for processed_count, session in enumerate(sessions, start=1):
+            session_started_s = time.perf_counter()
             result = run_session(config, session)
+            session_elapsed_s = time.perf_counter() - session_started_s
             executed_count += int(result["executed"])
             failed_count += int(result["failed"])
             skipped_count += int(result.get("skipped", 0))
+            elapsed_s = time.perf_counter() - run_started_s
+            avg_session_s = elapsed_s / float(processed_count) if processed_count else 0.0
+            eta_s = avg_session_s * float(max(0, total_sessions - processed_count))
             _print_progress(
                 processed_count=processed_count,
                 total_sessions=total_sessions,
@@ -103,12 +120,21 @@ def run_phase6(
                 failed_count=failed_count,
                 skipped_count=skipped_count,
                 session_id=str(session.get("session_id", "")),
+                elapsed_s=elapsed_s,
+                last_session_s=session_elapsed_s,
+                avg_session_s=avg_session_s,
+                eta_s=eta_s,
             )
 
     analysis_path = ""
+    verification_path = ""
+    verification_passed = True
     if not dry_run and not only_plan and not skip_analysis and _bool(_mapping(config.get("execution")).get("run_analysis", True)):
         result_package = analyze_phase6_run(package_root)
         analysis_path = result_package["artifacts"]["resultados_para_validar_md"]
+        verification = verify_phase6_package(package_root, require_plots=True, write_artifacts=True)
+        verification_path = verification["artifacts"]["verification_md"]
+        verification_passed = bool(verification["all_checks_passed"])
 
     return {
         "package_root": str(package_root),
@@ -116,6 +142,8 @@ def run_phase6(
         "executed_count": executed_count,
         "failed_count": failed_count,
         "analysis_path": analysis_path,
+        "verification_path": verification_path,
+        "verification_passed": verification_passed,
     }
 
 
@@ -124,6 +152,7 @@ def build_phase6_protocol_and_plan(
     preset: str,
     package_root: Path,
 ) -> tuple[Dict[str, Any], List[Dict[str, Any]]]:
+    config = apply_preset_overrides(config, preset)
     paths = _mapping(config.get("paths"))
     experiment = _mapping(config.get("experiment"))
     execution = _mapping(config.get("execution"))
@@ -152,6 +181,7 @@ def build_phase6_protocol_and_plan(
             "controllers receive only runtime feedback, ladder, buffer and measured download time"
         ),
         "synthetic_policy": "synthetic windows are diagnostic and reported separately",
+        "preset_runtime": preset_runtime_metadata(config, preset),
         "media_profiles": media_profiles,
         "controllers": controllers,
         "trace_windows": trace_windows,
@@ -176,7 +206,17 @@ def build_phase6_protocol_and_plan(
                     )
                     sessions.append(session)
                     if max_sessions is not None and len(sessions) >= int(max_sessions):
+                        protocol["session_count"] = len(sessions)
+                        protocol["preset_runtime"]["estimated_total_duration_s"] = _estimated_total_duration_s(
+                            protocol["preset_runtime"],
+                            len(sessions),
+                        )
                         return protocol, sessions
+    protocol["session_count"] = len(sessions)
+    protocol["preset_runtime"]["estimated_total_duration_s"] = _estimated_total_duration_s(
+        protocol["preset_runtime"],
+        len(sessions),
+    )
     return protocol, sessions
 
 
@@ -310,6 +350,7 @@ def run_session(config: Mapping[str, Any], session: Mapping[str, Any]) -> Dict[s
 
 
 def build_client_config(config: Mapping[str, Any], session: Mapping[str, Any]) -> Dict[str, Any]:
+    config = apply_preset_overrides(config, str(session.get("preset", _mapping(config.get("experiment")).get("preset", "rapido"))))
     playback = _mapping(config.get("playback"))
     network = _mapping(config.get("network_replay"))
     downloader = _mapping(config.get("downloader"))
@@ -400,6 +441,47 @@ def load_existing_protocol_package(package_root: Path) -> Optional[tuple[Dict[st
     return protocol, [dict(session) for session in sessions]
 
 
+def apply_preset_overrides(config: Mapping[str, Any], preset: str) -> Dict[str, Any]:
+    effective = deepcopy(dict(config))
+    spec = preset_spec(preset)
+    playback = dict(_mapping(effective.get("playback")))
+    network = dict(_mapping(effective.get("network_replay")))
+    execution = dict(_mapping(effective.get("execution")))
+
+    if spec.get("max_media_segments") is not None:
+        playback["max_media_segments"] = int(spec["max_media_segments"])
+    if spec.get("network_window_duration_s") is not None:
+        network["window_duration_s"] = float(spec["network_window_duration_s"])
+    if spec.get("timeout_seconds") is not None:
+        execution["timeout_seconds"] = float(spec["timeout_seconds"])
+
+    effective["playback"] = playback
+    effective["network_replay"] = network
+    effective["execution"] = execution
+    effective.setdefault("experiment", {})["preset"] = preset
+    return effective
+
+
+def preset_runtime_metadata(config: Mapping[str, Any], preset: str) -> Dict[str, Any]:
+    spec = preset_spec(preset)
+    playback = _mapping(config.get("playback"))
+    network = _mapping(config.get("network_replay"))
+    execution = _mapping(config.get("execution"))
+    return {
+        "preset": preset,
+        "max_media_segments": playback.get("max_media_segments"),
+        "network_window_duration_s": network.get("window_duration_s"),
+        "timeout_seconds": execution.get("timeout_seconds"),
+        "estimated_session_duration_s": float(spec.get("estimated_session_duration_s", 0.0) or 0.0),
+        "estimated_total_duration_s": 0.0,
+        "diagnostic_only": preset == "diagnostico",
+    }
+
+
+def _estimated_total_duration_s(runtime: Mapping[str, Any], session_count: int) -> float:
+    return float(runtime.get("estimated_session_duration_s", 0.0) or 0.0) * float(session_count)
+
+
 def _session_completed(session: Mapping[str, Any]) -> bool:
     run_root = Path(str(session.get("run_output_root", "")))
     if not run_root.is_dir():
@@ -435,16 +517,27 @@ def _print_progress(
     failed_count: int,
     skipped_count: int,
     session_id: str,
+    elapsed_s: float,
+    last_session_s: float,
+    avg_session_s: float,
+    eta_s: float,
 ) -> None:
     percent = (float(processed_count) / float(total_sessions) * 100.0) if total_sessions else 100.0
     print(
-        "PHASE6_PROGRESS processed={0} total={1} percent={2:.1f} executed={3} failed={4} skipped={5} session={6}".format(
+        (
+            "PHASE6_PROGRESS processed={0} total={1} percent={2:.1f} executed={3} failed={4} "
+            "skipped={5} elapsed_s={6:.1f} last_session_s={7:.1f} avg_session_s={8:.1f} eta_s={9:.1f} session={10}"
+        ).format(
             processed_count,
             total_sessions,
             percent,
             executed_count,
             failed_count,
             skipped_count,
+            elapsed_s,
+            last_session_s,
+            avg_session_s,
+            eta_s,
             session_id,
         ),
         flush=True,

@@ -13,6 +13,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from core.phase6.analysis import analyze_phase6_run
+from core.phase6.verification import verify_phase6_package
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
@@ -22,9 +23,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     args = parser.parse_args(argv)
 
     package = analyze_phase6_run(args.package_root, generate_plots=not args.no_plots)
+    verification = verify_phase6_package(args.package_root, require_plots=not args.no_plots, write_artifacts=True)
     print(json.dumps(package["gates"], indent=2, sort_keys=True))
     print("Resultados para validar: {0}".format(package["artifacts"]["resultados_para_validar_md"]))
-    return 0 if package["gates"]["all_gates_passed"] else 1
+    print("Verificacion paquete: {0}".format(verification["artifacts"]["verification_md"]))
+    return 0 if package["gates"]["all_gates_passed"] and verification["all_checks_passed"] else 1
 
 
 if __name__ == "__main__":

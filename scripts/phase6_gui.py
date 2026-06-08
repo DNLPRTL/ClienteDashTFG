@@ -15,6 +15,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from core.phase6.catalog import discover_comparable_controllers
+from core.phase6.catalog import PRESET_NAMES
 from core.phase6.config import DEFAULT_PHASE6_LOCAL_CONFIG, load_phase6_config
 
 
@@ -152,7 +153,7 @@ class Phase6Gui:
         options = ttk.Frame(main)
         options.pack(fill="x", pady=10)
         ttk.Label(options, text="Preset").grid(row=0, column=0, sticky="w")
-        preset_box = ttk.Combobox(options, textvariable=self.preset, values=["rapido", "equilibrado", "extendido"], state="readonly", width=16)
+        preset_box = ttk.Combobox(options, textvariable=self.preset, values=list(PRESET_NAMES), state="readonly", width=16)
         preset_box.grid(row=0, column=1, padx=6)
         ttk.Label(options, text="Motor").grid(row=0, column=2, sticky="w")
         engine_box = ttk.Combobox(options, textvariable=self.engine, values=["fake", "gst"], state="readonly", width=12)
@@ -185,7 +186,7 @@ class Phase6Gui:
             expand=True,
             padx=(0, 8),
         )
-        ttk.Label(progress_row, textvariable=self.progress_text, width=42).pack(side="right")
+        ttk.Label(progress_row, textvariable=self.progress_text, width=72).pack(side="right")
 
         analysis_row = ttk.Frame(main)
         analysis_row.pack(fill="x", pady=4)
@@ -342,12 +343,20 @@ class Phase6Gui:
         total = int(progress.get("total", 0) or 0)
         failed = int(progress.get("failed", 0) or 0)
         skipped = int(progress.get("skipped", 0) or 0)
+        elapsed_s = float(progress.get("elapsed_s", 0.0) or 0.0)
+        last_session_s = float(progress.get("last_session_s", 0.0) or 0.0)
+        avg_session_s = float(progress.get("avg_session_s", 0.0) or 0.0)
+        eta_s = float(progress.get("eta_s", 0.0) or 0.0)
         self.progress_percent.set(max(0.0, min(100.0, percent)))
         self.progress_text.set(
-            "Progreso: {0:.1f}% ({1}/{2}) | fallidas {3} | reanudadas {4}".format(
+            "Progreso: {0:.1f}% ({1}/{2}) | {3} trans. | ult. {4} | media {5} | ETA {6} | fallidas {7} | rean. {8}".format(
                 percent,
                 processed,
                 total,
+                _format_duration(elapsed_s),
+                _format_duration(last_session_s),
+                _format_duration(avg_session_s),
+                _format_duration(eta_s),
                 failed,
                 skipped,
             )
@@ -399,7 +408,7 @@ def parse_phase6_progress_line(line: str) -> Dict[str, Any]:
                 result[key] = int(float(value))
             except ValueError:
                 result[key] = 0
-        elif key == "percent":
+        elif key in {"percent", "elapsed_s", "last_session_s", "avg_session_s", "eta_s"}:
             try:
                 result[key] = float(value)
             except ValueError:
@@ -407,6 +416,15 @@ def parse_phase6_progress_line(line: str) -> Dict[str, Any]:
         else:
             result[key] = value
     return result
+
+
+def _format_duration(seconds: float) -> str:
+    total = max(0, int(round(float(seconds or 0.0))))
+    hours, rem = divmod(total, 3600)
+    minutes, secs = divmod(rem, 60)
+    if hours:
+        return "{0:d}h{1:02d}m{2:02d}s".format(hours, minutes, secs)
+    return "{0:d}m{1:02d}s".format(minutes, secs)
 
 
 def main() -> int:
