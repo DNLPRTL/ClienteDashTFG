@@ -41,6 +41,11 @@ phase5_contracto_integracion_dos_controllers.md
 phase5_feature_mapping_runtime.md
 phase5_fallback_y_telemetria.md
 phase5_tests_y_runbook_ubuntu.md
-phase5_5_nota_verificacion_futura.md
 phase5_cierre_windows.md
+```
+
+La verificacion posterior del cliente y de los controllers clasicos vive en:
+
+```text
+docs/contexto rama nueva/fase_verificacion_cliente_y_controllers_clasicos/
 ```

@@ -7,7 +7,7 @@ _Paquete imprescindible para trasladar DashClientModular4 a otro proyecto o a ot
 - Proyecto: DashClientModular4.
 - Tema: ABR con IA para streaming MPEG-DASH.
 - Objetivo general: construir un cliente DASH modular, implementar baselines ABR clasicos, integrar un controlador IA propio y preparar una evaluacion comparativa defendible.
-- Estado consolidado al generar este paquete: Phase 1 a Phase 5 cerradas; Phase 6A0-6D existe como fase preparatoria de validacion, protocolo, manifest y media profile. No hay benchmark final autorizado.
+- Estado consolidado al generar este paquete: Phase 1 a Phase 5 cerradas; la fase activa verifica el cliente y los controllers clasicos antes de la evaluacion formal. No hay benchmark final autorizado.
 
 ## 2. Resultado esperado del TFG
 
@@ -69,6 +69,17 @@ Estado: cerrada.
 Objetivo: integrar `neural_abr_lite` como guarded neural scorer controller con action mask, safety guard, fallback, carga segura de bundle, inferencia CPU y telemetria diagnostica.
 
 No significa: que la IA gane, ranking, benchmark, SOTA o validacion real-world.
+
+### Fase de Verificacion - Cliente y controllers clasicos
+
+Estado: activa.
+
+Objetivo: demostrar que el cliente reproduce contenido DASH, genera artifacts
+canonicos, no contamina pruebas futuras y usa controllers clasicos coherentes
+con sus specs locales.
+
+No significa: benchmark, ranking, ganador, comparacion QoE ni afirmacion de
+mejora.
 
 ### Phase 6 - Validacion preparatoria
 

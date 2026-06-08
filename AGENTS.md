@@ -20,7 +20,7 @@ archive/current-before-phase3-rebuild
 La fase activa es:
 
 ```text
-Phase 5 closed on Ubuntu - two NeuralABR-Lite controllers integrated
+Fase de Verificacion del Cliente y Controllers Clasicos
 ```
 
 Phase 1 y Phase 2 se consideran cerradas. Phase 3 Rebuild esta cerrada en
@@ -168,7 +168,9 @@ ia_training_performed=false
 ```
 
 Phase 4 ya cerro el contrato de sampler/corpus y el entrenamiento offline. Phase
-5 integro los bundles como controllers sin convertir smokes en benchmark.
+5 integro los bundles como controllers sin convertir smokes en benchmark. La
+fase activa verifica el cliente y los controllers clasicos antes de la
+evaluacion formal, sin benchmark, ranking, ganador ni afirmacion de mejora.
 
 ## Synthetic controlled trace guardrails
 

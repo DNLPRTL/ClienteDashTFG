@@ -53,6 +53,7 @@ REQUIRED_IMPORTS = (
     "core.media_engine.fake",
     "core.media_engine.gst_media_engine",
     "scripts.check_environment",
+    "scripts.verificar_cliente_y_controllers_clasicos",
 )
 
 CURRENT_DOCS = (
