@@ -19,3 +19,4 @@ tmp_runs/
 media/
 dash_media/
 config/client.local.yaml
+config/phase6.local.yaml

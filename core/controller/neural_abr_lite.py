@@ -229,7 +229,7 @@ class NeuralAbrLiteController(BaseController):
             model_label=self.model_label,
             bundle_path=self.bundle_dir,
             bundle_configured=1 if self.bundle_dir.strip() else 0,
-            diagnostic_only=1,
+            diagnostic_only=1 if self.diagnostic_only else 0,
         )
 
 
@@ -385,4 +385,3 @@ def _as_bool(value: object, default: bool) -> bool:
         if lowered in {"false", "no", "0", "off"}:
             return False
     return bool(default)
-

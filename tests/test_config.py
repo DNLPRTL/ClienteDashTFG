@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -32,9 +33,56 @@ class ConfigLoadingTest(unittest.TestCase):
         self.assertTrue(config.playback.headless)
         self.assertEqual(0, config.playback.initial_quality)
         self.assertFalse(config.playback.initial_controller_decision)
+        self.assertIsNone(config.playback.max_media_segments)
+        self.assertFalse(config.network_replay.enabled)
+        self.assertIsNone(config.network_replay.trace_csv_path)
         self.assertEqual("logs", config.output.root_dir)
         self.assertEqual("segment_telemetry.csv", config.output.segment_telemetry_filename)
         self.assertEqual("evaluation_segments.csv", config.output.evaluation_segments_filename)
+
+    def test_network_replay_and_segment_cap_load_from_json_config(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            config_path = tmp_path / "client.phase6.yaml"
+            config_path.write_text(
+                json.dumps(
+                    {
+                        "mpd_url": "http://example.invalid/video.mpd",
+                        "playback": {"max_media_segments": 30},
+                        "network_replay": {
+                            "enabled": True,
+                            "trace_csv_path": "/tmp/trace.csv",
+                            "window_start_s": 12.0,
+                            "window_duration_s": 120.0,
+                            "end_policy": "fail",
+                            "max_loops": 0,
+                            "sleep": False,
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            config = load_client_config(config_path, defaults_path=None)
+
+        self.assertEqual(30, config.playback.max_media_segments)
+        self.assertTrue(config.network_replay.enabled)
+        self.assertEqual("/tmp/trace.csv", config.network_replay.trace_csv_path)
+        self.assertEqual(12.0, config.network_replay.window_start_s)
+        self.assertEqual(120.0, config.network_replay.window_duration_s)
+        self.assertFalse(config.network_replay.sleep)
+        validate_config_for_run(config)
+
+    def test_network_replay_requires_trace_path_when_enabled(self):
+        config = ClientConfig.from_dict(
+            {
+                "mpd_url": "http://example.invalid/video.mpd",
+                "network_replay": {"enabled": True},
+            }
+        )
+
+        with self.assertRaises(ConfigError):
+            validate_config_for_run(config)
 
     def test_local_config_overlays_example_defaults(self):
         with tempfile.TemporaryDirectory() as tmp:

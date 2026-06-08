@@ -1,0 +1,57 @@
+{
+  "controller_params": {
+    "neural_abr_lite_robust_mpc": {
+      "bundle_dir": "/home/daniel/TFG/modelos/phase4/phase4F_bundle_para_inferencia_neural_abr_lite",
+      "diagnostic_only": false,
+      "fallback_controller": "robust_mpc",
+      "max_inference_latency_ms": 50.0,
+      "verify_hashes": true
+    },
+    "neural_abr_lite_teacher_hibrido": {
+      "bundle_dir": "/home/daniel/TFG/modelos/phase4/phase4H_bundle_para_inferencia_teacher_hibrido_neural_abr_lite",
+      "diagnostic_only": false,
+      "fallback_controller": "robust_mpc",
+      "max_inference_latency_ms": 50.0,
+      "verify_hashes": true
+    }
+  },
+  "execution": {
+    "max_sessions": null,
+    "resume": true,
+    "run_analysis": true,
+    "run_sessions": true,
+    "timeout_seconds": 900.0
+  },
+  "experiment": {
+    "controllers": [],
+    "engine": "fake",
+    "include_synthetic_diagnostic": true,
+    "media_profile_ids": [],
+    "preset": "rapido",
+    "repetitions": 1,
+    "seed": 606
+  },
+  "network_replay": {
+    "decision_interval_s": 4.0,
+    "end_policy": "fail",
+    "max_loops": 0,
+    "sleep": true,
+    "window_duration_s": 120.0
+  },
+  "paths": {
+    "manifest_path": "/home/daniel/TFG/manifests_trazas/phase3/final/phase3_trace_manifest_curated.json",
+    "output_root": "/home/daniel/TFG/runs_trazas/phase6/validacion_comparativa",
+    "python": "python",
+    "repo_root": "/home/daniel/TFG/DashClientModular4",
+    "trace_path_rewrites": []
+  },
+  "playback": {
+    "drain_buffer_sleep_seconds": 0.01,
+    "initial_controller_decision": false,
+    "initial_quality": 0,
+    "max_buffer_seconds": 60.0,
+    "max_media_segments": 30,
+    "preroll_seconds": 0.0
+  },
+  "schema_version": "phase6_config_v1"
+}

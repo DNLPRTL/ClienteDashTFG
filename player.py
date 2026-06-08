@@ -48,7 +48,7 @@ class Player:
 
     def __init__(self, parser, media_engine, mpd_url, downloader, controller,
                  log_path=None, initial_level=0, use_initial_controller_decision=True, run_dir=None,
-                 segment_telemetry_path=None, evaluation_segments_path=None):
+                 segment_telemetry_path=None, evaluation_segments_path=None, max_media_segments=None):
         self.parser = parser
         self.media_engine = media_engine
         self.downloader = downloader
@@ -61,6 +61,7 @@ class Player:
         self.segment_telemetry_csv_path = segment_telemetry_path
         self.evaluation_segments_csv_path = evaluation_segments_path
         self.use_initial_controller_decision = bool(use_initial_controller_decision)
+        self.max_media_segments = self._normalize_max_media_segments(max_media_segments)
 
         # estado general
         self.downloaded_bytes = 0
@@ -81,6 +82,7 @@ class Player:
 
         # índice del último segmento común (para ignorar su "stall" falso)
         self._last_common_index = -1
+        self._active_item_count = None
 
         # Throughput / buffer history (para features)
         self._tp_hist = deque(maxlen=max(5, self.TP_WINDOW))
@@ -329,13 +331,15 @@ class Player:
         # último índice común (incluye INIT si lo hay)
         if num_items is None:
             raise RuntimeError("No hay segmentos en el MPD")
+        num_items = self._cap_item_count_by_media_limit(segments_per_level, num_items)
+        self._active_item_count = int(num_items)
         self._last_common_index = int(num_items - 1)
 
         # display: SOLO medias reales
         self.display_media_total_by_level = []
         for segs_lvl in self.segments_per_level:
-            has_init = (len(segs_lvl) > 0 and segs_lvl[0]['is_init'])
-            real_media = len(segs_lvl) - (1 if has_init else 0)
+            active_segs = segs_lvl[:num_items]
+            real_media = sum(1 for seg in active_segs if not seg.get('is_init'))
             self.display_media_total_by_level.append(real_media)
 
         display_media_total_lvl0 = self.display_media_total_by_level[self.cur_level]
@@ -405,7 +409,7 @@ class Player:
         self.media_engine.start()
 
         # Bucle principal
-        num_items = len(self.segments_per_level[0])  # garantizado por construcción previa
+        num_items = int(self._active_item_count or len(self.segments_per_level[0]))
         while self.cur_index < num_items:
             segs_lvl = self.segments_per_level[self.cur_level]
             durs_lvl = self.durations_per_level[self.cur_level]
@@ -671,6 +675,34 @@ class Player:
                 pass
 
     # ------------------------- helpers CSV -------------------------
+    @staticmethod
+    def _normalize_max_media_segments(value):
+        if value is None:
+            return None
+        parsed = int(value)
+        if parsed < 1:
+            raise ValueError("max_media_segments must be null or >= 1")
+        return parsed
+
+    def _cap_item_count_by_media_limit(self, segments_per_level, current_num_items):
+        if self.max_media_segments is None:
+            return int(current_num_items)
+        cap_counts = []
+        for segs_lvl in segments_per_level:
+            real_media_seen = 0
+            cap_count = int(current_num_items)
+            for idx, seg in enumerate(segs_lvl[:current_num_items]):
+                if seg.get('is_init'):
+                    continue
+                real_media_seen += 1
+                if real_media_seen >= self.max_media_segments:
+                    cap_count = idx + 1
+                    break
+            cap_counts.append(cap_count)
+        if not cap_counts:
+            return int(current_num_items)
+        return int(min([current_num_items] + cap_counts))
+
     def _resolve_run_dir(self):
         if self.run_dir:
             run_dir = os.fspath(self.run_dir)

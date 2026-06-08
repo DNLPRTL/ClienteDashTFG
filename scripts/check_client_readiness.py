@@ -52,8 +52,17 @@ REQUIRED_IMPORTS = (
     "core.controller.neural_abr_safety",
     "core.media_engine.fake",
     "core.media_engine.gst_media_engine",
+    "core.phase6.analysis",
+    "core.phase6.catalog",
+    "core.phase6.config",
+    "core.phase6.selection",
+    "core.trace_replay.controlled_downloader",
     "scripts.check_environment",
     "scripts.verificar_cliente_y_controllers_clasicos",
+    "scripts.run_phase6_validacion_comparativa",
+    "scripts.analyze_phase6_results",
+    "scripts.phase6_gui",
+    "scripts.run_phase6_verificacion_clasica_controlada",
 )
 
 CURRENT_DOCS = (

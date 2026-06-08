@@ -137,6 +137,27 @@ class PlayerFragmentFlowTest(unittest.TestCase):
             finally:
                 reset_logging()
 
+    def test_max_media_segments_caps_downloaded_media_items(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            mpd_path = tmp_path / "flow.mpd"
+            output_root = tmp_path / "runs"
+            mpd_path.write_text(_mpd_text(), encoding="utf-8")
+            config = _client_config(mpd_path, output_root, max_media_segments=2)
+
+            try:
+                with mock.patch.object(main, "SegmentDownloader", RecordingDownloader):
+                    with mock.patch.object(main, "FakeMediaEngine", RecordingFakeMediaEngine):
+                        with mock.patch("requests.sessions.Session.request", side_effect=AssertionError("External network is not allowed")):
+                            with mock.patch("sys.stdout", io.StringIO()):
+                                with mock.patch("sys.stderr", io.StringIO()):
+                                    main.run_client(config, command_args=["max-media-segments-test"])
+
+                requested_names = [Path(item["url"]).name for item in RecordingDownloader.instances[0].requests]
+                self.assertEqual(["init-low.m4s", "low-1.m4s", "low-2.m4s"], requested_names)
+            finally:
+                reset_logging()
+
     def _assert_csv_integrity(self, path):
         with path.open(newline="", encoding="utf-8") as fh:
             rows = list(csv.reader(fh))
@@ -191,7 +212,7 @@ def _mpd_text():
 """
 
 
-def _client_config(mpd_path, output_root):
+def _client_config(mpd_path, output_root, max_media_segments=None):
     return ClientConfig.from_dict(
         {
             "mpd_url": mpd_path.as_posix(),
@@ -213,6 +234,7 @@ def _client_config(mpd_path, output_root):
                 "max_buffer_seconds": 60.0,
                 "drain_buffer_sleep_seconds": 0.01,
                 "preroll_seconds": 0.0,
+                "max_media_segments": max_media_segments,
             },
             "downloader": {
                 "max_retries": 1,

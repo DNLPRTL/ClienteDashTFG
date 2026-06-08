@@ -90,10 +90,7 @@ def run_client(config: ClientConfig, command_args: Optional[List[str]] = None) -
         except (TypeError, ValueError) as exc:
             raise ConfigError(str(exc)) from exc
         media_engine = _create_media_engine(config)
-        downloader = SegmentDownloader(
-            max_retries=config.downloader.max_retries,
-            verbose=config.downloader.verbose,
-        )
+        downloader = _create_downloader(config)
         parser_dash = DashParser()
 
         player = Player(
@@ -108,6 +105,7 @@ def run_client(config: ClientConfig, command_args: Optional[List[str]] = None) -
             run_dir=str(run_context.run_dir),
             segment_telemetry_path=str(run_context.segment_telemetry_path),
             evaluation_segments_path=str(run_context.evaluation_segments_path),
+            max_media_segments=config.playback.max_media_segments,
         )
         _apply_runtime_config(player, config)
 
@@ -160,6 +158,27 @@ def _create_media_engine(config: ClientConfig):
         )
 
     raise ConfigError("media_engine.name must be either 'fake' or 'gst'.")
+
+
+def _create_downloader(config: ClientConfig):
+    base_downloader = SegmentDownloader(
+        max_retries=config.downloader.max_retries,
+        verbose=config.downloader.verbose,
+    )
+    if not config.network_replay.enabled:
+        return base_downloader
+
+    from core.trace_replay.controlled_downloader import TraceControlledDownloader
+
+    return TraceControlledDownloader(
+        base_downloader=base_downloader,
+        trace_csv_path=config.network_replay.trace_csv_path,
+        window_start_s=config.network_replay.window_start_s,
+        window_duration_s=config.network_replay.window_duration_s,
+        end_policy=config.network_replay.end_policy,
+        max_loops=config.network_replay.max_loops,
+        sleep=config.network_replay.sleep,
+    )
 
 
 def _apply_runtime_config(player: Player, config: ClientConfig) -> None:

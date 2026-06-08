@@ -81,13 +81,13 @@ con sus specs locales.
 No significa: benchmark, ranking, ganador, comparacion QoE ni afirmacion de
 mejora.
 
-### Phase 6 - Validacion preparatoria
+### Phase 6 - Validacion comparativa formal
 
-Estado: siguiente fase activa de planificacion/validacion formal; benchmark aun no autorizado.
+Estado: pipeline implementado para ejecucion en Ubuntu cliente; benchmark solo se autoriza por gates del paquete generado.
 
-Objetivo actual: congelar protocolo experimental, manifest schema, readiness gates, materializacion externa de trazas y media profile derivado de MPD.
+Objetivo actual: ejecutar comparacion formal con protocolo congelado, red controlada por trazas, QoE `qoe_linear_v1`, estadistica emparejada y paquete de evidencia externo.
 
-No significa: benchmark, plots, result CSVs, ranking, winner ni claim de mejora QoE.
+No significa: ganador automatico ni afirmacion de mejora QoE; `rapido` no autoriza ranking y `equilibrado`/`extendido` solo lo autorizan si pasan todos los gates.
 
 ### Phase 7 - Memoria y defensa
 

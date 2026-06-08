@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -43,12 +44,24 @@ class PlaybackConfig:
     max_buffer_seconds: float = 60.0
     drain_buffer_sleep_seconds: float = 0.5
     preroll_seconds: float = 10.0
+    max_media_segments: Optional[int] = None
 
 
 @dataclass(frozen=True)
 class DownloaderConfig:
     max_retries: int = 3
     verbose: bool = False
+
+
+@dataclass(frozen=True)
+class NetworkReplayConfig:
+    enabled: bool = False
+    trace_csv_path: Optional[str] = None
+    window_start_s: float = 0.0
+    window_duration_s: Optional[float] = None
+    end_policy: str = "fail"
+    max_loops: int = 0
+    sleep: bool = True
 
 
 @dataclass(frozen=True)
@@ -77,6 +90,7 @@ class ClientConfig:
     controller: ControllerConfig = field(default_factory=ControllerConfig)
     playback: PlaybackConfig = field(default_factory=PlaybackConfig)
     downloader: DownloaderConfig = field(default_factory=DownloaderConfig)
+    network_replay: NetworkReplayConfig = field(default_factory=NetworkReplayConfig)
     output: OutputConfig = field(default_factory=OutputConfig)
     logging: LoggingConfig = field(default_factory=LoggingConfig)
     analysis: AnalysisConfig = field(default_factory=AnalysisConfig)
@@ -90,6 +104,7 @@ class ClientConfig:
         output_raw = _mapping(raw.get("output"))
         logging_raw = _mapping(raw.get("logging"))
         downloader_raw = _mapping(raw.get("downloader"))
+        network_raw = _mapping(raw.get("network_replay"))
         analysis_raw = _mapping(raw.get("analysis"))
 
         if isinstance(controller_raw, str):
@@ -137,10 +152,26 @@ class ClientConfig:
                     "playback.drain_buffer_sleep_seconds",
                 ),
                 preroll_seconds=_as_float(playback_raw.get("preroll_seconds", 10.0), "playback.preroll_seconds"),
+                max_media_segments=_as_optional_positive_int(
+                    playback_raw.get("max_media_segments"),
+                    "playback.max_media_segments",
+                ),
             ),
             downloader=DownloaderConfig(
                 max_retries=_as_int(downloader_raw.get("max_retries", 3), "downloader.max_retries"),
                 verbose=_as_bool(downloader_raw.get("verbose", False), "downloader.verbose"),
+            ),
+            network_replay=NetworkReplayConfig(
+                enabled=_as_bool(network_raw.get("enabled", False), "network_replay.enabled"),
+                trace_csv_path=_as_optional_str(network_raw.get("trace_csv_path")),
+                window_start_s=_as_float(network_raw.get("window_start_s", 0.0), "network_replay.window_start_s"),
+                window_duration_s=_as_optional_positive_float(
+                    network_raw.get("window_duration_s"),
+                    "network_replay.window_duration_s",
+                ),
+                end_policy=_as_str(network_raw.get("end_policy", "fail")).strip().lower() or "fail",
+                max_loops=_as_int(network_raw.get("max_loops", 0), "network_replay.max_loops"),
+                sleep=_as_bool(network_raw.get("sleep", True), "network_replay.sleep"),
             ),
             output=OutputConfig(
                 root_dir=_as_str(output_raw.get("root_dir", logging_raw.get("output_dir", "logs"))),
@@ -189,10 +220,20 @@ class ClientConfig:
                 "max_buffer_seconds": self.playback.max_buffer_seconds,
                 "drain_buffer_sleep_seconds": self.playback.drain_buffer_sleep_seconds,
                 "preroll_seconds": self.playback.preroll_seconds,
+                "max_media_segments": self.playback.max_media_segments,
             },
             "downloader": {
                 "max_retries": self.downloader.max_retries,
                 "verbose": self.downloader.verbose,
+            },
+            "network_replay": {
+                "enabled": self.network_replay.enabled,
+                "trace_csv_path": self.network_replay.trace_csv_path,
+                "window_start_s": self.network_replay.window_start_s,
+                "window_duration_s": self.network_replay.window_duration_s,
+                "end_policy": self.network_replay.end_policy,
+                "max_loops": self.network_replay.max_loops,
+                "sleep": self.network_replay.sleep,
             },
             "output": {
                 "root_dir": self.output.root_dir,
@@ -251,6 +292,19 @@ def validate_config_for_run(config: ClientConfig) -> None:
         raise ConfigError("playback.drain_buffer_sleep_seconds must be > 0.")
     if config.downloader.max_retries < 1:
         raise ConfigError("downloader.max_retries must be >= 1.")
+    if config.playback.max_media_segments is not None and config.playback.max_media_segments < 1:
+        raise ConfigError("playback.max_media_segments must be null or >= 1.")
+    if config.network_replay.enabled:
+        if not config.network_replay.trace_csv_path:
+            raise ConfigError("network_replay.trace_csv_path is required when network_replay.enabled=true.")
+        if config.network_replay.window_start_s < 0:
+            raise ConfigError("network_replay.window_start_s must be >= 0.")
+        if config.network_replay.window_duration_s is not None and config.network_replay.window_duration_s <= 0:
+            raise ConfigError("network_replay.window_duration_s must be null or > 0.")
+        if config.network_replay.end_policy not in {"fail", "loop"}:
+            raise ConfigError("network_replay.end_policy must be either 'fail' or 'loop'.")
+        if config.network_replay.max_loops < 0:
+            raise ConfigError("network_replay.max_loops must be >= 0.")
 
 
 def _select_config_path(path: Optional[Union[str, Path]]) -> Optional[Path]:
@@ -263,6 +317,15 @@ def _select_config_path(path: Optional[Union[str, Path]]) -> Optional[Path]:
 
 def _load_yaml_file(path: Path) -> Dict[str, Any]:
     text = path.read_text(encoding="utf-8-sig")
+    stripped = text.lstrip()
+    if stripped.startswith("{"):
+        try:
+            loaded = json.loads(text)
+        except json.JSONDecodeError as exc:
+            raise ConfigError(f"Invalid JSON/YAML config in {path}: {exc}") from exc
+        if not isinstance(loaded, dict):
+            raise ConfigError(f"Config root must be a mapping: {path}")
+        return loaded
     try:
         import yaml  # type: ignore
 
@@ -389,3 +452,21 @@ def _as_float(value: Any, field_name: str) -> float:
         return float(value)
     except (TypeError, ValueError) as exc:
         raise ConfigError(f"{field_name} must be a number.") from exc
+
+
+def _as_optional_positive_int(value: Any, field_name: str) -> Optional[int]:
+    if value is None:
+        return None
+    parsed = _as_int(value, field_name)
+    if parsed < 1:
+        raise ConfigError(f"{field_name} must be null or >= 1.")
+    return parsed
+
+
+def _as_optional_positive_float(value: Any, field_name: str) -> Optional[float]:
+    if value is None:
+        return None
+    parsed = _as_float(value, field_name)
+    if parsed <= 0:
+        raise ConfigError(f"{field_name} must be null or > 0.")
+    return parsed

@@ -20,7 +20,7 @@ archive/current-before-phase3-rebuild
 La fase activa es:
 
 ```text
-Phase 6 planning - validacion formal
+Phase 6 implementation ready - validacion comparativa formal
 ```
 
 Phase 1 y Phase 2 se consideran cerradas. Phase 3 Rebuild esta cerrada en
@@ -33,8 +33,9 @@ con `robust_mpc` real y otro con `teacher_hibrido`. No hay benchmark, ranking,
 ganador ni afirmacion de mejora de QoE autorizados.
 Phase 5 esta cerrada en Ubuntu con dos controllers IA integrados.
 La Fase de Verificacion del Cliente y Controllers Clasicos esta cerrada en
-Ubuntu con informe externo aceptado. La siguiente fase es Phase 6, que debe
-definir y ejecutar evaluacion formal sin reutilizar smokes como benchmark.
+Ubuntu con informe externo aceptado. Phase 6 dispone de pipeline reproducible
+para ejecutar evaluacion formal en Ubuntu cliente sin reutilizar smokes como
+benchmark.
 
 ## Documentos obligatorios por ejecucion
 

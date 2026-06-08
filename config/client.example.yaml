@@ -33,10 +33,20 @@ playback:
   max_buffer_seconds: 60.0
   drain_buffer_sleep_seconds: 0.5
   preroll_seconds: 10.0
+  max_media_segments: null
 
 downloader:
   max_retries: 3
   verbose: false
+
+network_replay:
+  enabled: false
+  trace_csv_path: null
+  window_start_s: 0.0
+  window_duration_s: null
+  end_policy: "fail"
+  max_loops: 0
+  sleep: true
 
 output:
   root_dir: "logs"
