@@ -367,6 +367,68 @@ class Phase6AnalysisTest(unittest.TestCase):
         self.assertTrue(ok["all_checks_passed"])
         self.assertFalse(bad["all_checks_passed"])
 
+    def test_own_controller_neural_audit_is_preserved_and_gated(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "phase6_neural_audit"
+            session = _session(root, alias="propio_th", synthetic=False)
+            _write_run(session, bitrate_Bps=100000.0, neural_success=True)
+            protocol_dir = root / "00_protocolo"
+            protocol_dir.mkdir(parents=True)
+            (protocol_dir / "protocolo_validacion.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": "phase6_validacion_comparativa_v1",
+                        "preset": "diagnostico",
+                        "benchmark_capable": False,
+                        "ranking_capable": False,
+                        "qoe_formula_version": "qoe_linear_v1",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (protocol_dir / "session_plan.json").write_text(json.dumps({"sessions": [session]}), encoding="utf-8")
+
+            package = analyze_phase6_run(root, generate_plots=False)
+            summary = _read_csv(root / "02_resultados" / "session_summary.csv")[0]
+            chunks = _read_csv(root / "02_resultados" / "raw_chunks.csv")
+            markdown = (root / "02_resultados" / "resultados_para_validar.md").read_text(encoding="utf-8")
+
+        self.assertEqual("3", summary["neural_success_row_count"])
+        self.assertEqual("3", summary["neural_inference_row_count"])
+        self.assertEqual("0", summary["neural_audit_missing_row_count"])
+        self.assertGreater(_as_float(summary["neural_inference_ms_mean"]), 0.0)
+        self.assertEqual("success_neural", chunks[0]["neural_fallback_reason"])
+        self.assertEqual(1.0, _as_float(chunks[0]["neural_bundle_loaded"]))
+        self.assertTrue(package["gates"]["gate_items"]["propios_with_verified_neural_inference"])
+        self.assertIn("Auditoria de inferencia propia", markdown)
+        self.assertIn("auditadas 3/3", markdown)
+
+    def test_own_controller_without_neural_audit_fails_gate(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "phase6_neural_audit_missing"
+            session = _session(root, alias="propio_th", synthetic=False)
+            _write_run(session, bitrate_Bps=100000.0, neural_success=False)
+            protocol_dir = root / "00_protocolo"
+            protocol_dir.mkdir(parents=True)
+            (protocol_dir / "protocolo_validacion.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": "phase6_validacion_comparativa_v1",
+                        "preset": "diagnostico",
+                        "benchmark_capable": False,
+                        "ranking_capable": False,
+                        "qoe_formula_version": "qoe_linear_v1",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (protocol_dir / "session_plan.json").write_text(json.dumps({"sessions": [session]}), encoding="utf-8")
+
+            package = analyze_phase6_run(root, generate_plots=False)
+
+        self.assertFalse(package["gates"]["gate_items"]["propios_with_verified_neural_inference"])
+        self.assertIn(session["session_id"], package["gates"]["violations"]["neural_audit_violations"])
+
 
 class Phase6RunnerAndGuiTest(unittest.TestCase):
     def test_builds_protocol_and_client_config(self):
@@ -508,7 +570,7 @@ def _session(root: Path, *, alias: str, synthetic: bool):
     }
 
 
-def _write_run(session, *, bitrate_Bps, bitrates_Bps=None, status="completed"):
+def _write_run(session, *, bitrate_Bps, bitrates_Bps=None, status="completed", neural_success=False):
     run_root = Path(session["run_output_root"])
     run_dir = run_root / "run_20260101_000000"
     run_dir.mkdir(parents=True)
@@ -529,6 +591,16 @@ def _write_run(session, *, bitrate_Bps, bitrates_Bps=None, status="completed"):
             "policy_decision_ms",
             "feedback_neural_fallback_used",
             "feedback_neural_diagnostic_only",
+            "feedback_neural_enabled",
+            "feedback_neural_model_label",
+            "feedback_neural_bundle_loaded",
+            "feedback_neural_bundle_hash_ok",
+            "feedback_neural_feature_vector_ok",
+            "feedback_neural_inference_ms",
+            "feedback_neural_fallback_reason",
+            "feedback_neural_raw_action",
+            "feedback_neural_safe_action",
+            "feedback_neural_valid_action",
         ]
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
@@ -551,6 +623,16 @@ def _write_run(session, *, bitrate_Bps, bitrates_Bps=None, status="completed"):
                     "policy_decision_ms": 1.0,
                     "feedback_neural_fallback_used": 0,
                     "feedback_neural_diagnostic_only": 0,
+                    "feedback_neural_enabled": 1 if neural_success else 0,
+                    "feedback_neural_model_label": "NeuralABR-Lite teacher_hibrido" if neural_success else "",
+                    "feedback_neural_bundle_loaded": 1 if neural_success else 0,
+                    "feedback_neural_bundle_hash_ok": 1 if neural_success else 0,
+                    "feedback_neural_feature_vector_ok": 1 if neural_success else 0,
+                    "feedback_neural_inference_ms": 0.5 if neural_success else "",
+                    "feedback_neural_fallback_reason": "success_neural" if neural_success else "",
+                    "feedback_neural_raw_action": 1 if neural_success else "",
+                    "feedback_neural_safe_action": 1 if neural_success else "",
+                    "feedback_neural_valid_action": 1 if neural_success else 0,
                 }
             )
 

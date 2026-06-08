@@ -31,6 +31,9 @@ desarrollo, tests rapidos, commit y push.
 - Controllers debug/test excluidos del modo comparable.
 - Controllers nuevos: entran automaticamente si estan en el registry y no estan
   en la lista de exclusion.
+- Controllers propios: las filas evaluables deben conservar auditoria neural
+  por chunk (`bundle_loaded`, `bundle_hash_ok`, `inference_ms`,
+  `fallback_reason=success_neural`, accion cruda/segura y `fallback_used=0`).
 
 ## Scripts
 
@@ -91,5 +94,6 @@ media por sesion y ETA restante.
 `diagnostico` y `rapido` no autorizan ranking final. `equilibrado` y
 `extendido` pueden autorizar benchmark/ranking si pasan todos los gates y la
 verificacion de paquete: sesiones reales completadas/evaluables, split eval,
-MPDs 4 s, sin fallback en controllers propios, sin artifacts legacy, graficas
-esperadas auditables y sinteticas separadas.
+MPDs 4 s, inferencia neural verificada en controllers propios, sin fallback en
+controllers propios, sin artifacts legacy, graficas esperadas auditables y
+sinteticas separadas.

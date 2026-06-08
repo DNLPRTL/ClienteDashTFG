@@ -161,8 +161,14 @@ def summarize_session(
         if _measured_throughput_kbps(row) > 0.0
     ]
     positive_smoothness, negative_smoothness = _signed_smoothness(linear.segment_quality_utilities)
+    neural_inference_times = [
+        _float(row.get("feedback_neural_inference_ms"))
+        for row in evaluable_rows
+        if _float(row.get("feedback_neural_inference_ms")) > 0.0
+    ]
     fallback_rows = sum(1 for row in evaluable_rows if _int(row.get("feedback_neural_fallback_used")) > 0)
     diagnostic_rows = sum(1 for row in evaluable_rows if _int(row.get("feedback_neural_diagnostic_only")) > 0)
+    neural_audit = _neural_audit_counts(evaluable_rows)
     transitions = max(1, int(linear.segment_count) - 1)
 
     summary.update(
@@ -196,6 +202,19 @@ def summarize_session(
             "fallback_row_count": int(fallback_rows),
             "fallback_row_ratio": float(fallback_rows) / float(linear.segment_count),
             "diagnostic_only_row_count": int(diagnostic_rows),
+            "neural_model_label": _first_nonempty(row.get("feedback_neural_model_label") for row in evaluable_rows),
+            "neural_bundle_path": _first_nonempty(row.get("feedback_neural_bundle_path") for row in evaluable_rows),
+            "neural_enabled_row_count": int(neural_audit["enabled"]),
+            "neural_bundle_loaded_row_count": int(neural_audit["bundle_loaded"]),
+            "neural_bundle_hash_ok_row_count": int(neural_audit["bundle_hash_ok"]),
+            "neural_feature_vector_ok_row_count": int(neural_audit["feature_vector_ok"]),
+            "neural_success_row_count": int(neural_audit["success"]),
+            "neural_valid_action_row_count": int(neural_audit["valid_action"]),
+            "neural_inference_row_count": int(len(neural_inference_times)),
+            "neural_audit_ok_row_count": int(neural_audit["audit_ok"]),
+            "neural_audit_missing_row_count": int(max(0, int(linear.segment_count) - int(neural_audit["audit_ok"]))),
+            "neural_inference_ms_mean": _mean(neural_inference_times),
+            "neural_inference_ms_p95": _percentile(neural_inference_times, 95.0),
         }
     )
 
@@ -231,6 +250,17 @@ def summarize_session(
                 "buffer_after_s": _float(row.get("feedback_queued_time")),
                 "decision_latency_ms": _float(row.get("policy_decision_ms")),
                 "fallback_used": _int(row.get("feedback_neural_fallback_used")),
+                "neural_enabled": _int(row.get("feedback_neural_enabled")),
+                "neural_model_label": str(row.get("feedback_neural_model_label", "")),
+                "neural_bundle_loaded": _int(row.get("feedback_neural_bundle_loaded")),
+                "neural_bundle_hash_ok": _int(row.get("feedback_neural_bundle_hash_ok")),
+                "neural_feature_vector_ok": _int(row.get("feedback_neural_feature_vector_ok")),
+                "neural_inference_ms": _float(row.get("feedback_neural_inference_ms")),
+                "neural_fallback_reason": str(row.get("feedback_neural_fallback_reason", "")),
+                "neural_raw_action": str(row.get("feedback_neural_raw_action", "")),
+                "neural_safe_action": str(row.get("feedback_neural_safe_action", "")),
+                "neural_valid_action": _int(row.get("feedback_neural_valid_action")),
+                "neural_diagnostic_only": _int(row.get("feedback_neural_diagnostic_only")),
             }
         )
     return summary, chunks
@@ -271,6 +301,9 @@ def aggregate_summaries(summaries: Sequence[Mapping[str, Any]]) -> List[Dict[str
                 "decision_latency_ms_mean": _mean(_values(rows, "decision_latency_ms_mean")),
                 "decision_latency_ms_p95": _percentile(_values(rows, "decision_latency_ms_p95"), 95.0),
                 "fallback_row_count": int(sum(_int(row.get("fallback_row_count")) for row in rows)),
+                "neural_audit_missing_row_count": int(sum(_int(row.get("neural_audit_missing_row_count")) for row in rows)),
+                "neural_inference_ms_mean": _mean(_values(rows, "neural_inference_ms_mean")),
+                "neural_inference_ms_p95": _percentile(_values(rows, "neural_inference_ms_p95"), 95.0),
             }
         )
     return sorted(aggregates, key=lambda row: row["qoe_linear_mean"], reverse=True)
@@ -388,6 +421,17 @@ def evaluate_gates(
         if str(row.get("controller_alias", "")).startswith(PROPIOS_PREFIXES)
         and (_int(row.get("fallback_row_count")) > 0 or _int(row.get("diagnostic_only_row_count")) > 0)
     ]
+    neural_audit_violations = [
+        str(row.get("session_id"))
+        for row in real_required
+        if str(row.get("controller_alias", "")).startswith(PROPIOS_PREFIXES)
+        and (
+            _int(row.get("segment_count")) <= 0
+            or _int(row.get("neural_audit_missing_row_count")) > 0
+            or _int(row.get("neural_success_row_count")) != _int(row.get("segment_count"))
+            or _int(row.get("neural_inference_row_count")) != _int(row.get("segment_count"))
+        )
+    ]
     legacy_violations = [str(row.get("session_id")) for row in summaries if _int(row.get("legacy_artifacts_present"))]
 
     gate_items = {
@@ -395,6 +439,7 @@ def evaluate_gates(
         "formal_uses_eval_split_only": not bad_splits,
         "formal_uses_only_4s_media_profiles": not bad_media,
         "propios_without_fallback_in_evaluable_rows": not fallback_violations,
+        "propios_with_verified_neural_inference": not neural_audit_violations,
         "legacy_artifacts_absent": not legacy_violations,
         "synthetic_reported_separately": bool(synthetic_rows),
         "audit_text_package_available": True,
@@ -410,6 +455,7 @@ def evaluate_gates(
             "bad_splits": bad_splits,
             "bad_media_profiles": bad_media,
             "fallback_violations": fallback_violations,
+            "neural_audit_violations": neural_audit_violations,
             "legacy_violations": legacy_violations,
         },
     }
@@ -716,6 +762,21 @@ def render_validation_markdown(package: Mapping[str, Any]) -> str:
                     row.get("bytes", 0),
                 )
             )
+    neural_rows = _own_controller_audit_rows(package)
+    if neural_rows:
+        lines.extend(["", "## Auditoria de inferencia propia", ""])
+        for row in neural_rows:
+            lines.append(
+                "- {0}: auditadas {1}/{2}, inferencias {3}, fallback {4}, modo diagnostico {5}, inferencia media {6:.3f} ms".format(
+                    row["controller_display_name"],
+                    row["audit_ok_rows"],
+                    row["segment_rows"],
+                    row["inference_rows"],
+                    row["fallback_rows"],
+                    row["diagnostic_rows"],
+                    row["inference_ms_mean"],
+                )
+            )
     lines.extend(["", "## Gates", ""])
     for name, ok in gates.get("gate_items", {}).items():
         lines.append("- {0}: {1}".format(name, _yes_no(ok)))
@@ -831,6 +892,35 @@ def _plot_manifest_rows(package: Mapping[str, Any]) -> List[Dict[str, Any]]:
     return [dict(row) for row in rows if isinstance(row, Mapping)]
 
 
+def _own_controller_audit_rows(package: Mapping[str, Any]) -> List[Dict[str, Any]]:
+    summary_path = Path(str(_mapping(package.get("artifacts")).get("session_summary_csv", "")))
+    rows = [
+        row
+        for row in _read_csv_dicts(summary_path)
+        if str(row.get("controller_alias", "")).startswith(PROPIOS_PREFIXES) and _int(row.get("evaluable"))
+    ]
+    if not rows:
+        return []
+    grouped: Dict[str, List[Mapping[str, Any]]] = defaultdict(list)
+    for row in rows:
+        grouped[str(row.get("controller_display_name", row.get("controller_alias", "")))].append(row)
+    result = []
+    for display_name in sorted(grouped):
+        items = grouped[display_name]
+        result.append(
+            {
+                "controller_display_name": display_name,
+                "segment_rows": int(sum(_int(row.get("segment_count")) for row in items)),
+                "audit_ok_rows": int(sum(_int(row.get("neural_audit_ok_row_count")) for row in items)),
+                "inference_rows": int(sum(_int(row.get("neural_inference_row_count")) for row in items)),
+                "fallback_rows": int(sum(_int(row.get("fallback_row_count")) for row in items)),
+                "diagnostic_rows": int(sum(_int(row.get("diagnostic_only_row_count")) for row in items)),
+                "inference_ms_mean": _mean(_values(items, "neural_inference_ms_mean")),
+            }
+        )
+    return result
+
+
 def _extract_failure_reason(command_log_path: Path) -> str:
     if not command_log_path.is_file():
         return ""
@@ -917,6 +1007,54 @@ def _signed_smoothness(quality_utilities: Sequence[float]) -> tuple[float, float
         elif delta < 0.0:
             negative += abs(delta)
     return positive, negative
+
+
+def _neural_audit_counts(rows: Sequence[Mapping[str, Any]]) -> Dict[str, int]:
+    counts = {
+        "enabled": 0,
+        "bundle_loaded": 0,
+        "bundle_hash_ok": 0,
+        "feature_vector_ok": 0,
+        "success": 0,
+        "valid_action": 0,
+        "audit_ok": 0,
+    }
+    for row in rows:
+        enabled = _int(row.get("feedback_neural_enabled")) > 0
+        bundle_loaded = _int(row.get("feedback_neural_bundle_loaded")) > 0
+        bundle_hash_ok = _int(row.get("feedback_neural_bundle_hash_ok")) > 0
+        feature_vector_ok = _int(row.get("feedback_neural_feature_vector_ok")) > 0
+        success = str(row.get("feedback_neural_fallback_reason", "")).strip() == "success_neural"
+        valid_action = _int(row.get("feedback_neural_valid_action")) > 0
+        no_fallback = _int(row.get("feedback_neural_fallback_used")) == 0
+        not_diagnostic = _int(row.get("feedback_neural_diagnostic_only")) == 0
+        inference_ms = _float(row.get("feedback_neural_inference_ms")) > 0.0
+        counts["enabled"] += int(enabled)
+        counts["bundle_loaded"] += int(bundle_loaded)
+        counts["bundle_hash_ok"] += int(bundle_hash_ok)
+        counts["feature_vector_ok"] += int(feature_vector_ok)
+        counts["success"] += int(success)
+        counts["valid_action"] += int(valid_action)
+        counts["audit_ok"] += int(
+            enabled
+            and bundle_loaded
+            and bundle_hash_ok
+            and feature_vector_ok
+            and success
+            and valid_action
+            and no_fallback
+            and not_diagnostic
+            and inference_ms
+        )
+    return counts
+
+
+def _first_nonempty(values: Iterable[Any]) -> str:
+    for value in values:
+        text = str(value or "").strip()
+        if text:
+            return text
+    return ""
 
 
 def _session_counts(summaries: Sequence[Mapping[str, Any]]) -> Dict[str, int]:
