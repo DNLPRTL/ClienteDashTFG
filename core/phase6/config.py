@@ -29,10 +29,13 @@ DEFAULT_PHASE6_CONFIG: Dict[str, Any] = {
         "repetitions": 1,
     },
     "network_replay": {
-        "window_duration_s": 120.0,
+        "window_duration_s": 300.0,
         "decision_interval_s": 4.0,
         "end_policy": "fail",
         "max_loops": 0,
+        "compact_timestamps": True,
+        "min_mean_throughput_kbps_for_formal": 450.0,
+        "min_max_throughput_kbps_for_formal": 300.0,
         "sleep": True,
     },
     "playback": {

@@ -122,6 +122,8 @@ class Phase6Gui:
         self.skip_analysis = tk.BooleanVar(value=False)
         self.max_sessions = tk.StringVar(value="")
         self.package_to_analyze = tk.StringVar(value="")
+        self.progress_percent = tk.DoubleVar(value=0.0)
+        self.progress_text = tk.StringVar(value="Progreso: esperando ejecucion")
         self.controller_vars: Dict[str, Any] = {}
 
         self._build_layout()
@@ -174,6 +176,16 @@ class Phase6Gui:
         ttk.Button(buttons, text="Analizar carpeta", command=self._run_analysis).pack(side="left", padx=4)
         ttk.Button(buttons, text="Verificacion clasica controlada", command=self._run_classic).pack(side="left", padx=4)
         ttk.Button(buttons, text="Detener", command=self._stop_process).pack(side="right", padx=4)
+
+        progress_row = ttk.Frame(main)
+        progress_row.pack(fill="x", pady=4)
+        ttk.Progressbar(progress_row, variable=self.progress_percent, maximum=100.0).pack(
+            side="left",
+            fill="x",
+            expand=True,
+            padx=(0, 8),
+        )
+        ttk.Label(progress_row, textvariable=self.progress_text, width=42).pack(side="right")
 
         analysis_row = ttk.Frame(main)
         analysis_row.pack(fill="x", pady=4)
@@ -294,6 +306,8 @@ class Phase6Gui:
         if self.process is not None and self.process.poll() is None:
             self.messagebox.showwarning("Proceso activo", "Ya hay un proceso en marcha.")
             return
+        self.progress_percent.set(0.0)
+        self.progress_text.set("Progreso: iniciando")
         self.log_text.insert("end", "\n$ {0}\n".format(" ".join(command)))
         thread = threading.Thread(target=self._worker, args=(list(command),), daemon=True)
         thread.start()
@@ -309,10 +323,35 @@ class Phase6Gui:
         )
         assert self.process.stdout is not None
         for line in self.process.stdout:
+            if line.startswith("PHASE6_PROGRESS "):
+                progress = parse_phase6_progress_line(line)
+                if progress:
+                    self.root.after(0, self._update_progress, progress)
             self.root.after(0, self.log_text.insert, "end", line)
             self.root.after(0, self.log_text.see, "end")
         code = self.process.wait()
         self.root.after(0, self.log_text.insert, "end", "\nProceso terminado con codigo {0}\n".format(code))
+        if code == 0:
+            self.root.after(0, self.progress_text.set, "Progreso: terminado correctamente")
+        else:
+            self.root.after(0, self.progress_text.set, "Progreso: terminado con incidencias")
+
+    def _update_progress(self, progress: Mapping[str, Any]) -> None:
+        percent = float(progress.get("percent", 0.0) or 0.0)
+        processed = int(progress.get("processed", 0) or 0)
+        total = int(progress.get("total", 0) or 0)
+        failed = int(progress.get("failed", 0) or 0)
+        skipped = int(progress.get("skipped", 0) or 0)
+        self.progress_percent.set(max(0.0, min(100.0, percent)))
+        self.progress_text.set(
+            "Progreso: {0:.1f}% ({1}/{2}) | fallidas {3} | reanudadas {4}".format(
+                percent,
+                processed,
+                total,
+                failed,
+                skipped,
+            )
+        )
 
     def _stop_process(self) -> None:
         if self.process is not None and self.process.poll() is None:
@@ -344,6 +383,30 @@ def _optional_int(value: Any) -> Optional[int]:
     if not text:
         return None
     return int(text)
+
+
+def parse_phase6_progress_line(line: str) -> Dict[str, Any]:
+    text = str(line or "").strip()
+    if not text.startswith("PHASE6_PROGRESS "):
+        return {}
+    result: Dict[str, Any] = {}
+    for token in text.split()[1:]:
+        key, sep, value = token.partition("=")
+        if not sep:
+            continue
+        if key in {"processed", "total", "executed", "failed", "skipped"}:
+            try:
+                result[key] = int(float(value))
+            except ValueError:
+                result[key] = 0
+        elif key == "percent":
+            try:
+                result[key] = float(value)
+            except ValueError:
+                result[key] = 0.0
+        else:
+            result[key] = value
+    return result
 
 
 def main() -> int:

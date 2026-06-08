@@ -9,9 +9,13 @@ from pathlib import Path
 from core.phase6.analysis import analyze_phase6_run, sign_test_exact
 from core.phase6.config import DEFAULT_PHASE6_CONFIG
 from core.phase6.selection import select_trace_windows
-from core.trace_replay.controlled_downloader import TraceControlledDownloader, clip_loaded_trace_window
+from core.trace_replay.controlled_downloader import (
+    TraceControlledDownloader,
+    clip_loaded_trace_window,
+    compact_loaded_trace_timeline,
+)
 from core.trace_replay.loader import load_normalized_trace_csv
-from scripts.phase6_gui import build_phase6_command
+from scripts.phase6_gui import build_phase6_command, parse_phase6_progress_line
 from scripts.run_phase6_validacion_comparativa import build_client_config, build_phase6_protocol_and_plan
 
 
@@ -31,8 +35,23 @@ class Phase6SelectionTest(unittest.TestCase):
         self.assertEqual(8, sum(1 for window in windows if not window["synthetic"]))
         self.assertEqual(2, sum(1 for window in windows if window["synthetic"]))
         self.assertTrue(all(window["source_split"] == "eval" for window in windows))
-        self.assertTrue(all(window["window_duration_s"] == 120.0 for window in windows))
+        self.assertTrue(all(window["window_duration_s"] == 300.0 for window in windows))
         self.assertEqual(len({window["trace_id"] for window in windows}), len(windows))
+
+    def test_filters_impossible_real_windows_but_keeps_synthetic_diagnostic(self):
+        manifest = {"traces": []}
+        for index in range(8):
+            manifest["traces"].append(_trace(index, split="eval", synthetic=False, mean_kbps=800.0))
+        for index in range(4):
+            manifest["traces"].append(_trace(20 + index, split="eval", synthetic=False, mean_kbps=50.0, max_kbps=90.0))
+        for index in range(2):
+            manifest["traces"].append(_trace(100 + index, split="eval", synthetic=True, mean_kbps=100.0, max_kbps=100.0))
+
+        windows = select_trace_windows(manifest, "rapido", dict(DEFAULT_PHASE6_CONFIG))
+
+        self.assertEqual(8, sum(1 for window in windows if not window["synthetic"]))
+        self.assertEqual(2, sum(1 for window in windows if window["synthetic"]))
+        self.assertTrue(all(float(window["throughput_mean_kbps"]) >= 450.0 for window in windows if not window["synthetic"]))
 
 
 class TraceControlledDownloaderTest(unittest.TestCase):
@@ -79,6 +98,55 @@ class TraceControlledDownloaderTest(unittest.TestCase):
         self.assertAlmostEqual(1.0, clipped.samples[1].timestamp_s)
         self.assertAlmostEqual(3.0, clipped.samples[1].duration_s)
 
+    def test_compacts_sparse_trace_before_clipping(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            trace_path = Path(tmp) / "trace.csv"
+            trace_path.write_text(
+                "\n".join(
+                    [
+                        "timestamp_s,duration_s,throughput_kbps",
+                        "0,10,1000",
+                        "7355,10,900",
+                        "14483,10,800",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            loaded = load_normalized_trace_csv(trace_path)
+            compacted = compact_loaded_trace_timeline(loaded)
+            clipped = clip_loaded_trace_window(compacted, window_start_s=15.0, window_duration_s=10.0)
+
+        self.assertEqual(2, len(clipped.samples))
+        self.assertAlmostEqual(0.0, clipped.samples[0].timestamp_s)
+        self.assertAlmostEqual(5.0, clipped.samples[0].duration_s)
+        self.assertAlmostEqual(5.0, clipped.samples[1].timestamp_s)
+        self.assertAlmostEqual(5.0, clipped.samples[1].duration_s)
+
+    def test_downloader_uses_compact_timeline_for_sparse_trace(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            trace_path = Path(tmp) / "trace.csv"
+            trace_path.write_text(
+                "\n".join(
+                    [
+                        "timestamp_s,duration_s,throughput_kbps",
+                        "0,10,1000",
+                        "7355,10,1000",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            downloader = TraceControlledDownloader(
+                FakeBaseDownloader(payload_size=1000),
+                trace_csv_path=trace_path,
+                window_start_s=15.0,
+                window_duration_s=4.0,
+                sleep=False,
+            )
+            data, info = downloader.download("http://example.invalid/seg.m4s")
+
+        self.assertEqual(1000, len(data))
+        self.assertTrue(info["trace_replay_compact_timestamps"])
+
 
 class Phase6AnalysisTest(unittest.TestCase):
     def test_analyzes_package_and_writes_validation_artifacts(self):
@@ -120,6 +188,64 @@ class Phase6AnalysisTest(unittest.TestCase):
     def test_sign_test_exact_handles_clear_direction(self):
         self.assertLess(sign_test_exact([1.0] * 8), 0.01)
 
+    def test_analysis_resolves_copied_package_run_paths(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "copied_phase6_package"
+            actual_session = _session(root, alias="base_robust_mpc", synthetic=False)
+            planned_session = dict(actual_session)
+            planned_session["run_output_root"] = "/home/daniel/TFG/runs_trazas/phase6/validacion_comparativa/pkg/01_ejecucion/runs/{0}".format(
+                planned_session["session_id"]
+            )
+            _write_run(actual_session, bitrate_Bps=100000.0)
+            protocol_dir = root / "00_protocolo"
+            protocol_dir.mkdir(parents=True)
+            (protocol_dir / "protocolo_validacion.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": "phase6_validacion_comparativa_v1",
+                        "preset": "rapido",
+                        "benchmark_capable": False,
+                        "ranking_capable": False,
+                        "qoe_formula_version": "qoe_linear_v1",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (protocol_dir / "session_plan.json").write_text(json.dumps({"sessions": [planned_session]}), encoding="utf-8")
+
+            package = analyze_phase6_run(root, generate_plots=False)
+
+        self.assertEqual(1, package["session_counts"]["evaluable"])
+        self.assertEqual(1, package["session_counts"]["completed"])
+
+    def test_failed_partial_sessions_do_not_feed_aggregates(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "phase6_failed_partial"
+            session = _session(root, alias="base_robust_mpc", synthetic=False)
+            _write_run(session, bitrate_Bps=100000.0)
+            run_dir = next(Path(session["run_output_root"]).iterdir())
+            (run_dir / "run_manifest.json").write_text(json.dumps({"status": "failed"}), encoding="utf-8")
+            protocol_dir = root / "00_protocolo"
+            protocol_dir.mkdir(parents=True)
+            (protocol_dir / "protocolo_validacion.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": "phase6_validacion_comparativa_v1",
+                        "preset": "rapido",
+                        "benchmark_capable": False,
+                        "ranking_capable": False,
+                        "qoe_formula_version": "qoe_linear_v1",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (protocol_dir / "session_plan.json").write_text(json.dumps({"sessions": [session]}), encoding="utf-8")
+
+            package = analyze_phase6_run(root, generate_plots=False)
+
+        self.assertEqual(0, package["session_counts"]["evaluable"])
+        self.assertEqual([], package["aggregates"])
+
 
 class Phase6RunnerAndGuiTest(unittest.TestCase):
     def test_builds_protocol_and_client_config(self):
@@ -127,7 +253,7 @@ class Phase6RunnerAndGuiTest(unittest.TestCase):
             tmp_path = Path(tmp)
             manifest_path = tmp_path / "manifest.json"
             trace_path = tmp_path / "trace.csv"
-            trace_path.write_text("timestamp_s,duration_s,throughput_kbps\n0,130,1000\n", encoding="utf-8")
+            trace_path.write_text("timestamp_s,duration_s,throughput_kbps\n0,400,1000\n", encoding="utf-8")
             traces = [_trace(index, split="eval", synthetic=False, path=trace_path.as_posix()) for index in range(8)]
             traces += [_trace(100 + index, split="eval", synthetic=True, path=trace_path.as_posix()) for index in range(2)]
             manifest_path.write_text(json.dumps({"traces": traces}), encoding="utf-8")
@@ -145,6 +271,8 @@ class Phase6RunnerAndGuiTest(unittest.TestCase):
         self.assertFalse(protocol["benchmark_capable"])
         self.assertEqual(20, len(sessions))
         self.assertTrue(client_config["network_replay"]["enabled"])
+        self.assertEqual(300.0, client_config["network_replay"]["window_duration_s"])
+        self.assertTrue(client_config["network_replay"]["compact_timestamps"])
         self.assertEqual(30, client_config["playback"]["max_media_segments"])
 
     def test_gui_command_builder_is_parameterized(self):
@@ -162,6 +290,16 @@ class Phase6RunnerAndGuiTest(unittest.TestCase):
         self.assertIn("--dry-run", command)
         self.assertIn("--no-resume", command)
         self.assertIn("3", command)
+
+    def test_gui_progress_line_parser(self):
+        parsed = parse_phase6_progress_line(
+            "PHASE6_PROGRESS processed=7 total=70 percent=10.0 executed=7 failed=1 skipped=0 session=s00007\n"
+        )
+
+        self.assertEqual(7, parsed["processed"])
+        self.assertEqual(70, parsed["total"])
+        self.assertAlmostEqual(10.0, parsed["percent"])
+        self.assertEqual(1, parsed["failed"])
 
 
 class FakeBaseDownloader:
@@ -184,20 +322,20 @@ class FakeBaseDownloader:
         return len(self.payload)
 
 
-def _trace(index, *, split, synthetic, path=None):
+def _trace(index, *, split, synthetic, path=None, mean_kbps=None, max_kbps=None):
     return {
         "trace_id": "trace_{0}".format(index),
         "dataset_id": "synthetic_controlled_network" if synthetic else "dataset_{0}".format(index % 3),
-        "duration_s": 180.0,
+        "duration_s": 400.0,
         "split": split,
         "usable_for_eval": True,
         "semantics": "synthetic_available_bandwidth" if synthetic else "available_bandwidth",
         "network_condition": "usable_network_trace",
         "normalized_trace_path": path or "/tmp/trace_{0}.csv".format(index),
         "leakage_group": "group_{0}".format(index),
-        "throughput_mean_kbps": 1000.0 + index,
+        "throughput_mean_kbps": float(mean_kbps if mean_kbps is not None else 1000.0 + index),
         "throughput_min_kbps": 500.0,
-        "throughput_max_kbps": 2000.0,
+        "throughput_max_kbps": float(max_kbps if max_kbps is not None else 2000.0),
         "synthetic": synthetic,
     }
 

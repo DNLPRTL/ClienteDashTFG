@@ -27,6 +27,7 @@ class TraceControlledDownloader:
         window_duration_s: Optional[float] = None,
         end_policy: str = END_POLICY_FAIL,
         max_loops: int = 0,
+        compact_timestamps: bool = True,
         sleep: bool = True,
     ) -> None:
         if not trace_csv_path:
@@ -35,6 +36,7 @@ class TraceControlledDownloader:
         self.trace_csv_path = str(trace_csv_path)
         self.window_start_s = float(window_start_s or 0.0)
         self.window_duration_s = None if window_duration_s is None else float(window_duration_s)
+        self.compact_timestamps = bool(compact_timestamps)
         self.sleep = bool(sleep)
         self.on_event = None
 
@@ -42,6 +44,8 @@ class TraceControlledDownloader:
             self.base_downloader.on_event = None
 
         loaded = load_normalized_trace_csv(self.trace_csv_path)
+        if self.compact_timestamps:
+            loaded = compact_loaded_trace_timeline(loaded)
         self.loaded_trace = clip_loaded_trace_window(
             loaded,
             window_start_s=self.window_start_s,
@@ -74,6 +78,7 @@ class TraceControlledDownloader:
                     "trace_replay_enabled": True,
                     "trace_replay_window_start_s": self.window_start_s,
                     "trace_replay_window_duration_s": self.window_duration_s,
+                    "trace_replay_compact_timestamps": self.compact_timestamps,
                 }
             )
             self._emit("error", error_info)
@@ -96,6 +101,7 @@ class TraceControlledDownloader:
                 "trace_replay_enabled": True,
                 "trace_replay_window_start_s": self.window_start_s,
                 "trace_replay_window_duration_s": self.window_duration_s,
+                "trace_replay_compact_timestamps": self.compact_timestamps,
                 "trace_replay_start_time_s": float(result.start_time_s),
                 "trace_replay_end_time_s": float(result.end_time_s),
                 "trace_replay_trace_time_start_s": float(result.trace_time_start_s),
@@ -141,6 +147,32 @@ class TraceControlledDownloader:
                 self.on_event(event, info)
         except Exception:
             pass
+
+
+def compact_loaded_trace_timeline(loaded_trace: LoadedTrace) -> LoadedTrace:
+    """Rebase sparse normalized traces into continuous replay time.
+
+    Some Phase 3 datasets preserve absolute measurement timestamps with large
+    gaps between samples. For replay-window selection, the canonical useful
+    duration is the sum of sample durations, so Phase 6 compacts samples before
+    clipping a window.
+    """
+
+    rows = []
+    cursor_s = 0.0
+    for sample in loaded_trace.samples:
+        duration_s = float(sample.duration_s)
+        rows.append(
+            {
+                "timestamp_s": cursor_s,
+                "duration_s": duration_s,
+                "throughput_kbps": float(sample.throughput_kbps),
+            }
+        )
+        cursor_s += duration_s
+    if not rows:
+        raise TraceLoadError("trace has no samples")
+    return load_normalized_trace_rows(rows, trace_id="{0}:compact_timeline".format(loaded_trace.trace_id))
 
 
 def clip_loaded_trace_window(

@@ -36,6 +36,7 @@ class ConfigLoadingTest(unittest.TestCase):
         self.assertIsNone(config.playback.max_media_segments)
         self.assertFalse(config.network_replay.enabled)
         self.assertIsNone(config.network_replay.trace_csv_path)
+        self.assertTrue(config.network_replay.compact_timestamps)
         self.assertEqual("logs", config.output.root_dir)
         self.assertEqual("segment_telemetry.csv", config.output.segment_telemetry_filename)
         self.assertEqual("evaluation_segments.csv", config.output.evaluation_segments_filename)
@@ -56,6 +57,7 @@ class ConfigLoadingTest(unittest.TestCase):
                             "window_duration_s": 120.0,
                             "end_policy": "fail",
                             "max_loops": 0,
+                            "compact_timestamps": False,
                             "sleep": False,
                         },
                     }
@@ -70,6 +72,7 @@ class ConfigLoadingTest(unittest.TestCase):
         self.assertEqual("/tmp/trace.csv", config.network_replay.trace_csv_path)
         self.assertEqual(12.0, config.network_replay.window_start_s)
         self.assertEqual(120.0, config.network_replay.window_duration_s)
+        self.assertFalse(config.network_replay.compact_timestamps)
         self.assertFalse(config.network_replay.sleep)
         validate_config_for_run(config)
 

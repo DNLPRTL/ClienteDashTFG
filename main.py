@@ -177,6 +177,7 @@ def _create_downloader(config: ClientConfig):
         window_duration_s=config.network_replay.window_duration_s,
         end_policy=config.network_replay.end_policy,
         max_loops=config.network_replay.max_loops,
+        compact_timestamps=config.network_replay.compact_timestamps,
         sleep=config.network_replay.sleep,
     )
 

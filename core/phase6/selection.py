@@ -30,6 +30,8 @@ def select_trace_windows(manifest: Mapping[str, Any], preset: str, config: Mappi
     experiment_cfg = _mapping(config.get("experiment"))
     window_duration_s = float(network_cfg.get("window_duration_s", 120.0))
     decision_interval_s = float(network_cfg.get("decision_interval_s", 4.0))
+    min_mean_throughput_kbps = float(network_cfg.get("min_mean_throughput_kbps_for_formal", 0.0) or 0.0)
+    min_max_throughput_kbps = float(network_cfg.get("min_max_throughput_kbps_for_formal", 0.0) or 0.0)
     seed = int(experiment_cfg.get("seed", 606))
     include_synthetic = bool(experiment_cfg.get("include_synthetic_diagnostic", True))
 
@@ -42,7 +44,16 @@ def select_trace_windows(manifest: Mapping[str, Any], preset: str, config: Mappi
         and float(item.get("duration_s", 0.0) or 0.0) >= window_duration_s
     ]
 
-    real_candidates = [item for item in eval_candidates if not is_synthetic_trace(item)]
+    real_candidates = [
+        item
+        for item in eval_candidates
+        if not is_synthetic_trace(item)
+        and _passes_formal_throughput_floor(
+            item,
+            min_mean_throughput_kbps=min_mean_throughput_kbps,
+            min_max_throughput_kbps=min_max_throughput_kbps,
+        )
+    ]
     synthetic_candidates = [item for item in eval_candidates if is_synthetic_trace(item)]
 
     real_windows = _balanced_pick(
@@ -74,6 +85,17 @@ def is_synthetic_trace(trace: Mapping[str, Any]) -> bool:
         or trace.get("dataset_id") == SYNTHETIC_DATASET_ID
         or trace.get("semantics") == SYNTHETIC_SEMANTICS
     )
+
+
+def _passes_formal_throughput_floor(
+    trace: Mapping[str, Any],
+    *,
+    min_mean_throughput_kbps: float,
+    min_max_throughput_kbps: float,
+) -> bool:
+    mean_kbps = float(trace.get("throughput_mean_kbps", 0.0) or 0.0)
+    max_kbps = float(trace.get("throughput_max_kbps", 0.0) or 0.0)
+    return mean_kbps >= min_mean_throughput_kbps and max_kbps >= min_max_throughput_kbps
 
 
 def _balanced_pick(

@@ -61,6 +61,7 @@ class NetworkReplayConfig:
     window_duration_s: Optional[float] = None
     end_policy: str = "fail"
     max_loops: int = 0
+    compact_timestamps: bool = True
     sleep: bool = True
 
 
@@ -171,6 +172,10 @@ class ClientConfig:
                 ),
                 end_policy=_as_str(network_raw.get("end_policy", "fail")).strip().lower() or "fail",
                 max_loops=_as_int(network_raw.get("max_loops", 0), "network_replay.max_loops"),
+                compact_timestamps=_as_bool(
+                    network_raw.get("compact_timestamps", True),
+                    "network_replay.compact_timestamps",
+                ),
                 sleep=_as_bool(network_raw.get("sleep", True), "network_replay.sleep"),
             ),
             output=OutputConfig(
@@ -233,6 +238,7 @@ class ClientConfig:
                 "window_duration_s": self.network_replay.window_duration_s,
                 "end_policy": self.network_replay.end_policy,
                 "max_loops": self.network_replay.max_loops,
+                "compact_timestamps": self.network_replay.compact_timestamps,
                 "sleep": self.network_replay.sleep,
             },
             "output": {

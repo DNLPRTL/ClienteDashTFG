@@ -46,6 +46,7 @@ network_replay:
   window_duration_s: null
   end_policy: "fail"
   max_loops: 0
+  compact_timestamps: true
   sleep: true
 
 output:

@@ -88,11 +88,22 @@ def run_phase6(
 
     executed_count = 0
     failed_count = 0
+    skipped_count = 0
     if not dry_run and not only_plan and _bool(_mapping(config.get("execution")).get("run_sessions", True)):
-        for session in sessions:
+        total_sessions = len(sessions)
+        for processed_count, session in enumerate(sessions, start=1):
             result = run_session(config, session)
             executed_count += int(result["executed"])
             failed_count += int(result["failed"])
+            skipped_count += int(result.get("skipped", 0))
+            _print_progress(
+                processed_count=processed_count,
+                total_sessions=total_sessions,
+                executed_count=executed_count,
+                failed_count=failed_count,
+                skipped_count=skipped_count,
+                session_id=str(session.get("session_id", "")),
+            )
 
     analysis_path = ""
     if not dry_run and not only_plan and not skip_analysis and _bool(_mapping(config.get("execution")).get("run_analysis", True)):
@@ -248,7 +259,7 @@ def run_session(config: Mapping[str, Any], session: Mapping[str, Any]) -> Dict[s
     execution = _mapping(config.get("execution"))
     paths = _mapping(config.get("paths"))
     if _bool(execution.get("resume", True)) and _session_completed(session):
-        return {"executed": 0, "failed": 0}
+        return {"executed": 0, "failed": 0, "skipped": 1}
 
     client_config_path = Path(str(session["client_config_path"]))
     client_config_path.parent.mkdir(parents=True, exist_ok=True)
@@ -284,7 +295,7 @@ def run_session(config: Mapping[str, Any], session: Mapping[str, Any]) -> Dict[s
             ),
             encoding="utf-8",
         )
-        return {"executed": 1, "failed": 1 if completed.returncode != 0 else 0}
+        return {"executed": 1, "failed": 1 if completed.returncode != 0 else 0, "skipped": 0}
     except subprocess.TimeoutExpired as exc:
         command_log_path.write_text(
             "started_at={0}\ncommand={1}\ntimeout_seconds={2}\n\n{3}".format(
@@ -295,7 +306,7 @@ def run_session(config: Mapping[str, Any], session: Mapping[str, Any]) -> Dict[s
             ),
             encoding="utf-8",
         )
-        return {"executed": 1, "failed": 1}
+        return {"executed": 1, "failed": 1, "skipped": 0}
 
 
 def build_client_config(config: Mapping[str, Any], session: Mapping[str, Any]) -> Dict[str, Any]:
@@ -334,6 +345,7 @@ def build_client_config(config: Mapping[str, Any], session: Mapping[str, Any]) -
             "window_duration_s": session["window_duration_s"],
             "end_policy": str(network.get("end_policy", "fail")),
             "max_loops": int(network.get("max_loops", 0) or 0),
+            "compact_timestamps": _bool(network.get("compact_timestamps", True)),
             "sleep": _bool(network.get("sleep", True)),
         },
         "output": {
@@ -413,6 +425,30 @@ def _write_csv(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
         writer.writeheader()
         for row in rows:
             writer.writerow({key: row.get(key, "") for key in fieldnames})
+
+
+def _print_progress(
+    *,
+    processed_count: int,
+    total_sessions: int,
+    executed_count: int,
+    failed_count: int,
+    skipped_count: int,
+    session_id: str,
+) -> None:
+    percent = (float(processed_count) / float(total_sessions) * 100.0) if total_sessions else 100.0
+    print(
+        "PHASE6_PROGRESS processed={0} total={1} percent={2:.1f} executed={3} failed={4} skipped={5} session={6}".format(
+            processed_count,
+            total_sessions,
+            percent,
+            executed_count,
+            failed_count,
+            skipped_count,
+            session_id,
+        ),
+        flush=True,
+    )
 
 
 def _safe_path_token(value: str) -> str:

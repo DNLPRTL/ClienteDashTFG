@@ -10,6 +10,16 @@ desarrollo, tests rapidos, commit y push.
 
 - Motor formal: `fake` + `network_replay.enabled=true`.
 - Motor GStreamer: disponible solo como diagnostico separado desde la GUI.
+- Las trazas se compactan a tiempo continuo antes de recortar ventanas. Esto
+  evita que datasets con timestamps absolutos y huecos grandes fallen aunque
+  tengan duracion util suficiente.
+- La sesion formal evalua 30 segmentos de media de 4 s; el presupuesto de red
+  por defecto es una ventana de replay de 300 s para permitir rebuffering sin
+  convertir una red dificil en fallo tecnico.
+- Las ventanas reales formalmente comparables aplican un suelo conservador de
+  throughput medio/maximo para excluir trazas fisicamente incapaces de servir
+  siquiera la calidad minima del MPD. Las sinteticas siguen separadas como
+  diagnostico.
 - QoE primaria: `qoe_linear_v1`, `qoe_linear_mean`.
 - Split formal: solo `eval`.
 - Media formal: MPDs de 10 min con segmentos de 4 s, recortados a 30 segmentos
@@ -42,7 +52,12 @@ python scripts/run_phase6_verificacion_clasica_controlada.py --preset rapido
 
 `02_resultados/resultados_para_validar.md` y
 `02_resultados/resultados_para_validar.json` son los archivos pensados para
-auditar el experimento sin abrir imagenes.
+auditar el experimento sin abrir imagenes. El analizador puede leer paquetes
+copiados entre Ubuntu y Windows usando la estructura interna del paquete, aunque
+el plan contenga rutas absolutas de la maquina que ejecuto el experimento.
+
+La GUI muestra progreso por sesiones procesadas, sesiones totales, porcentaje,
+fallos y sesiones reanudadas.
 
 ## Autorizacion
 

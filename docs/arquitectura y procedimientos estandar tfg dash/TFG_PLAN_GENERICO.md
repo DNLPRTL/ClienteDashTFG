@@ -85,7 +85,7 @@ mejora.
 
 Estado: pipeline implementado para ejecucion en Ubuntu cliente; benchmark solo se autoriza por gates del paquete generado.
 
-Objetivo actual: ejecutar comparacion formal con protocolo congelado, red controlada por trazas, QoE `qoe_linear_v1`, estadistica emparejada y paquete de evidencia externo.
+Objetivo actual: ejecutar comparacion formal con protocolo congelado, red controlada por trazas, QoE `qoe_linear_v1`, estadistica emparejada y paquete de evidencia externo. La seleccion formal compacta timestamps de traza a tiempo continuo, evalua 30 segmentos de media de 4 s y usa una ventana de replay de red con margen para rebuffering.
 
 No significa: ganador automatico ni afirmacion de mejora QoE; `rapido` no autoriza ranking y `equilibrado`/`extendido` solo lo autorizan si pasan todos los gates.
 

@@ -4,7 +4,7 @@ import csv
 import json
 import math
 import random
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence
 
@@ -38,7 +38,7 @@ def analyze_phase6_run(package_root: str | Path, *, generate_plots: bool = True)
     raw_chunks: List[Dict[str, Any]] = []
     summaries: List[Dict[str, Any]] = []
     for session in sessions:
-        summary, chunks = summarize_session(session)
+        summary, chunks = summarize_session(session, package_root=root)
         summaries.append(summary)
         raw_chunks.extend(chunks)
 
@@ -91,9 +91,14 @@ def analyze_phase6_run(package_root: str | Path, *, generate_plots: bool = True)
     return package
 
 
-def summarize_session(session: Mapping[str, Any]) -> tuple[Dict[str, Any], List[Dict[str, Any]]]:
+def summarize_session(
+    session: Mapping[str, Any],
+    *,
+    package_root: Optional[str | Path] = None,
+) -> tuple[Dict[str, Any], List[Dict[str, Any]]]:
     session_id = str(session.get("session_id", ""))
-    run_dir = _latest_run_dir(Path(str(session.get("run_output_root", ""))))
+    run_root = _resolve_run_root(session, package_root)
+    run_dir = _latest_run_dir(run_root)
     manifest = _read_json(run_dir / RUN_MANIFEST_FILENAME) if run_dir else {}
     telemetry_path = run_dir / SEGMENT_TELEMETRY_FILENAME if run_dir else None
     rows = _read_csv_dicts(telemetry_path) if telemetry_path else []
@@ -104,6 +109,17 @@ def summarize_session(session: Mapping[str, Any]) -> tuple[Dict[str, Any], List[
     summary["legacy_artifacts_present"] = int(legacy_present)
     summary["run_status"] = str(manifest.get("status", "missing")) if manifest else "missing"
     summary["required_artifacts_present"] = int(_required_artifacts_present(run_dir) if run_dir else False)
+    if summary["run_status"] != "completed":
+        summary["failure_reason"] = _extract_failure_reason(_resolve_command_log_path(session, package_root))
+        summary.update(
+            {
+                "evaluable": 0,
+                "non_evaluable_reason": "run_status_{0}".format(summary["run_status"]),
+                "segment_count": 0,
+                "partial_evaluable_row_count": len(evaluable_rows),
+            }
+        )
+        return summary, []
 
     if not evaluable_rows:
         summary.update(
@@ -498,6 +514,11 @@ def render_validation_markdown(package: Mapping[str, Any]) -> str:
         for name, values in violations.items():
             if values:
                 lines.append("- {0}: {1}".format(name, ", ".join(values[:20])))
+    failure_reasons = _top_failure_reasons(package)
+    if failure_reasons:
+        lines.extend(["", "## Motivos de fallo detectados", ""])
+        for reason, count in failure_reasons:
+            lines.append("- {0} sesiones: {1}".format(count, reason))
     return "\n".join(lines) + "\n"
 
 
@@ -576,12 +597,72 @@ def _base_summary(session: Mapping[str, Any], run_dir: Optional[Path], manifest:
         "repetition": int(session.get("repetition", 1) or 1),
         "run_dir": str(run_dir or ""),
         "run_status": str(manifest.get("status", "missing")) if manifest else "missing",
+        "failure_reason": "",
         "evaluable": 0,
     }
 
 
+def _top_failure_reasons(package: Mapping[str, Any]) -> List[tuple[str, int]]:
+    summary_path = Path(str(_mapping(package.get("artifacts")).get("session_summary_csv", "")))
+    rows = _read_csv_dicts(summary_path)
+    counter = Counter(
+        str(row.get("failure_reason", "")).strip()
+        for row in rows
+        if str(row.get("failure_reason", "")).strip()
+    )
+    return [(reason, count) for reason, count in counter.most_common(8)]
+
+
+def _extract_failure_reason(command_log_path: Path) -> str:
+    if not command_log_path.is_file():
+        return ""
+    try:
+        lines = command_log_path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return ""
+    for line in reversed(lines):
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if "TraceLoadError:" in stripped:
+            return stripped.split("TraceLoadError:", 1)[1].strip() or stripped
+        if "TraceReplayError:" in stripped:
+            return stripped.split("TraceReplayError:", 1)[1].strip() or stripped
+        if "ConfigError:" in stripped:
+            return stripped.split("ConfigError:", 1)[1].strip() or stripped
+        if stripped.startswith(("TraceLoadError:", "TraceReplayError:", "ConfigError:", "TimeoutExpired")):
+            return stripped
+    for line in reversed(lines):
+        stripped = line.strip()
+        if stripped:
+            return stripped[:240]
+    return ""
+
+
 def _required_artifacts_present(run_dir: Path) -> bool:
     return all((run_dir / name).is_file() for name in (RUN_MANIFEST_FILENAME, SEGMENT_TELEMETRY_FILENAME, EVALUATION_SEGMENTS_FILENAME))
+
+
+def _resolve_run_root(session: Mapping[str, Any], package_root: Optional[str | Path]) -> Path:
+    configured = Path(str(session.get("run_output_root", "")))
+    if configured.is_dir():
+        return configured
+    if package_root is not None:
+        fallback = Path(package_root) / "01_ejecucion" / "runs" / str(session.get("session_id", ""))
+        if fallback.is_dir():
+            return fallback
+    return configured
+
+
+def _resolve_command_log_path(session: Mapping[str, Any], package_root: Optional[str | Path]) -> Path:
+    configured = Path(str(session.get("command_log_path", "")))
+    if configured.is_file():
+        return configured
+    if package_root is not None:
+        fallback = Path(package_root) / "01_ejecucion" / "command_logs" / "{0}.log".format(session.get("session_id", ""))
+        if fallback.is_file():
+            return fallback
+    return configured
 
 
 def _is_evaluable_media_row(row: Mapping[str, Any]) -> bool:
@@ -838,6 +919,10 @@ def _bool(value: Any) -> bool:
     if isinstance(value, (int, float)):
         return bool(value)
     return str(value).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _mapping(value: Any) -> Mapping[str, Any]:
+    return value if isinstance(value, Mapping) else {}
 
 
 def _yes_no(value: Any) -> str:
