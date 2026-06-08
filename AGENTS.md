@@ -20,7 +20,7 @@ archive/current-before-phase3-rebuild
 La fase activa es:
 
 ```text
-Fase de Verificacion del Cliente y Controllers Clasicos
+Phase 6 planning - validacion formal
 ```
 
 Phase 1 y Phase 2 se consideran cerradas. Phase 3 Rebuild esta cerrada en
@@ -31,6 +31,10 @@ pura, postprocesador QoE, gates y smokes sinteticos controlados. Phase 4 Rebuild
 esta cerrada en Ubuntu con dos bundles offline `NeuralABR-Lite`: uno entrenado
 con `robust_mpc` real y otro con `teacher_hibrido`. No hay benchmark, ranking,
 ganador ni afirmacion de mejora de QoE autorizados.
+Phase 5 esta cerrada en Ubuntu con dos controllers IA integrados.
+La Fase de Verificacion del Cliente y Controllers Clasicos esta cerrada en
+Ubuntu con informe externo aceptado. La siguiente fase es Phase 6, que debe
+definir y ejecutar evaluacion formal sin reutilizar smokes como benchmark.
 
 ## Documentos obligatorios por ejecucion
 
@@ -169,8 +173,10 @@ ia_training_performed=false
 
 Phase 4 ya cerro el contrato de sampler/corpus y el entrenamiento offline. Phase
 5 integro los bundles como controllers sin convertir smokes en benchmark. La
-fase activa verifica el cliente y los controllers clasicos antes de la
-evaluacion formal, sin benchmark, ranking, ganador ni afirmacion de mejora.
+Fase de Verificacion comprobo cliente y controllers clasicos sin benchmark,
+ranking, ganador ni afirmacion de mejora. Phase 6 debe ser la primera fase que
+autorice evaluacion comparativa formal, si antes congela protocolo, trazas,
+media profile, QoE y gates.
 
 ## Synthetic controlled trace guardrails
 

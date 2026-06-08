@@ -1,6 +1,6 @@
 # Fase de Verificacion del Cliente y Controllers Clasicos
 
-Status: planned_for_ubuntu_execution.
+Status: closed_on_ubuntu.
 
 Esta fase verifica que DashClientModular4 funciona como cliente DASH y que los
 controllers clasicos usados como comparadores tienen una implementacion
@@ -34,6 +34,27 @@ Dentro de esa carpeta quedan:
 El informe final esta pensado para ser leido por un humano o por otra IA sin
 tener que inspeccionar todos los CSV a mano.
 
+## Cierre Ubuntu
+
+Ubuntu cliente valido:
+
+- `python scripts/check_client_readiness.py --strict`: `88 OK / 0 WARN / 0 FAIL`.
+- `curl -I` del MPD de verificacion: `HTTP/1.1 200 OK`.
+- `python scripts/verificar_cliente_y_controllers_clasicos.py --mpd-url ...`:
+  `Status: accepted`.
+
+Informe externo aceptado:
+
+```text
+/home/daniel/TFG/runs_trazas/fase_verificacion_cliente_y_controllers_clasicos/informe_verificacion_cliente_y_controllers_clasicos.md
+```
+
+Decision:
+
+```text
+ACCEPTED_AS_CLIENT_AND_CLASSIC_CONTROLLER_VERIFICATION
+```
+
 ## Controllers verificados
 
 ```text
@@ -57,4 +78,3 @@ verificacion_de_controllers_clasicos.md
 guia_ubuntu_paso_a_paso.md
 informe_final_verificacion.md
 ```
-

@@ -12,7 +12,7 @@ La rama se reinicia desde el cierre real de Phase 2. Por tanto, las fases anteri
 04_neural_abr        Phase 4 Rebuild: modelo offline, sampler y entrenamiento.
 05_neural_controller Phase 5 Rebuild: integracion de dos controllers IA.
 fase_verificacion_cliente_y_controllers_clasicos
-                     Verificacion del cliente DASH y controllers clasicos.
+                     Cerrada en Ubuntu: verificacion del cliente DASH y controllers clasicos.
 06_validation        Phase 6 futura: validacion formal y protocolo.
 07_memoria_defensa   Material futuro para memoria y defensa.
 ```

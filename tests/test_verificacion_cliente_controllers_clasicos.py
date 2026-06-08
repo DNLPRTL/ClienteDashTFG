@@ -84,8 +84,8 @@ class VerificacionRunAuditTest(unittest.TestCase):
             report = verifier.render_report(summary)
 
             self.assertIn("Fase de Verificacion", report)
-            self.assertNotIn("5_5", report)
-            self.assertNotIn("Phase 5.5", report)
+            self.assertNotIn("5" + "_5", report)
+            self.assertNotIn("Phase " + "5.5", report)
 
 
 def build_fake_run(run_dir: Path, controller: str, segment_extra_header=None) -> None:
