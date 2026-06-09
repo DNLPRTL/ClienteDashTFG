@@ -1,6 +1,6 @@
 ﻿# Arquitectura operativa y procedimientos estándar del TFG DASH/ABR
 
-Este documento define cómo se organiza el proyecto, qué papel tiene cada máquina y cuál debe ser el flujo estándar de trabajo entre Windows físico, la VM cliente Ubuntu y la VM servidor Ubuntu.
+Este documento define cómo se organiza el proyecto, qué papel tiene cada máquina y cuál debe ser el flujo estándar de trabajo entre Windows físico, WSL2 Ubuntu para entrenamiento IA, la VM cliente Ubuntu y la VM servidor Ubuntu.
 
 El objetivo es evitar confusiones entre entorno de desarrollo, entorno de ejecución real, servidor de contenidos y entorno de benchmark. También sirve como guía para Codex: cuando modifique el proyecto, debe respetar esta arquitectura y no mezclar responsabilidades entre máquinas.
 
@@ -10,15 +10,16 @@ El objetivo es evitar confusiones entre entorno de desarrollo, entorno de ejecuc
 
 El proyecto no se trabaja como si todo ocurriera en una sola máquina.
 
-Hay tres entornos con responsabilidades distintas:
+Hay cuatro entornos con responsabilidades distintas:
 
 1. **Windows físico**: entorno principal de desarrollo, edición, commits, push y validación rápida.
-2. **VM cliente Ubuntu**: entorno real donde se sincroniza el repositorio y se ejecutan las fases finales, pruebas relevantes, scripts de benchmark y generación de evidencia.
-3. **VM servidor Ubuntu**: servidor HTTP de contenidos DASH. Aloja los MPD, segmentos e inicializaciones, pero no define por sí misma la red del benchmark.
+2. **WSL2 Ubuntu local con ROCm**: entorno de entrenamiento IA pesado con GPU AMD. Genera datasets derivados, checkpoints, bundles y auditorías de entrenamiento fuera de Git.
+3. **VM cliente Ubuntu**: entorno real donde se sincroniza el repositorio y se ejecutan las fases finales, pruebas relevantes, scripts de benchmark y generación de evidencia.
+4. **VM servidor Ubuntu**: servidor HTTP de contenidos DASH. Aloja los MPD, segmentos e inicializaciones, pero no define por sí misma la red del benchmark.
 
 La regla más importante es:
 
-> **Windows desarrolla y versiona; Ubuntu cliente ejecuta lo que importa; Ubuntu servidor solo sirve contenido DASH.**
+> **Windows desarrolla y versiona; WSL2 entrena IA pesada; Ubuntu cliente valida lo que importa; Ubuntu servidor solo sirve contenido DASH.**
 
 ---
 
@@ -41,9 +42,21 @@ La regla más importante es:
 ┌────────────────────────────────────────────────────────────┐
 │ GitHub                                                     │
 │                                                            │
-│ - Punto limpio de sincronización entre Windows y Ubuntu     │
-│ - Fuente canónica para llevar cambios a la VM cliente       │
+│ - Punto limpio entre Windows, WSL2 y Ubuntu cliente         │
+│ - Fuente canónica para llevar cambios a WSL2/VM cliente     │
 │ - Evita copiar código manualmente si no es necesario        │
+└──────────────────────────────┬─────────────────────────────┘
+                               │
+                               │ git pull en WSL2 para entrenamiento IA
+                               ▼
+┌────────────────────────────────────────────────────────────┐
+│ WSL2 Ubuntu local con ROCm                                 │
+│                                                            │
+│ - Clona/sincroniza el repo desde GitHub                     │
+│ - Ejecuta entrenamientos IA con PyTorch/ROCm/GPU            │
+│ - Usa rutas Linux bajo ~/TFG                                │
+│ - Guarda datasets derivados, checkpoints y bundles fuera Git│
+│ - No sustituye la validación formal en Ubuntu cliente       │
 └──────────────────────────────┬─────────────────────────────┘
                                │
                                │ git pull en Ubuntu cliente
@@ -95,7 +108,37 @@ Windows **no** debe tratarse como el entorno final del benchmark. Que algo pase 
 
 Windows sirve para producir una versión ordenada, testeada y subida a GitHub.
 
-### 3.2. VM cliente Ubuntu
+### 3.2. WSL2 Ubuntu local con ROCm
+
+WSL2 Ubuntu es el entorno local de entrenamiento IA pesado cuando una fase
+necesite usar GPU.
+
+Estado observado tras la instalación:
+
+- Distribución: `Ubuntu-24.04` en WSL2.
+- Ubuntu observado: `Ubuntu 24.04.4 LTS`.
+- Acceso GPU WSL: `/dev/dxg` presente.
+- ROCm: `rocminfo` detecta la GPU AMD.
+- GPU: `AMD Radeon RX 7800 XT`.
+- PyTorch: `2.9.1+rocm7.2.1`.
+- Entorno virtual: `~/venvs/rocm721`.
+- Comprobación PyTorch: `torch.cuda.is_available()` devuelve `True`.
+
+En WSL2:
+
+- Se clona o sincroniza el repositorio desde GitHub.
+- Se ejecutan entrenamientos, fine-tuning, generación de datasets derivados y
+  validaciones offline de modelos.
+- Se guardan outputs pesados bajo rutas Linux, preferiblemente `~/TFG/...`.
+- No se usa `/mnt/c/Users/danie/Documents/TFG/...` como ruta principal para
+  entrenamiento ni movimiento intensivo de ficheros.
+- No se commitean checkpoints, modelos, bundles, runs, CSVs generados ni logs.
+
+WSL2 no sustituye a la VM cliente Ubuntu. Si un modelo entrenado en WSL2 pasa a
+ser candidato, debe integrarse como controller reproducible y después evaluarse
+en Ubuntu cliente mediante los runbooks y gates correspondientes.
+
+### 3.3. VM cliente Ubuntu
 
 La VM cliente Ubuntu es el entorno donde el proyecto debe funcionar de verdad.
 
@@ -112,7 +155,7 @@ En la VM cliente:
 
 La VM cliente representa el entorno Linux real del cliente DASH/ABR. Por tanto, si hay una discrepancia entre Windows y Ubuntu cliente, **manda Ubuntu cliente**.
 
-### 3.3. VM servidor Ubuntu
+### 3.4. VM servidor Ubuntu
 
 La VM servidor Ubuntu no desarrolla, no evalúa controllers y no decide las condiciones de red del benchmark.
 
@@ -139,13 +182,21 @@ La red del benchmark debe venir de los mecanismos definidos para replay/emulaci�
 
 El código vive en el repositorio.
 
-El código se desarrolla principalmente en Windows con Codex y después se sincroniza en Ubuntu cliente mediante GitHub.
+El código se desarrolla principalmente en Windows con Codex y después se sincroniza en WSL2 o Ubuntu cliente mediante GitHub, según el tipo de tarea.
+
+WSL2 puede ejecutar scripts de entrenamiento IA, pero no debe convertirse en el
+repositorio principal ni en el entorno que hace commits.
 
 ### 4.2. Datos pesados
 
 Los datasets, trazas, bundles, manifests finales y paquetes de evidencia pueden estar fuera del repositorio si son grandes, generados o no deben versionarse.
 
 Estos elementos deben tener rutas claras y manifests que permitan saber exactamente qué se ha usado.
+
+Para entrenamiento IA en WSL2, los datos pesados deben estar bajo `~/TFG/...`
+dentro del sistema de ficheros Linux de WSL2. Evitar usar `/mnt/c/...` como
+workspace principal de entrenamiento por rendimiento, estabilidad de I/O y
+separación operativa.
 
 ### 4.3. Contenido DASH
 
@@ -181,10 +232,12 @@ Windows puede validar sintaxis, tests unitarios, estructura y documentación, pe
 4. Codex revisa git status.
 5. Codex hace commit.
 6. Codex hace push a GitHub.
-7. Daniel entra en la VM cliente Ubuntu.
-8. Daniel hace git pull.
-9. Daniel ejecuta la validación o fase correspondiente en Ubuntu cliente.
-10. Si falla en Ubuntu cliente, se reporta el error y Codex corrige desde Windows.
+7. Si la tarea requiere IA pesada, Daniel sincroniza WSL2 y ejecuta el
+   entrenamiento indicado.
+8. Si la tarea requiere validación formal, Daniel entra en la VM cliente Ubuntu.
+9. Daniel hace git pull.
+10. Daniel ejecuta la validación o fase correspondiente en Ubuntu cliente.
+11. Si falla en Ubuntu cliente, se reporta el error y Codex corrige desde Windows.
 ```
 
 ### 5.2. Qué debe hacer Codex siempre en Windows
@@ -323,6 +376,54 @@ Para Phase 6F o fases finales, la VM cliente debe tener localizados:
 - Directorio de salida de runs/evidencia.
 
 La validación realmente importante es la de Ubuntu cliente.
+
+---
+
+## 7.bis. Procedimiento estándar en WSL2 para entrenamiento IA
+
+WSL2 se usa cuando el proyecto necesite entrenamiento IA con GPU AMD/ROCm.
+
+Primer clonado recomendado:
+
+```bash
+wsl -d Ubuntu-24.04
+cd ~
+mkdir -p ~/TFG
+cd ~/TFG
+git clone https://github.com/DNLPRTL/DashClientModular4.git
+cd DashClientModular4
+git checkout rebuild/phase3-from-phase2
+source ~/venvs/rocm721/bin/activate
+python3 -c "import torch; print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0))"
+```
+
+Sincronización diaria si el repo ya existe:
+
+```bash
+wsl -d Ubuntu-24.04
+cd ~/TFG/DashClientModular4
+git status --short --branch
+git pull
+source ~/venvs/rocm721/bin/activate
+python3 -c "import torch; print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0))"
+```
+
+La salida esperada de la comprobación PyTorch es `True` y `AMD Radeon RX 7800 XT`
+o nombre equivalente de la GPU AMD expuesta por ROCm.
+
+Los outputs pesados de entrenamiento deben guardarse fuera del repositorio,
+preferiblemente bajo:
+
+```bash
+~/TFG/datasets_normalizados
+~/TFG/modelos
+~/TFG/runs_trazas
+~/TFG/auditorias_trazas
+```
+
+Si el usuario observado dentro de WSL2 no es `daniel`, usar siempre rutas con
+`~` en los runbooks para evitar confusiones entre `/home/danie` y
+`/home/daniel`.
 
 ---
 

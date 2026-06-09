@@ -70,6 +70,32 @@ Objetivo: integrar `neural_abr_lite` como guarded neural scorer controller con a
 
 No significa: que la IA gane, ranking, benchmark, SOTA o validacion real-world.
 
+### Fase 4-5 vN - Iteraciones nuevas de IA ABR
+
+Estado: Fase 4-5 v1 abierta como iteracion nueva; no sustituye a las Phase 4 y
+Phase 5 cerradas.
+
+Objetivo: estudiar el corpus nuevo de papers IA ABR, decidir desde cero uno o
+varios modelos/controllers propios, construir datasets derivados si hacen falta,
+entrenar o ajustar modelos, empaquetarlos como bundles reproducibles,
+integrarlos como controllers plug-and-play y dejarlos listos para evaluacion en
+Phase 6.
+
+No significa: reutilizar automaticamente `NeuralABR-Lite`, declarar ganador,
+afirmar mejora QoE, mezclar sinteticas con reales ni tratar entrenamiento
+offline como benchmark.
+
+El corpus operativo canonico de Fase 4-5 v1 esta en:
+
+```text
+docs/contexto rama nueva/fase_4_5_v1/abr ia md/
+```
+
+El entorno disponible para entrenamientos largos con GPU es WSL2 Ubuntu
+`Ubuntu-24.04` con ROCm/PyTorch en `~/venvs/rocm721`. Windows sigue siendo el
+entorno de desarrollo, commit y push; WSL2 se usa para entrenamiento IA pesado;
+Ubuntu cliente se mantiene como entorno de validacion formal.
+
 ### Fase de Verificacion - Cliente y controllers clasicos
 
 Estado: cerrada en Ubuntu.
@@ -109,6 +135,10 @@ La regla central es investigacion just-in-time por fase:
 8. Cerrar bloque y documentar limites.
 
 Codex no debe decidir ciencia desde cero. Codex ejecuta cuando existen contratos, specs y acceptance tests.
+
+Para Fase 4-5 v1, el paso previo obligatorio es leer los `.md` nuevos del corpus
+`abr ia md/` y documentar una decision nueva. No se debe restaurar ni continuar
+un plan anterior si Daniel lo ha eliminado explicitamente.
 
 ## 5. Flujo PDF -> MD -> Codex
 

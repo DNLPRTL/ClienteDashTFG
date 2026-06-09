@@ -11,6 +11,8 @@ La rama se reinicia desde el cierre real de Phase 2. Por tanto, las fases anteri
 03_qoe_reward        Phase 3.5 Rebuild: QoE, reward, gates y no-ranking.
 04_neural_abr        Phase 4 Rebuild: modelo offline, sampler y entrenamiento.
 05_neural_controller Phase 5 Rebuild: integracion de dos controllers IA.
+fase_4_5_v1          Iteracion nueva para estudiar papers IA ABR y disenar
+                     futuros controllers propios desde cero.
 fase_verificacion_cliente_y_controllers_clasicos
                      Cerrada en Ubuntu: verificacion del cliente DASH y controllers clasicos.
 06_validation        Phase 6 futura: validacion formal y protocolo.
@@ -24,3 +26,5 @@ fase_verificacion_cliente_y_controllers_clasicos
 - No usar dry-runs legacy como datos de entrenamiento.
 - No declarar ranking, ganador ni mejora de QoE hasta que una fase de evaluacion formal lo autorice.
 - Usar siempre los documentos obligatorios de arquitectura y procedimiento antes de cambios relevantes.
+- Para Fase 4-5 v1, no decidir ni implementar controller hasta leer el corpus
+  operativo nuevo en `fase_4_5_v1/abr ia md/`.

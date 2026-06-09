@@ -1,70 +1,102 @@
-# Fase 4-5 v1 - Nueva iteracion IA ABR
+# Fase 4-5 v1 - Iteracion nueva IA ABR
 
-Status: paper_audit_started.
+## Estado
 
-Esta fase no sustituye a las Phase 4 y Phase 5 cerradas. Es una iteracion
-nueva para disenar controllers IA mas defendibles, empaquetables como bundles
-reproducibles e integrables como controllers normales de Phase 6.
+Fase 4-5 v1 queda abierta como una iteracion nueva para disenar, entrenar e
+integrar controllers IA ABR propios mas defendibles.
 
-## Objetivo
+Esta fase no sustituye a las Phase 4 y Phase 5 cerradas. Los controllers
+anteriores (`neural_abr_lite_robust_mpc` y
+`neural_abr_lite_teacher_hibrido`) siguen existiendo como historia, runtime y
+comparadores, pero no son el punto de partida obligatorio del nuevo diseno.
 
-Crear uno o varios controllers propios nuevos, disenados desde el corpus ABR/IA
-y desde la arquitectura actual del proyecto. Los controllers IA anteriores se
-consideran pruebas de integracion cerradas, no punto de partida tecnico ni
-objetivo de mejora.
+El rastro documental antiguo de esta carpeta se considera descartado. No se
+debe restaurar ni continuar un plan previo. Antes de elegir modelo, arquitectura
+o dataset derivado hay que leer el corpus nuevo de papers en Markdown.
 
-La meta es reducir rebuffering y agresividad en redes bajas o variables,
-manteniendo calidad razonable en redes medias y altas.
+## Fuente canonica de papers
 
-El resultado buscado no es declarar un ganador antes de Phase 6, sino producir
-controllers con:
-
-- comportamiento explicable por escenario;
-- inferencia real auditada;
-- fallback 0 en diagnostico y rapido;
-- separacion limpia entre entrenamiento, bundle, controller y evaluacion;
-- comparacion posterior contra clasicos y controllers propios previos.
-
-## Guardrails
-
-- No cerrar Phase 6 durante esta iteracion.
-- No declarar mejora QoE, ranking ni ganador desde smokes, diagnosticos o
-  presets no autorizados.
-- No mezclar trazas sinteticas con conclusiones principales sobre redes reales.
-- No commitear PDFs, modelos, bundles, runs, CSVs generados ni paquetes de
-  evidencia.
-- El controller no puede ver `trace_id`, `dataset_id`, `split`,
-  `leakage_group`, etiquetas OOD, throughput futuro ni QoE futuro en runtime.
-
-## Corpus inicial
-
-Los PDFs viven fuera del repo:
+El corpus operativo nuevo esta en:
 
 ```text
-C:\Users\danie\Documents\TFG\abr ia pdf\abr ia pdf
+docs/contexto rama nueva/fase_4_5_v1/abr ia md/
 ```
 
-La auditoria operativa versionable vive aqui:
+Estos `.md` son la fuente de trabajo para Codex. Los PDF originales siguen
+siendo fuente de verdad para formulas, tablas y figuras cuando la extraccion
+textual pierda layout, pero no se debe implementar directamente desde PDFs
+brutos si ya existe un `.md` operativo.
+
+## Corpus disponible
 
 ```text
-docs/contexto rama nueva/fase_4_5_v1/paper_audits/
+01_comyco_2019_imitation_learning.md
+02_puffer_fugu_2020_learning_in_situ.md
+03_sabr_2025_bc_rl_finetuning.md
+04_pll_abr_2025_ppo_lstm_attention.md
+05_greenabr_2022_energy_aware_drl.md
+06_alvs_2022_live_video_drl.md
+07_edge_rl_adaptive_streaming_2023.md
+08_pca_gwo_bp_mpeg_dash_ai_bitrate_selection.md
+09_a2br_2022_meta_rl_domain_priors.md
+10_ant_2024_network_dynamics_dedicated_models.md
+11_souane_2023_drl_dash.md
+12_beta_2025_spatial_temporal_generalization.md
+13_visual_sensitivity_aware_drl_abr.md
+14_incendio_sabr_marl_expert_guidance.md
+15_http_adaptive_streaming_review_2025.md
+16_learning_based_methods_has_review_2025.md
+25_ppo_abr_2023_proximal_policy_optimization_drl.md
+26_soda_2024_consistent_high_quality_non_neural_abr.md
+27_dqnreg_2022_reinforcement_learning_rate_adaptation.md
+28_mambra_2026_session_bandwidth_prediction_ssm_mamba.md
+29_merina_2022_meta_rl_generalization_neural_abr.md
+30_metaabr_2024_meta_learning_adaptive_bitrate_selection.md
+31_oboe_2018_auto_tuning_abr_network_conditions.md
+32_pensieve_2017_neural_adaptive_video_streaming.md
 ```
 
-## Documentos de esta fase
+## Reglas de decision
 
-- `paper_audits/00_indice_corpus.md`: inventario PDF por PDF.
-- `paper_audits/*.md`: ficha operativa por PDF.
-- `matriz_tecnica_detallada.md`: que implementa exactamente cada paper y que
-  aporta al diseno.
-- `decision_modelos_v1.md`: sintesis critica y planes de controller.
+- No hay decision de modelo tomada al iniciar esta fase.
+- No reutilizar por inercia el diseno `NeuralABR-Lite`.
+- No entrenar todavia sin una spec escrita de dataset, simulador, state, action,
+  reward/loss, arquitectura, bundle, telemetria y acceptance tests.
+- No mezclar resultados sinteticos con conclusiones principales sobre trazas
+  reales.
+- No llamar benchmark a entrenamiento offline, smokes, dry-runs ni auditorias.
+- No declarar ganador, mejora QoE ni generalizacion antes de Phase 6 autorizada.
 
-## Siguiente ciclo previsto
+## Entorno de entrenamiento disponible
 
-1. Auditar corpus ABR/IA.
-2. Congelar plan Fase 4-5 v1 desde literatura, trazas disponibles y contrato
-   Phase 6.
-3. Construir dataset offline sin leakage.
-4. Entrenar o construir modelos candidatos.
-5. Exportar bundles reproducibles.
-6. Integrar controllers plug-and-play.
-7. Ejecutar Phase 6 diagnostico y rapido en Ubuntu cliente.
+Hay WSL2 Ubuntu con ROCm/PyTorch y GPU AMD disponible para entrenamientos largos.
+La nota operativa esta en:
+
+```text
+docs/contexto rama nueva/fase_4_5_v1/wsl_rocm_gpu_context.md
+```
+
+Resumen de responsabilidades:
+
+- Windows fisico: desarrollo, tests rapidos, commits y push.
+- WSL2 Ubuntu/ROCm: entrenamiento IA pesado y artefactos externos bajo `~/TFG`.
+- Ubuntu cliente: validacion real y Phase 6.
+- Ubuntu servidor: MPD, segmentos e inicializaciones DASH.
+
+## Siguiente paso real
+
+El siguiente bloque no es implementar. Es leer el corpus nuevo y producir una
+decision tecnica de Fase 4-5 v1 que convierta los papers en uno o varios planes
+implementables para DashClientModular4.
+
+Cada plan candidato debe explicar:
+
+- tipo de IA;
+- entrenamiento previsto;
+- dataset derivado necesario;
+- compatibilidad con el cliente y Phase 6;
+- coste computacional;
+- riesgos de leakage;
+- telemetria de inferencia;
+- acceptance tests;
+- por que es defendible academicamente.

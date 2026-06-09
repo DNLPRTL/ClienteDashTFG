@@ -37,6 +37,18 @@ Ubuntu con informe externo aceptado. Phase 6 dispone de pipeline reproducible
 para ejecutar evaluacion formal en Ubuntu cliente sin reutilizar smokes como
 benchmark.
 
+Fase 4-5 v1 queda abierta como iteracion nueva e independiente para crear
+controllers IA nuevos. No sustituye a las Phase 4 y Phase 5 cerradas, y no debe
+heredar automaticamente decisiones de `NeuralABR-Lite`. El punto de partida
+canonico es el corpus `.md` creado desde cero en:
+
+```text
+docs/contexto rama nueva/fase_4_5_v1/abr ia md/
+```
+
+Antes de decidir modelo, entrenamiento, dataset derivado o controller para
+Fase 4-5 v1, leer ese corpus operativo y documentar la decision nueva.
+
 ## Documentos obligatorios por ejecucion
 
 Antes de hacer cambios relevantes, leer siempre:
@@ -74,7 +86,24 @@ C:\Users\danie\Documents\TFG\datasets_normalizados
 C:\Users\danie\Documents\TFG\manifests_trazas
 C:\Users\danie\Documents\TFG\runs_trazas
 C:\Users\danie\Documents\TFG\auditorias_trazas
+C:\Users\danie\Documents\TFG\modelos
 ```
+
+Entorno WSL2/ROCm disponible para entrenamiento IA pesado:
+
+```text
+Distribucion: Ubuntu-24.04 en WSL2
+Venv GPU: ~/venvs/rocm721
+Torch observado: 2.9.1+rocm7.2.1
+GPU observada: AMD Radeon RX 7800 XT
+Repo recomendado dentro de WSL: ~/TFG/DashClientModular4
+Raiz pesada recomendada dentro de WSL: ~/TFG
+```
+
+En WSL2, no usar `/mnt/c/Users/danie/Documents/TFG/...` como ruta principal de
+entrenamiento ni de ficheros grandes. Puede servir para consultas puntuales,
+pero datasets, checkpoints, modelos, logs y runs de entrenamiento deben vivir
+bajo rutas Linux dentro de `~/TFG`.
 
 Artifacts externos relevantes:
 
@@ -95,14 +124,16 @@ pesados/generados.
 4. Windows desarrolla, testea rapido, commitea y pushea; Ubuntu cliente ejecuta
    las validaciones relevantes.
 5. GitHub es el puente limpio entre Windows y Ubuntu cliente.
-6. Ubuntu servidor solo sirve MPD, segmentos e inicializaciones DASH; no define
+6. WSL2 Ubuntu con ROCm entrena IA pesada cuando haga falta, pero no sustituye
+   la validacion formal de Ubuntu cliente.
+7. Ubuntu servidor solo sirve MPD, segmentos e inicializaciones DASH; no define
    la red experimental.
-7. No tocar `player.py`, runtime, media engine, controladores ni evaluacion sin
+8. No tocar `player.py`, runtime, media engine, controladores ni evaluacion sin
    contrato explicito y tests.
-8. No mezclar contenido DASH, trazas de red, resultados, entrenamiento y
+9. No mezclar contenido DASH, trazas de red, resultados, entrenamiento y
    benchmark.
-9. No llamar benchmark a smoke tests, dry-runs, conversiones ni auditorias.
-10. No declarar mejora de QoE, ranking, ganador ni generalizacion antes de una
+10. No llamar benchmark a smoke tests, dry-runs, conversiones ni auditorias.
+11. No declarar mejora de QoE, ranking, ganador ni generalizacion antes de una
     fase de evaluacion formal autorizada.
 
 ## Phase 3 Rebuild guardrails
@@ -244,3 +275,17 @@ git pull
 
 Despues ejecutara el smoke/runbook indicado para la fase. Si Windows y Ubuntu
 cliente discrepan, manda Ubuntu cliente.
+
+En WSL2 para entrenamiento IA con GPU, Daniel sincronizara o clonara el repo en
+`~/TFG/DashClientModular4`, activara `~/venvs/rocm721` y comprobara PyTorch:
+
+```bash
+wsl -d Ubuntu-24.04
+cd ~/TFG/DashClientModular4
+git pull
+source ~/venvs/rocm721/bin/activate
+python3 -c "import torch; print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0))"
+```
+
+La salida esperada para el entorno GPU actual es `True` y `AMD Radeon RX 7800 XT`
+o nombre equivalente de la GPU AMD expuesta por ROCm.
