@@ -29,6 +29,8 @@ brutos si ya existe un `.md` operativo.
 
 ## Corpus disponible
 
+La carpeta contiene 32 `.md` operativos:
+
 ```text
 01_comyco_2019_imitation_learning.md
 02_puffer_fugu_2020_learning_in_situ.md
@@ -46,6 +48,14 @@ brutos si ya existe un `.md` operativo.
 14_incendio_sabr_marl_expert_guidance.md
 15_http_adaptive_streaming_review_2025.md
 16_learning_based_methods_has_review_2025.md
+17_bpa_bandwidth_prediction_drl_abr.md
+18_fortuna_2025_offline_meta_rl_diverse_networks.md
+19_gelato_plume_2024_trace_skew_neural_abr.md
+20_kaken_20k14740_fair_high_qoe_multiuser_abr_report.md
+21_a2br_learning_tailored_abr_domain_priors_meta_rl.md
+22_ahaggar_bitrate_guidance_meta_rl_cmcd_cmsd.md
+23_causalsim_2023_unbiased_trace_driven_simulation.md
+24_eastream_2026_environment_aware_abr_meta_rl_vae.md
 25_ppo_abr_2023_proximal_policy_optimization_drl.md
 26_soda_2024_consistent_high_quality_non_neural_abr.md
 27_dqnreg_2022_reinforcement_learning_rate_adaptation.md

@@ -1549,9 +1549,9 @@ Qtarg(st+1, a),
 ```text
 Springer LATEX template
 5
-Adaptation
+Adaptation 
 Algorithm
-Video
+Video 
 Player
 1
 7
@@ -1628,10 +1628,9 @@ Responses
 1
 4
 7
-	
+	 
 
- 
-  
+    
 
  
 
@@ -1786,7 +1785,7 @@ Episode Number
 1.4
 1.5
 1.6
-Average QoE
+Average QoE 
 DQNReg
 DQN
 Fig. 2 Training convergence of DQNReg vs. DQN methods.

@@ -1695,14 +1695,14 @@ contexts
 l
 Buffer occupancy
 latent distribution
-state
+state 
 Policy Network
 Meta-Policy
 st
-latent
+latent 
 Trained by on-policy RL or imitation learning
 ous
-bitrate
+bitrate 
 Figure 1: System framework of the proposed MERINA.
 policy that performs well if the distribution of throughput dynamics
 has been experienced in the training dataset, but may unfortunately
@@ -1913,7 +1913,7 @@ train the inference and actor networks to maximize the actor loss
 and the regularization I(𝒂; 𝒛|𝒔) on the parameters of 𝜃and 𝜙. As a
 result, the objective ˜𝐽𝜃(𝒄,𝝉) of the actor network is expressed as:
 ˜𝐽𝜃(𝒄,𝝉) = E𝒛
-
+	
 min
 
 𝜌(𝜃) ˆ𝐴, clip[𝜌(𝜃), 1 −𝜖, 1 + 𝜖] ˆ𝐴

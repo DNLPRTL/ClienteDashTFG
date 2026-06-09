@@ -3477,7 +3477,7 @@ and the decay factor 𝜌to be the same as Theorem A.1, and the coefficient 𝐶
 Here, the coefficients 𝐶,𝐶′ and the decay factor 𝜌are given by Theorem A.1 and Corollary A.2. Then, SODA achieves a dynamic regret of
 𝐶1𝜌𝐾−1cost(OPT) = 𝑂(𝜌𝐾𝑁) and a competitive ratio of 1 + 𝐶1𝜌𝐾−1 = 1 + 𝑂(𝜌𝐾). Here, the coefficient 𝐶1 is given by
 𝐶1 = 8
-
+ 
 2(4𝛾+ 𝛽+ 𝜔max) ·
 1
 1 −𝜌·
@@ -3734,9 +3734,9 @@ identical decisions to the brute-force solver with relatively high probabilities
 Theorem A.9. Let ˆ𝜔×𝐾denote the sequence { ˆ𝜔, . . . , ˆ𝜔} with length 𝐾. For any 𝜆> 0, when the coefficient 𝛾is sufficiently large such that
 𝛾≥𝐾2
 𝜆2
-
+ 
 ˆ𝜔
-
+ 
 1
 𝑟2
 min
@@ -3885,56 +3885,26 @@ ACM SIGCOMM ’24, August 4–8, 2024, Sydney, NSW, Australia
 also assume that for 𝑗= 1, 2, 𝑓(𝑗)
 𝑡
 satisfies that for all 𝑥𝑡, 𝜇𝑡∈[0,𝑥max],
-
-
-
-∇𝑥𝑡𝑓(𝑗)
+∇𝑥𝑡𝑓(𝑗)
 𝑡
 (𝑥𝑡; 𝜇𝑡)
-
-
-
- +
-
-
-
-∇𝜇𝑡𝑓(𝑗)
+ +
+∇𝜇𝑡𝑓(𝑗)
 𝑡
 (𝑥𝑡; 𝜇𝑡)
-
-
-
- ≤𝐿𝑓, and
-
-
-
-∇𝜇𝑡∇𝑥𝑡𝑓(𝑗)
+ ≤𝐿𝑓, and
+∇𝜇𝑡∇𝑥𝑡𝑓(𝑗)
 𝑡
 (𝑥𝑡; 𝜇𝑡)
-
-
-
- ≤ℓ𝜇.
+ ≤ℓ𝜇.
 2) 𝑐𝑡(·;𝑤𝑡) : R𝐻→R is convex and ℓ𝑐-smooth for all 𝑡and 𝑤𝑡∈W ⊂R𝑞. 𝑐𝑡(·;𝑤𝑡) is in C2 on [0,𝑥max]𝐻. We also assume that for all
 𝑤𝑡∈W and feasible 𝑥𝑡:𝑡−𝐻+1, we have
-
-
-∇𝑥𝑡:𝑡−𝐻+1𝑐𝑡(𝑥𝑡:𝑡−𝐻+1;𝑤𝑡)
-
-
- +
-
-
-∇𝑤𝑡𝑐𝑡(𝑥𝑡:𝑡−𝐻+1;𝑤𝑡)
-
-
- ≤𝐿𝑐, and
-
-
-∇𝑤𝑡∇𝑥𝑡:𝑡−𝐻+1𝑐𝑡(𝑥𝑡:𝑡−𝐻+1;𝑤𝑡)
-
-
- ≤ℓ𝑤.
+∇𝑥𝑡:𝑡−𝐻+1𝑐𝑡(𝑥𝑡:𝑡−𝐻+1;𝑤𝑡)
+ +
+∇𝑤𝑡𝑐𝑡(𝑥𝑡:𝑡−𝐻+1;𝑤𝑡)
+ ≤𝐿𝑐, and
+∇𝑤𝑡∇𝑥𝑡:𝑡−𝐻+1𝑐𝑡(𝑥𝑡:𝑡−𝐻+1;𝑤𝑡)
+ ≤ℓ𝑤.
 3) We have 𝛿𝑡∈Δ holds for all 𝑡, where Δ is a closed interval on R and is bounded below by some positive constant 𝛿. Denote 𝑑B ⌈𝑥max/𝛿⌉.
 In the special case of the video streaming problem, Assumption B.1 is satisfied with the parameters 𝑚𝑓= 𝜖𝛽, ℓ𝑓= ℓ𝜇= 𝛽, ℓ𝑐= 2(𝜔min+3)
 𝜔2
@@ -3947,20 +3917,9 @@ min
 We state the exponentially decaying perturbation bound for the SOCO with memory problem formally in Theorem B.1 and defer its proof
 to Appendix B.1.
 Theorem B.1. Under Assumption B.1, if 𝑝≥𝑑, the inequality
-
-
-𝜓(𝑦,𝑧; 𝜇,𝑤,𝛿)𝑡−𝜓(𝑦′,𝑧′; 𝜇′,𝑤′,𝛿′)𝑡
-
-
-≤𝐶 𝜌𝑡
-
-𝑦−𝑦′
-
- + 𝜌𝑝−𝑡
-
-𝑧−𝑧′
-
- + 𝐶©­
+𝜓(𝑦,𝑧; 𝜇,𝑤,𝛿)𝑡−𝜓(𝑦′,𝑧′; 𝜇′,𝑤′,𝛿′)𝑡
+
+≤𝐶 𝜌𝑡𝑦−𝑦′ + 𝜌𝑝−𝑡𝑧−𝑧′ + 𝐶©­
 «
 𝑝
 ∑︁
@@ -3971,23 +3930,15 @@ Theorem B.1. Under Assumption B.1, if 𝑝≥𝑑, the inequality
 𝑝+𝐻−1
 ∑︁
 𝜏=0
-𝜌|𝑡−𝜏|
-
-𝑤𝜏−𝑤′
+𝜌|𝑡−𝜏| 𝑤𝜏−𝑤′
 𝜏
-
-
- +
+ +
 𝑝+1
 ∑︁
 𝜏=0
-𝜌|𝑡−𝜏|
-
-𝛿𝜏−𝛿′
+𝜌|𝑡−𝜏| 𝛿𝜏−𝛿′
 𝜏
-
-
-ª®
+ª®
 ¬
 (8)
 holds for all 𝑡∈[0, 𝑝] and 𝑦,𝑧∈[𝑥,𝑥]𝐻−1. Here,
@@ -4121,22 +4072,9 @@ Lemma B.2 establishes that given any feasible tuple of (𝑦,𝑧;𝜃), one can
 while there can be other (𝜉′, 𝜎′) that satisfies 𝜓(𝑦,𝑧;𝜃) = ˆ𝜓(𝑦,𝑧;𝜃; 𝜉′, 𝜎′).
 Lemma B.3. Suppose Assumption B.1 holds and 𝑝≥𝑑. If both ˆ𝜓(𝑦,𝑧;𝜃; 𝜉, 𝜎) and ˆ𝜓(𝑦′,𝑧′;𝜃′; 𝜉, 𝜎) exist for 𝑦,𝑧,𝑦′,𝑧′ ∈[0,𝑥max]𝐻−1 and
 (𝜉, 𝜎), then we have
-
-
-
- ˆ𝜓(𝑦,𝑧;𝜃; 𝜉, 𝜎)𝑡−ˆ𝜓(𝑦′,𝑧′;𝜃′; 𝜉, 𝜎)𝑡
-
-
-
-≤𝐶 𝜌𝑡
-
-𝑦−𝑦′
-
- + 𝜌𝑝−𝑡
-
-𝑧−𝑧′
-
- + 𝐶©­
+ ˆ𝜓(𝑦,𝑧;𝜃; 𝜉, 𝜎)𝑡−ˆ𝜓(𝑦′,𝑧′;𝜃′; 𝜉, 𝜎)𝑡
+
+≤𝐶 𝜌𝑡𝑦−𝑦′ + 𝜌𝑝−𝑡𝑧−𝑧′ + 𝐶©­
 «
 𝑝
 ∑︁
@@ -4147,13 +4085,9 @@ Lemma B.3. Suppose Assumption B.1 holds and 𝑝≥𝑑. If both ˆ𝜓(𝑦,�
 𝑝+𝐻−1
 ∑︁
 𝜏=0
-𝜌|𝑡−𝜏|
-
-𝑤𝜏−𝑤′
+𝜌|𝑡−𝜏| 𝑤𝜏−𝑤′
 𝜏
-
-
- +
+ +
 𝑝+1
 ∑︁
 𝜏=0
@@ -4201,20 +4135,12 @@ After the change of variable, the objective becomes a function ˆℎof 𝑥𝑡0
 ˆℎ( ˆ𝑥0:𝑞;𝜁) = ˆℎ𝑎( ˆ𝑥0:𝑞; 𝜇) + ˆℎ𝑏( ˆ𝑥0:𝑞;𝜁),
 where 𝜁= (𝑦,𝑧,𝜃), ˆℎ𝑎is the sum of the original hitting costs minus 𝑚𝑓
 2
-
-
-ˆ𝑥0:𝑞
-
-
-2, and ˆℎ𝑏is the sum of the original switching costs plus
+ˆ𝑥0:𝑞
+2, and ˆℎ𝑏is the sum of the original switching costs plus
 𝑚𝑓
 2
-
-
-ˆ𝑥0:𝑞
-
-
-2. By Assumption B.1, we see that
+ˆ𝑥0:𝑞
+2. By Assumption B.1, we see that
 ∇2
 ˆ𝑥0:𝑞ˆℎ𝑎( ˆ𝑥0:𝑞; 𝜇) ⪰0, (𝑚𝑓+ 𝐻ℓ𝑐)𝐼⪰∇2
 ˆ𝑥0:𝑞ˆℎ𝑏( ˆ𝑥0:𝑞;𝜁) ⪰𝑚𝑓𝐼.
@@ -4225,27 +4151,15 @@ We also note that ∇2
 ˆ𝑥0:𝑞
 ˆℎ𝑏( ˆ𝑥0:𝑞;𝜁) is a 2𝐻-banded matrix.
 We can follow a similar procedure as Theorem 3.1 in [49] to show
-
-
-
- ˆ𝜓(𝑦,𝑧;𝜃; 𝜉, 𝜎)𝑡𝜏−ˆ𝜓(𝑦′,𝑧′;𝜃′; 𝜉, 𝜎)𝑡𝜏
-
-
-
+ ˆ𝜓(𝑦,𝑧;𝜃; 𝜉, 𝜎)𝑡𝜏−ˆ𝜓(𝑦′,𝑧′;𝜃′; 𝜉, 𝜎)𝑡𝜏
+
 ≤𝐶0
 
 𝜌𝜏
 0
-
-
-𝑦−𝑦′
-
- + 𝜌𝑞−𝜏
+𝑦−𝑦′ + 𝜌𝑞−𝜏
 0
-
-
-𝑧−𝑧′
-
+𝑧−𝑧′
 
 + 𝐶0 ©­
 «
@@ -4262,25 +4176,17 @@ We can follow a similar procedure as Theorem 3.1 in [49] to show
 𝑖=0
 𝜌|𝜙(𝑖)−𝜏|
 0
-
-
-𝑤𝑖−𝑤′
+𝑤𝑖−𝑤′
 𝑖
-
-
- +
+ +
 𝑝+1
 ∑︁
 𝑖=0
 𝜌|𝜙(𝑖)−𝜏|
 0
-
-
-𝛿𝑖−𝛿′
+𝛿𝑖−𝛿′
 𝑖
-
-
-ª®
+ª®
 ¬
 ,
 (12)
@@ -4401,34 +4307,15 @@ Recall that ¯ℓB max{𝐻ℓ𝑐, 𝐻ℓ𝑓, ℓ𝜇, ℓ𝑤}. We know that
 𝑗−𝐻+1:𝑗+𝐻−1,:, and 𝑅(𝛿𝑖)
 𝑗,:
 are all upper bounded by ¯ℓ. Taking norm on both sides of (13) gives
-
-
-
-
+
 𝑑
 𝑑𝜃𝜓(𝜁+ 𝜂𝑒)𝜏
-
-
-
-
- ≤¯ℓ
-
-
-(𝑀−1)𝜏,0:𝐻−2
-
-
-
-
-𝑒𝑦
-
-
- + ¯ℓ
-
-
-(𝑀−1)𝜏,𝑞−𝐻+2:𝑞
-
-
- ∥𝑒𝑧∥
+ ≤¯ℓ
+(𝑀−1)𝜏,0:𝐻−2
+ 𝑒𝑦
+ + ¯ℓ
+(𝑀−1)𝜏,𝑞−𝐻+2:𝑞
+ ∥𝑒𝑧∥
 + ¯ℓ
 𝑞
 ∑︁
@@ -4436,33 +4323,18 @@ are all upper bounded by ¯ℓ. Taking norm on both sides of (13) gives
 𝑡𝑗+1−1
 ∑︁
 𝑖=𝑡𝑗
-
-
-(𝑀−1)𝜏,𝑗
-
-
-
-
-𝑒𝜇𝑖
-
-
- + ¯ℓ
+(𝑀−1)𝜏,𝑗
+ 𝑒𝜇𝑖
+ + ¯ℓ
 𝑞+1
 ∑︁
 𝑗=0
 𝑡𝑗+1−1
 ∑︁
 𝑖=𝑡𝑗
-
-
-(𝑀−1)𝜏,𝑗−𝐻+1:𝑗+𝐻−1
-
-
-
-
-𝑒𝑤𝑖
-
-
+(𝑀−1)𝜏,𝑗−𝐻+1:𝑗+𝐻−1
+ 𝑒𝑤𝑖
+
 + ¯ℓ
 𝑞
 ∑︁
@@ -4470,17 +4342,9 @@ are all upper bounded by ¯ℓ. Taking norm on both sides of (13) gives
 𝑡𝑗+1−1
 ∑︁
 𝑖=𝑡𝑗
-
-
-(𝑀−1)𝜏,𝑗
-
-
-
-
-𝑒𝛿𝑖
-
-
- .
+(𝑀−1)𝜏,𝑗
+ 𝑒𝛿𝑖
+ .
 (14)
 Note that 𝑀can be decomposed as 𝑀= 𝑀𝑎+ 𝑀𝑏, where
 𝑀𝑎:= ∇2
@@ -4489,44 +4353,28 @@ Note that 𝑀can be decomposed as 𝑀= 𝑀𝑎+ 𝑀𝑏, where
 ˆ𝑥0:𝑞ˆℎ𝑏(𝜓(𝜁+ 𝜂𝑒),𝜁+ 𝜂𝑒).
 Since 𝑀𝑎is a diagonal (𝑞+ 1) × (𝑞+ 1) matrix and satisfies 𝑀𝑎⪰0, and 𝑀𝑏is 2𝐻-banded and satisfies (𝑚𝑓+ ℓ)𝐼⪰𝑀𝑏⪰𝑚𝑓𝐼, we obtain
 the following with Lemma B.1 in [49]:
-
-
-(𝑀−1)𝜏,0:𝐻−2
-
-
- ≤
+(𝑀−1)𝜏,0:𝐻−2
+ ≤
 2
 𝑚𝑓
 𝜌𝜏−(𝐻−2)
 0
 ,
-
-
-(𝑀−1)𝜏,𝑞−𝐻+2:𝑞
-
-
- ≤
+(𝑀−1)𝜏,𝑞−𝐻+2:𝑞
+ ≤
 2
 𝑚𝑓
 𝜌𝑞−𝜏−(𝐻−2)
 0
-
-
-(𝑀−1)𝜏,𝑗
-
-
- ≤
+(𝑀−1)𝜏,𝑗
+ ≤
 2
 𝑚𝑓
 𝜌|𝜏−𝑗|
 0
 ,
-
-
-(𝑀−1)𝜏,𝑗−𝐻+1:𝑗+𝐻−1
-
-
- ≤
+(𝑀−1)𝜏,𝑗−𝐻+1:𝑗+𝐻−1
+ ≤
 2
 𝑚𝑓
 𝜌|𝜏−𝑗|−(𝐻−1)
@@ -4542,26 +4390,15 @@ where 𝜌0 := (
 −1
 .
 Substituting this into (14), we see that
-
-
-
-
+
 𝑑
 𝑑𝜃𝜓(𝜁+ 𝜃𝑒)𝜏
-
-
-
-
- ≤𝐶0 ©­
+ ≤𝐶0 ©­
 «
 𝜌𝜏
 0
-
-
-𝑒𝑦
-
-
- + 𝜌𝑞−𝜏
+𝑒𝑦
+ + 𝜌𝑞−𝜏
 0
 ∥𝑒𝑧∥+
 𝑝
@@ -4569,34 +4406,22 @@ Substituting this into (14), we see that
 𝑖=0
 𝜌|𝜙(𝑖)−𝜏|
 0
-
-
-𝑒𝜇𝑖
-
-
- +
+𝑒𝜇𝑖
+ +
 𝑝+𝐻−1
 ∑︁
 𝑖=0
 𝜌|𝜙(𝑖)−𝜏|
 0
-
-
-𝑒𝑤𝑖
-
-
- +
+𝑒𝑤𝑖
+ +
 𝑝
 ∑︁
 𝑖=0
 𝜌|𝜙(𝑖)−𝜏|
 0
-
-
-𝑒𝛿𝑖
-
-
-ª®
+𝑒𝛿𝑖
+ª®
 ¬
 .
 636
@@ -4608,50 +4433,27 @@ Substituting this into (14), we see that
 SODA: An Adaptive Bitrate Controller for Consistent High-Quality Video Streaming
 ACM SIGCOMM ’24, August 4–8, 2024, Sydney, NSW, Australia
 Hence we obtain
-
-
-
-𝜓(𝜁)𝜏−𝜓(𝜁+ 𝑒)𝜏
-
-
-
- =
-
-
-
-
+𝜓(𝜁)𝜏−𝜓(𝜁+ 𝑒)𝜏
+ =
+
 ∫1
 0
 𝑑
 𝑑𝜂𝜓(𝜁+ 𝜂𝑒)𝜏𝑑𝜂
-
-
-
-
+
 ≤
 ∫1
 0
-
-
-
-
+
 𝑑
 𝑑𝜂𝜓(𝜁+ 𝜂𝑒)𝜏
-
-
-
-
-𝑑𝜂
+𝑑𝜂
 ≤𝐶0 ©­
 «
 𝜌𝜏
 0
-
-
-𝑒𝑦
-
-
- + 𝜌𝑞−𝜏
+𝑒𝑦
+ + 𝜌𝑞−𝜏
 0
 ∥𝑒𝑧∥+
 𝑝
@@ -4659,34 +4461,22 @@ Hence we obtain
 𝑖=0
 𝜌|𝜙(𝑖)−𝜏|
 0
-
-
-𝑒𝜇𝑖
-
-
- +
+𝑒𝜇𝑖
+ +
 𝑝+𝐻−1
 ∑︁
 𝑖=0
 𝜌|𝜙(𝑖)−𝜏|
 0
-
-
-𝑒𝑤𝑖
-
-
- +
+𝑒𝑤𝑖
+ +
 𝑝
 ∑︁
 𝑖=0
 𝜌|𝜙(𝑖)−𝜏|
 0
-
-
-𝑒𝛿𝑖
-
-
-ª®
+𝑒𝛿𝑖
+ª®
 ¬
 .
 This finishes the proof of (12). Recall that we have 𝑡𝑖< 𝑡𝑖+1 ≤𝑡𝑖+ 𝑑+ 𝐻. Therefore, (12) implies (10).
@@ -4707,31 +4497,19 @@ For the sake of contradiction, we assume 𝜓(𝑦,𝑧;𝜃) ≠ˆ𝜓(𝑦,�
 𝜄(𝑦,𝑧;𝜃) < ˆ𝜄(𝑦,𝑧;𝜃; 𝜉, 𝜎).
 Define the optimality gap as Λ B ˆ𝜄(𝑦,𝑧;𝜃; 𝜉, 𝜎) −𝜄(𝑦,𝑧;𝜃).
 Since lim𝑞→∞(𝑦𝑞,𝑧𝑞;𝜃𝑞) = (𝑦,𝑧;𝜃), for an arbitrary small positive real number 𝜖, we can find a positive integer 𝑞such that
-
-
-𝑦𝑞−𝑦
-
-
- +
-
-
-𝑧𝑞−𝑧
-
-
- + 𝑑𝑖𝑠𝑡(𝜃,𝜃𝑞) < 𝜖,
+𝑦𝑞−𝑦
+ +
+𝑧𝑞−𝑧
+ + 𝑑𝑖𝑠𝑡(𝜃,𝜃𝑞) < 𝜖,
 where 𝑑𝑖𝑠𝑡(𝜃,𝜃′) = Í𝑝
 𝑖=0
 𝜇𝑖−𝜇′
 𝑖
  + Í𝑝+𝐻−1
 𝑖=0
-
-
-𝑤𝑖−𝑤′
+𝑤𝑖−𝑤′
 𝑖
-
-
- + Í𝑝+1
+ + Í𝑝+1
 𝑖=0
 𝛿𝑖−𝛿′
 𝑖
@@ -4758,30 +4536,16 @@ such that 𝑥′
 𝑡+1 + 𝛿(𝑞)
 𝑡+1. Note that this procedure can guarantee that 𝑥′ is a feasible solution for (7), and their distance are upper bounded
 by
-
-
-𝜓(𝑦,𝑧;𝜃) −𝑥′
-
- ≤(2𝑑+ 1)𝜖.
+𝜓(𝑦,𝑧;𝜃) −𝑥′ ≤(2𝑑+ 1)𝜖.
 (15)
 Since the objective function of (7) is Lipschitz in (𝑥,𝑦,𝑧,𝜃), by (15), we know there exists some positive constant 𝑐0 such that
 𝜄(𝑦𝑞,𝑧𝑞;𝜃𝑞) −𝜄(𝑦,𝑧;𝜃) ≤𝑐0
- 
-
-𝑥′ −𝜓(𝑦,𝑧;𝜃)
-
-
- + 𝜖 ≤(2𝑑+ 2)𝑐0𝜖.
+ 𝑥′ −𝜓(𝑦,𝑧;𝜃)
+ + 𝜖 ≤(2𝑑+ 2)𝑐0𝜖.
 (16)
 On the other hand, by Lemma B.3, we see that
-
-
-
- ˆ𝜓(𝑦𝑞,𝑧𝑞;𝜃𝑞; 𝜉, 𝜎) −ˆ𝜓(𝑦,𝑧;𝜃; 𝜉, 𝜎)
-
-
-
- ≤
+ ˆ𝜓(𝑦𝑞,𝑧𝑞;𝜃𝑞; 𝜉, 𝜎) −ˆ𝜓(𝑦,𝑧;𝜃; 𝜉, 𝜎)
+ ≤
 
 𝐶
 1 −𝜌+ 1
@@ -4856,22 +4620,11 @@ sup{𝜂∈[0, 1] | 𝜓 (1 −𝜂)(𝑦,𝑧;𝜃) + 𝜂(𝑦′,𝑧′;𝜃
 and let 𝜂𝑖+1 be the supremum value above. We can repeat this construction and stop when 𝜂𝑖+1 = 1. By the construction, we know all pairs
 in the sequence (𝜉, 𝜎)0:𝑖−1 are distinct, thus the construction will terminate in finite time. Hence, we have a finite index 𝑞such that 𝜂𝑞= 1.
 By Lemma B.3, we know that
-
-
-𝜓 (1 −𝜂𝑖)(𝑦,𝑧;𝜃) + 𝜂𝑖(𝑦′,𝑧′;𝜃′)
+𝜓 (1 −𝜂𝑖)(𝑦,𝑧;𝜃) + 𝜂𝑖(𝑦′,𝑧′;𝜃′)
 𝑡−𝜓 (1 −𝜂𝑖+1)(𝑦,𝑧;𝜃) + 𝜂𝑖+1(𝑦′,𝑧′;𝜃′)
 𝑡
-
-
-≤(𝜂𝑖+1 −𝜂𝑖)𝐶 𝜌𝑡
-
-𝑦−𝑦′
-
- + 𝜌𝑝−𝑡
-
-𝑧−𝑧′
-
- + (𝜂𝑖+1 −𝜂𝑖)𝐶©­
+
+≤(𝜂𝑖+1 −𝜂𝑖)𝐶 𝜌𝑡𝑦−𝑦′ + 𝜌𝑝−𝑡𝑧−𝑧′ + (𝜂𝑖+1 −𝜂𝑖)𝐶©­
 «
 𝑝
 ∑︁
@@ -4882,23 +4635,15 @@ By Lemma B.3, we know that
 𝑝+𝐻−1
 ∑︁
 𝜏=0
-𝜌|𝑡−𝜏|
-
-𝑤𝜏−𝑤′
+𝜌|𝑡−𝜏| 𝑤𝜏−𝑤′
 𝜏
-
-
- +
+ +
 𝑝+1
 ∑︁
 𝜏=0
-𝜌|𝑡−𝜏|
-
-𝛿𝜏−𝛿′
+𝜌|𝑡−𝜏| 𝛿𝜏−𝛿′
 𝜏
-
-
-ª®
+ª®
 ¬
 .
 (20)
@@ -5423,7 +5168,7 @@ SODA: An Adaptive Bitrate Controller for Consistent High-Quality Video Streaming
 ACM SIGCOMM ’24, August 4–8, 2024, Sydney, NSW, Australia
 Substituting (30) into (31) gives that
 cost(SODA) −cost(OPT) ≤
-
+ 
 𝜂+
 
 1 + 1
@@ -5748,7 +5493,7 @@ By (34), we see that
 𝑟max
 
 ·
-
+ 
 1
 1 −𝜌
 
@@ -6004,9 +5749,9 @@ On the other hand, we have that
 𝑡+ 𝛽𝑏( ˇ𝑥𝑡)
 
 ≥𝐾
-
+ 
 ˆ𝜔
-
+ 
 1
 𝑟2max
 −
@@ -6038,9 +5783,9 @@ By the optimality of {( ˆ𝑎𝜏, ˆ𝑢𝜏, ˆ𝑥𝜏)}𝜏=𝑡,...,𝑡+�
 > 𝛾𝜆2
 𝐾
 + 𝐾
-
+ 
 ˆ𝜔
-
+ 
 1
 𝑟2max
 −
@@ -6054,9 +5799,9 @@ min
 which contradicts our assumption that
 𝛾≥𝐾2
 𝜆2
-
+ 
 ˆ𝜔
-
+ 
 1
 𝑟2
 min

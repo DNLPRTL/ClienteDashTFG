@@ -1519,18 +1519,18 @@ Each chunk is encoded at several discrete bitrates, where a higher
 schemes use basic “tabular” RL approaches [43]. As a result, they must rely on simpliﬁed
 network models and perform poorly in real network conditions. We discuss these
 schemes further in §5.4 and §7.
-Video
+Video 
 Server
 CDN
-Throughput
+Throughput 
 Predictor
-Playback
+Playback 
 Buffer
-ABR
+ABR 
 Controller
-Rendered
+Rendered 
 video chunks
-Chunk
+Chunk 
 Info
 Throughput Estimate
 Buffer Occupancy

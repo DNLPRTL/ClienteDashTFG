@@ -1440,7 +1440,7 @@ where r(ϕ) =
 is the importance sampling ra-
 tio, DKL(πϕnew||πϕ) = P
 a πϕnew(s, a) log
-
+ 
 πϕnew (s,a)
 πϕ(s,a)
 !
@@ -1467,7 +1467,7 @@ is given as:
 maximizeϕLclip(ϕnew) = κEt
 "
 min
-
+ 
 LCP I(ϕ), clip(r(ϕ) , 1 −ϵ, 1 + ϵ)Aϕ(s, a)
 !#
 subject to DKL(πϕnew||πϕ) ≤λ
@@ -1640,7 +1640,7 @@ maximizeϕLclip(ϕnew)
 κEt
 "
 min
-
+ 
 LCP I(ϕ), clip(r(ϕ) , 1 −ϵ, 1 + ϵ)Aϕ(s, a)
 !#
 19:
