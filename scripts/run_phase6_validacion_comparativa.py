@@ -322,31 +322,40 @@ def run_session(config: Mapping[str, Any], session: Mapping[str, Any]) -> Dict[s
             cwd=str(repo_root),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            text=True,
             timeout=timeout_seconds,
             check=False,
         )
+        output = _decode_subprocess_output(completed.stdout)
         command_log_path.write_text(
-            "started_at={0}\ncommand={1}\nreturncode={2}\n\n{3}".format(
+            "started_at={0}\ncommand={1}\nreturncode={2}\noutput_decoding=utf-8 errors=replace\n\n{3}".format(
                 started,
                 " ".join(command),
                 completed.returncode,
-                completed.stdout or "",
+                output,
             ),
             encoding="utf-8",
         )
         return {"executed": 1, "failed": 1 if completed.returncode != 0 else 0, "skipped": 0}
     except subprocess.TimeoutExpired as exc:
+        output = _decode_subprocess_output(exc.stdout)
         command_log_path.write_text(
-            "started_at={0}\ncommand={1}\ntimeout_seconds={2}\n\n{3}".format(
+            "started_at={0}\ncommand={1}\ntimeout_seconds={2}\noutput_decoding=utf-8 errors=replace\n\n{3}".format(
                 started,
                 " ".join(command),
                 timeout_seconds,
-                exc.stdout or "",
+                output,
             ),
             encoding="utf-8",
         )
         return {"executed": 1, "failed": 1, "skipped": 0}
+
+
+def _decode_subprocess_output(output: Any) -> str:
+    if output is None:
+        return ""
+    if isinstance(output, bytes):
+        return output.decode("utf-8", errors="replace")
+    return str(output)
 
 
 def build_client_config(config: Mapping[str, Any], session: Mapping[str, Any]) -> Dict[str, Any]:

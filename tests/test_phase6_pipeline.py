@@ -5,6 +5,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from core.phase6.analysis import analyze_phase6_run, sign_test_exact
 from core.phase6.config import DEFAULT_PHASE6_CONFIG
@@ -17,7 +18,7 @@ from core.trace_replay.controlled_downloader import (
 )
 from core.trace_replay.loader import load_normalized_trace_csv
 from scripts.phase6_gui import build_phase6_command, parse_phase6_progress_line
-from scripts.run_phase6_validacion_comparativa import build_client_config, build_phase6_protocol_and_plan
+from scripts.run_phase6_validacion_comparativa import build_client_config, build_phase6_protocol_and_plan, run_session
 
 
 class Phase6SelectionTest(unittest.TestCase):
@@ -510,6 +511,39 @@ class Phase6RunnerAndGuiTest(unittest.TestCase):
         self.assertAlmostEqual(10.0, parsed["percent"])
         self.assertEqual(1, parsed["failed"])
         self.assertAlmostEqual(1083.6, parsed["eta_s"])
+
+    def test_runner_tolerates_non_utf8_child_output(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            command_log_path = tmp_path / "session.log"
+            session = {
+                "session_id": "s00001_base_rate_based",
+                "client_config_path": (tmp_path / "client.json").as_posix(),
+                "run_output_root": (tmp_path / "runs" / "s00001").as_posix(),
+                "command_log_path": command_log_path.as_posix(),
+                "mpd_url": "http://example.invalid/video.mpd",
+                "engine": "fake",
+                "controller_key": "rate_based",
+                "normalized_trace_path": (tmp_path / "trace.csv").as_posix(),
+                "window_start_s": 0.0,
+                "window_duration_s": 90.0,
+            }
+            config = dict(DEFAULT_PHASE6_CONFIG)
+            config["execution"] = dict(config["execution"])
+            config["execution"]["resume"] = False
+            config["paths"] = dict(config["paths"])
+            config["paths"]["python"] = "python"
+            config["paths"]["repo_root"] = tmp_path.as_posix()
+
+            completed = mock.Mock(returncode=0, stdout=b"linea valida\nbyte raro: \x98\n")
+            with mock.patch("scripts.run_phase6_validacion_comparativa.subprocess.run", return_value=completed):
+                result = run_session(config, session)
+
+            log_text = command_log_path.read_text(encoding="utf-8")
+
+        self.assertEqual({"executed": 1, "failed": 0, "skipped": 0}, result)
+        self.assertIn("output_decoding=utf-8 errors=replace", log_text)
+        self.assertIn("byte raro: �", log_text)
 
 
 class FakeBaseDownloader:
