@@ -110,3 +110,19 @@ Cada plan candidato debe explicar:
 - telemetria de inferencia;
 - acceptance tests;
 - por que es defendible academicamente.
+
+## Decision tecnica inicial
+
+La lectura del corpus y la primera decision de modelos quedan documentadas en:
+
+```text
+docs/contexto rama nueva/fase_4_5_v1/decision_tecnica_modelos_v1.md
+```
+
+Decision de arranque:
+
+- construir primero `spc_abr_v1`, predictor neural + planner ABR seguro;
+- construir tambien `spbc_abr_v1`, policy por behavioral cloning desde oracle
+  offline;
+- dejar `spbc_ppo_abr_v1` como fine-tuning condicionado a gates;
+- no empezar por meta-RL, Mamba, MARL, edge, energia ni VMAF.
