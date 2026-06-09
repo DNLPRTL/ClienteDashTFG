@@ -14,6 +14,9 @@ ORACLE_AUDIT_SCHEMA_ID = "phase45_v1_oracle_qoe_beam_audit_v1"
 SPC_MODEL_CONFIG_SCHEMA_ID = "phase45_v1_spc_abr_model_config_v1"
 SPC_TRAINING_REPORT_SCHEMA_ID = "phase45_v1_spc_abr_training_report_v1"
 SPC_CHECKPOINT_SCHEMA_ID = "phase45_v1_spc_abr_checkpoint_v1"
+SPBC_MODEL_CONFIG_SCHEMA_ID = "phase45_v1_spbc_abr_model_config_v1"
+SPBC_TRAINING_REPORT_SCHEMA_ID = "phase45_v1_spbc_abr_training_report_v1"
+SPBC_CHECKPOINT_SCHEMA_ID = "phase45_v1_spbc_abr_checkpoint_v1"
 
 TRAINING_ROLE = "training"
 VALIDATION_ROLE = "validation"
@@ -33,6 +36,10 @@ SPC_MODEL_FILENAME = "modelo_spc_abr_v1.pt"
 SPC_MODEL_CONFIG_FILENAME = "configuracion_spc_abr_v1.json"
 SPC_NORMALIZATION_FILENAME = "normalizacion_spc_abr_v1.json"
 SPC_TRAINING_REPORT_FILENAME = "reporte_entrenamiento_spc_abr_v1.json"
+SPBC_MODEL_FILENAME = "modelo_spbc_abr_v1.pt"
+SPBC_MODEL_CONFIG_FILENAME = "configuracion_spbc_abr_v1.json"
+SPBC_NORMALIZATION_FILENAME = "normalizacion_spbc_abr_v1.json"
+SPBC_TRAINING_REPORT_FILENAME = "reporte_entrenamiento_spbc_abr_v1.json"
 
 DATA_FILENAMES = {
     TRAINING_ROLE: TRAINING_DATA_FILENAME,
