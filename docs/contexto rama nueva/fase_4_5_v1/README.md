@@ -8,8 +8,13 @@ reproducibles e integrables como controllers normales de Phase 6.
 
 ## Objetivo
 
-Crear uno o varios controllers propios que reduzcan rebuffering y agresividad en
-redes bajas o variables, manteniendo calidad razonable en redes medias y altas.
+Crear uno o varios controllers propios nuevos, disenados desde el corpus ABR/IA
+y desde la arquitectura actual del proyecto. Los controllers IA anteriores se
+consideran pruebas de integracion cerradas, no punto de partida tecnico ni
+objetivo de mejora.
+
+La meta es reducir rebuffering y agresividad en redes bajas o variables,
+manteniendo calidad razonable en redes medias y altas.
 
 El resultado buscado no es declarar un ganador antes de Phase 6, sino producir
 controllers con:
@@ -54,10 +59,10 @@ docs/contexto rama nueva/fase_4_5_v1/paper_audits/
 ## Siguiente ciclo previsto
 
 1. Auditar corpus ABR/IA.
-2. Analizar fallos chunk a chunk de los controllers propios actuales en Phase 6.
-3. Congelar plan Fase 4-5 v1.
-4. Construir dataset offline sin leakage.
-5. Entrenar o construir modelos candidatos.
-6. Exportar bundles reproducibles.
-7. Integrar controllers plug-and-play.
-8. Ejecutar Phase 6 diagnostico y rapido en Ubuntu cliente.
+2. Congelar plan Fase 4-5 v1 desde literatura, trazas disponibles y contrato
+   Phase 6.
+3. Construir dataset offline sin leakage.
+4. Entrenar o construir modelos candidatos.
+5. Exportar bundles reproducibles.
+6. Integrar controllers plug-and-play.
+7. Ejecutar Phase 6 diagnostico y rapido en Ubuntu cliente.

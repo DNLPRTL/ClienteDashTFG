@@ -2,25 +2,24 @@
 
 Status: propuesta_inicial_no_implementada.
 
-Esta decision se basa en la auditoria inicial de los 32 PDFs del corpus ABR/IA
-y en el resultado conocido de Phase 6 rapido: los dos controllers propios
-anteriores hacen inferencia real y fallback 0, pero son demasiado agresivos en
-redes bajas, variables y con caidas.
+Esta decision se basa en la auditoria inicial de los 32 PDFs del corpus ABR/IA,
+en el contrato tecnico de Phase 6 y en las trazas disponibles. Los dos
+controllers propios anteriores se consideran pruebas de integracion cerradas:
+demostraron que el pipeline puede cargar bundles, ejecutar inferencia real y
+auditar fallback, pero no son la base cientifica ni tecnica de Fase 4-5 v1.
 
 ## Diagnostico de alto nivel
 
-Los modelos anteriores son defendibles como integracion, pero debiles como
-politica ABR propia:
+Fase 4-5 v1 empieza como diseno nuevo. El diagnostico de fondo no es "arreglar"
+los modelos anteriores, sino evitar repetir las debilidades tipicas de muchos
+ABR neuronales:
 
-- aprenden por imitation learning de labels discretos;
-- no tienen una nocion fuerte de riesgo de buffer;
-- el guardrail runtime valida accion, pero no convierte la politica en
-  conservadora ante incertidumbre;
-- el training no parece haber priorizado suficientemente tail traces, redes
-  bajas, caidas a cero y variabilidad;
-- no modelan explicitamente incertidumbre ni regimen de red;
-- no explican bien por que una accion es segura salvo por telemetria de accion
-  cruda/segura.
+- aprender acciones discretas sin una nocion fuerte de riesgo;
+- optimizar QoE medio y fallar en tail traces;
+- subir demasiado tarde o bajar tarde ante caidas;
+- tratar redes bajas, variables y altas como si fueran el mismo problema;
+- usar prediccion de throughput sin incertidumbre;
+- producir decisiones dificiles de explicar academicamente.
 
 ## Principio de diseno
 
@@ -165,18 +164,21 @@ Adaptacion posible:
 
 Antes de implementar Plan A:
 
-1. Analizar Phase 6 rapido chunk a chunk para los dos controllers propios.
-2. Comparar por chunk contra robust_mpc, rate_based, bba y mpc en las mismas
-   ventanas.
-3. Identificar patrones:
-   - subida demasiado temprana;
-   - bajada tardia;
-   - salto grande con throughput incierto;
-   - buffer bajo ignorado;
-   - estimacion de chunk size demasiado optimista;
-   - accion cruda neural corregida por safe layer;
-   - accion segura todavia demasiado agresiva.
-4. Convertir esos patrones en acceptance tests offline.
+1. Definir desde cero el contrato de `neural_abr_risk_guard_v1`.
+2. Seleccionar las seniales runtime permitidas.
+3. Definir escenarios de entrenamiento por regimen de red:
+   - baja estable;
+   - baja variable;
+   - media variable;
+   - alta estable;
+   - caidas a cero;
+   - recuperaciones bruscas;
+   - sinteticas diagnosticas separadas.
+4. Definir teachers o fuentes de supervision solo si ayudan al nuevo diseno:
+   robust_mpc, rate_based, bba, mpc, solver offline propio o politica
+   risk-aware. No usar los dos controllers IA anteriores como teacher.
+5. Convertir los escenarios de riesgo en acceptance tests offline antes de
+   entrenar.
 
 ## Decision actual
 
@@ -185,7 +187,6 @@ No entrenar todavia.
 Primero cerrar:
 
 - auditoria paper por paper;
-- postmortem chunk-level de Phase 6 rapido;
 - spec de `neural_abr_risk_guard_v1`;
 - acceptance tests y telemetry esperada.
 
