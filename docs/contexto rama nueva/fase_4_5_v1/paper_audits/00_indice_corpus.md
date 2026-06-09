@@ -14,6 +14,12 @@ Extraccion temporal usada para lectura local, fuera de Git:
 C:\Users\danie\Documents\TFG\auditorias_trazas\phase4_5_v1_pdf_text_tmp
 ```
 
+La lectura tecnica detallada esta consolidada en:
+
+```text
+docs/contexto rama nueva/fase_4_5_v1/matriz_tecnica_detallada.md
+```
+
 ## Inventario
 
 | # | PDF | Paper identificado | Tipo | Ficha |

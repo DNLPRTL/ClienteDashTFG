@@ -54,6 +54,8 @@ docs/contexto rama nueva/fase_4_5_v1/paper_audits/
 
 - `paper_audits/00_indice_corpus.md`: inventario PDF por PDF.
 - `paper_audits/*.md`: ficha operativa por PDF.
+- `matriz_tecnica_detallada.md`: que implementa exactamente cada paper y que
+  aporta al diseno.
 - `decision_modelos_v1.md`: sintesis critica y planes de controller.
 
 ## Siguiente ciclo previsto
