@@ -126,3 +126,40 @@ Decision de arranque:
   offline;
 - dejar `spbc_ppo_abr_v1` como fine-tuning condicionado a gates;
 - no empezar por meta-RL, Mamba, MARL, edge, energia ni VMAF.
+
+## Bloque 1-3 implementado: dataset derivado
+
+El primer bloque operativo de Fase 4-5 v1 queda documentado en:
+
+```text
+docs/contexto rama nueva/fase_4_5_v1/runbook_phase45_v1_dataset_wsl.md
+```
+
+Este bloque implementa solo:
+
+1. generador offline de dataset `phase45_v1`;
+2. sincronizacion manual de datasets/manifests a WSL2;
+3. generacion validada del dataset derivado.
+
+No entrena modelos, no exporta bundles, no integra controllers y no ejecuta
+Phase 6.
+
+Script principal:
+
+```text
+scripts/build_phase45_v1_dataset.py
+```
+
+Salidas externas previstas:
+
+```text
+~/TFG/datasets_normalizados/phase45_v1/phase45v1B_spc_spbc_dataset_v1/
+```
+
+El dataset contiene targets para:
+
+- `spc_abr_v1`: prediccion de capacidad futura y riesgo de rebuffer;
+- `spbc_abr_v1`: behavioral cloning desde `oracle_qoe_beam_v1`.
+
+Los controllers clasicos reales se consultan como auditoria, no como profesor
+principal.
