@@ -9,7 +9,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterable, Mapping, Sequence
+from typing import Callable, Iterable, Mapping, Sequence
 
 import torch
 from torch import nn
@@ -331,10 +331,13 @@ def train_spc_abr_v1(
     max_training_samples: int | None | str = "profile",
     max_validation_samples: int | None | str = "profile",
     validate_dataset: bool = True,
+    progress_callback: Callable[[Mapping[str, object]], None] | None = None,
 ) -> Mapping[str, object]:
+    _emit_progress(progress_callback, "preparing", "Preparando entrenamiento spc_abr_v1")
     data_path = ensure_existing_dir(dataset_dir, purpose="phase45_v1 dataset")
     output_path = prepare_output_dir(output_dir, overwrite=overwrite, purpose="spc_abr_v1 model")
     if validate_dataset:
+        _emit_progress(progress_callback, "validating_dataset", "Validando dataset phase45_v1")
         dataset_validation = validate_phase45_v1_dataset_dir(data_path)
     else:
         dataset_validation = {"status": "SKIPPED", "dataset_dir": str(data_path)}
@@ -348,10 +351,25 @@ def train_spc_abr_v1(
     selected_device = resolve_torch_device(device)
     set_training_seed(profile.seed)
     started = time.monotonic()
+    _emit_progress(
+        progress_callback,
+        "loading_examples",
+        "Cargando muestras JSONL",
+        device_used=str(selected_device),
+        training_limit=train_limit,
+        validation_limit=val_limit,
+    )
     training_examples = load_spc_examples(data_path / DATA_FILENAMES[TRAINING_ROLE], TRAINING_ROLE, limit=train_limit)
     validation_examples = load_spc_examples(data_path / DATA_FILENAMES[VALIDATION_ROLE], VALIDATION_ROLE, limit=val_limit)
     if not training_examples or not validation_examples:
         raise SpcTrainingError("spc_abr_v1 training requires training and validation examples")
+    _emit_progress(
+        progress_callback,
+        "examples_loaded",
+        "Muestras cargadas",
+        training_samples=len(training_examples),
+        validation_samples=len(validation_examples),
+    )
     normalization = fit_spc_normalization(training_examples)
     train_tensors = examples_to_tensors(training_examples, normalization)
     validation_tensors = examples_to_tensors(validation_examples, normalization)
@@ -388,12 +406,32 @@ def train_spc_abr_v1(
     best_state_dict = None
     best_epoch = 0
     for epoch in range(1, active_epochs + 1):
+        epoch_started = time.monotonic()
+        _emit_progress(
+            progress_callback,
+            "epoch_started",
+            "Iniciando epoca",
+            epoch=epoch,
+            epochs=active_epochs,
+            train_batches=len(train_loader),
+        )
         train_metrics = _run_epoch(
             model,
             train_loader,
             device=selected_device,
             optimizer=optimizer,
             profile=profile,
+            progress_callback=progress_callback,
+            epoch=epoch,
+            epochs=active_epochs,
+        )
+        _emit_progress(
+            progress_callback,
+            "epoch_validation_started",
+            "Validando epoca",
+            epoch=epoch,
+            epochs=active_epochs,
+            validation_batches=len(validation_loader),
         )
         validation_metrics = evaluate_spc_model(
             model,
@@ -414,13 +452,30 @@ def train_spc_abr_v1(
             "validation_risk_brier": validation_metrics["risk_brier"],
         }
         epoch_reports.append(epoch_report)
+        is_best = float(validation_metrics["loss"]) < best_validation_loss
         if float(validation_metrics["loss"]) < best_validation_loss:
             best_validation_loss = float(validation_metrics["loss"])
             best_epoch = epoch
             best_state_dict = {key: value.detach().cpu().clone() for key, value in model.state_dict().items()}
+        _emit_progress(
+            progress_callback,
+            "epoch_finished",
+            "Epoca completada",
+            epoch=epoch,
+            epochs=active_epochs,
+            epoch_duration_s=time.monotonic() - epoch_started,
+            training_loss=train_metrics["loss"],
+            validation_loss=validation_metrics["loss"],
+            validation_p50_mae_kbps=validation_metrics["p50_mae_kbps"],
+            validation_capacity_mae_kbps=validation_metrics["capacity_mae_kbps"],
+            validation_risk_brier=validation_metrics["risk_brier"],
+            best_epoch=best_epoch,
+            best_so_far=is_best,
+        )
 
     if best_state_dict is not None:
         model.load_state_dict(best_state_dict)
+    _emit_progress(progress_callback, "final_evaluation_started", "Calculando metricas finales")
     final_training_metrics = evaluate_spc_model(
         model,
         train_eval_loader,
@@ -512,6 +567,14 @@ def train_spc_abr_v1(
         "real_world_generalization_claimed": False,
     }
     write_json(report_path, report)
+    _emit_progress(
+        progress_callback,
+        "finished",
+        "Entrenamiento spc_abr_v1 finalizado",
+        training_duration_s=duration_s,
+        output_dir=str(output_path),
+        best_epoch=best_epoch,
+    )
     return report
 
 
@@ -652,10 +715,16 @@ def _run_epoch(
     device: torch.device,
     optimizer: torch.optim.Optimizer,
     profile: SpcTrainingProfile,
+    progress_callback: Callable[[Mapping[str, object]], None] | None = None,
+    epoch: int | None = None,
+    epochs: int | None = None,
 ) -> Mapping[str, float]:
     model.train()
     totals = _MetricTotals()
-    for batch in loader:
+    total_batches = len(loader)
+    progress_every = _progress_batch_interval(total_batches)
+    epoch_started = time.monotonic()
+    for batch_index, batch in enumerate(loader, start=1):
         moved = _move_batch(batch, device)
         optimizer.zero_grad()
         outputs = model(moved[0], moved[1], moved[2], moved[3])
@@ -665,7 +734,40 @@ def _run_epoch(
         optimizer.step()
         batch_size = int(moved[0].shape[0])
         totals.add({}, losses, batch_size)
+        if batch_index == 1 or batch_index == total_batches or batch_index % progress_every == 0:
+            elapsed_s = time.monotonic() - epoch_started
+            estimated_total_s = elapsed_s * float(total_batches) / float(batch_index)
+            _emit_progress(
+                progress_callback,
+                "training_batch",
+                "Entrenando batches",
+                epoch=epoch,
+                epochs=epochs,
+                batch=batch_index,
+                batches=total_batches,
+                elapsed_s=elapsed_s,
+                eta_s=max(estimated_total_s - elapsed_s, 0.0),
+                loss=float(losses["loss"].detach().cpu().item()),
+            )
     return totals.to_json(metrics_only=False)
+
+
+def _emit_progress(
+    callback: Callable[[Mapping[str, object]], None] | None,
+    event: str,
+    message: str,
+    **fields: object,
+) -> None:
+    if callback is None:
+        return
+    payload = {"event": event, "message": message, **fields}
+    callback(payload)
+
+
+def _progress_batch_interval(total_batches: int) -> int:
+    if total_batches <= 10:
+        return 1
+    return max(1, total_batches // 20)
 
 
 def _loss_components(

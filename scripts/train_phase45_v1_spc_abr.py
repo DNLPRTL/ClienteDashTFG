@@ -4,8 +4,9 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
 from pathlib import Path
-from typing import Sequence
+from typing import Mapping, Sequence
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -37,6 +38,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="Usa todo el dataset aunque el perfil smoke/pilot tenga limites por defecto.",
     )
     parser.add_argument("--skip-dataset-validation", action="store_true")
+    parser.add_argument(
+        "--quiet-progress",
+        action="store_true",
+        help="No muestra progreso incremental por stderr; el JSON final se sigue escribiendo por stdout.",
+    )
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args(argv)
 
@@ -49,6 +55,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.max_validation_samples is not None:
         max_validation_samples = args.max_validation_samples
 
+    progress_started = time.monotonic()
+    progress_callback = None if args.quiet_progress else _make_progress_printer(progress_started)
     report = train_spc_abr_v1(
         args.dataset_dir,
         output_dir,
@@ -61,9 +69,85 @@ def main(argv: Sequence[str] | None = None) -> int:
         max_training_samples=max_training_samples,
         max_validation_samples=max_validation_samples,
         validate_dataset=not args.skip_dataset_validation,
+        progress_callback=progress_callback,
     )
     print(json.dumps(report, indent=2, sort_keys=True))
     return 0
+
+
+def _make_progress_printer(started: float):
+    def _print_progress(event: Mapping[str, object]) -> None:
+        event_key = str(event.get("event", "progress"))
+        elapsed = _format_seconds(time.monotonic() - started)
+        if event_key == "training_batch":
+            epoch = event.get("epoch")
+            epochs = event.get("epochs")
+            batch = int(event.get("batch", 0))
+            batches = int(event.get("batches", 1))
+            percent = 100.0 * float(batch) / max(float(batches), 1.0)
+            eta = _format_seconds(float(event.get("eta_s", 0.0)))
+            loss = float(event.get("loss", 0.0))
+            line = (
+                "[{elapsed}] epoca {epoch}/{epochs} batch {batch}/{batches} "
+                "({percent:5.1f}%) loss={loss:.4f} eta_epoca={eta}"
+            ).format(
+                elapsed=elapsed,
+                epoch=epoch,
+                epochs=epochs,
+                batch=batch,
+                batches=batches,
+                percent=percent,
+                loss=loss,
+                eta=eta,
+            )
+        elif event_key == "epoch_finished":
+            line = (
+                "[{elapsed}] epoca {epoch}/{epochs} lista en {duration}; "
+                "train_loss={train_loss:.4f} val_loss={val_loss:.4f} "
+                "p50_mae={p50:.0f}kbps cap_mae={cap:.0f}kbps risk_brier={risk:.4f} "
+                "best_epoch={best}{star}"
+            ).format(
+                elapsed=elapsed,
+                epoch=event.get("epoch"),
+                epochs=event.get("epochs"),
+                duration=_format_seconds(float(event.get("epoch_duration_s", 0.0))),
+                train_loss=float(event.get("training_loss", 0.0)),
+                val_loss=float(event.get("validation_loss", 0.0)),
+                p50=float(event.get("validation_p50_mae_kbps", 0.0)),
+                cap=float(event.get("validation_capacity_mae_kbps", 0.0)),
+                risk=float(event.get("validation_risk_brier", 0.0)),
+                best=event.get("best_epoch"),
+                star=" nuevo_mejor" if event.get("best_so_far") is True else "",
+            )
+        elif event_key == "examples_loaded":
+            line = "[{0}] muestras cargadas: train={1} validation={2}".format(
+                elapsed,
+                event.get("training_samples"),
+                event.get("validation_samples"),
+            )
+        elif event_key == "finished":
+            line = "[{0}] terminado en {1}; best_epoch={2}; salida={3}".format(
+                elapsed,
+                _format_seconds(float(event.get("training_duration_s", 0.0))),
+                event.get("best_epoch"),
+                event.get("output_dir"),
+            )
+        else:
+            line = "[{0}] {1}".format(elapsed, event.get("message", event_key))
+        print(line, file=sys.stderr, flush=True)
+
+    return _print_progress
+
+
+def _format_seconds(value: float) -> str:
+    seconds = max(int(round(float(value))), 0)
+    hours, remainder = divmod(seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    if hours:
+        return "{0:d}h{1:02d}m{2:02d}s".format(hours, minutes, seconds)
+    if minutes:
+        return "{0:d}m{1:02d}s".format(minutes, seconds)
+    return "{0:d}s".format(seconds)
 
 
 if __name__ == "__main__":
