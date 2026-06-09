@@ -11,6 +11,9 @@ TARGET_SCHEMA_ID = "phase45_v1_targets_schema_v1"
 LEAKAGE_AUDIT_SCHEMA_ID = "phase45_v1_no_contamination_audit_v1"
 NORMALIZATION_SCHEMA_ID = "phase45_v1_normalization_stats_v1"
 ORACLE_AUDIT_SCHEMA_ID = "phase45_v1_oracle_qoe_beam_audit_v1"
+SPC_MODEL_CONFIG_SCHEMA_ID = "phase45_v1_spc_abr_model_config_v1"
+SPC_TRAINING_REPORT_SCHEMA_ID = "phase45_v1_spc_abr_training_report_v1"
+SPC_CHECKPOINT_SCHEMA_ID = "phase45_v1_spc_abr_checkpoint_v1"
 
 TRAINING_ROLE = "training"
 VALIDATION_ROLE = "validation"
@@ -26,6 +29,10 @@ TARGET_SCHEMA_FILENAME = "esquema_targets_phase45_v1.json"
 LEAKAGE_AUDIT_FILENAME = "auditoria_no_contaminacion_phase45_v1.json"
 NORMALIZATION_STATS_FILENAME = "estadisticas_normalizacion_train_only_phase45_v1.json"
 ORACLE_AUDIT_FILENAME = "auditoria_oracle_qoe_beam_v1.json"
+SPC_MODEL_FILENAME = "modelo_spc_abr_v1.pt"
+SPC_MODEL_CONFIG_FILENAME = "configuracion_spc_abr_v1.json"
+SPC_NORMALIZATION_FILENAME = "normalizacion_spc_abr_v1.json"
+SPC_TRAINING_REPORT_FILENAME = "reporte_entrenamiento_spc_abr_v1.json"
 
 DATA_FILENAMES = {
     TRAINING_ROLE: TRAINING_DATA_FILENAME,

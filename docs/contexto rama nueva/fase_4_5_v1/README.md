@@ -163,3 +163,29 @@ El dataset contiene targets para:
 
 Los controllers clasicos reales se consultan como auditoria, no como profesor
 principal.
+
+## Bloque 4 implementado: entrenamiento `spc_abr_v1`
+
+El runbook operativo de entrenamiento queda en:
+
+```text
+docs/contexto rama nueva/fase_4_5_v1/runbook_phase45_v1_spc_training_wsl.md
+```
+
+Este bloque entrena solo el predictor `spc_abr_v1` sobre el dataset derivado
+`phase45_v1`.
+
+No exporta bundle, no registra controller, no ejecuta Phase 6 y no declara
+mejora.
+
+Script principal:
+
+```text
+scripts/train_phase45_v1_spc_abr.py
+```
+
+Salidas externas previstas:
+
+```text
+~/TFG/modelos/phase45_v1/spc_abr_v1/<profile>/
+```
