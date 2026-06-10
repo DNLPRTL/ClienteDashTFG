@@ -126,6 +126,49 @@ No pasar a `full_v1` si `focus_2_5_mbps` mejora `top1` pero empeora
 `selected_utility_regret_vs_best_immediate_mean`,
 `selected_rebuffer_regret_vs_best_immediate_mean`, over-aggressive o rebuffer.
 
+## Pilot utility-risk 7B.3 recomendado antes de full
+
+Este run mantiene dataset y contrato, pero mejora el entrenamiento desde la
+raiz:
+
+- el checkpoint se selecciona por `validation_selection_score`, alineado con
+  utility regret, rebuffer regret, over-aggressive e invalid actions, con foco
+  explicito en `2_5_mbps`;
+- el modelo aprende cabezas auxiliares por accion para `reward_n`, rebuffer y
+  target risk usando solo targets de entrenamiento, nunca como inputs;
+- los logits de decision fusionan politica base, utilidad predicha y riesgo
+  predicho.
+
+```bash
+python3 scripts/train_phase45_v2_spbc_dpo.py \
+  --profile pilot \
+  --output-dir ~/TFG/modelos/phase45_v1/spbc_abr_v2_dpo/pilot_utility_risk_v1 \
+  --overwrite \
+  --device auto
+```
+
+Variante endurecida para comprobar si el foco `2_5_mbps` acepta mas penalizacion
+sin perder utilidad global:
+
+```bash
+python3 scripts/train_phase45_v2_spbc_dpo.py \
+  --profile pilot \
+  --output-dir ~/TFG/modelos/phase45_v1/spbc_abr_v2_dpo/pilot_utility_risk_focus_v1 \
+  --overwrite \
+  --device auto \
+  --utility-loss-weight 0.65 \
+  --rebuffer-loss-weight 0.65 \
+  --focus-bucket-sample-weight 1.75 \
+  --over-aggressive-rebuffer-action-weight 2.25 \
+  --decision-rebuffer-fusion-weight 0.40 \
+  --decision-risk-fusion-weight 0.24 \
+  --selection-focus-weight 1.25
+```
+
+No lanzar `full_v1` si el nuevo score mejora por perdida de `top1` pero empeora
+`selected_utility_regret_vs_best_immediate_mean`, rebuffer real estimado u
+over-aggressive en `2_5_mbps`.
+
 ## Full v1
 
 ```bash
@@ -189,7 +232,12 @@ False False
 - La referencia por defecto es `spbc_abr_v1/full_v1` congelada.
 - La loss total combina CE contra `oracle_action`, DPO ponderado por gaps
   normalizados/capados, ranking/soft utility, distribucion soft por `reward_n`
-  y penalizacion esperada de rebuffer.
+  penalizacion esperada de rebuffer y cabezas auxiliares de utilidad/riesgo.
+- El mejor checkpoint se selecciona por un score offline de entrenamiento
+  alineado con utility regret, rebuffer regret, over-aggressive e invalid
+  actions, con foco explicito en `2_5_mbps`; no usa `eval`.
+- Las cabezas auxiliares predicen `reward_n`, rebuffer y target risk por accion,
+  pero esos targets no forman parte del forward input contract.
 - El reporte incluye metricas globales, por `throughput_bucket`, por
   `rollout_source`, foco `2_5_mbps`, selected utility regret y selected
   rebuffer regret contra oracle y mejor accion inmediata.

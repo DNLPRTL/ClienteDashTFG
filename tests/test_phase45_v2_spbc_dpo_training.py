@@ -21,6 +21,7 @@ from core.phase45_v1.spbc_v2_dpo_training import (
     profile_by_name,
     train_spbc_abr_v2_dpo,
     _loss_components,
+    _selection_score,
 )
 from tests.test_phase45_v2_preference_dataset import build_manifest_with_trace_files, unit_profile, write_stub_spbc_checkpoint
 
@@ -65,12 +66,18 @@ class Phase45V2SpbcDpoTrainingTest(unittest.TestCase):
         mask = torch.tensor([[True, True, False, False, False, False], [True, False, True, False, False, False]])
 
         logits = model(sequence, scalars, candidates, mask)["action_logits"]
+        outputs = model(sequence, scalars, candidates, mask)
 
         self.assertEqual((2, 6), logits.shape)
         self.assertLess(float(logits[0, 2]), -1.0e8)
         self.assertLess(float(logits[1, 1]), -1.0e8)
+        self.assertEqual((2, 6), outputs["base_action_logits"].shape)
+        self.assertEqual((2, 6), outputs["predicted_reward_n_by_action"].shape)
+        self.assertEqual((2, 6), outputs["predicted_rebuffer_s_by_action"].shape)
+        self.assertEqual((2, 6), outputs["predicted_target_risk_logits_by_action"].shape)
         self.assertEqual("spbc_abr_v2_dpo", model.config()["model_key"])
         self.assertFalse(model.config()["forward_input_contract"]["preference_pairs_used_as_inputs"])
+        self.assertTrue(model.config()["auxiliary_heads"]["targets_used_only_for_training"])
 
     def test_loader_rejects_forbidden_extra_model_input_fields(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -139,8 +146,15 @@ class Phase45V2SpbcDpoTrainingTest(unittest.TestCase):
             self.assertIn("predicted_target_risk_rate", report_file["validation_metrics"])
             self.assertIn("utility_loss", report_file["validation_metrics"])
             self.assertIn("rebuffer_loss", report_file["validation_metrics"])
+            self.assertIn("aux_reward_loss", report_file["validation_metrics"])
+            self.assertIn("aux_rebuffer_loss", report_file["validation_metrics"])
+            self.assertIn("aux_risk_loss", report_file["validation_metrics"])
             self.assertIn("selected_utility_regret_vs_best_immediate_mean", report_file["validation_metrics"])
             self.assertIn("selected_rebuffer_regret_vs_best_immediate_mean", report_file["validation_metrics"])
+            self.assertEqual("validation_selection_score", report_file["checkpoint_selection"]["criterion"])
+            self.assertTrue(report_file["state_load_report"]["loaded"])
+            self.assertTrue(report_file["state_load_report"]["auxiliary_heads_initialized_from_zero"])
+            self.assertIn("decision_fusion", report_file["loss_design"])
             self.assertTrue(report_file["loss_design"]["sample_weights_include_focus_bucket_and_severe_errors"])
 
     def test_loss_components_include_utility_and_rebuffer_penalty(self):
@@ -154,8 +168,18 @@ class Phase45V2SpbcDpoTrainingTest(unittest.TestCase):
         )
         logits_risky = torch.tensor([[0.0, 3.0]], dtype=torch.float32)
         logits_safe = torch.tensor([[3.0, 0.0]], dtype=torch.float32)
-        outputs_risky = {"action_logits": logits_risky}
-        outputs_safe = {"action_logits": logits_safe}
+        outputs_risky = {
+            "action_logits": logits_risky,
+            "predicted_reward_n_by_action": torch.tensor([[2.0, -5.0]], dtype=torch.float32),
+            "predicted_rebuffer_s_by_action": torch.tensor([[0.0, 2.0]], dtype=torch.float32),
+            "predicted_target_risk_logits_by_action": torch.tensor([[-3.0, 3.0]], dtype=torch.float32),
+        }
+        outputs_safe = {
+            "action_logits": logits_safe,
+            "predicted_reward_n_by_action": torch.tensor([[2.0, -5.0]], dtype=torch.float32),
+            "predicted_rebuffer_s_by_action": torch.tensor([[0.0, 2.0]], dtype=torch.float32),
+            "predicted_target_risk_logits_by_action": torch.tensor([[-3.0, 3.0]], dtype=torch.float32),
+        }
         ref_outputs = {"action_logits": torch.zeros((1, 2), dtype=torch.float32)}
         batch = (
             torch.zeros((1, 8, 2), dtype=torch.float32),
@@ -184,6 +208,43 @@ class Phase45V2SpbcDpoTrainingTest(unittest.TestCase):
 
         self.assertGreater(float(risky_losses["rebuffer_loss"]), float(safe_losses["rebuffer_loss"]))
         self.assertGreater(float(risky_losses["utility_loss"]), float(safe_losses["utility_loss"]))
+        self.assertLess(float(risky_losses["aux_reward_loss"]), 1.0e-6)
+        self.assertLess(float(risky_losses["aux_rebuffer_loss"]), 1.0e-6)
+        self.assertLess(float(risky_losses["aux_risk_loss"]), 0.05)
+
+    def test_selection_score_prioritizes_regret_rebuffer_and_focus_bucket(self):
+        profile = profile_by_name("smoke")
+        low_loss_bad_policy = {
+            "selected_utility_regret_vs_best_immediate_mean": 0.20,
+            "selected_rebuffer_regret_vs_best_immediate_mean": 0.05,
+            "over_aggressive_rate_vs_oracle": 0.20,
+            "invalid_action_rate": 0.0,
+            "focus_2_5_mbps": {
+                "bucket_present": True,
+                "selected_utility_regret_vs_best_immediate_mean": 0.40,
+                "selected_rebuffer_regret_vs_best_immediate_mean": 0.10,
+                "over_aggressive_rate_vs_oracle": 0.30,
+                "invalid_action_rate": 0.0,
+            },
+        }
+        higher_loss_better_policy = {
+            "selected_utility_regret_vs_best_immediate_mean": 0.05,
+            "selected_rebuffer_regret_vs_best_immediate_mean": 0.01,
+            "over_aggressive_rate_vs_oracle": 0.08,
+            "invalid_action_rate": 0.0,
+            "focus_2_5_mbps": {
+                "bucket_present": True,
+                "selected_utility_regret_vs_best_immediate_mean": 0.06,
+                "selected_rebuffer_regret_vs_best_immediate_mean": 0.01,
+                "over_aggressive_rate_vs_oracle": 0.10,
+                "invalid_action_rate": 0.0,
+            },
+        }
+
+        self.assertLess(
+            _selection_score(higher_loss_better_policy, profile),
+            _selection_score(low_loss_bad_policy, profile),
+        )
 
 
 def build_unit_v2_dataset(

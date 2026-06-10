@@ -55,10 +55,20 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--ranking-margin-scale", type=float, default=None)
     parser.add_argument("--utility-temperature", type=float, default=None)
     parser.add_argument("--rebuffer-loss-cap-s", type=float, default=None)
+    parser.add_argument("--aux-reward-loss-weight", type=float, default=None)
+    parser.add_argument("--aux-rebuffer-loss-weight", type=float, default=None)
+    parser.add_argument("--aux-risk-loss-weight", type=float, default=None)
+    parser.add_argument("--decision-reward-fusion-weight", type=float, default=None)
+    parser.add_argument("--decision-rebuffer-fusion-weight", type=float, default=None)
+    parser.add_argument("--decision-risk-fusion-weight", type=float, default=None)
     parser.add_argument("--focus-bucket-sample-weight", type=float, default=None)
     parser.add_argument("--severe-error-sample-weight", type=float, default=None)
     parser.add_argument("--safe-vs-rebuffer-pair-weight", type=float, default=None)
     parser.add_argument("--over-aggressive-rebuffer-action-weight", type=float, default=None)
+    parser.add_argument("--selection-focus-weight", type=float, default=None)
+    parser.add_argument("--selection-rebuffer-weight", type=float, default=None)
+    parser.add_argument("--selection-over-aggressive-weight", type=float, default=None)
+    parser.add_argument("--selection-invalid-weight", type=float, default=None)
     parser.add_argument("--max-pair-weight", type=float, default=None)
     parser.add_argument("--max-training-samples", type=int, default=None)
     parser.add_argument("--max-validation-samples", type=int, default=None)
@@ -120,10 +130,20 @@ def _profile_with_overrides(args: argparse.Namespace):
         ("ranking_margin_scale", "ranking_margin_scale"),
         ("utility_temperature", "utility_temperature"),
         ("rebuffer_loss_cap_s", "rebuffer_loss_cap_s"),
+        ("aux_reward_loss_weight", "aux_reward_loss_weight"),
+        ("aux_rebuffer_loss_weight", "aux_rebuffer_loss_weight"),
+        ("aux_risk_loss_weight", "aux_risk_loss_weight"),
+        ("decision_reward_fusion_weight", "decision_reward_fusion_weight"),
+        ("decision_rebuffer_fusion_weight", "decision_rebuffer_fusion_weight"),
+        ("decision_risk_fusion_weight", "decision_risk_fusion_weight"),
         ("focus_bucket_sample_weight", "focus_bucket_sample_weight"),
         ("severe_error_sample_weight", "severe_error_sample_weight"),
         ("safe_vs_rebuffer_pair_weight", "safe_vs_rebuffer_pair_weight"),
         ("over_aggressive_rebuffer_action_weight", "over_aggressive_rebuffer_action_weight"),
+        ("selection_focus_weight", "selection_focus_weight"),
+        ("selection_rebuffer_weight", "selection_rebuffer_weight"),
+        ("selection_over_aggressive_weight", "selection_over_aggressive_weight"),
+        ("selection_invalid_weight", "selection_invalid_weight"),
         ("max_pair_weight", "max_pair_weight"),
     ):
         value = getattr(args, arg_name)
@@ -162,7 +182,8 @@ def _make_progress_printer(started: float):
                 "[{elapsed}] epoca {epoch}/{epochs} lista en {duration}; "
                 "train_loss={train_loss:.4f} val_loss={val_loss:.4f} "
                 "top1={top1:.4f} pair_acc={pair_acc:.4f} qoe_gap={qoe_gap:.4f} "
-                "u_regret={u_regret:.4f} rb_regret={rb_regret:.4f} best_epoch={best}{star}"
+                "u_regret={u_regret:.4f} rb_regret={rb_regret:.4f} "
+                "selection={selection:.4f} best_epoch={best}{star}"
             ).format(
                 elapsed=elapsed,
                 epoch=event.get("epoch"),
@@ -175,6 +196,7 @@ def _make_progress_printer(started: float):
                 qoe_gap=float(event.get("validation_predicted_qoe_gap_mean", 0.0)),
                 u_regret=float(event.get("validation_utility_regret", 0.0)),
                 rb_regret=float(event.get("validation_rebuffer_regret", 0.0)),
+                selection=float(event.get("validation_selection_score", 0.0)),
                 best=event.get("best_epoch"),
                 star=" nuevo_mejor" if event.get("best_so_far") is True else "",
             )

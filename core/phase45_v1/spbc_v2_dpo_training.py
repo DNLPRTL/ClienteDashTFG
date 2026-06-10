@@ -33,6 +33,7 @@ from core.phase45_v1.spbc_training import (
     SCALAR_FEATURES,
     SEQUENCE_FEATURES,
     SpbcAbrV1Policy,
+    SpbcTrainingError,
 )
 
 
@@ -60,6 +61,17 @@ CANDIDATE_INPUT_KEYS = frozenset(CANDIDATE_FEATURES)
 TARGET_RISK_QOE_GAP_THRESHOLD = 0.25
 FOCUS_THROUGHPUT_BUCKET = "2_5_mbps"
 REBUFFER_LOSS_SECONDS_CAP = 4.0
+_LOSS_METRIC_NAMES = (
+    "loss",
+    "ce_loss",
+    "dpo_loss",
+    "ranking_loss",
+    "utility_loss",
+    "rebuffer_loss",
+    "aux_reward_loss",
+    "aux_rebuffer_loss",
+    "aux_risk_loss",
+)
 
 
 class SpbcV2DpoTrainingError(ValueError):
@@ -89,10 +101,20 @@ class SpbcV2DpoTrainingProfile:
     ranking_margin_scale: float = 0.15
     utility_temperature: float = 0.55
     rebuffer_loss_cap_s: float = REBUFFER_LOSS_SECONDS_CAP
+    aux_reward_loss_weight: float = 0.08
+    aux_rebuffer_loss_weight: float = 0.10
+    aux_risk_loss_weight: float = 0.08
+    decision_reward_fusion_weight: float = 0.12
+    decision_rebuffer_fusion_weight: float = 0.30
+    decision_risk_fusion_weight: float = 0.18
     focus_bucket_sample_weight: float = 1.45
     severe_error_sample_weight: float = 1.25
     safe_vs_rebuffer_pair_weight: float = 1.25
     over_aggressive_rebuffer_action_weight: float = 1.75
+    selection_focus_weight: float = 1.00
+    selection_rebuffer_weight: float = 4.30
+    selection_over_aggressive_weight: float = 0.20
+    selection_invalid_weight: float = 10.00
     max_pair_weight: float = 6.0
     seed: int = 450701
 
@@ -119,10 +141,20 @@ class SpbcV2DpoTrainingProfile:
             "ranking_margin_scale": self.ranking_margin_scale,
             "utility_temperature": self.utility_temperature,
             "rebuffer_loss_cap_s": self.rebuffer_loss_cap_s,
+            "aux_reward_loss_weight": self.aux_reward_loss_weight,
+            "aux_rebuffer_loss_weight": self.aux_rebuffer_loss_weight,
+            "aux_risk_loss_weight": self.aux_risk_loss_weight,
+            "decision_reward_fusion_weight": self.decision_reward_fusion_weight,
+            "decision_rebuffer_fusion_weight": self.decision_rebuffer_fusion_weight,
+            "decision_risk_fusion_weight": self.decision_risk_fusion_weight,
             "focus_bucket_sample_weight": self.focus_bucket_sample_weight,
             "severe_error_sample_weight": self.severe_error_sample_weight,
             "safe_vs_rebuffer_pair_weight": self.safe_vs_rebuffer_pair_weight,
             "over_aggressive_rebuffer_action_weight": self.over_aggressive_rebuffer_action_weight,
+            "selection_focus_weight": self.selection_focus_weight,
+            "selection_rebuffer_weight": self.selection_rebuffer_weight,
+            "selection_over_aggressive_weight": self.selection_over_aggressive_weight,
+            "selection_invalid_weight": self.selection_invalid_weight,
             "max_pair_weight": self.max_pair_weight,
             "seed": self.seed,
         }
@@ -249,12 +281,115 @@ class SpbcV2DpoNormalizationStats:
 
 
 class SpbcAbrV2DpoPolicy(SpbcAbrV1Policy):
+    def __init__(
+        self,
+        *,
+        sequence_dim: int = 2,
+        scalar_dim: int = len(SCALAR_FEATURES),
+        candidate_dim: int = len(CANDIDATE_FEATURES),
+        history_hidden_size: int = 128,
+        state_hidden_size: int = 96,
+        candidate_hidden_size: int = 48,
+        shared_hidden_size: int = 192,
+        dropout: float = 0.10,
+        decision_reward_fusion_weight: float = 0.12,
+        decision_rebuffer_fusion_weight: float = 0.30,
+        decision_risk_fusion_weight: float = 0.18,
+        rebuffer_prediction_cap_s: float = REBUFFER_LOSS_SECONDS_CAP,
+    ) -> None:
+        super().__init__(
+            sequence_dim=sequence_dim,
+            scalar_dim=scalar_dim,
+            candidate_dim=candidate_dim,
+            history_hidden_size=history_hidden_size,
+            state_hidden_size=state_hidden_size,
+            candidate_hidden_size=candidate_hidden_size,
+            shared_hidden_size=shared_hidden_size,
+            dropout=dropout,
+        )
+        self.decision_reward_fusion_weight = float(decision_reward_fusion_weight)
+        self.decision_rebuffer_fusion_weight = float(decision_rebuffer_fusion_weight)
+        self.decision_risk_fusion_weight = float(decision_risk_fusion_weight)
+        self.rebuffer_prediction_cap_s = float(rebuffer_prediction_cap_s)
+        aux_input_dim = self.shared_hidden_size + self.candidate_hidden_size
+        self.reward_head = self._auxiliary_head(aux_input_dim)
+        self.rebuffer_head = self._auxiliary_head(aux_input_dim)
+        self.risk_head = self._auxiliary_head(aux_input_dim)
+        self._zero_initialize_auxiliary_heads()
+
+    def _auxiliary_head(self, input_dim: int) -> nn.Sequential:
+        return nn.Sequential(
+            nn.Linear(input_dim, self.shared_hidden_size),
+            nn.ReLU(),
+            nn.Dropout(self.dropout),
+            nn.Linear(self.shared_hidden_size, 1),
+        )
+
+    def _zero_initialize_auxiliary_heads(self) -> None:
+        for head in (self.reward_head, self.rebuffer_head, self.risk_head):
+            final = head[-1]
+            if isinstance(final, nn.Linear):
+                nn.init.zeros_(final.weight)
+                nn.init.zeros_(final.bias)
+
+    def forward(
+        self,
+        sequence: torch.Tensor,
+        scalars: torch.Tensor,
+        candidates: torch.Tensor,
+        action_mask: torch.Tensor,
+    ) -> Mapping[str, torch.Tensor]:
+        if sequence.ndim != 3 or sequence.shape[2] != self.sequence_dim:
+            raise SpbcTrainingError("sequence must have shape [batch, history, sequence_dim]")
+        if scalars.ndim != 2 or scalars.shape[1] != self.scalar_dim:
+            raise SpbcTrainingError("scalars must have shape [batch, scalar_dim]")
+        if candidates.ndim != 3 or candidates.shape[2] != self.candidate_dim:
+            raise SpbcTrainingError("candidates must have shape [batch, candidates, candidate_dim]")
+        if action_mask.shape != candidates.shape[:2]:
+            raise SpbcTrainingError("action_mask shape must match candidate rows")
+
+        _history_output, hidden = self.history_encoder(sequence)
+        history_vector = hidden[-1]
+        state_vector = self.state_encoder(scalars)
+        shared = self.shared(torch.cat([history_vector, state_vector], dim=1))
+
+        batch_size, candidate_count, _ = candidates.shape
+        candidate_vectors = self.candidate_encoder(candidates)
+        expanded_shared = shared.unsqueeze(1).expand(batch_size, candidate_count, self.shared_hidden_size)
+        joint = torch.cat([expanded_shared, candidate_vectors], dim=2)
+
+        base_logits = self.policy_head(joint).squeeze(2)
+        predicted_reward = self.reward_head(joint).squeeze(2)
+        predicted_rebuffer_norm = torch.sigmoid(self.rebuffer_head(joint).squeeze(2))
+        predicted_rebuffer_s = predicted_rebuffer_norm * max(float(self.rebuffer_prediction_cap_s), 1.0e-6)
+        predicted_risk_logits = self.risk_head(joint).squeeze(2)
+        predicted_risk_probability = torch.sigmoid(predicted_risk_logits)
+
+        mask = action_mask.to(dtype=torch.bool, device=base_logits.device)
+        valid_counts = torch.clamp(mask.sum(dim=1, keepdim=True).to(dtype=base_logits.dtype), min=1.0)
+        reward_sum = predicted_reward.masked_fill(~mask, 0.0).sum(dim=1, keepdim=True)
+        centered_reward = predicted_reward - (reward_sum / valid_counts)
+        fusion = (
+            float(self.decision_reward_fusion_weight) * centered_reward
+            - float(self.decision_rebuffer_fusion_weight) * predicted_rebuffer_norm
+            - float(self.decision_risk_fusion_weight) * predicted_risk_probability
+        )
+        logits = base_logits + fusion
+        masked_logits = logits.masked_fill(~mask, -1.0e9)
+        return {
+            "action_logits": masked_logits,
+            "base_action_logits": base_logits.masked_fill(~mask, -1.0e9),
+            "predicted_reward_n_by_action": predicted_reward.masked_fill(~mask, 0.0),
+            "predicted_rebuffer_s_by_action": predicted_rebuffer_s.masked_fill(~mask, 0.0),
+            "predicted_target_risk_logits_by_action": predicted_risk_logits.masked_fill(~mask, -1.0e9),
+        }
+
     def config(self) -> Mapping[str, object]:
         return {
             "schema_id": SPBC_V2_DPO_MODEL_CONFIG_SCHEMA_ID,
             "model_key": SPBC_V2_DPO_MODEL_KEY,
             "model_family": "Safe Preference Behavioral Cloning ABR v2 DPO",
-            "model_type": "gru_candidate_policy",
+            "model_type": "gru_candidate_policy_with_auxiliary_utility_risk_heads",
             "sequence_features": list(SEQUENCE_FEATURES),
             "scalar_features": list(SCALAR_FEATURES),
             "candidate_features": list(CANDIDATE_FEATURES),
@@ -278,6 +413,23 @@ class SpbcAbrV2DpoPolicy(SpbcAbrV1Policy):
             "candidate_hidden_size": self.candidate_hidden_size,
             "shared_hidden_size": self.shared_hidden_size,
             "dropout": self.dropout,
+            "auxiliary_heads": {
+                "predicted_reward_n_by_action": True,
+                "predicted_rebuffer_s_by_action": True,
+                "predicted_target_risk_logits_by_action": True,
+                "targets_used_only_for_training": True,
+            },
+            "decision_fusion": {
+                "enabled": True,
+                "reward_weight": self.decision_reward_fusion_weight,
+                "rebuffer_weight": self.decision_rebuffer_fusion_weight,
+                "risk_weight": self.decision_risk_fusion_weight,
+                "rebuffer_prediction_cap_s": self.rebuffer_prediction_cap_s,
+            },
+            "decision_reward_fusion_weight": self.decision_reward_fusion_weight,
+            "decision_rebuffer_fusion_weight": self.decision_rebuffer_fusion_weight,
+            "decision_risk_fusion_weight": self.decision_risk_fusion_weight,
+            "rebuffer_prediction_cap_s": self.rebuffer_prediction_cap_s,
             "controller_registered": False,
             "bundle_exported": False,
         }
@@ -371,8 +523,9 @@ def train_spbc_abr_v2_dpo(
     if normalization is None:
         normalization = fit_spbc_v2_dpo_normalization(training_examples)
     model = _build_model_from_profile_or_checkpoint(profile, init_payload).to(selected_device)
+    state_load_report = {"loaded": False, "missing_keys": [], "unexpected_keys": []}
     if init_payload is not None:
-        model.load_state_dict(init_payload["state_dict"])
+        state_load_report = _load_initial_state_dict(model, init_payload)
     reference_model = _clone_reference_model(model, selected_device)
     train_tensors = examples_to_tensors(training_examples, normalization)
     validation_tensors = examples_to_tensors(validation_examples, normalization)
@@ -385,6 +538,7 @@ def train_spbc_abr_v2_dpo(
 
     epoch_reports = []
     best_validation_loss = math.inf
+    best_validation_selection_score = math.inf
     best_state_dict = None
     best_epoch = 0
     for epoch in range(1, active_epochs + 1):
@@ -432,9 +586,15 @@ def train_spbc_abr_v2_dpo(
             "training_ranking_loss": train_metrics["ranking_loss"],
             "training_utility_loss": train_metrics["utility_loss"],
             "training_rebuffer_loss": train_metrics["rebuffer_loss"],
+            "training_aux_reward_loss": train_metrics["aux_reward_loss"],
+            "training_aux_rebuffer_loss": train_metrics["aux_rebuffer_loss"],
+            "training_aux_risk_loss": train_metrics["aux_risk_loss"],
             "validation_loss": validation_metrics["loss"],
             "validation_utility_loss": validation_metrics["utility_loss"],
             "validation_rebuffer_loss": validation_metrics["rebuffer_loss"],
+            "validation_aux_reward_loss": validation_metrics["aux_reward_loss"],
+            "validation_aux_rebuffer_loss": validation_metrics["aux_rebuffer_loss"],
+            "validation_aux_risk_loss": validation_metrics["aux_risk_loss"],
             "validation_top1_accuracy": validation_metrics["top1_accuracy"],
             "validation_pair_preference_accuracy": validation_metrics["pair_preference_accuracy"],
             "validation_predicted_qoe_gap_mean": validation_metrics["predicted_qoe_gap_mean"],
@@ -445,10 +605,13 @@ def train_spbc_abr_v2_dpo(
                 "selected_rebuffer_regret_vs_best_immediate_mean"
             ],
         }
+        selection_score = _selection_score(validation_metrics, profile)
+        epoch_report["validation_selection_score"] = selection_score
         epoch_reports.append(epoch_report)
-        is_best = float(validation_metrics["loss"]) < best_validation_loss
+        best_validation_loss = min(best_validation_loss, float(validation_metrics["loss"]))
+        is_best = float(selection_score) < best_validation_selection_score
         if is_best:
-            best_validation_loss = float(validation_metrics["loss"])
+            best_validation_selection_score = float(selection_score)
             best_epoch = epoch
             best_state_dict = {key: value.detach().cpu().clone() for key, value in model.state_dict().items()}
         _emit_progress(
@@ -465,6 +628,7 @@ def train_spbc_abr_v2_dpo(
             validation_predicted_qoe_gap_mean=validation_metrics["predicted_qoe_gap_mean"],
             validation_utility_regret=validation_metrics["selected_utility_regret_vs_best_immediate_mean"],
             validation_rebuffer_regret=validation_metrics["selected_rebuffer_regret_vs_best_immediate_mean"],
+            validation_selection_score=selection_score,
             best_epoch=best_epoch,
             best_so_far=is_best,
         )
@@ -526,6 +690,8 @@ def train_spbc_abr_v2_dpo(
         "init_checkpoint_sha256": init_payload["sha256"] if init_payload is not None else None,
         "reference_policy_source": _reference_policy_source(init_payload),
         "best_epoch": best_epoch,
+        "best_validation_selection_score": best_validation_selection_score,
+        "best_validation_loss_seen": best_validation_loss,
         "device_used": str(selected_device),
         "controller_registered": False,
         "bundle_exported": False,
@@ -537,7 +703,7 @@ def train_spbc_abr_v2_dpo(
     report = {
         "schema_id": SPBC_V2_DPO_TRAINING_REPORT_SCHEMA_ID,
         "human_readable_name": "Entrenamiento offline de spbc_abr_v2_dpo",
-        "phase": "fase_4_5_v1_bloque7b_entrenamiento_spbc_abr_v2_dpo",
+        "phase": "fase_4_5_v1_bloque7b3_entrenamiento_spbc_abr_v2_dpo_utility_risk",
         "status": "PASS",
         "generated_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
         "dataset_dir": str(data_path),
@@ -557,6 +723,14 @@ def train_spbc_abr_v2_dpo(
             VALIDATION_ROLE: len(validation_examples),
         },
         "best_epoch": best_epoch,
+        "best_validation_selection_score": best_validation_selection_score,
+        "best_validation_loss_seen": best_validation_loss,
+        "checkpoint_selection": {
+            "criterion": "validation_selection_score",
+            "lower_is_better": True,
+            "uses_eval_split": False,
+            "focus_throughput_bucket": FOCUS_THROUGHPUT_BUCKET,
+        },
         "epoch_reports": epoch_reports,
         "training_metrics": final_training_metrics,
         "validation_metrics": final_validation_metrics,
@@ -571,6 +745,7 @@ def train_spbc_abr_v2_dpo(
         "init_checkpoint": init_payload["path"] if init_payload is not None else None,
         "init_checkpoint_sha256": init_payload["sha256"] if init_payload is not None else None,
         "reference_policy_source": _reference_policy_source(init_payload),
+        "state_load_report": state_load_report,
         "loss_design": {
             "cross_entropy_target": "oracle_action",
             "cross_entropy_role": "anchor_not_primary_objective",
@@ -582,6 +757,18 @@ def train_spbc_abr_v2_dpo(
             "utility_temperature": profile.utility_temperature,
             "rebuffer_loss": "expected_normalized_rebuffer_penalty_under_policy_distribution",
             "rebuffer_loss_cap_s": profile.rebuffer_loss_cap_s,
+            "auxiliary_reward_loss": "masked_smooth_l1_prediction_of_reward_n_by_action",
+            "auxiliary_rebuffer_loss": "masked_smooth_l1_prediction_of_capped_rebuffer_by_action",
+            "auxiliary_risk_loss": "masked_bce_prediction_of_target_risk_by_action",
+            "decision_fusion": "policy_logits_plus_predicted_utility_minus_predicted_rebuffer_and_risk",
+            "decision_reward_fusion_weight": profile.decision_reward_fusion_weight,
+            "decision_rebuffer_fusion_weight": profile.decision_rebuffer_fusion_weight,
+            "decision_risk_fusion_weight": profile.decision_risk_fusion_weight,
+            "checkpoint_selected_by": "validation_selection_score_aligned_with_regret_rebuffer_focus_bucket",
+            "selection_focus_weight": profile.selection_focus_weight,
+            "selection_rebuffer_weight": profile.selection_rebuffer_weight,
+            "selection_over_aggressive_weight": profile.selection_over_aggressive_weight,
+            "selection_invalid_weight": profile.selection_invalid_weight,
             "pair_weights_normalized_and_capped": True,
             "sample_weights_include_focus_bucket_and_severe_errors": True,
             "focus_throughput_bucket": FOCUS_THROUGHPUT_BUCKET,
@@ -925,6 +1112,8 @@ def _loss_components(
     mask = batch[3].to(dtype=torch.bool)
     labels = batch[4]
     rewards = batch[8]
+    rebuffer_s = batch[7]
+    target_risks = batch[11]
     rebuffer_penalties = batch[18]
     sample_weights = batch[12]
     pair_preferred = batch[13]
@@ -970,12 +1159,33 @@ def _loss_components(
         mask,
         sample_weights,
     )
+    aux_reward_loss = _masked_weighted_smooth_l1(
+        outputs["predicted_reward_n_by_action"],
+        rewards,
+        mask,
+        sample_weights,
+    )
+    aux_rebuffer_loss = _masked_weighted_smooth_l1(
+        outputs["predicted_rebuffer_s_by_action"] / max(float(profile.rebuffer_loss_cap_s), 1.0e-6),
+        torch.clamp(rebuffer_s, min=0.0, max=float(profile.rebuffer_loss_cap_s)) / max(float(profile.rebuffer_loss_cap_s), 1.0e-6),
+        mask,
+        sample_weights,
+    )
+    aux_risk_loss = _masked_weighted_binary_cross_entropy(
+        outputs["predicted_target_risk_logits_by_action"],
+        target_risks,
+        mask,
+        sample_weights,
+    )
     loss = (
         float(profile.ce_loss_weight) * ce_loss
         + float(profile.dpo_loss_weight) * dpo_loss
         + float(profile.ranking_loss_weight) * ranking_loss
         + float(profile.utility_loss_weight) * utility_loss
         + float(profile.rebuffer_loss_weight) * rebuffer_loss
+        + float(profile.aux_reward_loss_weight) * aux_reward_loss
+        + float(profile.aux_rebuffer_loss_weight) * aux_rebuffer_loss
+        + float(profile.aux_risk_loss_weight) * aux_risk_loss
     )
     return {
         "loss_tensor": loss,
@@ -985,6 +1195,9 @@ def _loss_components(
         "ranking_loss": ranking_loss.detach(),
         "utility_loss": utility_loss.detach(),
         "rebuffer_loss": rebuffer_loss.detach(),
+        "aux_reward_loss": aux_reward_loss.detach(),
+        "aux_rebuffer_loss": aux_rebuffer_loss.detach(),
+        "aux_risk_loss": aux_risk_loss.detach(),
     }
 
 
@@ -1088,6 +1301,36 @@ def _expected_rebuffer_penalty_loss(
     return (per_sample_loss * weights).sum() / torch.clamp(weights.sum(), min=1.0)
 
 
+def _masked_weighted_smooth_l1(
+    predictions: torch.Tensor,
+    targets: torch.Tensor,
+    mask: torch.Tensor,
+    sample_weights: torch.Tensor,
+) -> torch.Tensor:
+    active_mask = mask.to(dtype=torch.bool, device=predictions.device)
+    targets = targets.to(device=predictions.device, dtype=predictions.dtype)
+    raw = F.smooth_l1_loss(predictions, targets, reduction="none")
+    valid_counts = torch.clamp(active_mask.sum(dim=1).to(dtype=predictions.dtype), min=1.0)
+    per_sample_loss = (raw * active_mask.to(dtype=predictions.dtype)).sum(dim=1) / valid_counts
+    weights = sample_weights.to(device=predictions.device, dtype=predictions.dtype)
+    return (per_sample_loss * weights).sum() / torch.clamp(weights.sum(), min=1.0)
+
+
+def _masked_weighted_binary_cross_entropy(
+    logits: torch.Tensor,
+    targets: torch.Tensor,
+    mask: torch.Tensor,
+    sample_weights: torch.Tensor,
+) -> torch.Tensor:
+    active_mask = mask.to(dtype=torch.bool, device=logits.device)
+    targets = targets.to(device=logits.device, dtype=logits.dtype)
+    raw = F.binary_cross_entropy_with_logits(logits, targets, reduction="none")
+    valid_counts = torch.clamp(active_mask.sum(dim=1).to(dtype=logits.dtype), min=1.0)
+    per_sample_loss = (raw * active_mask.to(dtype=logits.dtype)).sum(dim=1) / valid_counts
+    weights = sample_weights.to(device=logits.device, dtype=logits.dtype)
+    return (per_sample_loss * weights).sum() / torch.clamp(weights.sum(), min=1.0)
+
+
 def _policy_observations(
     outputs: Mapping[str, torch.Tensor],
     batch: Sequence[torch.Tensor],
@@ -1176,7 +1419,7 @@ class _LossTotals:
 
     def add(self, losses: Mapping[str, object], batch_size: int) -> None:
         self.weight += int(batch_size)
-        for name in ("loss", "ce_loss", "dpo_loss", "ranking_loss", "utility_loss", "rebuffer_loss"):
+        for name in _LOSS_METRIC_NAMES:
             value = losses[name]
             numeric = float(value.detach().cpu().item()) if hasattr(value, "detach") else float(value)
             self.losses[name] += numeric * float(batch_size)
@@ -1237,7 +1480,7 @@ class _PolicyMetricTotals:
         batch_size: int,
     ) -> None:
         self.weight += int(batch_size)
-        for name in ("loss", "ce_loss", "dpo_loss", "ranking_loss", "utility_loss", "rebuffer_loss"):
+        for name in _LOSS_METRIC_NAMES:
             if name in losses:
                 value = losses[name]
                 numeric = float(value.detach().cpu().item()) if hasattr(value, "detach") else float(value)
@@ -1600,6 +1843,34 @@ def _normalization_from_init_checkpoint(
     )
 
 
+def _load_initial_state_dict(
+    model: SpbcAbrV2DpoPolicy,
+    init_payload: Mapping[str, object],
+) -> Mapping[str, object]:
+    result = model.load_state_dict(init_payload["state_dict"], strict=False)
+    missing_keys = list(result.missing_keys)
+    unexpected_keys = list(result.unexpected_keys)
+    allowed_missing_prefixes = ("reward_head.", "rebuffer_head.", "risk_head.")
+    disallowed_missing = [
+        key
+        for key in missing_keys
+        if not any(str(key).startswith(prefix) for prefix in allowed_missing_prefixes)
+    ]
+    if disallowed_missing or unexpected_keys:
+        raise SpbcV2DpoTrainingError(
+            "init checkpoint incompatible with spbc_abr_v2_dpo: missing={0} unexpected={1}".format(
+                disallowed_missing,
+                unexpected_keys,
+            )
+        )
+    return {
+        "loaded": True,
+        "missing_keys": missing_keys,
+        "unexpected_keys": unexpected_keys,
+        "auxiliary_heads_initialized_from_zero": bool(missing_keys),
+    }
+
+
 def _build_model_from_profile_or_checkpoint(
     profile: SpbcV2DpoTrainingProfile,
     init_payload: Mapping[str, object] | None,
@@ -1612,6 +1883,16 @@ def _build_model_from_profile_or_checkpoint(
             candidate_hidden_size=int(config["candidate_hidden_size"]),
             shared_hidden_size=int(config["shared_hidden_size"]),
             dropout=float(config["dropout"]),
+            decision_reward_fusion_weight=float(
+                config.get("decision_reward_fusion_weight", profile.decision_reward_fusion_weight)
+            ),
+            decision_rebuffer_fusion_weight=float(
+                config.get("decision_rebuffer_fusion_weight", profile.decision_rebuffer_fusion_weight)
+            ),
+            decision_risk_fusion_weight=float(
+                config.get("decision_risk_fusion_weight", profile.decision_risk_fusion_weight)
+            ),
+            rebuffer_prediction_cap_s=float(config.get("rebuffer_prediction_cap_s", profile.rebuffer_loss_cap_s)),
         )
     return SpbcAbrV2DpoPolicy(
         history_hidden_size=profile.history_hidden_size,
@@ -1619,6 +1900,10 @@ def _build_model_from_profile_or_checkpoint(
         candidate_hidden_size=profile.candidate_hidden_size,
         shared_hidden_size=profile.shared_hidden_size,
         dropout=profile.dropout,
+        decision_reward_fusion_weight=profile.decision_reward_fusion_weight,
+        decision_rebuffer_fusion_weight=profile.decision_rebuffer_fusion_weight,
+        decision_risk_fusion_weight=profile.decision_risk_fusion_weight,
+        rebuffer_prediction_cap_s=profile.rebuffer_loss_cap_s,
     )
 
 
@@ -1629,6 +1914,10 @@ def _clone_reference_model(model: SpbcAbrV2DpoPolicy, device: torch.device) -> S
         candidate_hidden_size=model.candidate_hidden_size,
         shared_hidden_size=model.shared_hidden_size,
         dropout=model.dropout,
+        decision_reward_fusion_weight=model.decision_reward_fusion_weight,
+        decision_rebuffer_fusion_weight=model.decision_rebuffer_fusion_weight,
+        decision_risk_fusion_weight=model.decision_risk_fusion_weight,
+        rebuffer_prediction_cap_s=model.rebuffer_prediction_cap_s,
     )
     reference.load_state_dict({key: value.detach().cpu().clone() for key, value in model.state_dict().items()})
     reference.to(device)
@@ -1644,6 +1933,39 @@ def _reference_policy_source(init_payload: Mapping[str, object] | None) -> str:
     if init_payload.get("model_key") == "spbc_abr_v1":
         return "spbc_abr_v1_full_v1_frozen_checkpoint"
     return "frozen_initial_checkpoint"
+
+
+def _selection_score(metrics: Mapping[str, object], profile: SpbcV2DpoTrainingProfile) -> float:
+    global_score = _selection_component(metrics, profile)
+    focus_raw = metrics.get("focus_2_5_mbps", {})
+    focus_score = 0.0
+    if isinstance(focus_raw, Mapping) and focus_raw.get("bucket_present") is True:
+        focus_score = _selection_component(focus_raw, profile)
+    return round(float(global_score + float(profile.selection_focus_weight) * focus_score), 9)
+
+
+def _selection_component(metrics: Mapping[str, object], profile: SpbcV2DpoTrainingProfile) -> float:
+    utility_regret = _metric_float(metrics, "selected_utility_regret_vs_best_immediate_mean")
+    rebuffer_regret = _metric_float(metrics, "selected_rebuffer_regret_vs_best_immediate_mean")
+    over_aggressive = _metric_float(metrics, "over_aggressive_rate_vs_oracle")
+    invalid = _metric_float(metrics, "invalid_action_rate")
+    return (
+        utility_regret
+        + float(profile.selection_rebuffer_weight) * rebuffer_regret
+        + float(profile.selection_over_aggressive_weight) * over_aggressive
+        + float(profile.selection_invalid_weight) * invalid
+    )
+
+
+def _metric_float(metrics: Mapping[str, object], key: str) -> float:
+    value = metrics.get(key, 0.0)
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        numeric = 0.0
+    if not math.isfinite(numeric):
+        return 0.0
+    return numeric
 
 
 def _build_reference_comparison(
@@ -1797,10 +2119,20 @@ def _validate_training_args(
         "ranking_margin_scale",
         "utility_temperature",
         "rebuffer_loss_cap_s",
+        "aux_reward_loss_weight",
+        "aux_rebuffer_loss_weight",
+        "aux_risk_loss_weight",
+        "decision_reward_fusion_weight",
+        "decision_rebuffer_fusion_weight",
+        "decision_risk_fusion_weight",
         "focus_bucket_sample_weight",
         "severe_error_sample_weight",
         "safe_vs_rebuffer_pair_weight",
         "over_aggressive_rebuffer_action_weight",
+        "selection_focus_weight",
+        "selection_rebuffer_weight",
+        "selection_over_aggressive_weight",
+        "selection_invalid_weight",
         "max_pair_weight",
     ):
         value = float(getattr(profile, name))
