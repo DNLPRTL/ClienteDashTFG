@@ -148,11 +148,16 @@ Decision: aceptar
 `~/TFG/modelos/phase45_v1/spbc_abr_v2_dpo/full_v2_anchor_safe_rank_v1/modelo_spbc_abr_v2_dpo.pt`
 como candidato offline SPBC 7B para la siguiente fase de preparacion. No
 exportar bundle, no registrar controller, no ejecutar Phase 6 y no declarar
-ranking, ganador, mejora QoE ni generalizacion. Antes de cualquier integracion,
-capturar el `checkpoint_sha256` desde el reporte de entrenamiento y mantenerlo
-en la documentacion/runbook.
+ranking, ganador, mejora QoE ni generalizacion.
 
-Siguiente paso recomendado: congelar el artefacto con ruta y SHA, y continuar
-con el modelo complementario `spc_abr_v2_reward_risk` usando el mismo criterio:
-pilots/summaries versionados, gates estrictos y ninguna afirmacion comparativa
-antes de Phase 6.
+Artefacto congelado:
+
+```text
+checkpoint=/home/danie/TFG/modelos/phase45_v1/spbc_abr_v2_dpo/full_v2_anchor_safe_rank_v1/modelo_spbc_abr_v2_dpo.pt
+checkpoint_sha256=43b4d012448e12885fac8cbfec914aab6450e0c1b146a4bb8534e8b90b61c227
+training_report=/home/danie/TFG/modelos/phase45_v1/spbc_abr_v2_dpo/full_v2_anchor_safe_rank_v1/reporte_entrenamiento_spbc_abr_v2_dpo.json
+```
+
+Siguiente paso recomendado: continuar con el modelo complementario
+`spc_abr_v2_reward_risk` usando el mismo criterio: pilots/summaries
+versionados, gates estrictos y ninguna afirmacion comparativa antes de Phase 6.

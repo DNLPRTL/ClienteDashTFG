@@ -2,24 +2,30 @@
 
 ## Objetivo
 
-Entrenar el scorer `spc_abr_v2_reward_risk` sobre el dataset externo
-`phase45v2_preference_onpolicy_dataset_v1`.
+Entrenar el scorer `spc_abr_v2_reward_risk` sobre el dataset externo mas
+avanzado `phase45v2_preference_onpolicy_dagger2_dataset_v1`.
 
 Este bloque no toca runtime, `player.py`, controllers, bundles ni Phase 6. No
 autoriza benchmark, ranking, ganador ni afirmacion de mejora QoE.
 
 ## Entradas
 
-Dataset v2 validado:
+Dataset DAgger-2 validado:
 
 ```bash
-~/TFG/datasets_normalizados/phase45_v1/phase45v2_preference_onpolicy_dataset_v1/
+~/TFG/datasets_normalizados/phase45_v1/phase45v2_preference_onpolicy_dagger2_dataset_v1/
 ```
 
 Politica opcional para comparacion offline:
 
 ```bash
-~/TFG/modelos/phase45_v1/spbc_abr_v2_dpo/full_v1_utility_risk_v1/modelo_spbc_abr_v2_dpo.pt
+~/TFG/modelos/phase45_v1/spbc_abr_v2_dpo/full_v2_anchor_safe_rank_v1/modelo_spbc_abr_v2_dpo.pt
+```
+
+SHA congelado de la politica de referencia:
+
+```text
+43b4d012448e12885fac8cbfec914aab6450e0c1b146a4bb8534e8b90b61c227
 ```
 
 ## Salidas externas
@@ -42,6 +48,43 @@ git pull
 source ~/venvs/rocm721/bin/activate
 python3 -c "import torch; print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0))"
 ```
+
+## Pilot DAgger-2 multi-seed actual
+
+No pegar comandos largos manualmente en WSL. Usar el runner versionado:
+
+```bash
+cd ~/TFG/DashClientModular4
+git pull
+bash scripts/run_phase45_v2_spc_reward_risk_dagger2_pilot_wsl.sh
+```
+
+Para repetir solo el resumen:
+
+```bash
+cd ~/TFG/DashClientModular4
+python3 scripts/summarize_phase45_v2_spc_reward_risk_dagger2_pilot.py
+```
+
+Este pilot usa:
+
+```text
+profile=pilot
+seeds=450841,450842,450843
+dataset=phase45v2_preference_onpolicy_dagger2_dataset_v1
+reference_policy=spbc_abr_v2_dpo/full_v2_anchor_safe_rank_v1
+sample_limits=profile
+```
+
+Aceptar solo si la mayoria de seeds mantiene senal coherente en global,
+`2_5_mbps` y `spbc_v2_dpo_on_policy`, sin disparar rebuffer,
+over-aggressive, under-aggressive ni `risk_false_negative_rate`. Esta salida no
+es benchmark ni ranking.
+
+## Comandos historicos/manuales
+
+Las secciones siguientes quedan como referencia tecnica. Para ejecucion normal,
+preferir los runners versionados anteriores.
 
 ## Smoke
 

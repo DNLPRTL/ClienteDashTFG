@@ -74,6 +74,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--selection-over-aggressive-weight", type=float, default=None)
     parser.add_argument("--selection-invalid-weight", type=float, default=None)
     parser.add_argument("--selection-prediction-loss-weight", type=float, default=None)
+    parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--max-training-samples", type=int, default=None)
     parser.add_argument("--max-validation-samples", type=int, default=None)
     parser.add_argument(
@@ -152,6 +153,8 @@ def _profile_with_overrides(args: argparse.Namespace):
         value = getattr(args, arg_name)
         if value is not None:
             replacements[field_name] = float(value)
+    if args.seed is not None:
+        replacements["seed"] = int(args.seed)
     return replace(profile, **replacements) if replacements else profile
 
 

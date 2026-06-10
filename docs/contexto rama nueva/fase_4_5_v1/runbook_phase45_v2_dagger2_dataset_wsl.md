@@ -410,11 +410,13 @@ queda aceptado solo como candidato offline, no como controller final.
 
 Artefacto candidato:
 
-```bash
-~/TFG/modelos/phase45_v1/spbc_abr_v2_dpo/full_v2_anchor_safe_rank_v1/modelo_spbc_abr_v2_dpo.pt
+```text
+checkpoint=/home/danie/TFG/modelos/phase45_v1/spbc_abr_v2_dpo/full_v2_anchor_safe_rank_v1/modelo_spbc_abr_v2_dpo.pt
+checkpoint_sha256=43b4d012448e12885fac8cbfec914aab6450e0c1b146a4bb8534e8b90b61c227
+training_report=/home/danie/TFG/modelos/phase45_v1/spbc_abr_v2_dpo/full_v2_anchor_safe_rank_v1/reporte_entrenamiento_spbc_abr_v2_dpo.json
 ```
 
-Para capturar ruta y SHA del checkpoint despues de actualizar el repo:
+Para verificar de nuevo ruta y SHA del checkpoint despues de actualizar el repo:
 
 ```bash
 cd ~/TFG/DashClientModular4

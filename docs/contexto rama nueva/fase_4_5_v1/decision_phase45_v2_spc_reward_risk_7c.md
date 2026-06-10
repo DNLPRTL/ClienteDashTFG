@@ -93,3 +93,37 @@ El score penaliza:
 ```
 
 No commitear checkpoints, reportes ni logs generados.
+
+## Addendum 2026-06-10 - arranque DAgger-2 tras SPBC anchor_safe_rank
+
+Tras aceptar como candidato offline el SPBC 7B
+`full_v2_anchor_safe_rank_v1`, el siguiente entrenamiento SPC debe usar el
+dataset mas avanzado disponible:
+
+```text
+~/TFG/datasets_normalizados/phase45_v1/phase45v2_preference_onpolicy_dagger2_dataset_v1
+```
+
+La comparacion offline de referencia debe apuntar al candidato SPBC congelado:
+
+```text
+checkpoint=/home/danie/TFG/modelos/phase45_v1/spbc_abr_v2_dpo/full_v2_anchor_safe_rank_v1/modelo_spbc_abr_v2_dpo.pt
+checkpoint_sha256=43b4d012448e12885fac8cbfec914aab6450e0c1b146a4bb8534e8b90b61c227
+```
+
+Lectura conceptual:
+
+- `spbc_abr_v2_dpo` aprende directamente una politica: decide que bitrate
+  elegir.
+- `spc_abr_v2_reward_risk` aprende una superficie de consecuencias por accion:
+  recompensa, rebuffer, gap QoE, smoothness y riesgo.
+- SPC puede ser mas facil como tarea predictiva porque ve targets por accion,
+  pero puede ser mas delicado como decisor porque un error de calibracion en
+  riesgo/rebuffer puede mover la accion seleccionada.
+
+Por tanto, el primer paso no debe ser `full_v1`. Debe ser un pilot multi-seed
+con limites de `pilot`, DAgger-2, referencia al SPBC congelado y pesos mas
+sensibles a `2_5_mbps`, rebuffer y riesgo. La aceptacion exige mirar global,
+`2_5_mbps`, `spbc_v2_dpo_on_policy`, regret, rebuffer, over/under-aggressive,
+`risk_brier` y `risk_false_negative_rate`. No aceptar un scorer por mejorar solo
+una media global.
