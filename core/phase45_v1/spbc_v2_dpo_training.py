@@ -77,6 +77,7 @@ _LOSS_METRIC_NAMES = (
     "over_aggressive_probability_loss",
     "over_aggressive_margin_loss",
     "over_aggressive_reference_excess_loss",
+    "safe_utility_rank_loss",
 )
 
 
@@ -115,6 +116,8 @@ class SpbcV2DpoTrainingProfile:
     over_aggressive_margin_loss_weight: float = 0.0
     over_aggressive_reference_excess_loss_weight: float = 0.0
     over_aggressive_margin: float = 0.25
+    safe_utility_rank_loss_weight: float = 0.0
+    safe_utility_margin: float = 0.25
     decision_reward_fusion_weight: float = 0.12
     decision_rebuffer_fusion_weight: float = 0.30
     decision_risk_fusion_weight: float = 0.18
@@ -166,6 +169,8 @@ class SpbcV2DpoTrainingProfile:
             "over_aggressive_margin_loss_weight": self.over_aggressive_margin_loss_weight,
             "over_aggressive_reference_excess_loss_weight": self.over_aggressive_reference_excess_loss_weight,
             "over_aggressive_margin": self.over_aggressive_margin,
+            "safe_utility_rank_loss_weight": self.safe_utility_rank_loss_weight,
+            "safe_utility_margin": self.safe_utility_margin,
             "decision_reward_fusion_weight": self.decision_reward_fusion_weight,
             "decision_rebuffer_fusion_weight": self.decision_rebuffer_fusion_weight,
             "decision_risk_fusion_weight": self.decision_risk_fusion_weight,
@@ -655,6 +660,7 @@ def train_spbc_abr_v2_dpo(
             "training_over_aggressive_probability_loss": train_metrics["over_aggressive_probability_loss"],
             "training_over_aggressive_margin_loss": train_metrics["over_aggressive_margin_loss"],
             "training_over_aggressive_reference_excess_loss": train_metrics["over_aggressive_reference_excess_loss"],
+            "training_safe_utility_rank_loss": train_metrics["safe_utility_rank_loss"],
             "validation_loss": validation_metrics["loss"],
             "validation_utility_loss": validation_metrics["utility_loss"],
             "validation_rebuffer_loss": validation_metrics["rebuffer_loss"],
@@ -667,6 +673,7 @@ def train_spbc_abr_v2_dpo(
             "validation_over_aggressive_reference_excess_loss": validation_metrics[
                 "over_aggressive_reference_excess_loss"
             ],
+            "validation_safe_utility_rank_loss": validation_metrics["safe_utility_rank_loss"],
             "validation_top1_accuracy": validation_metrics["top1_accuracy"],
             "validation_pair_preference_accuracy": validation_metrics["pair_preference_accuracy"],
             "validation_predicted_qoe_gap_mean": validation_metrics["predicted_qoe_gap_mean"],
@@ -880,6 +887,9 @@ def train_spbc_abr_v2_dpo(
             "over_aggressive_reference_excess_loss": "positive_policy_probability_excess_over_frozen_reference_on_over_aggressive_actions",
             "over_aggressive_reference_excess_loss_weight": profile.over_aggressive_reference_excess_loss_weight,
             "over_aggressive_margin": profile.over_aggressive_margin,
+            "safe_utility_rank_loss": "margin_ranking_best_reward_action_inside_valid_non_over_aggressive_action_set",
+            "safe_utility_rank_loss_weight": profile.safe_utility_rank_loss_weight,
+            "safe_utility_margin": profile.safe_utility_margin,
             "decision_fusion": "policy_logits_plus_predicted_utility_minus_predicted_rebuffer_and_risk",
             "decision_reward_fusion_weight": profile.decision_reward_fusion_weight,
             "decision_rebuffer_fusion_weight": profile.decision_rebuffer_fusion_weight,
@@ -1333,6 +1343,14 @@ def _loss_components(
         mask,
         sample_weights,
     )
+    safe_utility_rank_loss = _safe_utility_rank_loss(
+        logits,
+        rewards,
+        over_aggressive_actions,
+        mask,
+        sample_weights,
+        margin=float(profile.safe_utility_margin),
+    )
     loss = (
         float(profile.ce_loss_weight) * ce_loss
         + float(profile.dpo_loss_weight) * dpo_loss
@@ -1346,6 +1364,7 @@ def _loss_components(
         + float(profile.over_aggressive_probability_loss_weight) * over_aggressive_probability_loss
         + float(profile.over_aggressive_margin_loss_weight) * over_aggressive_margin_loss
         + float(profile.over_aggressive_reference_excess_loss_weight) * over_aggressive_reference_excess_loss
+        + float(profile.safe_utility_rank_loss_weight) * safe_utility_rank_loss
     )
     return {
         "loss_tensor": loss,
@@ -1362,6 +1381,7 @@ def _loss_components(
         "over_aggressive_probability_loss": over_aggressive_probability_loss.detach(),
         "over_aggressive_margin_loss": over_aggressive_margin_loss.detach(),
         "over_aggressive_reference_excess_loss": over_aggressive_reference_excess_loss.detach(),
+        "safe_utility_rank_loss": safe_utility_rank_loss.detach(),
     }
 
 
@@ -1566,6 +1586,36 @@ def _over_aggressive_reference_excess_loss(
     excess = F.relu(probabilities - ref_probabilities)
     per_sample_loss = (excess * over_mask.to(dtype=logits.dtype)).sum(dim=1)
     weights = sample_weights.to(device=logits.device, dtype=logits.dtype)
+    return (per_sample_loss * weights).sum() / torch.clamp(weights.sum(), min=1.0)
+
+
+def _safe_utility_rank_loss(
+    logits: torch.Tensor,
+    rewards: torch.Tensor,
+    over_aggressive_actions: torch.Tensor,
+    mask: torch.Tensor,
+    sample_weights: torch.Tensor,
+    *,
+    margin: float,
+) -> torch.Tensor:
+    active_mask = mask.to(dtype=torch.bool, device=logits.device)
+    over_mask = over_aggressive_actions.to(dtype=torch.bool, device=logits.device) & active_mask
+    safe_mask = active_mask & ~over_mask
+    has_safe = safe_mask.any(dim=1, keepdim=True)
+    effective_safe_mask = torch.where(has_safe, safe_mask, active_mask)
+    rewards = rewards.to(device=logits.device, dtype=logits.dtype)
+    safe_rewards = rewards.masked_fill(~effective_safe_mask, -1.0e9)
+    best_safe = safe_rewards.argmax(dim=1)
+    masked_logits = logits.masked_fill(~active_mask, -1.0e9)
+    best_safe_logits = torch.gather(masked_logits, 1, best_safe.unsqueeze(1)).squeeze(1)
+    action_indices = torch.arange(logits.shape[1], device=logits.device).unsqueeze(0)
+    competing_safe_mask = effective_safe_mask & (action_indices != best_safe.unsqueeze(1))
+    has_competing_safe = competing_safe_mask.any(dim=1)
+    competing_logits = masked_logits.masked_fill(~competing_safe_mask, -1.0e9)
+    best_competing_logits = competing_logits.max(dim=1).values
+    per_sample_loss = F.relu(float(margin) + best_competing_logits - best_safe_logits)
+    per_sample_loss = torch.where(has_competing_safe, per_sample_loss, torch.zeros_like(per_sample_loss))
+    weights = sample_weights.to(device=logits.device, dtype=logits.dtype) * has_competing_safe.to(dtype=logits.dtype)
     return (per_sample_loss * weights).sum() / torch.clamp(weights.sum(), min=1.0)
 
 

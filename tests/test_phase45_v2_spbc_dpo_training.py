@@ -166,6 +166,7 @@ class Phase45V2SpbcDpoTrainingTest(unittest.TestCase):
             self.assertIn("over_aggressive_probability_loss", report_file["validation_metrics"])
             self.assertIn("over_aggressive_margin_loss", report_file["validation_metrics"])
             self.assertIn("over_aggressive_reference_excess_loss", report_file["validation_metrics"])
+            self.assertIn("safe_utility_rank_loss", report_file["validation_metrics"])
             self.assertIn("selected_utility_regret_vs_best_immediate_mean", report_file["validation_metrics"])
             self.assertIn("selected_rebuffer_regret_vs_best_immediate_mean", report_file["validation_metrics"])
             self.assertEqual("validation_selection_score", report_file["checkpoint_selection"]["criterion"])
@@ -173,6 +174,7 @@ class Phase45V2SpbcDpoTrainingTest(unittest.TestCase):
             self.assertTrue(report_file["state_load_report"]["auxiliary_heads_initialized_from_zero"])
             self.assertIn("decision_fusion", report_file["loss_design"])
             self.assertIn("over_aggressive_margin_loss", report_file["loss_design"])
+            self.assertIn("safe_utility_rank_loss", report_file["loss_design"])
             self.assertTrue(report_file["loss_design"]["sample_weights_include_focus_bucket_and_severe_errors"])
 
     def test_training_can_warm_start_from_v2_checkpoint_and_compare_initial_policy(self):
@@ -355,6 +357,67 @@ class Phase45V2SpbcDpoTrainingTest(unittest.TestCase):
         )
         self.assertGreater(float(risky_losses["reference_kl_loss"]), float(safe_losses["reference_kl_loss"]))
         self.assertGreater(float(risky_losses["loss"]), float(safe_losses["loss"]))
+
+    def test_safe_utility_rank_loss_targets_best_non_over_aggressive_action(self):
+        profile = replace(
+            profile_by_name("smoke"),
+            ce_loss_weight=0.0,
+            dpo_loss_weight=0.0,
+            ranking_loss_weight=0.0,
+            utility_loss_weight=0.0,
+            rebuffer_loss_weight=0.0,
+            aux_reward_loss_weight=0.0,
+            aux_rebuffer_loss_weight=0.0,
+            aux_risk_loss_weight=0.0,
+            reference_kl_loss_weight=0.0,
+            over_aggressive_probability_loss_weight=0.0,
+            over_aggressive_margin_loss_weight=0.0,
+            over_aggressive_reference_excess_loss_weight=0.0,
+            safe_utility_rank_loss_weight=1.0,
+            safe_utility_margin=0.50,
+        )
+        outputs_wrong_safe = {
+            "action_logits": torch.tensor([[3.0, 0.0, 9.0]], dtype=torch.float32),
+            "predicted_reward_n_by_action": torch.zeros((1, 3), dtype=torch.float32),
+            "predicted_rebuffer_s_by_action": torch.zeros((1, 3), dtype=torch.float32),
+            "predicted_target_risk_logits_by_action": torch.zeros((1, 3), dtype=torch.float32),
+        }
+        outputs_best_safe = {
+            "action_logits": torch.tensor([[0.0, 3.0, 9.0]], dtype=torch.float32),
+            "predicted_reward_n_by_action": torch.zeros((1, 3), dtype=torch.float32),
+            "predicted_rebuffer_s_by_action": torch.zeros((1, 3), dtype=torch.float32),
+            "predicted_target_risk_logits_by_action": torch.zeros((1, 3), dtype=torch.float32),
+        }
+        ref_outputs = {"action_logits": torch.zeros((1, 3), dtype=torch.float32)}
+        batch = (
+            torch.zeros((1, 8, 2), dtype=torch.float32),
+            torch.zeros((1, 7), dtype=torch.float32),
+            torch.zeros((1, 3, 7), dtype=torch.float32),
+            torch.tensor([[True, True, True]], dtype=torch.bool),
+            torch.tensor([2], dtype=torch.long),
+            torch.tensor([2], dtype=torch.long),
+            torch.zeros((1, 3), dtype=torch.float32),
+            torch.zeros((1, 3), dtype=torch.float32),
+            torch.tensor([[0.0, 2.0, 9.0]], dtype=torch.float32),
+            torch.zeros((1, 3), dtype=torch.float32),
+            torch.zeros((1, 3), dtype=torch.float32),
+            torch.zeros((1, 3), dtype=torch.float32),
+            torch.tensor([1.0], dtype=torch.float32),
+            torch.tensor([[1]], dtype=torch.long),
+            torch.tensor([[0]], dtype=torch.long),
+            torch.tensor([[1.0]], dtype=torch.float32),
+            torch.tensor([[1.0]], dtype=torch.float32),
+            torch.tensor([[True]], dtype=torch.bool),
+            torch.zeros((1, 3), dtype=torch.float32),
+            torch.tensor([[False, False, True]], dtype=torch.bool),
+        )
+
+        wrong_losses = _loss_components(outputs_wrong_safe, ref_outputs, batch, profile)
+        best_losses = _loss_components(outputs_best_safe, ref_outputs, batch, profile)
+
+        self.assertGreater(float(wrong_losses["safe_utility_rank_loss"]), 0.0)
+        self.assertLess(float(best_losses["safe_utility_rank_loss"]), 1.0e-6)
+        self.assertGreater(float(wrong_losses["loss"]), float(best_losses["loss"]))
 
     def test_selection_score_prioritizes_regret_rebuffer_and_focus_bucket(self):
         profile = profile_by_name("smoke")
