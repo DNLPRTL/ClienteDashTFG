@@ -91,3 +91,68 @@ no_final_ranking=true
 bundle_exported=false
 controller_registered=false
 ```
+
+## Addendum 2026-06-10 - anchor_safe_rank
+
+El ajuste `safe_margin_v1` no queda aceptado para escalar a `full_v1`: la
+confirmacion multi-seed full-samples termino en fallback (`best_epoch=0`) en
+las tres seeds observadas. El fallo dominante no fue ya la sobre-agresividad
+global, sino no sostener el regret de utilidad en `2_5_mbps` y
+`spbc_v2_dpo_on_policy` frente al gate relativo. No relajar el gate.
+
+La receta posterior `anchor_safe_rank` anade una perdida positiva dentro del
+conjunto seguro (`safe_utility_rank_loss`) y mantiene el anclaje al checkpoint
+inicial. La confirmacion multi-seed con profile `pilot` y full-samples queda
+aceptada como condicion operativa previa: 3/3 seeds tuvieron `best_epoch=6`,
+`gate=true` y metricas estables.
+
+Resultado observado del entrenamiento normal `--profile full_v1`:
+
+```text
+best_epoch=8
+gate=true
+global_over=0.009878
+focus_over=0.026312
+spbc2_over=0.005187
+global_u=0.053229
+focus_u=0.062015
+spbc2_u=0.044244
+safe_rank=0.018196476
+```
+
+Deltas frente a `full_v1_utility_risk_v1` en la misma validacion:
+
+```text
+global utility_regret delta=-0.015430
+global rebuffer_regret delta=-0.003992
+global over_aggressive delta=-0.005777
+global predicted_rebuffer_s_mean delta=-0.004228
+
+2_5_mbps utility_regret delta=-0.026998
+2_5_mbps rebuffer_regret delta=-0.007969
+2_5_mbps over_aggressive delta=-0.018583
+2_5_mbps predicted_rebuffer_s_mean delta=-0.008934
+```
+
+La lectura tecnica es positiva para preparacion offline: el run selecciona un
+epoch entrenado, pasa el safety gate y mejora simultaneamente regret de
+utilidad, regret de rebuffer y sobre-agresividad, tambien en el foco
+`2_5_mbps`. Como contrapartida diagnostica, baja `top1_accuracy`,
+`balanced_accuracy` y `macro_f1`, sube `under_aggressive_rate_vs_oracle`
+(`+0.059409` global, `+0.163059` en `2_5_mbps`) y baja el bitrate medio
+predicho (`-127.600217` kbps global, `-340.249597` kbps en `2_5_mbps`). Esto
+indica una politica mas conservadora, aceptable como candidato offline pero
+obligatoria de monitorizar antes de integracion.
+
+Decision: aceptar
+`~/TFG/modelos/phase45_v1/spbc_abr_v2_dpo/full_v2_anchor_safe_rank_v1/modelo_spbc_abr_v2_dpo.pt`
+como candidato offline SPBC 7B para la siguiente fase de preparacion. No
+exportar bundle, no registrar controller, no ejecutar Phase 6 y no declarar
+ranking, ganador, mejora QoE ni generalizacion. Antes de cualquier integracion,
+capturar el `checkpoint_sha256` desde el reporte de entrenamiento y mantenerlo
+en la documentacion/runbook.
+
+Siguiente paso recomendado: congelar el artefacto con ruta y SHA, y continuar
+con el modelo complementario `spc_abr_v2_reward_risk` usando el mismo criterio:
+pilots/summaries versionados, gates estrictos y ninguna afirmacion comparativa
+antes de Phase 6.

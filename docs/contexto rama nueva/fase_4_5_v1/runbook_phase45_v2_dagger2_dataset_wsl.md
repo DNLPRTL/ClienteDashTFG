@@ -369,3 +369,60 @@ Aceptar el `full_v1` normal solo si `best_epoch > 0`,
 `selected_checkpoint_safety_gate.passed=true` y los deltas frente al checkpoint
 inicial mantienen no-regresion en global, `2_5_mbps` y
 `spbc_v2_dpo_on_policy`. Si falla, no relajar gate ni congelar candidato.
+
+Resultado observado del `full_v1 anchor_safe_rank`:
+
+```text
+best_epoch=8
+gate=true
+global_over=0.009878
+focus_over=0.026312
+spbc2_over=0.005187
+global_u=0.053229
+focus_u=0.062015
+spbc2_u=0.044244
+safe_rank=0.018196476
+```
+
+Deltas principales frente a `full_v1_utility_risk_v1`:
+
+```text
+global utility_regret delta=-0.015430
+global rebuffer_regret delta=-0.003992
+global over_aggressive delta=-0.005777
+global predicted_rebuffer_s_mean delta=-0.004228
+global predicted_bitrate_kbps_mean delta=-127.600217
+global under_aggressive delta=+0.059409
+
+2_5_mbps utility_regret delta=-0.026998
+2_5_mbps rebuffer_regret delta=-0.007969
+2_5_mbps over_aggressive delta=-0.018583
+2_5_mbps predicted_rebuffer_s_mean delta=-0.008934
+2_5_mbps predicted_bitrate_kbps_mean delta=-340.249597
+2_5_mbps under_aggressive delta=+0.163059
+```
+
+Lectura: el run normal pasa el gate con un epoch entrenado y mejora la zona que
+habia bloqueado `safe_margin_v1`, incluido `2_5_mbps`. La contrapartida es una
+politica mas conservadora: baja `top1_accuracy`, `balanced_accuracy` y
+`macro_f1`, baja el bitrate medio predicho y sube `under_aggressive`. Por tanto,
+queda aceptado solo como candidato offline, no como controller final.
+
+Artefacto candidato:
+
+```bash
+~/TFG/modelos/phase45_v1/spbc_abr_v2_dpo/full_v2_anchor_safe_rank_v1/modelo_spbc_abr_v2_dpo.pt
+```
+
+Para capturar ruta y SHA del checkpoint despues de actualizar el repo:
+
+```bash
+cd ~/TFG/DashClientModular4
+git pull
+python3 scripts/summarize_phase45_v2_anchor_safe_rank_full.py
+```
+
+No exportar bundle, no registrar controller, no lanzar Phase 6 y no declarar
+ranking, ganador, mejora QoE ni generalizacion con este resultado. El siguiente
+paso de IA recomendado es preparar/evaluar offline el modelo complementario
+`spc_abr_v2_reward_risk` con scripts versionados y gates analogos.

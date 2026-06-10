@@ -20,6 +20,7 @@ def main() -> int:
     source = metrics["by_rollout_source"].get("spbc_v2_dpo_on_policy", {})
     gate = report["selected_checkpoint_safety_gate"]
     comparison = report["init_checkpoint_reference_comparison"]
+    artifacts = report.get("artifacts", {})
 
     print("best_epoch=", report["best_epoch"])
     print("gate=", gate["passed"])
@@ -32,6 +33,9 @@ def main() -> int:
     print("safe_rank=", metrics.get("safe_utility_rank_loss"))
     print("comparison=", comparison["validation_delta_candidate_minus_reference"])
     print("focus_comparison=", comparison["validation_focus_2_5_mbps_delta_candidate_minus_reference"])
+    print("checkpoint=", artifacts.get("checkpoint"))
+    print("checkpoint_sha256=", artifacts.get("checkpoint_sha256"))
+    print("training_report=", artifacts.get("training_report"))
     return 0
 
 
