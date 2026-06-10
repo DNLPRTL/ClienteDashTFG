@@ -135,6 +135,10 @@ pesados/generados.
 10. No llamar benchmark a smoke tests, dry-runs, conversiones ni auditorias.
 11. No declarar mejora de QoE, ranking, ganador ni generalizacion antes de una
     fase de evaluacion formal autorizada.
+12. Para comandos largos de WSL/Ubuntu, no pedir a Daniel que pegue bloques con
+    muchos flags, heredocs o bucles extensos. Crear o reutilizar scripts
+    versionados en `scripts/` y dar comandos cortos tipo `git pull` + `bash
+    scripts/<script>.sh`.
 
 ## Phase 3 Rebuild guardrails
 

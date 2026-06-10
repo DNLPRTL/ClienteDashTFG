@@ -310,78 +310,19 @@ Ejecutar primero como confirmacion full-samples con profile `pilot` y
 `--no-profile-sample-limits`. No llamar benchmark a esta salida y no declarar
 mejora de QoE.
 
+No pegar el comando largo manualmente en WSL. Usar el runner versionado:
+
 ```bash
 cd ~/TFG/DashClientModular4
 git pull
-source ~/venvs/rocm721/bin/activate
+bash scripts/run_phase45_v2_anchor_safe_rank_wsl.sh
+```
 
-for SEED in 450741 450742 450743; do
-  LOG=/tmp/phase45_v2_spbc_dpo_anchor_safe_rank_seed_${SEED}_$(date +%Y%m%d_%H%M%S).log
-  {
-    python3 scripts/train_phase45_v2_spbc_dpo.py \
-      --profile pilot \
-      --dataset-dir ~/TFG/datasets_normalizados/phase45_v1/phase45v2_preference_onpolicy_dagger2_dataset_v1 \
-      --output-dir ~/TFG/modelos/phase45_v1/spbc_abr_v2_dpo/pilot_dagger2_warm_v3_anchor_safe_rank_seed_${SEED}_v1 \
-      --init-checkpoint ~/TFG/modelos/phase45_v1/spbc_abr_v2_dpo/full_v1_utility_risk_v1/modelo_spbc_abr_v2_dpo.pt \
-      --overwrite \
-      --device auto \
-      --epochs 6 \
-      --batch-size 1024 \
-      --learning-rate 0.000075 \
-      --no-profile-sample-limits \
-      --seed "$SEED" \
-      --utility-loss-weight 0.62 \
-      --rebuffer-loss-weight 0.90 \
-      --focus-bucket-sample-weight 2.35 \
-      --severe-error-sample-weight 1.90 \
-      --safe-vs-rebuffer-pair-weight 2.10 \
-      --over-aggressive-rebuffer-action-weight 5.00 \
-      --reference-kl-loss-weight 0.30 \
-      --over-aggressive-probability-loss-weight 2.40 \
-      --over-aggressive-margin-loss-weight 1.50 \
-      --over-aggressive-reference-excess-loss-weight 2.40 \
-      --over-aggressive-margin 0.40 \
-      --safe-utility-rank-loss-weight 1.80 \
-      --safe-utility-margin 0.25 \
-      --decision-rebuffer-fusion-weight 0.52 \
-      --decision-risk-fusion-weight 0.40 \
-      --selection-focus-weight 2.20 \
-      --selection-rebuffer-weight 9.20 \
-      --selection-over-aggressive-weight 3.00 \
-      --enable-safety-gate \
-      --safety-global-over-aggressive-tolerance 0.006 \
-      --safety-focus-over-aggressive-tolerance 0.015 \
-      --safety-spbc-v2-over-aggressive-tolerance 0.012 \
-      --safety-utility-regret-tolerance 0.0015 \
-      --safety-rebuffer-regret-tolerance 0.0010
-  } 2>&1 | tee "$LOG"
-  echo "Salida seed ${SEED}: $LOG"
-done
+Para repetir solo el resumen:
 
-python3 - <<'PY'
-from pathlib import Path
-import json
-
-root = Path.home() / "TFG/modelos/phase45_v1/spbc_abr_v2_dpo"
-for path in sorted(root.glob("pilot_dagger2_warm_v3_anchor_safe_rank_seed_*_v1/reporte_entrenamiento_spbc_abr_v2_dpo.json")):
-    report = json.loads(path.read_text(encoding="utf-8"))
-    metrics = report["validation_metrics"]
-    focus = metrics["focus_2_5_mbps"]
-    source = metrics["by_rollout_source"].get("spbc_v2_dpo_on_policy", {})
-    gate = report["selected_checkpoint_safety_gate"]
-    print(
-        path.parent.name,
-        "best_epoch=", report["best_epoch"],
-        "gate=", gate["passed"],
-        "global_over=", metrics["over_aggressive_rate_vs_oracle"],
-        "focus_over=", focus["over_aggressive_rate_vs_oracle"],
-        "spbc2_over=", source.get("over_aggressive_rate_vs_oracle"),
-        "global_u=", metrics["selected_utility_regret_vs_oracle_mean"],
-        "focus_u=", focus["selected_utility_regret_vs_oracle_mean"],
-        "spbc2_u=", source.get("selected_utility_regret_vs_oracle_mean"),
-        "safe_rank=", metrics.get("safe_utility_rank_loss"),
-    )
-PY
+```bash
+cd ~/TFG/DashClientModular4
+python3 scripts/summarize_phase45_v2_anchor_safe_rank.py
 ```
 
 Aceptar `anchor_safe_rank` solo si la mayoria de seeds tiene `best_epoch > 0`,
@@ -390,3 +331,41 @@ checkpoint inicial y no consume de forma fragil el margen de `2_5_mbps` ni de
 `spbc_v2_dpo_on_policy`. Si vuelve a caer a `best_epoch=0` en la mayoria, no
 relajar el gate: pasar a diagnostico de dataset/labels o a residual/logit-delta
 anclado.
+
+Resultado observado del multi-seed `anchor_safe_rank`:
+
+```text
+seed_450741 best_epoch=6 gate=true global_over=0.009971 focus_over=0.026763 spbc2_over=0.005397 global_u=0.054827 focus_u=0.064302 spbc2_u=0.047667
+seed_450742 best_epoch=6 gate=true global_over=0.009677 focus_over=0.026441 spbc2_over=0.005211 global_u=0.054297 focus_u=0.062302 spbc2_u=0.047701
+seed_450743 best_epoch=6 gate=true global_over=0.010204 focus_over=0.026860 spbc2_over=0.005676 global_u=0.054066 focus_u=0.062735 spbc2_u=0.046887
+```
+
+Lectura: la receta pasa la condicion operativa de estabilidad full-samples con
+profile `pilot`: 3/3 seeds tienen `best_epoch > 0`, `gate=true`, over controlado
+y utility regret estable en `2_5_mbps` y `spbc_v2_dpo_on_policy`. Esto no es
+benchmark, ranking ni claim de mejora QoE; solo autoriza el siguiente paso del
+plan: ejecutar el entrenamiento normal con `--profile full_v1` usando la misma
+familia de loss.
+
+## Entrenamiento normal full_v1 anchor_safe_rank
+
+Ejecutar solo despues de que el multi-seed anterior pase. No pegar el comando
+largo manualmente en WSL; usar el runner versionado:
+
+```bash
+cd ~/TFG/DashClientModular4
+git pull
+bash scripts/run_phase45_v2_anchor_safe_rank_full_wsl.sh
+```
+
+Para repetir solo el resumen:
+
+```bash
+cd ~/TFG/DashClientModular4
+python3 scripts/summarize_phase45_v2_anchor_safe_rank_full.py
+```
+
+Aceptar el `full_v1` normal solo si `best_epoch > 0`,
+`selected_checkpoint_safety_gate.passed=true` y los deltas frente al checkpoint
+inicial mantienen no-regresion en global, `2_5_mbps` y
+`spbc_v2_dpo_on_policy`. Si falla, no relajar gate ni congelar candidato.
