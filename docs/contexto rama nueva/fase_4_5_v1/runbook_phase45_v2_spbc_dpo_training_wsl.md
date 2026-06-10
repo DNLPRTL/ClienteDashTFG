@@ -93,6 +93,39 @@ Salida esperada:
 ~/TFG/modelos/phase45_v1/spbc_abr_v2_dpo/pilot/
 ```
 
+## Pilot utility-aware 7B.2 recomendado
+
+Este run usa el objetivo ampliado tras los pilots iniciales: CE queda como
+ancla, y la loss incorpora utilidad soft por `reward_n`, penalizacion esperada
+de rebuffer y pesos para `2_5_mbps`/errores graves.
+
+```bash
+python3 scripts/train_phase45_v2_spbc_dpo.py \
+  --profile pilot \
+  --output-dir ~/TFG/modelos/phase45_v1/spbc_abr_v2_dpo/pilot_utility_v1 \
+  --overwrite \
+  --device auto
+```
+
+Si hace falta endurecer aun mas el rebuffer en `2_5_mbps`, usar una variante
+explícita:
+
+```bash
+python3 scripts/train_phase45_v2_spbc_dpo.py \
+  --profile pilot \
+  --output-dir ~/TFG/modelos/phase45_v1/spbc_abr_v2_dpo/pilot_utility_focus_v1 \
+  --overwrite \
+  --device auto \
+  --utility-loss-weight 0.65 \
+  --rebuffer-loss-weight 0.65 \
+  --focus-bucket-sample-weight 1.75 \
+  --over-aggressive-rebuffer-action-weight 2.25
+```
+
+No pasar a `full_v1` si `focus_2_5_mbps` mejora `top1` pero empeora
+`selected_utility_regret_vs_best_immediate_mean`,
+`selected_rebuffer_regret_vs_best_immediate_mean`, over-aggressive o rebuffer.
+
 ## Full v1
 
 ```bash
@@ -155,9 +188,11 @@ False False
   `-logsigmoid(beta * ((logp_theta(pref)-logp_theta(rej)) - (logp_ref(pref)-logp_ref(rej))))`.
 - La referencia por defecto es `spbc_abr_v1/full_v1` congelada.
 - La loss total combina CE contra `oracle_action`, DPO ponderado por gaps
-  normalizados/capados y ranking/soft utility opcional.
+  normalizados/capados, ranking/soft utility, distribucion soft por `reward_n`
+  y penalizacion esperada de rebuffer.
 - El reporte incluye metricas globales, por `throughput_bucket`, por
-  `rollout_source` y foco `2_5_mbps`.
+  `rollout_source`, foco `2_5_mbps`, selected utility regret y selected
+  rebuffer regret contra oracle y mejor accion inmediata.
 - Las banderas obligatorias se mantienen:
   `benchmark_performed=false`, `ranking_performed=false`,
   `no_final_ranking=true`, `bundle_exported=false`,

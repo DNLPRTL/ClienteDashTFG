@@ -49,8 +49,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--ce-loss-weight", type=float, default=None)
     parser.add_argument("--dpo-loss-weight", type=float, default=None)
     parser.add_argument("--ranking-loss-weight", type=float, default=None)
+    parser.add_argument("--utility-loss-weight", type=float, default=None)
+    parser.add_argument("--rebuffer-loss-weight", type=float, default=None)
     parser.add_argument("--dpo-beta", type=float, default=None)
     parser.add_argument("--ranking-margin-scale", type=float, default=None)
+    parser.add_argument("--utility-temperature", type=float, default=None)
+    parser.add_argument("--rebuffer-loss-cap-s", type=float, default=None)
+    parser.add_argument("--focus-bucket-sample-weight", type=float, default=None)
+    parser.add_argument("--severe-error-sample-weight", type=float, default=None)
+    parser.add_argument("--safe-vs-rebuffer-pair-weight", type=float, default=None)
+    parser.add_argument("--over-aggressive-rebuffer-action-weight", type=float, default=None)
     parser.add_argument("--max-pair-weight", type=float, default=None)
     parser.add_argument("--max-training-samples", type=int, default=None)
     parser.add_argument("--max-validation-samples", type=int, default=None)
@@ -106,8 +114,16 @@ def _profile_with_overrides(args: argparse.Namespace):
         ("ce_loss_weight", "ce_loss_weight"),
         ("dpo_loss_weight", "dpo_loss_weight"),
         ("ranking_loss_weight", "ranking_loss_weight"),
+        ("utility_loss_weight", "utility_loss_weight"),
+        ("rebuffer_loss_weight", "rebuffer_loss_weight"),
         ("dpo_beta", "dpo_beta"),
         ("ranking_margin_scale", "ranking_margin_scale"),
+        ("utility_temperature", "utility_temperature"),
+        ("rebuffer_loss_cap_s", "rebuffer_loss_cap_s"),
+        ("focus_bucket_sample_weight", "focus_bucket_sample_weight"),
+        ("severe_error_sample_weight", "severe_error_sample_weight"),
+        ("safe_vs_rebuffer_pair_weight", "safe_vs_rebuffer_pair_weight"),
+        ("over_aggressive_rebuffer_action_weight", "over_aggressive_rebuffer_action_weight"),
         ("max_pair_weight", "max_pair_weight"),
     ):
         value = getattr(args, arg_name)
@@ -145,7 +161,8 @@ def _make_progress_printer(started: float):
             line = (
                 "[{elapsed}] epoca {epoch}/{epochs} lista en {duration}; "
                 "train_loss={train_loss:.4f} val_loss={val_loss:.4f} "
-                "top1={top1:.4f} pair_acc={pair_acc:.4f} qoe_gap={qoe_gap:.4f} best_epoch={best}{star}"
+                "top1={top1:.4f} pair_acc={pair_acc:.4f} qoe_gap={qoe_gap:.4f} "
+                "u_regret={u_regret:.4f} rb_regret={rb_regret:.4f} best_epoch={best}{star}"
             ).format(
                 elapsed=elapsed,
                 epoch=event.get("epoch"),
@@ -156,6 +173,8 @@ def _make_progress_printer(started: float):
                 top1=float(event.get("validation_top1_accuracy", 0.0)),
                 pair_acc=float(event.get("validation_pair_preference_accuracy", 0.0)),
                 qoe_gap=float(event.get("validation_predicted_qoe_gap_mean", 0.0)),
+                u_regret=float(event.get("validation_utility_regret", 0.0)),
+                rb_regret=float(event.get("validation_rebuffer_regret", 0.0)),
                 best=event.get("best_epoch"),
                 star=" nuevo_mejor" if event.get("best_so_far") is True else "",
             )

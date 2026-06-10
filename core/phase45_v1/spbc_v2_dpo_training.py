@@ -59,6 +59,7 @@ CONTEXT_INPUT_KEYS = frozenset(SEQUENCE_FEATURES + SCALAR_FEATURES)
 CANDIDATE_INPUT_KEYS = frozenset(CANDIDATE_FEATURES)
 TARGET_RISK_QOE_GAP_THRESHOLD = 0.25
 FOCUS_THROUGHPUT_BUCKET = "2_5_mbps"
+REBUFFER_LOSS_SECONDS_CAP = 4.0
 
 
 class SpbcV2DpoTrainingError(ValueError):
@@ -79,11 +80,19 @@ class SpbcV2DpoTrainingProfile:
     shared_hidden_size: int
     dropout: float
     label_smoothing: float = 0.02
-    ce_loss_weight: float = 0.70
+    ce_loss_weight: float = 0.45
     dpo_loss_weight: float = 0.85
     ranking_loss_weight: float = 0.35
+    utility_loss_weight: float = 0.55
+    rebuffer_loss_weight: float = 0.45
     dpo_beta: float = 0.20
     ranking_margin_scale: float = 0.15
+    utility_temperature: float = 0.55
+    rebuffer_loss_cap_s: float = REBUFFER_LOSS_SECONDS_CAP
+    focus_bucket_sample_weight: float = 1.45
+    severe_error_sample_weight: float = 1.25
+    safe_vs_rebuffer_pair_weight: float = 1.25
+    over_aggressive_rebuffer_action_weight: float = 1.75
     max_pair_weight: float = 6.0
     seed: int = 450701
 
@@ -104,8 +113,16 @@ class SpbcV2DpoTrainingProfile:
             "ce_loss_weight": self.ce_loss_weight,
             "dpo_loss_weight": self.dpo_loss_weight,
             "ranking_loss_weight": self.ranking_loss_weight,
+            "utility_loss_weight": self.utility_loss_weight,
+            "rebuffer_loss_weight": self.rebuffer_loss_weight,
             "dpo_beta": self.dpo_beta,
             "ranking_margin_scale": self.ranking_margin_scale,
+            "utility_temperature": self.utility_temperature,
+            "rebuffer_loss_cap_s": self.rebuffer_loss_cap_s,
+            "focus_bucket_sample_weight": self.focus_bucket_sample_weight,
+            "severe_error_sample_weight": self.severe_error_sample_weight,
+            "safe_vs_rebuffer_pair_weight": self.safe_vs_rebuffer_pair_weight,
+            "over_aggressive_rebuffer_action_weight": self.over_aggressive_rebuffer_action_weight,
             "max_pair_weight": self.max_pair_weight,
             "seed": self.seed,
         }
@@ -181,8 +198,10 @@ class SpbcV2DpoExample:
     bitrate_kbps_by_action: tuple[float, ...]
     smoothness_mbps_by_action: tuple[float, ...]
     target_risk_by_action: tuple[float, ...]
+    rebuffer_penalty_by_action: tuple[float, ...]
     pairs: tuple[PreferencePair, ...]
     sample_weight: float
+    max_pair_weight: float
     data_role: str
     rollout_source: str
     throughput_bucket: str
@@ -320,12 +339,22 @@ def train_spbc_abr_v2_dpo(
         TRAINING_ROLE,
         limit=train_limit,
         max_pair_weight=profile.max_pair_weight,
+        focus_bucket_sample_weight=profile.focus_bucket_sample_weight,
+        severe_error_sample_weight=profile.severe_error_sample_weight,
+        safe_vs_rebuffer_pair_weight=profile.safe_vs_rebuffer_pair_weight,
+        over_aggressive_rebuffer_action_weight=profile.over_aggressive_rebuffer_action_weight,
+        rebuffer_loss_cap_s=profile.rebuffer_loss_cap_s,
     )
     validation_examples = load_spbc_v2_dpo_examples(
         data_path / V2_DATA_FILENAMES[VALIDATION_ROLE],
         VALIDATION_ROLE,
         limit=val_limit,
         max_pair_weight=profile.max_pair_weight,
+        focus_bucket_sample_weight=profile.focus_bucket_sample_weight,
+        severe_error_sample_weight=profile.severe_error_sample_weight,
+        safe_vs_rebuffer_pair_weight=profile.safe_vs_rebuffer_pair_weight,
+        over_aggressive_rebuffer_action_weight=profile.over_aggressive_rebuffer_action_weight,
+        rebuffer_loss_cap_s=profile.rebuffer_loss_cap_s,
     )
     if not training_examples or not validation_examples:
         raise SpbcV2DpoTrainingError("spbc_abr_v2_dpo training requires training and validation examples")
@@ -401,10 +430,20 @@ def train_spbc_abr_v2_dpo(
             "training_ce_loss": train_metrics["ce_loss"],
             "training_dpo_loss": train_metrics["dpo_loss"],
             "training_ranking_loss": train_metrics["ranking_loss"],
+            "training_utility_loss": train_metrics["utility_loss"],
+            "training_rebuffer_loss": train_metrics["rebuffer_loss"],
             "validation_loss": validation_metrics["loss"],
+            "validation_utility_loss": validation_metrics["utility_loss"],
+            "validation_rebuffer_loss": validation_metrics["rebuffer_loss"],
             "validation_top1_accuracy": validation_metrics["top1_accuracy"],
             "validation_pair_preference_accuracy": validation_metrics["pair_preference_accuracy"],
             "validation_predicted_qoe_gap_mean": validation_metrics["predicted_qoe_gap_mean"],
+            "validation_selected_utility_regret_vs_best_immediate_mean": validation_metrics[
+                "selected_utility_regret_vs_best_immediate_mean"
+            ],
+            "validation_selected_rebuffer_regret_vs_best_immediate_mean": validation_metrics[
+                "selected_rebuffer_regret_vs_best_immediate_mean"
+            ],
         }
         epoch_reports.append(epoch_report)
         is_best = float(validation_metrics["loss"]) < best_validation_loss
@@ -424,6 +463,8 @@ def train_spbc_abr_v2_dpo(
             validation_top1_accuracy=validation_metrics["top1_accuracy"],
             validation_pair_preference_accuracy=validation_metrics["pair_preference_accuracy"],
             validation_predicted_qoe_gap_mean=validation_metrics["predicted_qoe_gap_mean"],
+            validation_utility_regret=validation_metrics["selected_utility_regret_vs_best_immediate_mean"],
+            validation_rebuffer_regret=validation_metrics["selected_rebuffer_regret_vs_best_immediate_mean"],
             best_epoch=best_epoch,
             best_so_far=is_best,
         )
@@ -532,11 +573,22 @@ def train_spbc_abr_v2_dpo(
         "reference_policy_source": _reference_policy_source(init_payload),
         "loss_design": {
             "cross_entropy_target": "oracle_action",
+            "cross_entropy_role": "anchor_not_primary_objective",
             "dpo_pairs": "preference_pairs",
             "dpo_reference_policy": _reference_policy_source(init_payload),
             "dpo_formula": "-logsigmoid(beta * ((logp_theta(preferred)-logp_theta(rejected)) - (logp_ref(preferred)-logp_ref(rejected))))",
             "ranking_weighted_by": "normalized_capped_reward_gap/qoe_gap/source",
+            "utility_loss": "cross_entropy_against_softmax_reward_distribution_over_valid_actions",
+            "utility_temperature": profile.utility_temperature,
+            "rebuffer_loss": "expected_normalized_rebuffer_penalty_under_policy_distribution",
+            "rebuffer_loss_cap_s": profile.rebuffer_loss_cap_s,
             "pair_weights_normalized_and_capped": True,
+            "sample_weights_include_focus_bucket_and_severe_errors": True,
+            "focus_throughput_bucket": FOCUS_THROUGHPUT_BUCKET,
+            "focus_bucket_sample_weight": profile.focus_bucket_sample_weight,
+            "severe_error_sample_weight": profile.severe_error_sample_weight,
+            "safe_vs_rebuffer_pair_weight": profile.safe_vs_rebuffer_pair_weight,
+            "over_aggressive_rebuffer_action_weight": profile.over_aggressive_rebuffer_action_weight,
             "max_pair_weight": profile.max_pair_weight,
             "soft_utility_ranking_loss_enabled": float(profile.ranking_loss_weight) > 0.0,
         },
@@ -587,6 +639,11 @@ def load_spbc_v2_dpo_examples(
     *,
     limit: int | None = None,
     max_pair_weight: float = 6.0,
+    focus_bucket_sample_weight: float = 1.45,
+    severe_error_sample_weight: float = 1.25,
+    safe_vs_rebuffer_pair_weight: float = 1.25,
+    over_aggressive_rebuffer_action_weight: float = 1.75,
+    rebuffer_loss_cap_s: float = REBUFFER_LOSS_SECONDS_CAP,
 ) -> tuple[SpbcV2DpoExample, ...]:
     examples = []
     with Path(path).open("r", encoding="utf-8") as handle:
@@ -598,7 +655,19 @@ def load_spbc_v2_dpo_examples(
                 raw = json.loads(text)
             except json.JSONDecodeError as exc:
                 raise SpbcV2DpoTrainingError("{0}: invalid JSONL line {1}".format(path, line_number)) from exc
-            examples.append(_example_from_sample(raw, data_role, line_number, max_pair_weight=max_pair_weight))
+            examples.append(
+                _example_from_sample(
+                    raw,
+                    data_role,
+                    line_number,
+                    max_pair_weight=max_pair_weight,
+                    focus_bucket_sample_weight=focus_bucket_sample_weight,
+                    severe_error_sample_weight=severe_error_sample_weight,
+                    safe_vs_rebuffer_pair_weight=safe_vs_rebuffer_pair_weight,
+                    over_aggressive_rebuffer_action_weight=over_aggressive_rebuffer_action_weight,
+                    rebuffer_loss_cap_s=rebuffer_loss_cap_s,
+                )
+            )
             if limit is not None and len(examples) >= int(limit):
                 break
     return tuple(examples)
@@ -651,6 +720,7 @@ def examples_to_tensors(
     pair_weight_rows = []
     pair_reward_gap_rows = []
     pair_mask_rows = []
+    rebuffer_penalty_rows = []
     for example in examples:
         if example.oracle_action >= len(example.candidates):
             raise SpbcV2DpoTrainingError("oracle_action outside candidate range")
@@ -666,6 +736,7 @@ def examples_to_tensors(
         bitrates = [float(value) for value in example.bitrate_kbps_by_action]
         smoothness = [float(value) for value in example.smoothness_mbps_by_action]
         target_risks = [float(value) for value in example.target_risk_by_action]
+        rebuffer_penalties = [float(value) for value in example.rebuffer_penalty_by_action]
         while len(candidates) < max_candidates:
             candidates.append([0.0 for _ in CANDIDATE_FEATURES])
             mask.append(False)
@@ -675,9 +746,10 @@ def examples_to_tensors(
             bitrates.append(0.0)
             smoothness.append(0.0)
             target_risks.append(1.0)
+            rebuffer_penalties.append(1.0)
         pair_preferred = [pair.preferred_action for pair in example.pairs]
         pair_rejected = [pair.rejected_action for pair in example.pairs]
-        pair_weight = [pair.weight for pair in example.pairs]
+        pair_weight = [min(pair.weight * float(example.sample_weight), float(example.max_pair_weight)) for pair in example.pairs]
         pair_reward_gap = [max(pair.reward_gap, 0.0) for pair in example.pairs]
         pair_mask = [True for _pair in example.pairs]
         while len(pair_preferred) < max_pairs:
@@ -702,6 +774,7 @@ def examples_to_tensors(
         pair_weight_rows.append(pair_weight)
         pair_reward_gap_rows.append(pair_reward_gap)
         pair_mask_rows.append(pair_mask)
+        rebuffer_penalty_rows.append(rebuffer_penalties)
     return (
         torch.tensor(sequence_rows, dtype=torch.float32),
         torch.tensor(scalar_rows, dtype=torch.float32),
@@ -721,6 +794,7 @@ def examples_to_tensors(
         torch.tensor(pair_weight_rows, dtype=torch.float32),
         torch.tensor(pair_reward_gap_rows, dtype=torch.float32),
         torch.tensor(pair_mask_rows, dtype=torch.bool),
+        torch.tensor(rebuffer_penalty_rows, dtype=torch.float32),
     )
 
 
@@ -850,6 +924,8 @@ def _loss_components(
     ref_logits = ref_outputs["action_logits"].detach()
     mask = batch[3].to(dtype=torch.bool)
     labels = batch[4]
+    rewards = batch[8]
+    rebuffer_penalties = batch[18]
     sample_weights = batch[12]
     pair_preferred = batch[13]
     pair_rejected = batch[14]
@@ -881,10 +957,25 @@ def _loss_components(
         pair_mask,
         margin_scale=float(profile.ranking_margin_scale),
     )
+    utility_loss = _utility_distribution_loss(
+        logits,
+        rewards,
+        mask,
+        sample_weights,
+        temperature=float(profile.utility_temperature),
+    )
+    rebuffer_loss = _expected_rebuffer_penalty_loss(
+        logits,
+        rebuffer_penalties,
+        mask,
+        sample_weights,
+    )
     loss = (
         float(profile.ce_loss_weight) * ce_loss
         + float(profile.dpo_loss_weight) * dpo_loss
         + float(profile.ranking_loss_weight) * ranking_loss
+        + float(profile.utility_loss_weight) * utility_loss
+        + float(profile.rebuffer_loss_weight) * rebuffer_loss
     )
     return {
         "loss_tensor": loss,
@@ -892,6 +983,8 @@ def _loss_components(
         "ce_loss": ce_loss.detach(),
         "dpo_loss": dpo_loss.detach(),
         "ranking_loss": ranking_loss.detach(),
+        "utility_loss": utility_loss.detach(),
+        "rebuffer_loss": rebuffer_loss.detach(),
     }
 
 
@@ -960,6 +1053,41 @@ def _ranking_loss(
     return (raw * weights * mask).sum() / torch.clamp((weights * mask).sum(), min=1.0)
 
 
+def _utility_distribution_loss(
+    logits: torch.Tensor,
+    rewards: torch.Tensor,
+    mask: torch.Tensor,
+    sample_weights: torch.Tensor,
+    *,
+    temperature: float,
+) -> torch.Tensor:
+    active_mask = mask.to(dtype=torch.bool, device=logits.device)
+    active_logits = logits.masked_fill(~active_mask, -1.0e9)
+    log_probs = F.log_softmax(active_logits, dim=1)
+    rewards = rewards.to(device=logits.device, dtype=logits.dtype)
+    masked_rewards = rewards.masked_fill(~active_mask, -1.0e9)
+    centered_rewards = masked_rewards - masked_rewards.max(dim=1, keepdim=True).values
+    target_distribution = F.softmax(centered_rewards / max(float(temperature), 1.0e-6), dim=1)
+    per_sample_loss = -(target_distribution * log_probs).sum(dim=1)
+    weights = sample_weights.to(device=logits.device, dtype=logits.dtype)
+    return (per_sample_loss * weights).sum() / torch.clamp(weights.sum(), min=1.0)
+
+
+def _expected_rebuffer_penalty_loss(
+    logits: torch.Tensor,
+    rebuffer_penalties: torch.Tensor,
+    mask: torch.Tensor,
+    sample_weights: torch.Tensor,
+) -> torch.Tensor:
+    active_mask = mask.to(dtype=torch.bool, device=logits.device)
+    active_logits = logits.masked_fill(~active_mask, -1.0e9)
+    probabilities = F.softmax(active_logits, dim=1)
+    penalties = rebuffer_penalties.to(device=logits.device, dtype=logits.dtype).masked_fill(~active_mask, 0.0)
+    per_sample_loss = (probabilities * penalties).sum(dim=1)
+    weights = sample_weights.to(device=logits.device, dtype=logits.dtype)
+    return (per_sample_loss * weights).sum() / torch.clamp(weights.sum(), min=1.0)
+
+
 def _policy_observations(
     outputs: Mapping[str, torch.Tensor],
     batch: Sequence[torch.Tensor],
@@ -999,6 +1127,7 @@ def _policy_observations(
     for index, label in enumerate(labels_cpu):
         prediction = int(predictions_cpu[index])
         oracle_action = int(label)
+        best_immediate_action = int(best_cpu[index])
         valid_prediction = bool(mask_cpu[index][prediction]) if prediction < len(mask_cpu[index]) else False
         pair_total = 0
         pair_correct = 0
@@ -1013,7 +1142,7 @@ def _policy_observations(
         observations.append(
             {
                 "oracle_action": oracle_action,
-                "best_immediate_action": int(best_cpu[index]),
+                "best_immediate_action": best_immediate_action,
                 "predicted_action": prediction,
                 "top2_hit": oracle_action in [int(value) for value in topk_cpu[index]],
                 "valid_prediction": valid_prediction,
@@ -1024,9 +1153,12 @@ def _policy_observations(
                 "predicted_smoothness_mbps": float(smoothness_cpu[index][prediction]),
                 "predicted_target_risk": float(risk_cpu[index][prediction]),
                 "oracle_reward_n": float(rewards_cpu[index][oracle_action]),
+                "oracle_rebuffer_s": float(rebuffer_cpu[index][oracle_action]),
                 "oracle_bitrate_kbps": float(bitrate_cpu[index][oracle_action]),
                 "oracle_smoothness_mbps": float(smoothness_cpu[index][oracle_action]),
                 "oracle_target_risk": float(risk_cpu[index][oracle_action]),
+                "best_immediate_reward_n": float(rewards_cpu[index][best_immediate_action]),
+                "best_immediate_rebuffer_s": float(rebuffer_cpu[index][best_immediate_action]),
                 "pair_total": pair_total,
                 "pair_correct": pair_correct,
             }
@@ -1044,7 +1176,7 @@ class _LossTotals:
 
     def add(self, losses: Mapping[str, object], batch_size: int) -> None:
         self.weight += int(batch_size)
-        for name in ("loss", "ce_loss", "dpo_loss", "ranking_loss"):
+        for name in ("loss", "ce_loss", "dpo_loss", "ranking_loss", "utility_loss", "rebuffer_loss"):
             value = losses[name]
             numeric = float(value.detach().cpu().item()) if hasattr(value, "detach") else float(value)
             self.losses[name] += numeric * float(batch_size)
@@ -1083,6 +1215,10 @@ class _PolicyMetricTotals:
     oracle_smoothness_sum: float = 0.0
     target_risk_count: int = 0
     oracle_target_risk_count: int = 0
+    utility_regret_vs_oracle_sum: float = 0.0
+    utility_regret_vs_best_sum: float = 0.0
+    rebuffer_regret_vs_oracle_sum: float = 0.0
+    rebuffer_regret_vs_best_sum: float = 0.0
     pair_total: int = 0
     pair_correct: int = 0
 
@@ -1101,7 +1237,7 @@ class _PolicyMetricTotals:
         batch_size: int,
     ) -> None:
         self.weight += int(batch_size)
-        for name in ("loss", "ce_loss", "dpo_loss", "ranking_loss"):
+        for name in ("loss", "ce_loss", "dpo_loss", "ranking_loss", "utility_loss", "rebuffer_loss"):
             if name in losses:
                 value = losses[name]
                 numeric = float(value.detach().cpu().item()) if hasattr(value, "detach") else float(value)
@@ -1138,6 +1274,22 @@ class _PolicyMetricTotals:
                 self.rebuffer_positive_count += 1
             self.reward_sum += float(observation["predicted_reward_n"])
             self.oracle_reward_sum += float(observation["oracle_reward_n"])
+            self.utility_regret_vs_oracle_sum += max(
+                float(observation["oracle_reward_n"]) - float(observation["predicted_reward_n"]),
+                0.0,
+            )
+            self.utility_regret_vs_best_sum += max(
+                float(observation["best_immediate_reward_n"]) - float(observation["predicted_reward_n"]),
+                0.0,
+            )
+            self.rebuffer_regret_vs_oracle_sum += max(
+                predicted_rebuffer - float(observation["oracle_rebuffer_s"]),
+                0.0,
+            )
+            self.rebuffer_regret_vs_best_sum += max(
+                predicted_rebuffer - float(observation["best_immediate_rebuffer_s"]),
+                0.0,
+            )
             self.bitrate_sum += float(observation["predicted_bitrate_kbps"])
             self.oracle_bitrate_sum += float(observation["oracle_bitrate_kbps"])
             self.smoothness_sum += float(observation["predicted_smoothness_mbps"])
@@ -1182,6 +1334,10 @@ class _PolicyMetricTotals:
                 "predicted_rebuffer_rate": round(float(self.rebuffer_positive_count) / denominator, 6),
                 "predicted_reward_n_mean": round(self.reward_sum / denominator, 6),
                 "oracle_reward_n_mean": round(self.oracle_reward_sum / denominator, 6),
+                "selected_utility_regret_vs_oracle_mean": round(self.utility_regret_vs_oracle_sum / denominator, 6),
+                "selected_utility_regret_vs_best_immediate_mean": round(self.utility_regret_vs_best_sum / denominator, 6),
+                "selected_rebuffer_regret_vs_oracle_mean": round(self.rebuffer_regret_vs_oracle_sum / denominator, 6),
+                "selected_rebuffer_regret_vs_best_immediate_mean": round(self.rebuffer_regret_vs_best_sum / denominator, 6),
                 "predicted_bitrate_kbps_mean": round(self.bitrate_sum / denominator, 6),
                 "oracle_bitrate_kbps_mean": round(self.oracle_bitrate_sum / denominator, 6),
                 "predicted_smoothness_mbps_mean": round(self.smoothness_sum / denominator, 6),
@@ -1204,6 +1360,11 @@ def _example_from_sample(
     line_number: int,
     *,
     max_pair_weight: float,
+    focus_bucket_sample_weight: float,
+    severe_error_sample_weight: float,
+    safe_vs_rebuffer_pair_weight: float,
+    over_aggressive_rebuffer_action_weight: float,
+    rebuffer_loss_cap_s: float,
 ) -> SpbcV2DpoExample:
     if sample.get("data_role") != expected_role:
         raise SpbcV2DpoTrainingError("line {0}: data_role mismatch".format(line_number))
@@ -1235,24 +1396,32 @@ def _example_from_sample(
     bitrates = []
     smoothness = []
     target_risks = []
+    rebuffer_penalties = []
+    has_severe_rebuffer_error = False
     for index, raw_outcome in enumerate(outcomes_raw):
         outcome = _require_mapping(raw_outcome, "per_action_outcomes[{0}]".format(index))
         bitrate_kbps = max(_finite_number(outcome.get("bitrate_kbps"), "bitrate_kbps"), 0.0)
         smoothness_mbps = max(_finite_number(outcome.get("smoothness_mbps"), "smoothness_mbps"), 0.0)
         bitrates.append(bitrate_kbps)
         smoothness.append(smoothness_mbps)
+        over_aggressive_rebuffer = outcome.get("over_aggressive_rebuffer") is True
         if outcome.get("valid_action") is True:
             qoe_gap = max(_finite_number(outcome.get("qoe_gap"), "qoe_gap"), 0.0)
             rebuffer_s = max(_finite_number(outcome.get("estimated_rebuffer_s"), "estimated_rebuffer_s"), 0.0)
             qoe_gaps.append(qoe_gap)
             rebuffer.append(rebuffer_s)
             rewards.append(_finite_number(outcome.get("reward_n"), "reward_n"))
+            penalty = min(rebuffer_s, float(rebuffer_loss_cap_s)) / max(float(rebuffer_loss_cap_s), 1.0e-6)
+            if over_aggressive_rebuffer:
+                penalty *= max(float(over_aggressive_rebuffer_action_weight), 1.0)
+                has_severe_rebuffer_error = True
+            rebuffer_penalties.append(min(max(penalty, 0.0), max(float(max_pair_weight), 1.0)))
             target_risks.append(
                 1.0
                 if (
                     rebuffer_s > 0.0
                     or qoe_gap > TARGET_RISK_QOE_GAP_THRESHOLD
-                    or outcome.get("over_aggressive_rebuffer") is True
+                    or over_aggressive_rebuffer
                     or outcome.get("under_aggressive_qoe_loss") is True
                 )
                 else 0.0
@@ -1262,11 +1431,19 @@ def _example_from_sample(
             rebuffer.append(0.0)
             rewards.append(0.0)
             target_risks.append(1.0)
+            rebuffer_penalties.append(1.0)
     pairs_raw = sample.get("preference_pairs")
     if not isinstance(pairs_raw, list) or not pairs_raw:
         raise SpbcV2DpoTrainingError("line {0}: preference_pairs must be non-empty".format(line_number))
     pairs = _normalized_preference_pairs(
-        tuple(_preference_pair(pair, max_pair_weight=max_pair_weight) for pair in pairs_raw),
+        tuple(
+            _preference_pair(
+                pair,
+                max_pair_weight=max_pair_weight,
+                safe_vs_rebuffer_pair_weight=safe_vs_rebuffer_pair_weight,
+            )
+            for pair in pairs_raw
+        ),
         max_pair_weight=max_pair_weight,
     )
     if (
@@ -1275,6 +1452,7 @@ def _example_from_sample(
         or len(candidates) != len(bitrates)
         or len(candidates) != len(smoothness)
         or len(candidates) != len(target_risks)
+        or len(candidates) != len(rebuffer_penalties)
     ):
         raise SpbcV2DpoTrainingError("line {0}: candidates/mask/targets length mismatch".format(line_number))
     if int(oracle_action) < 0 or int(oracle_action) >= len(candidates) or not action_mask[int(oracle_action)]:
@@ -1282,7 +1460,10 @@ def _example_from_sample(
     if int(best_immediate_action) < 0 or int(best_immediate_action) >= len(candidates) or not action_mask[int(best_immediate_action)]:
         raise SpbcV2DpoTrainingError("line {0}: best_immediate_action invalid".format(line_number))
     metadata = _require_mapping(sample.get("metadata"), "metadata")
-    sample_weight = min(max(1.0 + max(pair.qoe_gap for pair in pairs), 1.0), float(max_pair_weight))
+    throughput_bucket = str(metadata.get("throughput_bucket", "unknown"))
+    bucket_weight = float(focus_bucket_sample_weight) if throughput_bucket == FOCUS_THROUGHPUT_BUCKET else 1.0
+    severe_weight = float(severe_error_sample_weight) if has_severe_rebuffer_error else 1.0
+    sample_weight = min(max((1.0 + max(pair.qoe_gap for pair in pairs)) * bucket_weight * severe_weight, 1.0), float(max_pair_weight))
     return SpbcV2DpoExample(
         sequence=sequence,
         scalars=scalars,
@@ -1296,21 +1477,30 @@ def _example_from_sample(
         bitrate_kbps_by_action=tuple(bitrates),
         smoothness_mbps_by_action=tuple(smoothness),
         target_risk_by_action=tuple(target_risks),
+        rebuffer_penalty_by_action=tuple(rebuffer_penalties),
         pairs=pairs,
         sample_weight=sample_weight,
+        max_pair_weight=float(max_pair_weight),
         data_role=expected_role,
         rollout_source=str(sample.get("rollout_source", "unknown")),
-        throughput_bucket=str(metadata.get("throughput_bucket", "unknown")),
+        throughput_bucket=throughput_bucket,
         synthetic=bool(metadata.get("synthetic") is True),
     )
 
 
-def _preference_pair(raw: object, *, max_pair_weight: float) -> PreferencePair:
+def _preference_pair(
+    raw: object,
+    *,
+    max_pair_weight: float,
+    safe_vs_rebuffer_pair_weight: float = 1.25,
+) -> PreferencePair:
     pair = _require_mapping(raw, "preference_pair")
     source = str(pair.get("preference_source", "unknown"))
     reward_gap = max(_finite_number(pair.get("reward_gap"), "reward_gap"), 0.0)
     qoe_gap = max(_finite_number(pair.get("qoe_gap"), "qoe_gap"), 0.0)
     source_weight = float(PAIR_SOURCE_WEIGHTS.get(source, 1.0))
+    if source == "safe_vs_rebuffer":
+        source_weight *= float(safe_vs_rebuffer_pair_weight)
     gap_weight = 1.0 + min(max(qoe_gap, reward_gap), float(max_pair_weight))
     weight = min(max(source_weight * gap_weight, 0.05), float(max_pair_weight))
     return PreferencePair(
@@ -1477,6 +1667,10 @@ def _build_reference_comparison(
         "balanced_accuracy",
         "macro_f1",
         "predicted_reward_n_mean",
+        "selected_utility_regret_vs_oracle_mean",
+        "selected_utility_regret_vs_best_immediate_mean",
+        "selected_rebuffer_regret_vs_oracle_mean",
+        "selected_rebuffer_regret_vs_best_immediate_mean",
         "predicted_rebuffer_s_mean",
         "predicted_rebuffer_rate",
         "predicted_target_risk_rate",
@@ -1593,10 +1787,27 @@ def _validate_training_args(
     for name, value in (("max_training_samples", max_training_samples), ("max_validation_samples", max_validation_samples)):
         if value is not None and int(value) <= 0:
             raise SpbcV2DpoTrainingError("{0} must be positive when provided".format(name))
-    for name in ("ce_loss_weight", "dpo_loss_weight", "ranking_loss_weight", "dpo_beta", "ranking_margin_scale", "max_pair_weight"):
+    for name in (
+        "ce_loss_weight",
+        "dpo_loss_weight",
+        "ranking_loss_weight",
+        "utility_loss_weight",
+        "rebuffer_loss_weight",
+        "dpo_beta",
+        "ranking_margin_scale",
+        "utility_temperature",
+        "rebuffer_loss_cap_s",
+        "focus_bucket_sample_weight",
+        "severe_error_sample_weight",
+        "safe_vs_rebuffer_pair_weight",
+        "over_aggressive_rebuffer_action_weight",
+        "max_pair_weight",
+    ):
         value = float(getattr(profile, name))
         if not math.isfinite(value) or value < 0.0:
             raise SpbcV2DpoTrainingError("{0} must be finite and non-negative".format(name))
+    if float(profile.utility_temperature) <= 0.0 or float(profile.rebuffer_loss_cap_s) <= 0.0:
+        raise SpbcV2DpoTrainingError("utility_temperature and rebuffer_loss_cap_s must be positive")
 
 
 def _resolve_limit(value: int | None | str, profile_value: int | None) -> int | None:

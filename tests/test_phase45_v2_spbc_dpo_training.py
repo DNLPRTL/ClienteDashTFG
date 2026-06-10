@@ -20,6 +20,7 @@ from core.phase45_v1.spbc_v2_dpo_training import (
     load_spbc_v2_dpo_examples,
     profile_by_name,
     train_spbc_abr_v2_dpo,
+    _loss_components,
 )
 from tests.test_phase45_v2_preference_dataset import build_manifest_with_trace_files, unit_profile, write_stub_spbc_checkpoint
 
@@ -47,6 +48,8 @@ class Phase45V2SpbcDpoTrainingTest(unittest.TestCase):
             self.assertEqual((len(examples), 6), tensors[9].shape)
             self.assertEqual((len(examples), 6), tensors[10].shape)
             self.assertEqual((len(examples), 6), tensors[11].shape)
+            self.assertEqual((len(examples), 6), tensors[18].shape)
+            self.assertGreaterEqual(max(example.sample_weight for example in examples), 1.0)
 
     def test_model_forward_masks_invalid_actions_and_only_accepts_feature_tensors(self):
         model = SpbcAbrV2DpoPolicy(
@@ -134,6 +137,53 @@ class Phase45V2SpbcDpoTrainingTest(unittest.TestCase):
             self.assertIn("focus_2_5_mbps", report_file["validation_metrics"])
             self.assertIn("by_rollout_source", report_file["validation_metrics"])
             self.assertIn("predicted_target_risk_rate", report_file["validation_metrics"])
+            self.assertIn("utility_loss", report_file["validation_metrics"])
+            self.assertIn("rebuffer_loss", report_file["validation_metrics"])
+            self.assertIn("selected_utility_regret_vs_best_immediate_mean", report_file["validation_metrics"])
+            self.assertIn("selected_rebuffer_regret_vs_best_immediate_mean", report_file["validation_metrics"])
+            self.assertTrue(report_file["loss_design"]["sample_weights_include_focus_bucket_and_severe_errors"])
+
+    def test_loss_components_include_utility_and_rebuffer_penalty(self):
+        profile = replace(
+            profile_by_name("smoke"),
+            ce_loss_weight=0.0,
+            dpo_loss_weight=0.0,
+            ranking_loss_weight=0.0,
+            utility_loss_weight=1.0,
+            rebuffer_loss_weight=1.0,
+        )
+        logits_risky = torch.tensor([[0.0, 3.0]], dtype=torch.float32)
+        logits_safe = torch.tensor([[3.0, 0.0]], dtype=torch.float32)
+        outputs_risky = {"action_logits": logits_risky}
+        outputs_safe = {"action_logits": logits_safe}
+        ref_outputs = {"action_logits": torch.zeros((1, 2), dtype=torch.float32)}
+        batch = (
+            torch.zeros((1, 8, 2), dtype=torch.float32),
+            torch.zeros((1, 7), dtype=torch.float32),
+            torch.zeros((1, 2, 7), dtype=torch.float32),
+            torch.tensor([[True, True]], dtype=torch.bool),
+            torch.tensor([0], dtype=torch.long),
+            torch.tensor([0], dtype=torch.long),
+            torch.tensor([[0.0, 2.0]], dtype=torch.float32),
+            torch.tensor([[0.0, 2.0]], dtype=torch.float32),
+            torch.tensor([[2.0, -5.0]], dtype=torch.float32),
+            torch.zeros((1, 2), dtype=torch.float32),
+            torch.zeros((1, 2), dtype=torch.float32),
+            torch.tensor([[0.0, 1.0]], dtype=torch.float32),
+            torch.tensor([1.0], dtype=torch.float32),
+            torch.tensor([[0]], dtype=torch.long),
+            torch.tensor([[1]], dtype=torch.long),
+            torch.tensor([[1.0]], dtype=torch.float32),
+            torch.tensor([[1.0]], dtype=torch.float32),
+            torch.tensor([[True]], dtype=torch.bool),
+            torch.tensor([[0.0, 1.0]], dtype=torch.float32),
+        )
+
+        risky_losses = _loss_components(outputs_risky, ref_outputs, batch, profile)
+        safe_losses = _loss_components(outputs_safe, ref_outputs, batch, profile)
+
+        self.assertGreater(float(risky_losses["rebuffer_loss"]), float(safe_losses["rebuffer_loss"]))
+        self.assertGreater(float(risky_losses["utility_loss"]), float(safe_losses["utility_loss"]))
 
 
 def build_unit_v2_dataset(
