@@ -127,3 +127,34 @@ sensibles a `2_5_mbps`, rebuffer y riesgo. La aceptacion exige mirar global,
 `2_5_mbps`, `spbc_v2_dpo_on_policy`, regret, rebuffer, over/under-aggressive,
 `risk_brier` y `risk_false_negative_rate`. No aceptar un scorer por mejorar solo
 una media global.
+
+## Addendum 2026-06-10 - resultado pilot anchor_ref v1
+
+El pilot multi-seed `pilot_dagger2_reward_risk_anchor_ref_seed_*_v1` no debe
+escalar a `full_v1`.
+
+Lectura agregada:
+
+```text
+best_epoch: 9, 12, 5
+global_utility_regret_vs_best_immediate=0.068708..0.071663
+global_rebuffer_regret_vs_best_immediate=0.004038..0.004795
+global_over_aggressive=0.010500..0.013833
+focus_2_5_mbps_over_aggressive=0.031790..0.041975
+risk_false_negative_rate=0.001289..0.001978
+```
+
+Frente al SPBC congelado, el scorer mejora ligeramente rebuffer regret
+(`-0.001214`, `-0.000692`, `-0.000457`), pero empeora utility regret
+(`+0.006017`, `+0.003062`, `+0.003898`) y over-aggressive
+(`+0.000833`, `+0.004166`, `+0.001500`). Esto confirma que el scorer aprendio
+una senal util de riesgo/rebuffer, pero como decisor compra esa mejora con
+demasiado coste de utilidad y seguridad.
+
+Decision: no full, no bundle, no controller. El siguiente intento debe convertir
+el fallo en loss/seleccion, igual que se hizo con SPBC: anadir una perdida
+positiva de ranking dentro del conjunto seguro (`safe_utility_rank_loss`) y una
+penalizacion explicita de masa de score sobre acciones
+`over_aggressive_rebuffer`. La receta v2 debe reducir el sesgo de seleccion a
+rebuffer puro y aumentar el peso de over-aggressive, manteniendo comparacion
+contra el SPBC congelado.

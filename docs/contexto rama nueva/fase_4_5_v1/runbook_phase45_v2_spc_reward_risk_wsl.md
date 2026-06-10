@@ -81,6 +81,38 @@ Aceptar solo si la mayoria de seeds mantiene senal coherente en global,
 over-aggressive, under-aggressive ni `risk_false_negative_rate`. Esta salida no
 es benchmark ni ranking.
 
+Resultado observado: el pilot `anchor_ref` v1 no se escala. Las tres seeds
+mejoraron ligeramente rebuffer regret frente al SPBC congelado, pero empeoraron
+utility regret y over-aggressive. El foco `2_5_mbps` mantuvo
+`over_aggressive=0.031790..0.041975`, demasiado alto para cerrar candidato.
+
+## Pilot DAgger-2 safe-rank v2
+
+El siguiente intento aplica lo aprendido del SPBC `anchor_safe_rank`: ademas de
+predecir reward/rebuffer/riesgo, fuerza que el score ordene mejor dentro del
+conjunto seguro y penaliza masa de score sobre acciones `over_aggressive`.
+
+Ejecutar con runner versionado:
+
+```bash
+cd ~/TFG/DashClientModular4
+git pull
+bash scripts/run_phase45_v2_spc_reward_risk_dagger2_safe_rank_pilot_wsl.sh
+```
+
+Para repetir solo el resumen:
+
+```bash
+cd ~/TFG/DashClientModular4
+python3 scripts/summarize_phase45_v2_spc_reward_risk_dagger2_pilot.py
+```
+
+Aceptar solo si la mayoria de seeds mejora o al menos no empeora frente al SPBC
+congelado en utility regret y over-aggressive, conserva la mejora de rebuffer y
+no rompe `2_5_mbps`, `spbc_v2_dpo_on_policy`, `risk_brier` ni
+`risk_false_negative_rate`. Si la v2 vuelve a comprar rebuffer con mas utility
+regret u over-aggressive, no lanzar full.
+
 ## Comandos historicos/manuales
 
 Las secciones siguientes quedan como referencia tecnica. Para ejecucion normal,

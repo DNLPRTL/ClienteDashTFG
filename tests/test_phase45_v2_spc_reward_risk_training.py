@@ -119,6 +119,61 @@ class Phase45V2SpcRewardRiskTrainingTest(unittest.TestCase):
         self.assertGreater(float(bad_losses["rebuffer_loss"]), float(good_losses["rebuffer_loss"]))
         self.assertGreater(float(bad_losses["risk_loss"]), float(good_losses["risk_loss"]))
 
+    def test_safe_utility_rank_loss_ignores_over_aggressive_high_reward_action(self):
+        profile = replace(
+            profile_by_name("smoke"),
+            best_immediate_ce_loss_weight=0.0,
+            pairwise_score_loss_weight=0.0,
+            reward_loss_weight=0.0,
+            rebuffer_loss_weight=0.0,
+            qoe_gap_loss_weight=0.0,
+            smoothness_loss_weight=0.0,
+            risk_loss_weight=0.0,
+            over_aggressive_score_loss_weight=0.0,
+            safe_utility_rank_loss_weight=1.0,
+            safe_utility_margin=0.25,
+        )
+        batch = (
+            torch.zeros((1, 8, 2), dtype=torch.float32),
+            torch.zeros((1, 7), dtype=torch.float32),
+            torch.zeros((1, 3, 7), dtype=torch.float32),
+            torch.tensor([[True, True, True]], dtype=torch.bool),
+            torch.tensor([0], dtype=torch.long),
+            torch.tensor([0], dtype=torch.long),
+            torch.zeros((1, 3), dtype=torch.float32),
+            torch.zeros((1, 3), dtype=torch.float32),
+            torch.tensor([[0.50, 0.20, 2.00]], dtype=torch.float32),
+            torch.zeros((1, 3), dtype=torch.float32),
+            torch.zeros((1, 3), dtype=torch.float32),
+            torch.zeros((1, 3), dtype=torch.float32),
+            torch.tensor([1.0], dtype=torch.float32),
+            torch.tensor([[0]], dtype=torch.long),
+            torch.tensor([[1]], dtype=torch.long),
+            torch.tensor([[1.0]], dtype=torch.float32),
+            torch.tensor([[1.0]], dtype=torch.float32),
+            torch.tensor([[False]], dtype=torch.bool),
+            torch.zeros((1, 3), dtype=torch.float32),
+            torch.tensor([[False, False, True]], dtype=torch.bool),
+        )
+        good_outputs = {
+            "action_scores": torch.tensor([[2.0, 0.0, 4.0]], dtype=torch.float32),
+            "predicted_reward_n_by_action": torch.zeros((1, 3), dtype=torch.float32),
+            "predicted_rebuffer_s_by_action": torch.zeros((1, 3), dtype=torch.float32),
+            "predicted_qoe_gap_by_action": torch.zeros((1, 3), dtype=torch.float32),
+            "predicted_smoothness_mbps_by_action": torch.zeros((1, 3), dtype=torch.float32),
+            "predicted_target_risk_logits_by_action": torch.zeros((1, 3), dtype=torch.float32),
+        }
+        bad_outputs = {
+            **good_outputs,
+            "action_scores": torch.tensor([[0.0, 2.0, 4.0]], dtype=torch.float32),
+        }
+
+        good_losses = _loss_components(good_outputs, batch, profile)
+        bad_losses = _loss_components(bad_outputs, batch, profile)
+
+        self.assertEqual(0.0, float(good_losses["safe_utility_rank_loss"]))
+        self.assertGreater(float(bad_losses["safe_utility_rank_loss"]), 1.0)
+
     def test_smoke_training_writes_checkpoint_report_and_reference_comparison_audit(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

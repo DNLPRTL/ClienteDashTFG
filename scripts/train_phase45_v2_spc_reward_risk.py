@@ -68,6 +68,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--severe-error-sample-weight", type=float, default=None)
     parser.add_argument("--safe-vs-rebuffer-pair-weight", type=float, default=None)
     parser.add_argument("--over-aggressive-rebuffer-action-weight", type=float, default=None)
+    parser.add_argument("--over-aggressive-score-loss-weight", type=float, default=None)
+    parser.add_argument("--safe-utility-rank-loss-weight", type=float, default=None)
+    parser.add_argument("--safe-utility-margin", type=float, default=None)
     parser.add_argument("--max-pair-weight", type=float, default=None)
     parser.add_argument("--selection-focus-weight", type=float, default=None)
     parser.add_argument("--selection-rebuffer-weight", type=float, default=None)
@@ -143,6 +146,9 @@ def _profile_with_overrides(args: argparse.Namespace):
         ("severe_error_sample_weight", "severe_error_sample_weight"),
         ("safe_vs_rebuffer_pair_weight", "safe_vs_rebuffer_pair_weight"),
         ("over_aggressive_rebuffer_action_weight", "over_aggressive_rebuffer_action_weight"),
+        ("over_aggressive_score_loss_weight", "over_aggressive_score_loss_weight"),
+        ("safe_utility_rank_loss_weight", "safe_utility_rank_loss_weight"),
+        ("safe_utility_margin", "safe_utility_margin"),
         ("max_pair_weight", "max_pair_weight"),
         ("selection_focus_weight", "selection_focus_weight"),
         ("selection_rebuffer_weight", "selection_rebuffer_weight"),

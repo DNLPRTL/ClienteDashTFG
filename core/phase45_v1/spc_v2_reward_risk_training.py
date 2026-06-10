@@ -68,6 +68,8 @@ _LOSS_METRIC_NAMES = (
     "qoe_gap_loss",
     "smoothness_loss",
     "risk_loss",
+    "over_aggressive_score_probability_loss",
+    "safe_utility_rank_loss",
 )
 
 
@@ -105,6 +107,9 @@ class SpcV2RewardRiskTrainingProfile:
     severe_error_sample_weight: float = 1.35
     safe_vs_rebuffer_pair_weight: float = 1.35
     over_aggressive_rebuffer_action_weight: float = 2.10
+    over_aggressive_score_loss_weight: float = 0.0
+    safe_utility_rank_loss_weight: float = 0.0
+    safe_utility_margin: float = 0.20
     max_pair_weight: float = 6.0
     selection_focus_weight: float = 1.25
     selection_rebuffer_weight: float = 4.30
@@ -143,6 +148,9 @@ class SpcV2RewardRiskTrainingProfile:
             "severe_error_sample_weight": self.severe_error_sample_weight,
             "safe_vs_rebuffer_pair_weight": self.safe_vs_rebuffer_pair_weight,
             "over_aggressive_rebuffer_action_weight": self.over_aggressive_rebuffer_action_weight,
+            "over_aggressive_score_loss_weight": self.over_aggressive_score_loss_weight,
+            "safe_utility_rank_loss_weight": self.safe_utility_rank_loss_weight,
+            "safe_utility_margin": self.safe_utility_margin,
             "max_pair_weight": self.max_pair_weight,
             "selection_focus_weight": self.selection_focus_weight,
             "selection_rebuffer_weight": self.selection_rebuffer_weight,
@@ -533,11 +541,17 @@ def train_spc_abr_v2_reward_risk(
             "training_qoe_gap_loss": train_metrics["qoe_gap_loss"],
             "training_smoothness_loss": train_metrics["smoothness_loss"],
             "training_risk_loss": train_metrics["risk_loss"],
+            "training_over_aggressive_score_probability_loss": train_metrics["over_aggressive_score_probability_loss"],
+            "training_safe_utility_rank_loss": train_metrics["safe_utility_rank_loss"],
             "validation_loss": validation_metrics["loss"],
             "validation_reward_mae": validation_metrics["reward_mae"],
             "validation_rebuffer_mae_s": validation_metrics["rebuffer_mae_s"],
             "validation_qoe_gap_mae": validation_metrics["qoe_gap_mae"],
             "validation_risk_brier": validation_metrics["risk_brier"],
+            "validation_over_aggressive_score_probability_loss": validation_metrics[
+                "over_aggressive_score_probability_loss"
+            ],
+            "validation_safe_utility_rank_loss": validation_metrics["safe_utility_rank_loss"],
             "validation_selected_utility_regret_vs_best_immediate_mean": validation_metrics[
                 "selected_utility_regret_vs_best_immediate_mean"
             ],
@@ -672,6 +686,11 @@ def train_spc_abr_v2_reward_risk(
             "sample_weights_include_focus_bucket_and_severe_errors": True,
             "pair_weights_normalized_and_capped": True,
             "risk_positive_weight": profile.risk_positive_weight,
+            "over_aggressive_score_probability_loss": "expected_softmax_score_mass_on_actions_marked_over_aggressive_rebuffer",
+            "over_aggressive_score_loss_weight": profile.over_aggressive_score_loss_weight,
+            "safe_utility_rank_loss": "margin_ranking_best_reward_action_inside_valid_non_over_aggressive_action_set",
+            "safe_utility_rank_loss_weight": profile.safe_utility_rank_loss_weight,
+            "safe_utility_margin": profile.safe_utility_margin,
             "focus_throughput_bucket": FOCUS_THROUGHPUT_BUCKET,
             "checkpoint_selected_by": "validation_selection_score_aligned_with_regret_rebuffer_focus_bucket_prediction_error",
         },
@@ -899,6 +918,7 @@ def _loss_components(
     pair_weights = batch[15]
     pair_reward_gaps = batch[16]
     pair_mask = batch[17].to(dtype=torch.bool)
+    over_aggressive_actions = batch[19] if len(batch) > 19 else torch.zeros_like(rebuffer_s, dtype=torch.bool)
     best_immediate_ce_loss = _masked_weighted_cross_entropy(scores, best_labels, mask, sample_weights)
     pairwise_score_loss = _pairwise_score_loss(
         scores,
@@ -935,6 +955,20 @@ def _loss_components(
         sample_weights,
         positive_weight=profile.risk_positive_weight,
     )
+    over_aggressive_score_probability_loss = _expected_over_aggressive_score_probability_loss(
+        scores,
+        over_aggressive_actions,
+        mask,
+        sample_weights,
+    )
+    safe_utility_rank_loss = _safe_utility_rank_loss(
+        scores,
+        rewards,
+        over_aggressive_actions,
+        mask,
+        sample_weights,
+        margin=float(profile.safe_utility_margin),
+    )
     loss = (
         float(profile.best_immediate_ce_loss_weight) * best_immediate_ce_loss
         + float(profile.pairwise_score_loss_weight) * pairwise_score_loss
@@ -943,6 +977,8 @@ def _loss_components(
         + float(profile.qoe_gap_loss_weight) * qoe_gap_loss
         + float(profile.smoothness_loss_weight) * smoothness_loss
         + float(profile.risk_loss_weight) * risk_loss
+        + float(profile.over_aggressive_score_loss_weight) * over_aggressive_score_probability_loss
+        + float(profile.safe_utility_rank_loss_weight) * safe_utility_rank_loss
     )
     return {
         "loss_tensor": loss,
@@ -954,6 +990,8 @@ def _loss_components(
         "qoe_gap_loss": qoe_gap_loss.detach(),
         "smoothness_loss": smoothness_loss.detach(),
         "risk_loss": risk_loss.detach(),
+        "over_aggressive_score_probability_loss": over_aggressive_score_probability_loss.detach(),
+        "safe_utility_rank_loss": safe_utility_rank_loss.detach(),
     }
 
 
@@ -1019,6 +1057,50 @@ def _masked_weighted_binary_cross_entropy(
     valid_counts = torch.clamp(active_mask.sum(dim=1).to(dtype=logits.dtype), min=1.0)
     per_sample_loss = (raw * action_weights * active_mask.to(dtype=logits.dtype)).sum(dim=1) / valid_counts
     weights = sample_weights.to(device=logits.device, dtype=logits.dtype)
+    return (per_sample_loss * weights).sum() / torch.clamp(weights.sum(), min=1.0)
+
+
+def _expected_over_aggressive_score_probability_loss(
+    scores: torch.Tensor,
+    over_aggressive_actions: torch.Tensor,
+    mask: torch.Tensor,
+    sample_weights: torch.Tensor,
+) -> torch.Tensor:
+    active_mask = mask.to(dtype=torch.bool, device=scores.device)
+    over_mask = over_aggressive_actions.to(dtype=torch.bool, device=scores.device) & active_mask
+    probabilities = F.softmax(scores.masked_fill(~active_mask, -1.0e9), dim=1)
+    per_sample_loss = (probabilities * over_mask.to(dtype=scores.dtype)).sum(dim=1)
+    weights = sample_weights.to(device=scores.device, dtype=scores.dtype)
+    return (per_sample_loss * weights).sum() / torch.clamp(weights.sum(), min=1.0)
+
+
+def _safe_utility_rank_loss(
+    scores: torch.Tensor,
+    rewards: torch.Tensor,
+    over_aggressive_actions: torch.Tensor,
+    mask: torch.Tensor,
+    sample_weights: torch.Tensor,
+    *,
+    margin: float,
+) -> torch.Tensor:
+    active_mask = mask.to(dtype=torch.bool, device=scores.device)
+    over_mask = over_aggressive_actions.to(dtype=torch.bool, device=scores.device) & active_mask
+    safe_mask = active_mask & ~over_mask
+    has_safe = safe_mask.any(dim=1, keepdim=True)
+    effective_safe_mask = torch.where(has_safe, safe_mask, active_mask)
+    rewards = rewards.to(device=scores.device, dtype=scores.dtype)
+    safe_rewards = rewards.masked_fill(~effective_safe_mask, -1.0e9)
+    best_safe = safe_rewards.argmax(dim=1)
+    masked_scores = scores.masked_fill(~active_mask, -1.0e9)
+    best_safe_scores = torch.gather(masked_scores, 1, best_safe.unsqueeze(1)).squeeze(1)
+    action_indices = torch.arange(scores.shape[1], device=scores.device).unsqueeze(0)
+    competing_safe_mask = effective_safe_mask & (action_indices != best_safe.unsqueeze(1))
+    has_competing_safe = competing_safe_mask.any(dim=1)
+    competing_scores = masked_scores.masked_fill(~competing_safe_mask, -1.0e9)
+    best_competing_scores = competing_scores.max(dim=1).values
+    per_sample_loss = F.relu(float(margin) + best_competing_scores - best_safe_scores)
+    per_sample_loss = torch.where(has_competing_safe, per_sample_loss, torch.zeros_like(per_sample_loss))
+    weights = sample_weights.to(device=scores.device, dtype=scores.dtype) * has_competing_safe.to(dtype=scores.dtype)
     return (per_sample_loss * weights).sum() / torch.clamp(weights.sum(), min=1.0)
 
 
