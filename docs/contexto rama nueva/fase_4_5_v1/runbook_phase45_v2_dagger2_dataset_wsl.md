@@ -122,38 +122,45 @@ fuente (`spbc_v2_dpo_on_policy`), no volver a entrenar en frio desde
 `spbc_abr_v2_dpo/full_v1_utility_risk_v1` como checkpoint inicial congelado y
 lo usa tambien como referencia DPO/auditoria.
 
-Despues de los pilots `warm_v2_focus` y `warm_v2_guarded`, el siguiente pilot
-debe activar seleccion constrained/safe-policy-improvement. El gate compara cada
-epoch contra el checkpoint inicial y no permite seleccionar como `best_epoch` un
-checkpoint que mejore regret a costa de demasiada sobre-agresividad. Si ningun
-epoch entrenado pasa el gate, `best_epoch=0` significa que no hay candidato
-seguro y se conserva la referencia inicial como salida diagnostica.
+Despues de los pilots `warm_v2_focus`, `warm_v2_guarded` y
+`warm_v2_constrained`, el siguiente pilot no debe relajar el gate ni lanzar full.
+El pilot constrained devolvio `best_epoch=0`: los epochs entrenados bajaban
+regret, pero subian demasiado `over_aggressive`, especialmente en
+`2_5_mbps`. Por tanto, el siguiente ataque convierte esa senal de rechazo en
+loss interna: KL a la referencia congelada, penalizacion de probabilidad sobre
+acciones `over_aggressive_rebuffer`, margen contra esas acciones y penalizacion
+del exceso de probabilidad respecto al checkpoint inicial.
 
 ```bash
 cd ~/TFG/DashClientModular4
 git pull
 source ~/venvs/rocm721/bin/activate
 
-LOG=/tmp/phase45_v2_spbc_dpo_dagger2_warm_v2_constrained_$(date +%Y%m%d_%H%M%S).log
+LOG=/tmp/phase45_v2_spbc_dpo_dagger2_warm_v2_safe_margin_$(date +%Y%m%d_%H%M%S).log
 {
   python3 scripts/train_phase45_v2_spbc_dpo.py \
     --profile pilot \
     --dataset-dir ~/TFG/datasets_normalizados/phase45_v1/phase45v2_preference_onpolicy_dagger2_dataset_v1 \
-    --output-dir ~/TFG/modelos/phase45_v1/spbc_abr_v2_dpo/pilot_dagger2_warm_v2_constrained_v1 \
+    --output-dir ~/TFG/modelos/phase45_v1/spbc_abr_v2_dpo/pilot_dagger2_warm_v2_safe_margin_v1 \
     --init-checkpoint ~/TFG/modelos/phase45_v1/spbc_abr_v2_dpo/full_v1_utility_risk_v1/modelo_spbc_abr_v2_dpo.pt \
     --overwrite \
     --device auto \
-    --epochs 12 \
+    --epochs 10 \
     --batch-size 1024 \
-    --learning-rate 0.00015 \
+    --learning-rate 0.00010 \
     --max-training-samples 150000 \
     --max-validation-samples 40000 \
-    --utility-loss-weight 0.68 \
-    --rebuffer-loss-weight 0.95 \
+    --utility-loss-weight 0.62 \
+    --rebuffer-loss-weight 0.90 \
     --focus-bucket-sample-weight 2.35 \
     --severe-error-sample-weight 1.90 \
     --safe-vs-rebuffer-pair-weight 2.10 \
     --over-aggressive-rebuffer-action-weight 5.00 \
+    --reference-kl-loss-weight 0.22 \
+    --over-aggressive-probability-loss-weight 2.80 \
+    --over-aggressive-margin-loss-weight 1.40 \
+    --over-aggressive-reference-excess-loss-weight 2.20 \
+    --over-aggressive-margin 0.40 \
     --decision-rebuffer-fusion-weight 0.52 \
     --decision-risk-fusion-weight 0.40 \
     --selection-focus-weight 2.20 \

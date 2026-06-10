@@ -73,6 +73,10 @@ _LOSS_METRIC_NAMES = (
     "aux_reward_loss",
     "aux_rebuffer_loss",
     "aux_risk_loss",
+    "reference_kl_loss",
+    "over_aggressive_probability_loss",
+    "over_aggressive_margin_loss",
+    "over_aggressive_reference_excess_loss",
 )
 
 
@@ -106,6 +110,11 @@ class SpbcV2DpoTrainingProfile:
     aux_reward_loss_weight: float = 0.08
     aux_rebuffer_loss_weight: float = 0.10
     aux_risk_loss_weight: float = 0.08
+    reference_kl_loss_weight: float = 0.0
+    over_aggressive_probability_loss_weight: float = 0.0
+    over_aggressive_margin_loss_weight: float = 0.0
+    over_aggressive_reference_excess_loss_weight: float = 0.0
+    over_aggressive_margin: float = 0.25
     decision_reward_fusion_weight: float = 0.12
     decision_rebuffer_fusion_weight: float = 0.30
     decision_risk_fusion_weight: float = 0.18
@@ -152,6 +161,11 @@ class SpbcV2DpoTrainingProfile:
             "aux_reward_loss_weight": self.aux_reward_loss_weight,
             "aux_rebuffer_loss_weight": self.aux_rebuffer_loss_weight,
             "aux_risk_loss_weight": self.aux_risk_loss_weight,
+            "reference_kl_loss_weight": self.reference_kl_loss_weight,
+            "over_aggressive_probability_loss_weight": self.over_aggressive_probability_loss_weight,
+            "over_aggressive_margin_loss_weight": self.over_aggressive_margin_loss_weight,
+            "over_aggressive_reference_excess_loss_weight": self.over_aggressive_reference_excess_loss_weight,
+            "over_aggressive_margin": self.over_aggressive_margin,
             "decision_reward_fusion_weight": self.decision_reward_fusion_weight,
             "decision_rebuffer_fusion_weight": self.decision_rebuffer_fusion_weight,
             "decision_risk_fusion_weight": self.decision_risk_fusion_weight,
@@ -245,6 +259,7 @@ class SpbcV2DpoExample:
     smoothness_mbps_by_action: tuple[float, ...]
     target_risk_by_action: tuple[float, ...]
     rebuffer_penalty_by_action: tuple[float, ...]
+    over_aggressive_action_by_action: tuple[bool, ...]
     pairs: tuple[PreferencePair, ...]
     sample_weight: float
     max_pair_weight: float
@@ -636,12 +651,22 @@ def train_spbc_abr_v2_dpo(
             "training_aux_reward_loss": train_metrics["aux_reward_loss"],
             "training_aux_rebuffer_loss": train_metrics["aux_rebuffer_loss"],
             "training_aux_risk_loss": train_metrics["aux_risk_loss"],
+            "training_reference_kl_loss": train_metrics["reference_kl_loss"],
+            "training_over_aggressive_probability_loss": train_metrics["over_aggressive_probability_loss"],
+            "training_over_aggressive_margin_loss": train_metrics["over_aggressive_margin_loss"],
+            "training_over_aggressive_reference_excess_loss": train_metrics["over_aggressive_reference_excess_loss"],
             "validation_loss": validation_metrics["loss"],
             "validation_utility_loss": validation_metrics["utility_loss"],
             "validation_rebuffer_loss": validation_metrics["rebuffer_loss"],
             "validation_aux_reward_loss": validation_metrics["aux_reward_loss"],
             "validation_aux_rebuffer_loss": validation_metrics["aux_rebuffer_loss"],
             "validation_aux_risk_loss": validation_metrics["aux_risk_loss"],
+            "validation_reference_kl_loss": validation_metrics["reference_kl_loss"],
+            "validation_over_aggressive_probability_loss": validation_metrics["over_aggressive_probability_loss"],
+            "validation_over_aggressive_margin_loss": validation_metrics["over_aggressive_margin_loss"],
+            "validation_over_aggressive_reference_excess_loss": validation_metrics[
+                "over_aggressive_reference_excess_loss"
+            ],
             "validation_top1_accuracy": validation_metrics["top1_accuracy"],
             "validation_pair_preference_accuracy": validation_metrics["pair_preference_accuracy"],
             "validation_predicted_qoe_gap_mean": validation_metrics["predicted_qoe_gap_mean"],
@@ -846,6 +871,15 @@ def train_spbc_abr_v2_dpo(
             "auxiliary_reward_loss": "masked_smooth_l1_prediction_of_reward_n_by_action",
             "auxiliary_rebuffer_loss": "masked_smooth_l1_prediction_of_capped_rebuffer_by_action",
             "auxiliary_risk_loss": "masked_bce_prediction_of_target_risk_by_action",
+            "reference_kl_loss": "weighted_KL(policy_distribution || frozen_reference_distribution)",
+            "reference_kl_loss_weight": profile.reference_kl_loss_weight,
+            "over_aggressive_probability_loss": "expected_policy_probability_on_actions_marked_over_aggressive_rebuffer",
+            "over_aggressive_probability_loss_weight": profile.over_aggressive_probability_loss_weight,
+            "over_aggressive_margin_loss": "softplus_margin_between_best_immediate_action_and_over_aggressive_actions",
+            "over_aggressive_margin_loss_weight": profile.over_aggressive_margin_loss_weight,
+            "over_aggressive_reference_excess_loss": "positive_policy_probability_excess_over_frozen_reference_on_over_aggressive_actions",
+            "over_aggressive_reference_excess_loss_weight": profile.over_aggressive_reference_excess_loss_weight,
+            "over_aggressive_margin": profile.over_aggressive_margin,
             "decision_fusion": "policy_logits_plus_predicted_utility_minus_predicted_rebuffer_and_risk",
             "decision_reward_fusion_weight": profile.decision_reward_fusion_weight,
             "decision_rebuffer_fusion_weight": profile.decision_rebuffer_fusion_weight,
@@ -997,6 +1031,7 @@ def examples_to_tensors(
     pair_reward_gap_rows = []
     pair_mask_rows = []
     rebuffer_penalty_rows = []
+    over_aggressive_action_rows = []
     for example in examples:
         if example.oracle_action >= len(example.candidates):
             raise SpbcV2DpoTrainingError("oracle_action outside candidate range")
@@ -1013,6 +1048,7 @@ def examples_to_tensors(
         smoothness = [float(value) for value in example.smoothness_mbps_by_action]
         target_risks = [float(value) for value in example.target_risk_by_action]
         rebuffer_penalties = [float(value) for value in example.rebuffer_penalty_by_action]
+        over_aggressive_actions = [bool(value) for value in example.over_aggressive_action_by_action]
         while len(candidates) < max_candidates:
             candidates.append([0.0 for _ in CANDIDATE_FEATURES])
             mask.append(False)
@@ -1023,6 +1059,7 @@ def examples_to_tensors(
             smoothness.append(0.0)
             target_risks.append(1.0)
             rebuffer_penalties.append(1.0)
+            over_aggressive_actions.append(False)
         pair_preferred = [pair.preferred_action for pair in example.pairs]
         pair_rejected = [pair.rejected_action for pair in example.pairs]
         pair_weight = [min(pair.weight * float(example.sample_weight), float(example.max_pair_weight)) for pair in example.pairs]
@@ -1051,6 +1088,7 @@ def examples_to_tensors(
         pair_reward_gap_rows.append(pair_reward_gap)
         pair_mask_rows.append(pair_mask)
         rebuffer_penalty_rows.append(rebuffer_penalties)
+        over_aggressive_action_rows.append(over_aggressive_actions)
     return (
         torch.tensor(sequence_rows, dtype=torch.float32),
         torch.tensor(scalar_rows, dtype=torch.float32),
@@ -1071,6 +1109,7 @@ def examples_to_tensors(
         torch.tensor(pair_reward_gap_rows, dtype=torch.float32),
         torch.tensor(pair_mask_rows, dtype=torch.bool),
         torch.tensor(rebuffer_penalty_rows, dtype=torch.float32),
+        torch.tensor(over_aggressive_action_rows, dtype=torch.bool),
     )
 
 
@@ -1204,6 +1243,7 @@ def _loss_components(
     rebuffer_s = batch[7]
     target_risks = batch[11]
     rebuffer_penalties = batch[18]
+    over_aggressive_actions = batch[19] if len(batch) > 19 else torch.zeros_like(rebuffer_penalties, dtype=torch.bool)
     sample_weights = batch[12]
     pair_preferred = batch[13]
     pair_rejected = batch[14]
@@ -1266,6 +1306,33 @@ def _loss_components(
         mask,
         sample_weights,
     )
+    reference_kl_loss = _masked_weighted_kl_to_reference_loss(
+        logits,
+        ref_logits,
+        mask,
+        sample_weights,
+    )
+    over_aggressive_probability_loss = _expected_over_aggressive_probability_loss(
+        logits,
+        over_aggressive_actions,
+        mask,
+        sample_weights,
+    )
+    over_aggressive_margin_loss = _over_aggressive_margin_loss(
+        logits,
+        batch[5],
+        over_aggressive_actions,
+        mask,
+        sample_weights,
+        margin=float(profile.over_aggressive_margin),
+    )
+    over_aggressive_reference_excess_loss = _over_aggressive_reference_excess_loss(
+        logits,
+        ref_logits,
+        over_aggressive_actions,
+        mask,
+        sample_weights,
+    )
     loss = (
         float(profile.ce_loss_weight) * ce_loss
         + float(profile.dpo_loss_weight) * dpo_loss
@@ -1275,6 +1342,10 @@ def _loss_components(
         + float(profile.aux_reward_loss_weight) * aux_reward_loss
         + float(profile.aux_rebuffer_loss_weight) * aux_rebuffer_loss
         + float(profile.aux_risk_loss_weight) * aux_risk_loss
+        + float(profile.reference_kl_loss_weight) * reference_kl_loss
+        + float(profile.over_aggressive_probability_loss_weight) * over_aggressive_probability_loss
+        + float(profile.over_aggressive_margin_loss_weight) * over_aggressive_margin_loss
+        + float(profile.over_aggressive_reference_excess_loss_weight) * over_aggressive_reference_excess_loss
     )
     return {
         "loss_tensor": loss,
@@ -1287,6 +1358,10 @@ def _loss_components(
         "aux_reward_loss": aux_reward_loss.detach(),
         "aux_rebuffer_loss": aux_rebuffer_loss.detach(),
         "aux_risk_loss": aux_risk_loss.detach(),
+        "reference_kl_loss": reference_kl_loss.detach(),
+        "over_aggressive_probability_loss": over_aggressive_probability_loss.detach(),
+        "over_aggressive_margin_loss": over_aggressive_margin_loss.detach(),
+        "over_aggressive_reference_excess_loss": over_aggressive_reference_excess_loss.detach(),
     }
 
 
@@ -1416,6 +1491,80 @@ def _masked_weighted_binary_cross_entropy(
     raw = F.binary_cross_entropy_with_logits(logits, targets, reduction="none")
     valid_counts = torch.clamp(active_mask.sum(dim=1).to(dtype=logits.dtype), min=1.0)
     per_sample_loss = (raw * active_mask.to(dtype=logits.dtype)).sum(dim=1) / valid_counts
+    weights = sample_weights.to(device=logits.device, dtype=logits.dtype)
+    return (per_sample_loss * weights).sum() / torch.clamp(weights.sum(), min=1.0)
+
+
+def _masked_weighted_kl_to_reference_loss(
+    logits: torch.Tensor,
+    ref_logits: torch.Tensor,
+    mask: torch.Tensor,
+    sample_weights: torch.Tensor,
+) -> torch.Tensor:
+    active_mask = mask.to(dtype=torch.bool, device=logits.device)
+    masked_logits = logits.masked_fill(~active_mask, -1.0e9)
+    masked_ref_logits = ref_logits.to(device=logits.device, dtype=logits.dtype).masked_fill(~active_mask, -1.0e9)
+    log_probs = F.log_softmax(masked_logits, dim=1)
+    ref_log_probs = F.log_softmax(masked_ref_logits, dim=1)
+    probabilities = F.softmax(masked_logits, dim=1)
+    per_sample_loss = (probabilities * (log_probs - ref_log_probs) * active_mask.to(dtype=logits.dtype)).sum(dim=1)
+    weights = sample_weights.to(device=logits.device, dtype=logits.dtype)
+    return (per_sample_loss * weights).sum() / torch.clamp(weights.sum(), min=1.0)
+
+
+def _expected_over_aggressive_probability_loss(
+    logits: torch.Tensor,
+    over_aggressive_actions: torch.Tensor,
+    mask: torch.Tensor,
+    sample_weights: torch.Tensor,
+) -> torch.Tensor:
+    active_mask = mask.to(dtype=torch.bool, device=logits.device)
+    over_mask = over_aggressive_actions.to(dtype=torch.bool, device=logits.device) & active_mask
+    masked_logits = logits.masked_fill(~active_mask, -1.0e9)
+    probabilities = F.softmax(masked_logits, dim=1)
+    per_sample_loss = (probabilities * over_mask.to(dtype=logits.dtype)).sum(dim=1)
+    weights = sample_weights.to(device=logits.device, dtype=logits.dtype)
+    return (per_sample_loss * weights).sum() / torch.clamp(weights.sum(), min=1.0)
+
+
+def _over_aggressive_margin_loss(
+    logits: torch.Tensor,
+    safe_labels: torch.Tensor,
+    over_aggressive_actions: torch.Tensor,
+    mask: torch.Tensor,
+    sample_weights: torch.Tensor,
+    *,
+    margin: float,
+) -> torch.Tensor:
+    active_mask = mask.to(dtype=torch.bool, device=logits.device)
+    safe = safe_labels.to(device=logits.device, dtype=torch.long)
+    masked_logits = logits.masked_fill(~active_mask, -1.0e9)
+    safe_logits = torch.gather(masked_logits, 1, safe.unsqueeze(1))
+    action_indices = torch.arange(logits.shape[1], device=logits.device).unsqueeze(0)
+    over_mask = over_aggressive_actions.to(dtype=torch.bool, device=logits.device) & active_mask
+    over_mask = over_mask & (action_indices != safe.unsqueeze(1))
+    raw = F.softplus(float(margin) + masked_logits - safe_logits)
+    over_counts = torch.clamp(over_mask.sum(dim=1).to(dtype=logits.dtype), min=1.0)
+    per_sample_loss = (raw * over_mask.to(dtype=logits.dtype)).sum(dim=1) / over_counts
+    weights = sample_weights.to(device=logits.device, dtype=logits.dtype)
+    return (per_sample_loss * weights).sum() / torch.clamp(weights.sum(), min=1.0)
+
+
+def _over_aggressive_reference_excess_loss(
+    logits: torch.Tensor,
+    ref_logits: torch.Tensor,
+    over_aggressive_actions: torch.Tensor,
+    mask: torch.Tensor,
+    sample_weights: torch.Tensor,
+) -> torch.Tensor:
+    active_mask = mask.to(dtype=torch.bool, device=logits.device)
+    over_mask = over_aggressive_actions.to(dtype=torch.bool, device=logits.device) & active_mask
+    masked_logits = logits.masked_fill(~active_mask, -1.0e9)
+    masked_ref_logits = ref_logits.to(device=logits.device, dtype=logits.dtype).masked_fill(~active_mask, -1.0e9)
+    probabilities = F.softmax(masked_logits, dim=1)
+    ref_probabilities = F.softmax(masked_ref_logits, dim=1)
+    excess = F.relu(probabilities - ref_probabilities)
+    per_sample_loss = (excess * over_mask.to(dtype=logits.dtype)).sum(dim=1)
     weights = sample_weights.to(device=logits.device, dtype=logits.dtype)
     return (per_sample_loss * weights).sum() / torch.clamp(weights.sum(), min=1.0)
 
@@ -1729,6 +1878,7 @@ def _example_from_sample(
     smoothness = []
     target_risks = []
     rebuffer_penalties = []
+    over_aggressive_actions = []
     has_severe_rebuffer_error = False
     for index, raw_outcome in enumerate(outcomes_raw):
         outcome = _require_mapping(raw_outcome, "per_action_outcomes[{0}]".format(index))
@@ -1737,6 +1887,7 @@ def _example_from_sample(
         bitrates.append(bitrate_kbps)
         smoothness.append(smoothness_mbps)
         over_aggressive_rebuffer = outcome.get("over_aggressive_rebuffer") is True
+        over_aggressive_actions.append(over_aggressive_rebuffer)
         if outcome.get("valid_action") is True:
             qoe_gap = max(_finite_number(outcome.get("qoe_gap"), "qoe_gap"), 0.0)
             rebuffer_s = max(_finite_number(outcome.get("estimated_rebuffer_s"), "estimated_rebuffer_s"), 0.0)
@@ -1785,6 +1936,7 @@ def _example_from_sample(
         or len(candidates) != len(smoothness)
         or len(candidates) != len(target_risks)
         or len(candidates) != len(rebuffer_penalties)
+        or len(candidates) != len(over_aggressive_actions)
     ):
         raise SpbcV2DpoTrainingError("line {0}: candidates/mask/targets length mismatch".format(line_number))
     if int(oracle_action) < 0 or int(oracle_action) >= len(candidates) or not action_mask[int(oracle_action)]:
@@ -1810,6 +1962,7 @@ def _example_from_sample(
         smoothness_mbps_by_action=tuple(smoothness),
         target_risk_by_action=tuple(target_risks),
         rebuffer_penalty_by_action=tuple(rebuffer_penalties),
+        over_aggressive_action_by_action=tuple(over_aggressive_actions),
         pairs=pairs,
         sample_weight=sample_weight,
         max_pair_weight=float(max_pair_weight),
@@ -2484,6 +2637,11 @@ def _validate_training_args(
         "aux_reward_loss_weight",
         "aux_rebuffer_loss_weight",
         "aux_risk_loss_weight",
+        "reference_kl_loss_weight",
+        "over_aggressive_probability_loss_weight",
+        "over_aggressive_margin_loss_weight",
+        "over_aggressive_reference_excess_loss_weight",
+        "over_aggressive_margin",
         "decision_reward_fusion_weight",
         "decision_rebuffer_fusion_weight",
         "decision_risk_fusion_weight",

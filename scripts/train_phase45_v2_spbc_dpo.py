@@ -69,6 +69,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--aux-reward-loss-weight", type=float, default=None)
     parser.add_argument("--aux-rebuffer-loss-weight", type=float, default=None)
     parser.add_argument("--aux-risk-loss-weight", type=float, default=None)
+    parser.add_argument("--reference-kl-loss-weight", type=float, default=None)
+    parser.add_argument("--over-aggressive-probability-loss-weight", type=float, default=None)
+    parser.add_argument("--over-aggressive-margin-loss-weight", type=float, default=None)
+    parser.add_argument("--over-aggressive-reference-excess-loss-weight", type=float, default=None)
+    parser.add_argument("--over-aggressive-margin", type=float, default=None)
     parser.add_argument("--decision-reward-fusion-weight", type=float, default=None)
     parser.add_argument("--decision-rebuffer-fusion-weight", type=float, default=None)
     parser.add_argument("--decision-risk-fusion-weight", type=float, default=None)
@@ -159,6 +164,11 @@ def _profile_with_overrides(args: argparse.Namespace):
         ("aux_reward_loss_weight", "aux_reward_loss_weight"),
         ("aux_rebuffer_loss_weight", "aux_rebuffer_loss_weight"),
         ("aux_risk_loss_weight", "aux_risk_loss_weight"),
+        ("reference_kl_loss_weight", "reference_kl_loss_weight"),
+        ("over_aggressive_probability_loss_weight", "over_aggressive_probability_loss_weight"),
+        ("over_aggressive_margin_loss_weight", "over_aggressive_margin_loss_weight"),
+        ("over_aggressive_reference_excess_loss_weight", "over_aggressive_reference_excess_loss_weight"),
+        ("over_aggressive_margin", "over_aggressive_margin"),
         ("decision_reward_fusion_weight", "decision_reward_fusion_weight"),
         ("decision_rebuffer_fusion_weight", "decision_rebuffer_fusion_weight"),
         ("decision_risk_fusion_weight", "decision_risk_fusion_weight"),
