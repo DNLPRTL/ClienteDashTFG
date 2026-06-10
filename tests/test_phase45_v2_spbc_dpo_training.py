@@ -23,7 +23,12 @@ from core.phase45_v1.spbc_v2_dpo_training import (
     _loss_components,
     _selection_score,
 )
-from tests.test_phase45_v2_preference_dataset import build_manifest_with_trace_files, unit_profile, write_stub_spbc_checkpoint
+from tests.test_phase45_v2_preference_dataset import (
+    build_manifest_with_trace_files,
+    unit_profile,
+    write_stub_spbc_checkpoint,
+    write_stub_spbc_v2_dpo_checkpoint,
+)
 
 
 class Phase45V2SpbcDpoTrainingTest(unittest.TestCase):
@@ -140,6 +145,11 @@ class Phase45V2SpbcDpoTrainingTest(unittest.TestCase):
             self.assertFalse(report_file["ranking_performed"])
             self.assertFalse(report_file["bundle_exported"])
             self.assertFalse(report_file["controller_registered"])
+            self.assertTrue(report_file["init_checkpoint_reference_comparison"]["available"])
+            self.assertEqual(
+                "spbc_abr_v1_full_v1_frozen_checkpoint",
+                report_file["init_checkpoint_reference_comparison"]["reference_label"],
+            )
             self.assertTrue(report_file["spbc_v1_reference_comparison"]["available"])
             self.assertIn("focus_2_5_mbps", report_file["validation_metrics"])
             self.assertIn("by_rollout_source", report_file["validation_metrics"])
@@ -156,6 +166,61 @@ class Phase45V2SpbcDpoTrainingTest(unittest.TestCase):
             self.assertTrue(report_file["state_load_report"]["auxiliary_heads_initialized_from_zero"])
             self.assertIn("decision_fusion", report_file["loss_design"])
             self.assertTrue(report_file["loss_design"]["sample_weights_include_focus_bucket_and_severe_errors"])
+
+    def test_training_can_warm_start_from_v2_checkpoint_and_compare_initial_policy(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            spbc_checkpoint = root / "modelos" / "phase45_v1" / "spbc_abr_v1" / "full_v1" / "modelo_spbc_abr_v1.pt"
+            dataset_dir = build_unit_v2_dataset(root, with_spbc=True, checkpoint_path=spbc_checkpoint)
+            v2_checkpoint = (
+                root
+                / "modelos"
+                / "phase45_v1"
+                / "spbc_abr_v2_dpo"
+                / "full_v1_utility_risk_v1"
+                / "modelo_spbc_abr_v2_dpo.pt"
+            )
+            write_stub_spbc_v2_dpo_checkpoint(v2_checkpoint)
+            output_dir = root / "modelos" / "phase45_v1" / "spbc_abr_v2_dpo" / "pilot_dagger2_warm"
+            profile = replace(
+                profile_by_name("smoke"),
+                epochs=1,
+                batch_size=32,
+                max_training_samples=96,
+                max_validation_samples=48,
+                decision_rebuffer_fusion_weight=0.77,
+            )
+
+            report = train_spbc_abr_v2_dpo(
+                dataset_dir,
+                output_dir,
+                profile=profile,
+                overwrite=True,
+                device="cpu",
+                init_checkpoint=v2_checkpoint,
+                validate_dataset=True,
+                progress_callback=None,
+            )
+            report_file = read_json(output_dir / SPBC_V2_DPO_TRAINING_REPORT_FILENAME)
+
+            self.assertEqual("PASS", report["status"])
+            self.assertEqual("spbc_abr_v2_dpo_frozen_initial_checkpoint", report_file["reference_policy_source"])
+            self.assertTrue(report_file["state_load_report"]["loaded"])
+            self.assertFalse(report_file["state_load_report"]["auxiliary_heads_initialized_from_zero"])
+            self.assertTrue(report_file["init_checkpoint_reference_comparison"]["available"])
+            self.assertEqual(
+                "spbc_abr_v2_dpo_frozen_initial_checkpoint",
+                report_file["init_checkpoint_reference_comparison"]["reference_label"],
+            )
+            self.assertNotIn(
+                "training_delta_candidate_minus_spbc_v1",
+                report_file["init_checkpoint_reference_comparison"],
+            )
+            self.assertFalse(report_file["spbc_v1_reference_comparison"]["available"])
+            self.assertEqual(
+                0.77,
+                report_file["model_config"]["decision_rebuffer_fusion_weight"],
+            )
 
     def test_loss_components_include_utility_and_rebuffer_penalty(self):
         profile = replace(

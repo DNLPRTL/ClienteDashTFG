@@ -655,8 +655,8 @@ def train_spbc_abr_v2_dpo(
     )
     reference_training_metrics = None
     reference_validation_metrics = None
-    if init_payload is not None and init_payload.get("model_key") == "spbc_abr_v1":
-        _emit_progress(progress_callback, "reference_evaluation_started", "Comparando contra referencia spbc_abr_v1 congelada")
+    if init_payload is not None:
+        _emit_progress(progress_callback, "reference_evaluation_started", "Comparando contra checkpoint inicial congelado")
         reference_training_metrics = evaluate_spbc_v2_dpo_model(
             reference_model,
             reference_model,
@@ -735,11 +735,23 @@ def train_spbc_abr_v2_dpo(
         "epoch_reports": epoch_reports,
         "training_metrics": final_training_metrics,
         "validation_metrics": final_validation_metrics,
-        "spbc_v1_reference_comparison": _build_reference_comparison(
+        "init_checkpoint_reference_comparison": _build_checkpoint_reference_comparison(
             training_metrics=final_training_metrics,
             validation_metrics=final_validation_metrics,
             reference_training_metrics=reference_training_metrics,
             reference_validation_metrics=reference_validation_metrics,
+            reference_label=_reference_policy_source(init_payload),
+            unavailable_reason="init checkpoint not available",
+        ),
+        "spbc_v1_reference_comparison": _build_reference_comparison(
+            training_metrics=final_training_metrics,
+            validation_metrics=final_validation_metrics,
+            reference_training_metrics=reference_training_metrics
+            if init_payload is not None and init_payload.get("model_key") == "spbc_abr_v1"
+            else None,
+            reference_validation_metrics=reference_validation_metrics
+            if init_payload is not None and init_payload.get("model_key") == "spbc_abr_v1"
+            else None,
         ),
         "training_duration_s": duration_s,
         "model_config": model_config,
@@ -1884,16 +1896,10 @@ def _build_model_from_profile_or_checkpoint(
             candidate_hidden_size=int(config["candidate_hidden_size"]),
             shared_hidden_size=int(config["shared_hidden_size"]),
             dropout=float(config["dropout"]),
-            decision_reward_fusion_weight=float(
-                config.get("decision_reward_fusion_weight", profile.decision_reward_fusion_weight)
-            ),
-            decision_rebuffer_fusion_weight=float(
-                config.get("decision_rebuffer_fusion_weight", profile.decision_rebuffer_fusion_weight)
-            ),
-            decision_risk_fusion_weight=float(
-                config.get("decision_risk_fusion_weight", profile.decision_risk_fusion_weight)
-            ),
-            rebuffer_prediction_cap_s=float(config.get("rebuffer_prediction_cap_s", profile.rebuffer_loss_cap_s)),
+            decision_reward_fusion_weight=profile.decision_reward_fusion_weight,
+            decision_rebuffer_fusion_weight=profile.decision_rebuffer_fusion_weight,
+            decision_risk_fusion_weight=profile.decision_risk_fusion_weight,
+            rebuffer_prediction_cap_s=profile.rebuffer_loss_cap_s,
         )
     return SpbcAbrV2DpoPolicy(
         history_hidden_size=profile.history_hidden_size,
@@ -1933,7 +1939,9 @@ def _reference_policy_source(init_payload: Mapping[str, object] | None) -> str:
         return "random_initial_policy_smoke_or_pilot_only"
     if init_payload.get("model_key") == "spbc_abr_v1":
         return "spbc_abr_v1_full_v1_frozen_checkpoint"
-    return "frozen_initial_checkpoint"
+    if init_payload.get("model_key") == SPBC_V2_DPO_MODEL_KEY:
+        return "spbc_abr_v2_dpo_frozen_initial_checkpoint"
+    return "unsupported_frozen_initial_checkpoint"
 
 
 def _selection_score(metrics: Mapping[str, object], profile: SpbcV2DpoTrainingProfile) -> float:
@@ -1976,10 +1984,52 @@ def _build_reference_comparison(
     reference_training_metrics: Mapping[str, object] | None,
     reference_validation_metrics: Mapping[str, object] | None,
 ) -> Mapping[str, object]:
+    comparison = dict(
+        _build_checkpoint_reference_comparison(
+            training_metrics=training_metrics,
+            validation_metrics=validation_metrics,
+            reference_training_metrics=reference_training_metrics,
+            reference_validation_metrics=reference_validation_metrics,
+            reference_label="spbc_abr_v1_full_v1_frozen_checkpoint",
+            unavailable_reason="spbc_abr_v1 checkpoint not available",
+        )
+    )
+    if comparison.get("available"):
+        metrics = comparison["metrics_compared"]
+        comparison.update(
+            {
+                "training_delta_candidate_minus_spbc_v1": _metric_deltas(
+                    training_metrics, reference_training_metrics or {}, metrics
+                ),
+                "validation_delta_candidate_minus_spbc_v1": _metric_deltas(
+                    validation_metrics, reference_validation_metrics or {}, metrics
+                ),
+                "validation_focus_2_5_mbps_delta_candidate_minus_spbc_v1": _metric_deltas(
+                    _nested_mapping(validation_metrics, "focus_2_5_mbps"),
+                    _nested_mapping(reference_validation_metrics or {}, "focus_2_5_mbps"),
+                    metrics,
+                ),
+                "spbc_v1_training_metrics": reference_training_metrics,
+                "spbc_v1_validation_metrics": reference_validation_metrics,
+            }
+        )
+    return comparison
+
+
+def _build_checkpoint_reference_comparison(
+    *,
+    training_metrics: Mapping[str, object],
+    validation_metrics: Mapping[str, object],
+    reference_training_metrics: Mapping[str, object] | None,
+    reference_validation_metrics: Mapping[str, object] | None,
+    reference_label: str,
+    unavailable_reason: str,
+) -> Mapping[str, object]:
     if reference_training_metrics is None or reference_validation_metrics is None:
         return {
             "available": False,
-            "reason": "spbc_abr_v1 checkpoint not available",
+            "reason": unavailable_reason,
+            "reference_label": reference_label,
             "comparison_type": "offline_training_audit_not_benchmark",
             "benchmark_performed": False,
             "ranking_performed": False,
@@ -2005,19 +2055,20 @@ def _build_reference_comparison(
     )
     return {
         "available": True,
+        "reference_label": reference_label,
         "comparison_type": "offline_training_audit_not_benchmark",
         "benchmark_performed": False,
         "ranking_performed": False,
         "metrics_compared": list(metrics),
-        "training_delta_candidate_minus_spbc_v1": _metric_deltas(training_metrics, reference_training_metrics, metrics),
-        "validation_delta_candidate_minus_spbc_v1": _metric_deltas(validation_metrics, reference_validation_metrics, metrics),
-        "validation_focus_2_5_mbps_delta_candidate_minus_spbc_v1": _metric_deltas(
+        "training_delta_candidate_minus_reference": _metric_deltas(training_metrics, reference_training_metrics, metrics),
+        "validation_delta_candidate_minus_reference": _metric_deltas(validation_metrics, reference_validation_metrics, metrics),
+        "validation_focus_2_5_mbps_delta_candidate_minus_reference": _metric_deltas(
             _nested_mapping(validation_metrics, "focus_2_5_mbps"),
             _nested_mapping(reference_validation_metrics, "focus_2_5_mbps"),
             metrics,
         ),
-        "spbc_v1_training_metrics": reference_training_metrics,
-        "spbc_v1_validation_metrics": reference_validation_metrics,
+        "reference_training_metrics": reference_training_metrics,
+        "reference_validation_metrics": reference_validation_metrics,
     }
 
 

@@ -24,7 +24,7 @@ from core.phase45_v1.spbc_v2_dpo_training import (  # noqa: E402
 TFG_ROOT = REPO_ROOT.parent
 DEFAULT_DATASET_DIR = TFG_ROOT / "datasets_normalizados" / "phase45_v1" / "phase45v2_preference_onpolicy_dataset_v1"
 DEFAULT_MODEL_ROOT = TFG_ROOT / "modelos" / "phase45_v1" / "spbc_abr_v2_dpo"
-DEFAULT_INIT_CHECKPOINT = (
+DEFAULT_INIT_SPBC_V1_CHECKPOINT = (
     TFG_ROOT / "modelos" / "phase45_v1" / "spbc_abr_v1" / "full_v1" / "modelo_spbc_abr_v1.pt"
 )
 
@@ -36,7 +36,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--profile", choices=sorted(SPBC_V2_DPO_TRAINING_PROFILES), default="smoke")
     parser.add_argument("--dataset-dir", type=Path, default=DEFAULT_DATASET_DIR)
     parser.add_argument("--output-dir", type=Path, default=None)
-    parser.add_argument("--init-spbc-v1-checkpoint", type=Path, default=DEFAULT_INIT_CHECKPOINT)
+    parser.add_argument(
+        "--init-checkpoint",
+        type=Path,
+        default=None,
+        help="Checkpoint inicial congelado para warm-start y DPO reference; acepta spbc_abr_v1 o spbc_abr_v2_dpo.",
+    )
+    parser.add_argument(
+        "--init-spbc-v1-checkpoint",
+        type=Path,
+        default=None,
+        help="Alias legacy para --init-checkpoint con spbc_abr_v1/full_v1.",
+    )
     parser.add_argument(
         "--allow-random-init-full",
         action="store_true",
@@ -85,9 +96,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args(argv)
+    if args.init_checkpoint is not None and args.init_spbc_v1_checkpoint is not None:
+        parser.error("usa solo uno de --init-checkpoint o --init-spbc-v1-checkpoint")
 
     profile = _profile_with_overrides(args)
     output_dir = args.output_dir or (DEFAULT_MODEL_ROOT / args.profile)
+    init_checkpoint = args.init_checkpoint or args.init_spbc_v1_checkpoint or DEFAULT_INIT_SPBC_V1_CHECKPOINT
     max_training_samples: int | None | str = None if args.no_profile_sample_limits else "profile"
     max_validation_samples: int | None | str = None if args.no_profile_sample_limits else "profile"
     if args.max_training_samples is not None:
@@ -103,7 +117,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         profile=profile,
         overwrite=args.overwrite,
         device=args.device,
-        init_checkpoint=args.init_spbc_v1_checkpoint,
+        init_checkpoint=init_checkpoint,
         allow_random_init_full=args.allow_random_init_full,
         epochs=args.epochs,
         batch_size=args.batch_size,
