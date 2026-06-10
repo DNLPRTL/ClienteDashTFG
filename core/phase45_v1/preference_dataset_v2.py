@@ -39,10 +39,12 @@ from core.phase45_v1.spbc_training import CANDIDATE_FEATURES, SCALAR_FEATURES, S
 
 PHASE45_V2_PHASE = "fase_4_5_v1_bloque7a_dataset_v2_preference_onpolicy"
 V2_DATASET_SCHEMA_ID = "phase45_v2_preference_onpolicy_dataset_v1"
+V2_DAGGER2_DATASET_SCHEMA_ID = "phase45_v2_preference_onpolicy_dagger2_dataset_v1"
 V2_SAMPLE_SCHEMA_ID = "phase45_v2_preference_onpolicy_sample_v1"
 V2_TARGET_SCHEMA_ID = "phase45_v2_preference_onpolicy_targets_v1"
 V2_LEAKAGE_AUDIT_SCHEMA_ID = "phase45_v2_no_contamination_audit_v1"
 V2_PREFERENCE_AUDIT_SCHEMA_ID = "phase45_v2_preference_audit_v1"
+SUPPORTED_V2_DATASET_SCHEMA_IDS = frozenset((V2_DATASET_SCHEMA_ID, V2_DAGGER2_DATASET_SCHEMA_ID))
 
 V2_TRAINING_DATA_FILENAME = "datos_entrenamiento_preference_onpolicy_v2.jsonl"
 V2_VALIDATION_DATA_FILENAME = "datos_validacion_preference_onpolicy_v2.jsonl"
@@ -73,7 +75,11 @@ V2_REQUIRED_DATASET_FILES = (
 )
 ROLLOUT_ORACLE = "oracle_rollout"
 ROLLOUT_SPBC = "spbc_v1_on_policy"
-ROLLOUT_SOURCES = (ROLLOUT_ORACLE, ROLLOUT_SPBC)
+ROLLOUT_SPBC_V2_DPO = "spbc_v2_dpo_on_policy"
+ROLLOUT_SOURCES = (ROLLOUT_ORACLE, ROLLOUT_SPBC, ROLLOUT_SPBC_V2_DPO)
+
+SPBC_V2_DPO_CHECKPOINT_SCHEMA_ID = "phase45_v2_spbc_dpo_checkpoint_v1"
+SPBC_V2_DPO_MODEL_KEY = "spbc_abr_v2_dpo"
 
 UNDER_AGGRESSIVE_QOE_GAP_THRESHOLD = 0.25
 UNNECESSARY_SWITCH_SMOOTHNESS_THRESHOLD_MBPS = 0.45
@@ -90,12 +96,14 @@ class Phase45V2DatasetValidationError(ValueError):
 
 
 @dataclass(frozen=True)
-class LoadedSpbcV1Policy:
-    model: SpbcAbrV1Policy
+class LoadedRolloutPolicy:
+    model: torch.nn.Module
     normalization: Mapping[str, object]
     checkpoint_path: Path
     checkpoint_sha256: str
     device: torch.device
+    model_key: str
+    rollout_source: str
 
 
 def build_phase45_v2_dataset(
@@ -110,13 +118,25 @@ def build_phase45_v2_dataset(
     representation_kbps: Sequence[int] = (300, 750, 1200, 1850, 2850, 4300),
     trace_path_rewrites: Sequence[PathRewriteRule] = (),
     spbc_checkpoint: object | None = None,
+    extra_policy_rollout_checkpoint: object | None = None,
+    extra_policy_rollout_source: str = ROLLOUT_SPBC_V2_DPO,
+    dataset_schema_id: str = V2_DATASET_SCHEMA_ID,
     allow_oracle_only_full: bool = False,
     device: str = "auto",
 ) -> Mapping[str, object]:
+    if dataset_schema_id not in SUPPORTED_V2_DATASET_SCHEMA_IDS:
+        raise Phase45V2DatasetBuildError("unsupported v2 dataset schema_id: {0}".format(dataset_schema_id))
+    if extra_policy_rollout_source not in ROLLOUT_SOURCES or extra_policy_rollout_source == ROLLOUT_ORACLE:
+        raise Phase45V2DatasetBuildError("invalid extra policy rollout_source: {0}".format(extra_policy_rollout_source))
     spbc_runtime = _load_optional_spbc_runtime(
         spbc_checkpoint,
         profile=profile,
         allow_oracle_only_full=allow_oracle_only_full,
+        device=device,
+    )
+    extra_policy_runtime = _load_optional_v2_dpo_runtime(
+        extra_policy_rollout_checkpoint,
+        rollout_source=extra_policy_rollout_source,
         device=device,
     )
     output_path = prepare_output_dir(output_dir, overwrite=overwrite, purpose="phase45_v2 preference dataset")
@@ -162,7 +182,7 @@ def build_phase45_v2_dataset(
                         ladder=ladder,
                         oracle_config=oracle_config,
                         rollout_source=ROLLOUT_ORACLE,
-                        spbc_runtime=None,
+                        policy_runtime=None,
                     )
                 )
                 if spbc_runtime is not None:
@@ -174,7 +194,19 @@ def build_phase45_v2_dataset(
                             ladder=ladder,
                             oracle_config=oracle_config,
                             rollout_source=ROLLOUT_SPBC,
-                            spbc_runtime=spbc_runtime,
+                            policy_runtime=spbc_runtime,
+                        )
+                    )
+                if extra_policy_runtime is not None:
+                    samples_by_role[data_role].extend(
+                        _samples_for_window(
+                            window=window,
+                            data_role=data_role,
+                            loaded_trace=loaded_trace,
+                            ladder=ladder,
+                            oracle_config=oracle_config,
+                            rollout_source=extra_policy_runtime.rollout_source,
+                            policy_runtime=extra_policy_runtime,
                         )
                     )
             except Exception as exc:  # noqa: BLE001 - skipped windows are audited so generation can continue.
@@ -215,6 +247,8 @@ def build_phase45_v2_dataset(
         path_rewrites=trace_path_rewrites,
         resolved_path_examples=resolved_path_examples,
         spbc_runtime=spbc_runtime,
+        extra_policy_runtime=extra_policy_runtime,
+        dataset_schema_id=dataset_schema_id,
         allow_oracle_only_full=allow_oracle_only_full,
         ladder_manifest=ladder.to_manifest(),
     )
@@ -236,6 +270,9 @@ def build_phase45_v2_dataset(
         "generation_window_counts": generation_window_counts,
         "rollout_sources": sorted(preference_audit["sample_counts_by_rollout_source"]),
         "spbc_on_policy_enabled": spbc_runtime is not None,
+        "extra_policy_on_policy_enabled": extra_policy_runtime is not None,
+        "spbc_v2_dpo_on_policy_enabled": extra_policy_runtime is not None
+        and extra_policy_runtime.model_key == SPBC_V2_DPO_MODEL_KEY,
         "skipped_window_count": len(skipped_windows),
         "benchmark_performed": False,
         "ia_training_performed": False,
@@ -250,7 +287,7 @@ def validate_phase45_v2_dataset_dir(path: object) -> Mapping[str, object]:
         raise Phase45V2DatasetValidationError("missing required v2 dataset files: {0}".format(", ".join(missing_files)))
 
     summary = read_json(data_dir / V2_SUMMARY_FILENAME)
-    if summary.get("schema_id") != V2_DATASET_SCHEMA_ID:
+    if summary.get("schema_id") not in SUPPORTED_V2_DATASET_SCHEMA_IDS:
         raise Phase45V2DatasetValidationError("unexpected v2 dataset summary schema_id")
     _assert_no_benchmark(summary)
 
@@ -320,6 +357,7 @@ def validate_phase45_v2_dataset_dir(path: object) -> Mapping[str, object]:
     return {
         "status": "PASS",
         "dataset_dir": str(data_dir),
+        "schema_id": str(summary.get("schema_id")),
         "sample_counts": sample_counts,
         "rollout_source_counts": dict(sorted(rollout_counts.items())),
         "preference_pair_source_counts": dict(sorted(pair_source_counts.items())),
@@ -429,7 +467,7 @@ def _samples_for_window(
     ladder,
     oracle_config: OracleConfig,
     rollout_source: str,
-    spbc_runtime: LoadedSpbcV1Policy | None,
+    policy_runtime: LoadedRolloutPolicy | None,
 ) -> list[Mapping[str, object]]:
     env = TraceReplayEnvironment(loaded_trace, ladder)
     samples: list[Mapping[str, object]] = []
@@ -444,7 +482,7 @@ def _samples_for_window(
             "candidates": [dict(candidate) for candidate in candidates],
             "action_mask": [bool(value) for value in action_mask],
         }
-        policy_action = _select_spbc_action(spbc_runtime, model_inputs) if spbc_runtime is not None else None
+        policy_action = _select_policy_action(policy_runtime, model_inputs) if policy_runtime is not None else None
         oracle_decision = select_oracle_action(state, ladder, env.network_model, oracle_config)
         per_action_outcomes = _build_per_action_outcomes(
             state=state,
@@ -459,6 +497,7 @@ def _samples_for_window(
             oracle_action=oracle_decision.action,
             best_immediate_action=best_immediate_action,
             policy_action=policy_action,
+            rollout_source=rollout_source,
         )
         selected_action = int(oracle_decision.action if rollout_source == ROLLOUT_ORACLE else policy_action)
         if not _action_valid(selected_action, action_mask):
@@ -480,7 +519,9 @@ def _samples_for_window(
             "oracle_best_sequence": list(oracle_decision.best_sequence),
             "best_immediate_action": int(best_immediate_action),
             "oracle_vs_immediate_disagreement": int(oracle_decision.action) != int(best_immediate_action),
-            "spbc_policy_action": policy_action,
+            "spbc_policy_action": policy_action if rollout_source == ROLLOUT_SPBC else None,
+            "rollout_policy_action": policy_action,
+            "rollout_policy_model_key": policy_runtime.model_key if policy_runtime is not None else None,
             "per_action_outcomes": per_action_outcomes,
             "preference_pairs": preference_pairs,
             "audit": {
@@ -580,6 +621,7 @@ def _build_preference_pairs(
     oracle_action: int,
     best_immediate_action: int,
     policy_action: int | None,
+    rollout_source: str,
 ) -> list[Mapping[str, object]]:
     pairs: list[Mapping[str, object]] = []
     seen: set[tuple[str, int, int]] = set()
@@ -605,7 +647,8 @@ def _build_preference_pairs(
         )
 
     if policy_action is not None and int(policy_action) != int(oracle_action):
-        add("oracle_vs_spbc_policy", int(oracle_action), int(policy_action))
+        source = "oracle_vs_spbc_policy" if rollout_source == ROLLOUT_SPBC else "oracle_vs_rollout_policy"
+        add(source, int(oracle_action), int(policy_action))
 
     valid = [outcome for outcome in outcomes if outcome.get("valid_action") is True]
     if valid:
@@ -662,7 +705,7 @@ def _load_optional_spbc_runtime(
     profile: DatasetProfile,
     allow_oracle_only_full: bool,
     device: str,
-) -> LoadedSpbcV1Policy | None:
+) -> LoadedRolloutPolicy | None:
     if path is None:
         if profile.name == "full_v1" and not allow_oracle_only_full:
             raise Phase45V2DatasetBuildError("full_v1 requires --spbc-checkpoint or --allow-oracle-only-full")
@@ -698,23 +741,78 @@ def _load_optional_spbc_runtime(
     model.to(selected_device)
     model.eval()
     normalization = _require_mapping(checkpoint.get("normalization"), "spbc normalization")
-    return LoadedSpbcV1Policy(
+    return LoadedRolloutPolicy(
         model=model,
         normalization=normalization,
         checkpoint_path=checkpoint_path,
         checkpoint_sha256=_sha256_file(checkpoint_path),
         device=selected_device,
+        model_key="spbc_abr_v1",
+        rollout_source=ROLLOUT_SPBC,
     )
 
 
-def _select_spbc_action(runtime: LoadedSpbcV1Policy | None, model_inputs: Mapping[str, object]) -> int | None:
+def _load_optional_v2_dpo_runtime(
+    path: object | None,
+    *,
+    rollout_source: str,
+    device: str,
+) -> LoadedRolloutPolicy | None:
+    if path is None:
+        return None
+    checkpoint_path = Path(path).expanduser()
+    if not checkpoint_path.is_file():
+        raise Phase45V2DatasetBuildError("extra policy rollout checkpoint is missing: {0}".format(checkpoint_path))
+    selected_device = _resolve_torch_device(device)
+    try:
+        checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+    except TypeError:
+        checkpoint = torch.load(checkpoint_path, map_location="cpu")
+    if not isinstance(checkpoint, Mapping):
+        raise Phase45V2DatasetBuildError("extra policy checkpoint must contain a mapping: {0}".format(checkpoint_path))
+    if checkpoint.get("schema_id") != SPBC_V2_DPO_CHECKPOINT_SCHEMA_ID or checkpoint.get("model_key") != SPBC_V2_DPO_MODEL_KEY:
+        raise Phase45V2DatasetBuildError("extra policy checkpoint schema/model_key mismatch: {0}".format(checkpoint_path))
+
+    from core.phase45_v1.spbc_v2_dpo_training import SpbcAbrV2DpoPolicy
+
+    config = _require_mapping(checkpoint.get("model_config"), "extra policy model_config")
+    model = SpbcAbrV2DpoPolicy(
+        history_hidden_size=int(config["history_hidden_size"]),
+        state_hidden_size=int(config["state_hidden_size"]),
+        candidate_hidden_size=int(config["candidate_hidden_size"]),
+        shared_hidden_size=int(config["shared_hidden_size"]),
+        dropout=float(config["dropout"]),
+        decision_reward_fusion_weight=float(config.get("decision_reward_fusion_weight", 0.12)),
+        decision_rebuffer_fusion_weight=float(config.get("decision_rebuffer_fusion_weight", 0.30)),
+        decision_risk_fusion_weight=float(config.get("decision_risk_fusion_weight", 0.18)),
+        rebuffer_prediction_cap_s=float(config.get("rebuffer_prediction_cap_s", 4.0)),
+    )
+    state_dict = checkpoint.get("model_state_dict")
+    if not isinstance(state_dict, Mapping):
+        raise Phase45V2DatasetBuildError("extra policy checkpoint missing model_state_dict")
+    model.load_state_dict(state_dict)
+    model.to(selected_device)
+    model.eval()
+    normalization = _require_mapping(checkpoint.get("normalization"), "extra policy normalization")
+    return LoadedRolloutPolicy(
+        model=model,
+        normalization=normalization,
+        checkpoint_path=checkpoint_path,
+        checkpoint_sha256=_sha256_file(checkpoint_path),
+        device=selected_device,
+        model_key=SPBC_V2_DPO_MODEL_KEY,
+        rollout_source=rollout_source,
+    )
+
+
+def _select_policy_action(runtime: LoadedRolloutPolicy | None, model_inputs: Mapping[str, object]) -> int | None:
     if runtime is None:
         return None
     context = _require_mapping(model_inputs.get("context"), "model_inputs.context")
     candidates_raw = model_inputs.get("candidates")
     action_mask_raw = model_inputs.get("action_mask")
     if not isinstance(candidates_raw, list) or not isinstance(action_mask_raw, list):
-        raise Phase45V2DatasetBuildError("spbc inference requires candidates and action_mask lists")
+        raise Phase45V2DatasetBuildError("policy rollout inference requires candidates and action_mask lists")
     sequence = _sequence_from_context(context)
     scalars = tuple(_finite_float(context.get(name), name) for name in SCALAR_FEATURES)
     candidates = tuple(
@@ -768,6 +866,7 @@ def _build_target_schema() -> Mapping[str, object]:
         ],
         "preference_pair_sources": [
             "oracle_vs_spbc_policy",
+            "oracle_vs_rollout_policy",
             "best_reward_vs_worst_valid",
             "safe_vs_rebuffer",
             "best_reward_vs_over_aggressive",
@@ -795,13 +894,25 @@ def _build_summary(
     skipped_windows: Sequence[Mapping[str, object]],
     path_rewrites: Sequence[PathRewriteRule],
     resolved_path_examples: Sequence[Mapping[str, object]],
-    spbc_runtime: LoadedSpbcV1Policy | None,
+    spbc_runtime: LoadedRolloutPolicy | None,
+    extra_policy_runtime: LoadedRolloutPolicy | None,
+    dataset_schema_id: str,
     allow_oracle_only_full: bool,
     ladder_manifest: Mapping[str, object],
 ) -> Mapping[str, object]:
     rollout_counts = Counter(str(sample["rollout_source"]) for samples in samples_by_role.values() for sample in samples)
+    policy_rollouts = [
+        {
+            "rollout_source": runtime.rollout_source,
+            "model_key": runtime.model_key,
+            "checkpoint": str(runtime.checkpoint_path),
+            "checkpoint_sha256": runtime.checkpoint_sha256,
+        }
+        for runtime in (spbc_runtime, extra_policy_runtime)
+        if runtime is not None
+    ]
     return {
-        "schema_id": V2_DATASET_SCHEMA_ID,
+        "schema_id": dataset_schema_id,
         "human_readable_name": "Phase 4-5 v2 preference/on-policy dataset for ABR candidates",
         "phase": PHASE45_V2_PHASE,
         "parent_phase": PHASE45_V1_PHASE,
@@ -819,6 +930,11 @@ def _build_summary(
         "spbc_on_policy_enabled": spbc_runtime is not None,
         "spbc_checkpoint": str(spbc_runtime.checkpoint_path) if spbc_runtime is not None else None,
         "spbc_checkpoint_sha256": spbc_runtime.checkpoint_sha256 if spbc_runtime is not None else None,
+        "extra_policy_on_policy_enabled": extra_policy_runtime is not None,
+        "spbc_v2_dpo_on_policy_enabled": extra_policy_runtime is not None
+        and extra_policy_runtime.model_key == SPBC_V2_DPO_MODEL_KEY,
+        "policy_rollouts": policy_rollouts,
+        "dagger_iteration": 2 if extra_policy_runtime is not None else 1,
         "allow_oracle_only_full": bool(allow_oracle_only_full),
         "metadata_fields_are_model_features": False,
         "future_fields_are_model_features": False,
@@ -869,6 +985,7 @@ def _build_leakage_audit(
         "future_throughput_as_feature": False,
         "oracle_action_as_feature": False,
         "spbc_policy_action_as_feature": False,
+        "rollout_policy_action_as_feature": False,
         "skipped_window_count": len(skipped_windows),
         "sample_counts_by_source_split": dict(sorted(by_source_split.items())),
         "sample_counts_by_rollout_source": dict(sorted(by_rollout.items())),

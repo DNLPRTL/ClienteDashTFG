@@ -49,6 +49,7 @@ SPBC_V2_DPO_TRAINING_REPORT_FILENAME = "reporte_entrenamiento_spbc_abr_v2_dpo.js
 
 PAIR_SOURCE_WEIGHTS = {
     "oracle_vs_spbc_policy": 1.30,
+    "oracle_vs_rollout_policy": 1.35,
     "best_reward_vs_worst_valid": 1.00,
     "safe_vs_rebuffer": 1.45,
     "best_reward_vs_over_aggressive": 1.55,

@@ -12,6 +12,8 @@ from core.phase45_v1.paths import PathRewriteRule
 from core.phase45_v1.preference_dataset_v2 import (
     ROLLOUT_ORACLE,
     ROLLOUT_SPBC,
+    ROLLOUT_SPBC_V2_DPO,
+    V2_DAGGER2_DATASET_SCHEMA_ID,
     V2_TRAINING_DATA_FILENAME,
     Phase45V2DatasetBuildError,
     Phase45V2DatasetValidationError,
@@ -83,6 +85,66 @@ class Phase45V2PreferenceDatasetTest(unittest.TestCase):
             self.assertIsNone(on_policy_rows[0]["state_origin_action"])
             self.assertIsNotNone(on_policy_rows[1]["state_origin_action"])
             self.assertIn("spbc_policy_action", on_policy_rows[0])
+
+    def test_builds_dagger2_policy_rollout_with_stub_checkpoint(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            manifest = build_manifest_with_trace_files(root)
+            spbc_checkpoint = root / "modelos" / "phase45_v1" / "spbc_abr_v1" / "full_v1" / "modelo_spbc_abr_v1.pt"
+            v2_checkpoint = (
+                root
+                / "modelos"
+                / "phase45_v1"
+                / "spbc_abr_v2_dpo"
+                / "full_v1_utility_risk_v1"
+                / "modelo_spbc_abr_v2_dpo.pt"
+            )
+            write_stub_spbc_checkpoint(spbc_checkpoint)
+            write_stub_spbc_v2_dpo_checkpoint(v2_checkpoint)
+            output_dir = root / "datasets_normalizados" / "phase45_v1" / "phase45v2_dagger2"
+
+            result = build_phase45_v2_dataset(
+                manifest,
+                output_dir=output_dir,
+                profile=unit_profile("unit_v2_dagger2"),
+                overwrite=True,
+                trace_path_rewrites=(PathRewriteRule("/home/daniel/TFG", str(root)),),
+                spbc_checkpoint=spbc_checkpoint,
+                extra_policy_rollout_checkpoint=v2_checkpoint,
+                dataset_schema_id=V2_DAGGER2_DATASET_SCHEMA_ID,
+                device="cpu",
+            )
+            validation = validate_phase45_v2_dataset_dir(output_dir)
+            training_rows = read_jsonl(output_dir / V2_TRAINING_DATA_FILENAME)
+            rollout_sources = {row["rollout_source"] for row in training_rows}
+            v2_rows = [row for row in training_rows if row["rollout_source"] == ROLLOUT_SPBC_V2_DPO]
+
+            self.assertEqual("PASS", result["status"])
+            self.assertEqual(V2_DAGGER2_DATASET_SCHEMA_ID, validation["schema_id"])
+            self.assertTrue(result["spbc_v2_dpo_on_policy_enabled"])
+            self.assertEqual({ROLLOUT_ORACLE, ROLLOUT_SPBC, ROLLOUT_SPBC_V2_DPO}, rollout_sources)
+            self.assertTrue(v2_rows)
+            self.assertEqual("spbc_abr_v2_dpo", v2_rows[0]["rollout_policy_model_key"])
+            self.assertIsNotNone(v2_rows[0]["rollout_policy_action"])
+
+    def test_dagger2_rollout_requires_existing_v2_policy_checkpoint(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            manifest = build_manifest_with_trace_files(root)
+            output_dir = root / "datasets_normalizados" / "phase45_v1" / "phase45v2_dagger2_missing"
+
+            with self.assertRaises(Phase45V2DatasetBuildError):
+                build_phase45_v2_dataset(
+                    manifest,
+                    output_dir=output_dir,
+                    profile=unit_profile("unit_v2_dagger2_missing"),
+                    overwrite=True,
+                    trace_path_rewrites=(PathRewriteRule("/home/daniel/TFG", str(root)),),
+                    spbc_checkpoint=None,
+                    extra_policy_rollout_checkpoint=root / "missing" / "modelo_spbc_abr_v2_dpo.pt",
+                    dataset_schema_id=V2_DAGGER2_DATASET_SCHEMA_ID,
+                    device="cpu",
+                )
 
     def test_full_v1_requires_spbc_checkpoint_unless_explicitly_overridden(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -158,6 +220,40 @@ def write_stub_spbc_checkpoint(path: Path) -> None:
     checkpoint = {
         "schema_id": SPBC_CHECKPOINT_SCHEMA_ID,
         "model_key": "spbc_abr_v1",
+        "model_state_dict": model.state_dict(),
+        "model_config": model.config(),
+        "normalization": {
+            "sequence_mean": [0.0, 0.0],
+            "sequence_std": [1.0, 1.0],
+            "scalar_mean": [0.0 for _ in range(7)],
+            "scalar_std": [1.0 for _ in range(7)],
+            "candidate_mean": [0.0 for _ in range(7)],
+            "candidate_std": [1.0 for _ in range(7)],
+        },
+    }
+    torch.save(checkpoint, path)
+
+
+def write_stub_spbc_v2_dpo_checkpoint(path: Path) -> None:
+    from core.phase45_v1.spbc_v2_dpo_training import (
+        SPBC_V2_DPO_CHECKPOINT_SCHEMA_ID,
+        SPBC_V2_DPO_MODEL_KEY,
+        SpbcAbrV2DpoPolicy,
+    )
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    model = SpbcAbrV2DpoPolicy(
+        history_hidden_size=32,
+        state_hidden_size=32,
+        candidate_hidden_size=24,
+        shared_hidden_size=64,
+        dropout=0.0,
+    )
+    for parameter in model.parameters():
+        torch.nn.init.constant_(parameter, 0.0)
+    checkpoint = {
+        "schema_id": SPBC_V2_DPO_CHECKPOINT_SCHEMA_ID,
+        "model_key": SPBC_V2_DPO_MODEL_KEY,
         "model_state_dict": model.state_dict(),
         "model_config": model.config(),
         "normalization": {
