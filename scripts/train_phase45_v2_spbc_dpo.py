@@ -96,6 +96,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--safety-utility-regret-tolerance", type=float, default=None)
     parser.add_argument("--safety-rebuffer-regret-tolerance", type=float, default=None)
     parser.add_argument("--max-pair-weight", type=float, default=None)
+    parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--max-training-samples", type=int, default=None)
     parser.add_argument("--max-validation-samples", type=int, default=None)
     parser.add_argument(
@@ -151,6 +152,8 @@ def _profile_with_overrides(args: argparse.Namespace):
     replacements: dict[str, object] = {}
     if args.enable_safety_gate:
         replacements["safety_gate_enabled"] = True
+    if args.seed is not None:
+        replacements["seed"] = int(args.seed)
     for arg_name, field_name in (
         ("ce_loss_weight", "ce_loss_weight"),
         ("dpo_loss_weight", "dpo_loss_weight"),
