@@ -61,6 +61,7 @@ CONTEXT_INPUT_KEYS = frozenset(SEQUENCE_FEATURES + SCALAR_FEATURES)
 CANDIDATE_INPUT_KEYS = frozenset(CANDIDATE_FEATURES)
 TARGET_RISK_QOE_GAP_THRESHOLD = 0.25
 FOCUS_THROUGHPUT_BUCKET = "2_5_mbps"
+SAFETY_ROLLOUT_SOURCE = "spbc_v2_dpo_on_policy"
 REBUFFER_LOSS_SECONDS_CAP = 4.0
 _LOSS_METRIC_NAMES = (
     "loss",
@@ -116,6 +117,12 @@ class SpbcV2DpoTrainingProfile:
     selection_rebuffer_weight: float = 4.30
     selection_over_aggressive_weight: float = 0.20
     selection_invalid_weight: float = 10.00
+    safety_gate_enabled: bool = False
+    safety_global_over_aggressive_tolerance: float = 0.006
+    safety_focus_over_aggressive_tolerance: float = 0.015
+    safety_spbc_v2_over_aggressive_tolerance: float = 0.012
+    safety_utility_regret_tolerance: float = 0.001
+    safety_rebuffer_regret_tolerance: float = 0.001
     max_pair_weight: float = 6.0
     seed: int = 450701
 
@@ -156,6 +163,12 @@ class SpbcV2DpoTrainingProfile:
             "selection_rebuffer_weight": self.selection_rebuffer_weight,
             "selection_over_aggressive_weight": self.selection_over_aggressive_weight,
             "selection_invalid_weight": self.selection_invalid_weight,
+            "safety_gate_enabled": self.safety_gate_enabled,
+            "safety_global_over_aggressive_tolerance": self.safety_global_over_aggressive_tolerance,
+            "safety_focus_over_aggressive_tolerance": self.safety_focus_over_aggressive_tolerance,
+            "safety_spbc_v2_over_aggressive_tolerance": self.safety_spbc_v2_over_aggressive_tolerance,
+            "safety_utility_regret_tolerance": self.safety_utility_regret_tolerance,
+            "safety_rebuffer_regret_tolerance": self.safety_rebuffer_regret_tolerance,
             "max_pair_weight": self.max_pair_weight,
             "seed": self.seed,
         }
@@ -520,6 +533,8 @@ def train_spbc_abr_v2_dpo(
     )
 
     init_payload = _load_initial_checkpoint(init_checkpoint, profile, allow_random_init_full)
+    if profile.safety_gate_enabled and init_payload is None:
+        raise SpbcV2DpoTrainingError("safety_gate_enabled requires an init checkpoint reference")
     normalization = _normalization_from_init_checkpoint(init_payload)
     if normalization is None:
         normalization = fit_spbc_v2_dpo_normalization(training_examples)
@@ -537,10 +552,31 @@ def train_spbc_abr_v2_dpo(
     train_eval_loader = DataLoader(TensorDataset(*train_tensors), batch_size=active_batch_size, shuffle=False)
     validation_loader = DataLoader(TensorDataset(*validation_tensors), batch_size=active_batch_size, shuffle=False)
 
+    reference_validation_metrics_for_selection = None
+    initial_state_dict = {key: value.detach().cpu().clone() for key, value in model.state_dict().items()}
+    if profile.safety_gate_enabled:
+        _emit_progress(
+            progress_callback,
+            "reference_gate_evaluation_started",
+            "Calculando referencia congelada para safety gate",
+        )
+        reference_validation_metrics_for_selection = evaluate_spbc_v2_dpo_model(
+            reference_model,
+            reference_model,
+            validation_loader,
+            device=selected_device,
+            profile=profile,
+            examples=validation_examples,
+        )
+
     epoch_reports = []
     best_validation_loss = math.inf
-    best_validation_selection_score = math.inf
-    best_state_dict = None
+    best_validation_selection_score = (
+        _selection_score(reference_validation_metrics_for_selection, profile)
+        if reference_validation_metrics_for_selection is not None
+        else math.inf
+    )
+    best_state_dict = initial_state_dict if profile.safety_gate_enabled else None
     best_epoch = 0
     for epoch in range(1, active_epochs + 1):
         epoch_started = time.monotonic()
@@ -579,6 +615,16 @@ def train_spbc_abr_v2_dpo(
             profile=profile,
             examples=validation_examples,
         )
+        critical_metrics = _critical_metric_summary(validation_metrics)
+        critical_delta = _critical_metric_delta(
+            validation_metrics,
+            reference_validation_metrics_for_selection,
+        )
+        safety_gate = _safety_gate_result(
+            validation_metrics,
+            reference_validation_metrics_for_selection,
+            profile,
+        )
         epoch_report = {
             "epoch": epoch,
             "training_loss": train_metrics["loss"],
@@ -605,12 +651,17 @@ def train_spbc_abr_v2_dpo(
             "validation_selected_rebuffer_regret_vs_best_immediate_mean": validation_metrics[
                 "selected_rebuffer_regret_vs_best_immediate_mean"
             ],
+            "validation_critical_metrics": critical_metrics,
+            "validation_critical_delta_candidate_minus_reference": critical_delta,
+            "validation_safety_gate": safety_gate,
+            **_flatten_epoch_critical_metrics(critical_metrics),
         }
         selection_score = _selection_score(validation_metrics, profile)
         epoch_report["validation_selection_score"] = selection_score
+        epoch_report["validation_safety_gate_passed"] = bool(safety_gate["passed"])
         epoch_reports.append(epoch_report)
         best_validation_loss = min(best_validation_loss, float(validation_metrics["loss"]))
-        is_best = float(selection_score) < best_validation_selection_score
+        is_best = bool(safety_gate["passed"]) and float(selection_score) < best_validation_selection_score
         if is_best:
             best_validation_selection_score = float(selection_score)
             best_epoch = epoch
@@ -629,6 +680,10 @@ def train_spbc_abr_v2_dpo(
             validation_predicted_qoe_gap_mean=validation_metrics["predicted_qoe_gap_mean"],
             validation_utility_regret=validation_metrics["selected_utility_regret_vs_best_immediate_mean"],
             validation_rebuffer_regret=validation_metrics["selected_rebuffer_regret_vs_best_immediate_mean"],
+            validation_over_aggressive=validation_metrics["over_aggressive_rate_vs_oracle"],
+            validation_under_aggressive=validation_metrics["under_aggressive_rate_vs_oracle"],
+            validation_focus_over_aggressive=critical_metrics[FOCUS_THROUGHPUT_BUCKET]["over_aggressive_rate_vs_oracle"],
+            validation_safety_gate_passed=safety_gate["passed"],
             validation_selection_score=selection_score,
             best_epoch=best_epoch,
             best_so_far=is_best,
@@ -654,7 +709,7 @@ def train_spbc_abr_v2_dpo(
         examples=validation_examples,
     )
     reference_training_metrics = None
-    reference_validation_metrics = None
+    reference_validation_metrics = reference_validation_metrics_for_selection
     if init_payload is not None:
         _emit_progress(progress_callback, "reference_evaluation_started", "Comparando contra checkpoint inicial congelado")
         reference_training_metrics = evaluate_spbc_v2_dpo_model(
@@ -665,14 +720,15 @@ def train_spbc_abr_v2_dpo(
             profile=profile,
             examples=training_examples,
         )
-        reference_validation_metrics = evaluate_spbc_v2_dpo_model(
-            reference_model,
-            reference_model,
-            validation_loader,
-            device=selected_device,
-            profile=profile,
-            examples=validation_examples,
-        )
+        if reference_validation_metrics is None:
+            reference_validation_metrics = evaluate_spbc_v2_dpo_model(
+                reference_model,
+                reference_model,
+                validation_loader,
+                device=selected_device,
+                profile=profile,
+                examples=validation_examples,
+            )
 
     model_config = dict(model.config())
     normalization_payload = normalization.to_json()
@@ -693,6 +749,7 @@ def train_spbc_abr_v2_dpo(
         "best_epoch": best_epoch,
         "best_validation_selection_score": best_validation_selection_score,
         "best_validation_loss_seen": best_validation_loss,
+        "safety_gate_enabled": bool(profile.safety_gate_enabled),
         "device_used": str(selected_device),
         "controller_registered": False,
         "bundle_exported": False,
@@ -727,14 +784,30 @@ def train_spbc_abr_v2_dpo(
         "best_validation_selection_score": best_validation_selection_score,
         "best_validation_loss_seen": best_validation_loss,
         "checkpoint_selection": {
-            "criterion": "validation_selection_score",
+            "criterion": "validation_selection_score_with_safety_gate"
+            if profile.safety_gate_enabled
+            else "validation_selection_score",
             "lower_is_better": True,
             "uses_eval_split": False,
             "focus_throughput_bucket": FOCUS_THROUGHPUT_BUCKET,
+            "safety_gate_enabled": bool(profile.safety_gate_enabled),
+            "safety_gate_mode": "relative_to_initial_checkpoint" if profile.safety_gate_enabled else "disabled",
+            "safety_gate_fallback_epoch": 0,
+            "safety_gate_tolerances": _safety_gate_tolerances(profile),
         },
         "epoch_reports": epoch_reports,
         "training_metrics": final_training_metrics,
         "validation_metrics": final_validation_metrics,
+        "safety_gate_reference_validation_critical_metrics": _critical_metric_summary(
+            reference_validation_metrics_for_selection
+        )
+        if reference_validation_metrics_for_selection is not None
+        else None,
+        "selected_checkpoint_safety_gate": _safety_gate_result(
+            final_validation_metrics,
+            reference_validation_metrics_for_selection,
+            profile,
+        ),
         "init_checkpoint_reference_comparison": _build_checkpoint_reference_comparison(
             training_metrics=final_training_metrics,
             validation_metrics=final_validation_metrics,
@@ -777,11 +850,14 @@ def train_spbc_abr_v2_dpo(
             "decision_reward_fusion_weight": profile.decision_reward_fusion_weight,
             "decision_rebuffer_fusion_weight": profile.decision_rebuffer_fusion_weight,
             "decision_risk_fusion_weight": profile.decision_risk_fusion_weight,
-            "checkpoint_selected_by": "validation_selection_score_aligned_with_regret_rebuffer_focus_bucket",
+            "checkpoint_selected_by": "validation_selection_score_with_reference_relative_safety_gate"
+            if profile.safety_gate_enabled
+            else "validation_selection_score_aligned_with_regret_rebuffer_focus_bucket",
             "selection_focus_weight": profile.selection_focus_weight,
             "selection_rebuffer_weight": profile.selection_rebuffer_weight,
             "selection_over_aggressive_weight": profile.selection_over_aggressive_weight,
             "selection_invalid_weight": profile.selection_invalid_weight,
+            "safety_gate": _safety_gate_tolerances(profile),
             "pair_weights_normalized_and_capped": True,
             "sample_weights_include_focus_bucket_and_severe_errors": True,
             "focus_throughput_bucket": FOCUS_THROUGHPUT_BUCKET,
@@ -1944,6 +2020,240 @@ def _reference_policy_source(init_payload: Mapping[str, object] | None) -> str:
     return "unsupported_frozen_initial_checkpoint"
 
 
+_CRITICAL_METRIC_KEYS = (
+    "top1_accuracy",
+    "balanced_accuracy",
+    "selected_utility_regret_vs_oracle_mean",
+    "selected_rebuffer_regret_vs_oracle_mean",
+    "over_aggressive_rate_vs_oracle",
+    "under_aggressive_rate_vs_oracle",
+    "predicted_bitrate_kbps_mean",
+    "predicted_rebuffer_rate",
+)
+
+
+def _critical_metric_summary(metrics: Mapping[str, object]) -> Mapping[str, object]:
+    focus_metrics = _nested_mapping(metrics, "focus_2_5_mbps")
+    source_metrics = _nested_mapping(_nested_mapping(metrics, "by_rollout_source"), SAFETY_ROLLOUT_SOURCE)
+    return {
+        "global": _critical_scope_summary(metrics, present=True),
+        FOCUS_THROUGHPUT_BUCKET: _critical_scope_summary(
+            focus_metrics,
+            present=bool(focus_metrics.get("bucket_present", bool(focus_metrics))),
+        ),
+        SAFETY_ROLLOUT_SOURCE: _critical_scope_summary(source_metrics, present=bool(source_metrics)),
+    }
+
+
+def _critical_scope_summary(metrics: Mapping[str, object], *, present: bool) -> Mapping[str, object]:
+    payload: dict[str, object] = {
+        "present": bool(present),
+        "sample_count": int(_metric_float(metrics, "sample_count")),
+    }
+    for key in _CRITICAL_METRIC_KEYS:
+        payload[key] = _metric_float(metrics, key)
+    return payload
+
+
+def _critical_metric_delta(
+    metrics: Mapping[str, object],
+    reference_metrics: Mapping[str, object] | None,
+) -> Mapping[str, object]:
+    if reference_metrics is None:
+        return {
+            "available": False,
+            "reason": "reference_validation_metrics_not_available",
+        }
+    candidate = _critical_metric_summary(metrics)
+    reference = _critical_metric_summary(reference_metrics)
+    deltas: dict[str, object] = {"available": True}
+    for scope in ("global", FOCUS_THROUGHPUT_BUCKET, SAFETY_ROLLOUT_SOURCE):
+        candidate_scope = _nested_mapping(candidate, scope)
+        reference_scope = _nested_mapping(reference, scope)
+        deltas[scope] = {
+            key: round(_metric_float(candidate_scope, key) - _metric_float(reference_scope, key), 6)
+            for key in _CRITICAL_METRIC_KEYS
+        }
+    return deltas
+
+
+def _flatten_epoch_critical_metrics(summary: Mapping[str, object]) -> Mapping[str, object]:
+    global_metrics = _nested_mapping(summary, "global")
+    focus_metrics = _nested_mapping(summary, FOCUS_THROUGHPUT_BUCKET)
+    source_metrics = _nested_mapping(summary, SAFETY_ROLLOUT_SOURCE)
+    return {
+        "validation_over_aggressive_rate_vs_oracle": global_metrics["over_aggressive_rate_vs_oracle"],
+        "validation_under_aggressive_rate_vs_oracle": global_metrics["under_aggressive_rate_vs_oracle"],
+        "validation_selected_utility_regret_vs_oracle_mean": global_metrics[
+            "selected_utility_regret_vs_oracle_mean"
+        ],
+        "validation_selected_rebuffer_regret_vs_oracle_mean": global_metrics[
+            "selected_rebuffer_regret_vs_oracle_mean"
+        ],
+        "validation_focus_2_5_mbps_over_aggressive_rate_vs_oracle": focus_metrics[
+            "over_aggressive_rate_vs_oracle"
+        ],
+        "validation_focus_2_5_mbps_under_aggressive_rate_vs_oracle": focus_metrics[
+            "under_aggressive_rate_vs_oracle"
+        ],
+        "validation_focus_2_5_mbps_selected_utility_regret_vs_oracle_mean": focus_metrics[
+            "selected_utility_regret_vs_oracle_mean"
+        ],
+        "validation_focus_2_5_mbps_selected_rebuffer_regret_vs_oracle_mean": focus_metrics[
+            "selected_rebuffer_regret_vs_oracle_mean"
+        ],
+        "validation_spbc_v2_dpo_on_policy_over_aggressive_rate_vs_oracle": source_metrics[
+            "over_aggressive_rate_vs_oracle"
+        ],
+        "validation_spbc_v2_dpo_on_policy_under_aggressive_rate_vs_oracle": source_metrics[
+            "under_aggressive_rate_vs_oracle"
+        ],
+        "validation_spbc_v2_dpo_on_policy_selected_utility_regret_vs_oracle_mean": source_metrics[
+            "selected_utility_regret_vs_oracle_mean"
+        ],
+        "validation_spbc_v2_dpo_on_policy_selected_rebuffer_regret_vs_oracle_mean": source_metrics[
+            "selected_rebuffer_regret_vs_oracle_mean"
+        ],
+    }
+
+
+def _safety_gate_result(
+    metrics: Mapping[str, object],
+    reference_metrics: Mapping[str, object] | None,
+    profile: SpbcV2DpoTrainingProfile,
+) -> Mapping[str, object]:
+    if not profile.safety_gate_enabled:
+        return {
+            "enabled": False,
+            "passed": True,
+            "mode": "disabled",
+            "checks": [],
+            "failed_checks": [],
+        }
+    if reference_metrics is None:
+        return {
+            "enabled": True,
+            "passed": False,
+            "mode": "relative_to_initial_checkpoint",
+            "reason": "reference_validation_metrics_not_available",
+            "checks": [],
+            "failed_checks": ["reference_validation_metrics_not_available"],
+        }
+    candidate = _critical_metric_summary(metrics)
+    reference = _critical_metric_summary(reference_metrics)
+    checks = []
+    checks.extend(
+        (
+            _upper_bound_gate_check(
+                "global_over_aggressive",
+                _nested_mapping(candidate, "global"),
+                _nested_mapping(reference, "global"),
+                "over_aggressive_rate_vs_oracle",
+                profile.safety_global_over_aggressive_tolerance,
+            ),
+            _upper_bound_gate_check(
+                "focus_2_5_mbps_over_aggressive",
+                _nested_mapping(candidate, FOCUS_THROUGHPUT_BUCKET),
+                _nested_mapping(reference, FOCUS_THROUGHPUT_BUCKET),
+                "over_aggressive_rate_vs_oracle",
+                profile.safety_focus_over_aggressive_tolerance,
+            ),
+            _upper_bound_gate_check(
+                "spbc_v2_dpo_on_policy_over_aggressive",
+                _nested_mapping(candidate, SAFETY_ROLLOUT_SOURCE),
+                _nested_mapping(reference, SAFETY_ROLLOUT_SOURCE),
+                "over_aggressive_rate_vs_oracle",
+                profile.safety_spbc_v2_over_aggressive_tolerance,
+                required=False,
+            ),
+        )
+    )
+    for scope in ("global", FOCUS_THROUGHPUT_BUCKET, SAFETY_ROLLOUT_SOURCE):
+        required_scope = scope != SAFETY_ROLLOUT_SOURCE
+        checks.append(
+            _upper_bound_gate_check(
+                "{0}_utility_regret_non_regression".format(scope),
+                _nested_mapping(candidate, scope),
+                _nested_mapping(reference, scope),
+                "selected_utility_regret_vs_oracle_mean",
+                profile.safety_utility_regret_tolerance,
+                required=required_scope,
+            )
+        )
+        checks.append(
+            _upper_bound_gate_check(
+                "{0}_rebuffer_regret_non_regression".format(scope),
+                _nested_mapping(candidate, scope),
+                _nested_mapping(reference, scope),
+                "selected_rebuffer_regret_vs_oracle_mean",
+                profile.safety_rebuffer_regret_tolerance,
+                required=required_scope,
+            )
+        )
+    failed = [str(check["id"]) for check in checks if check["passed"] is not True]
+    return {
+        "enabled": True,
+        "passed": not failed,
+        "mode": "relative_to_initial_checkpoint",
+        "reference_scopes": reference,
+        "candidate_scopes": candidate,
+        "checks": checks,
+        "failed_checks": failed,
+    }
+
+
+def _safety_gate_tolerances(profile: SpbcV2DpoTrainingProfile) -> Mapping[str, object]:
+    return {
+        "enabled": bool(profile.safety_gate_enabled),
+        "global_over_aggressive_tolerance": profile.safety_global_over_aggressive_tolerance,
+        "focus_2_5_mbps_over_aggressive_tolerance": profile.safety_focus_over_aggressive_tolerance,
+        "spbc_v2_dpo_on_policy_over_aggressive_tolerance": profile.safety_spbc_v2_over_aggressive_tolerance,
+        "utility_regret_tolerance": profile.safety_utility_regret_tolerance,
+        "rebuffer_regret_tolerance": profile.safety_rebuffer_regret_tolerance,
+        "fallback_epoch_when_no_trained_epoch_passes": 0,
+    }
+
+
+def _upper_bound_gate_check(
+    check_id: str,
+    candidate_scope: Mapping[str, object],
+    reference_scope: Mapping[str, object],
+    metric_name: str,
+    tolerance: float,
+    *,
+    required: bool = True,
+) -> Mapping[str, object]:
+    candidate_present = bool(candidate_scope.get("present", True))
+    reference_present = bool(reference_scope.get("present", True))
+    candidate_value = _metric_float(candidate_scope, metric_name)
+    reference_value = _metric_float(reference_scope, metric_name)
+    max_allowed = reference_value + max(float(tolerance), 0.0)
+    if not candidate_present or not reference_present:
+        return {
+            "id": check_id,
+            "metric": metric_name,
+            "candidate": round(candidate_value, 6),
+            "reference": round(reference_value, 6),
+            "tolerance": round(max(float(tolerance), 0.0), 6),
+            "max_allowed": round(max_allowed, 6),
+            "delta_candidate_minus_reference": round(candidate_value - reference_value, 6),
+            "passed": not required,
+            "skipped": not required,
+            "reason": "scope_not_present",
+        }
+    passed = candidate_present and reference_present and candidate_value <= max_allowed + 1.0e-12
+    return {
+        "id": check_id,
+        "metric": metric_name,
+        "candidate": round(candidate_value, 6),
+        "reference": round(reference_value, 6),
+        "tolerance": round(max(float(tolerance), 0.0), 6),
+        "max_allowed": round(max_allowed, 6),
+        "delta_candidate_minus_reference": round(candidate_value - reference_value, 6),
+        "passed": bool(passed),
+    }
+
+
 def _selection_score(metrics: Mapping[str, object], profile: SpbcV2DpoTrainingProfile) -> float:
     global_score = _selection_component(metrics, profile)
     focus_raw = metrics.get("focus_2_5_mbps", {})
@@ -2185,6 +2495,11 @@ def _validate_training_args(
         "selection_rebuffer_weight",
         "selection_over_aggressive_weight",
         "selection_invalid_weight",
+        "safety_global_over_aggressive_tolerance",
+        "safety_focus_over_aggressive_tolerance",
+        "safety_spbc_v2_over_aggressive_tolerance",
+        "safety_utility_regret_tolerance",
+        "safety_rebuffer_regret_tolerance",
         "max_pair_weight",
     ):
         value = float(getattr(profile, name))

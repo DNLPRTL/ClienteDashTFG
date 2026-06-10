@@ -21,6 +21,7 @@ from core.phase45_v1.spbc_v2_dpo_training import (
     profile_by_name,
     train_spbc_abr_v2_dpo,
     _loss_components,
+    _safety_gate_result,
     _selection_score,
 )
 from tests.test_phase45_v2_preference_dataset import (
@@ -310,6 +311,117 @@ class Phase45V2SpbcDpoTrainingTest(unittest.TestCase):
             _selection_score(higher_loss_better_policy, profile),
             _selection_score(low_loss_bad_policy, profile),
         )
+
+    def test_safety_gate_rejects_lower_regret_checkpoint_when_over_aggressive_regresses(self):
+        profile = replace(
+            profile_by_name("smoke"),
+            safety_gate_enabled=True,
+            safety_global_over_aggressive_tolerance=0.005,
+            safety_focus_over_aggressive_tolerance=0.010,
+            safety_spbc_v2_over_aggressive_tolerance=0.010,
+            safety_utility_regret_tolerance=0.001,
+            safety_rebuffer_regret_tolerance=0.001,
+        )
+        reference = {
+            "selected_utility_regret_vs_oracle_mean": 0.060,
+            "selected_rebuffer_regret_vs_oracle_mean": 0.010,
+            "over_aggressive_rate_vs_oracle": 0.020,
+            "under_aggressive_rate_vs_oracle": 0.250,
+            "focus_2_5_mbps": {
+                "bucket_present": True,
+                "selected_utility_regret_vs_oracle_mean": 0.050,
+                "selected_rebuffer_regret_vs_oracle_mean": 0.015,
+                "over_aggressive_rate_vs_oracle": 0.060,
+                "under_aggressive_rate_vs_oracle": 0.300,
+            },
+            "by_rollout_source": {
+                "spbc_v2_dpo_on_policy": {
+                    "selected_utility_regret_vs_oracle_mean": 0.080,
+                    "selected_rebuffer_regret_vs_oracle_mean": 0.020,
+                    "over_aggressive_rate_vs_oracle": 0.020,
+                    "under_aggressive_rate_vs_oracle": 0.400,
+                }
+            },
+        }
+        candidate = {
+            "selected_utility_regret_vs_oracle_mean": 0.040,
+            "selected_rebuffer_regret_vs_oracle_mean": 0.006,
+            "over_aggressive_rate_vs_oracle": 0.030,
+            "under_aggressive_rate_vs_oracle": 0.100,
+            "focus_2_5_mbps": {
+                "bucket_present": True,
+                "selected_utility_regret_vs_oracle_mean": 0.030,
+                "selected_rebuffer_regret_vs_oracle_mean": 0.009,
+                "over_aggressive_rate_vs_oracle": 0.090,
+                "under_aggressive_rate_vs_oracle": 0.120,
+            },
+            "by_rollout_source": {
+                "spbc_v2_dpo_on_policy": {
+                    "selected_utility_regret_vs_oracle_mean": 0.060,
+                    "selected_rebuffer_regret_vs_oracle_mean": 0.015,
+                    "over_aggressive_rate_vs_oracle": 0.040,
+                    "under_aggressive_rate_vs_oracle": 0.200,
+                }
+            },
+        }
+
+        result = _safety_gate_result(candidate, reference, profile)
+
+        self.assertTrue(result["enabled"])
+        self.assertFalse(result["passed"])
+        self.assertIn("focus_2_5_mbps_over_aggressive", result["failed_checks"])
+        self.assertIn("spbc_v2_dpo_on_policy_over_aggressive", result["failed_checks"])
+
+    def test_training_with_safety_gate_reports_epoch_critical_metrics(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            spbc_checkpoint = root / "modelos" / "phase45_v1" / "spbc_abr_v1" / "full_v1" / "modelo_spbc_abr_v1.pt"
+            dataset_dir = build_unit_v2_dataset(root, with_spbc=True, checkpoint_path=spbc_checkpoint)
+            v2_checkpoint = (
+                root
+                / "modelos"
+                / "phase45_v1"
+                / "spbc_abr_v2_dpo"
+                / "full_v1_utility_risk_v1"
+                / "modelo_spbc_abr_v2_dpo.pt"
+            )
+            write_stub_spbc_v2_dpo_checkpoint(v2_checkpoint)
+            output_dir = root / "modelos" / "phase45_v1" / "spbc_abr_v2_dpo" / "pilot_safe_gate"
+            profile = replace(
+                profile_by_name("smoke"),
+                epochs=1,
+                batch_size=32,
+                max_training_samples=96,
+                max_validation_samples=48,
+                safety_gate_enabled=True,
+            )
+
+            report = train_spbc_abr_v2_dpo(
+                dataset_dir,
+                output_dir,
+                profile=profile,
+                overwrite=True,
+                device="cpu",
+                init_checkpoint=v2_checkpoint,
+                validate_dataset=True,
+                progress_callback=None,
+            )
+            report_file = read_json(output_dir / SPBC_V2_DPO_TRAINING_REPORT_FILENAME)
+            first_epoch = report_file["epoch_reports"][0]
+
+            self.assertEqual("PASS", report["status"])
+            self.assertEqual(
+                "validation_selection_score_with_safety_gate",
+                report_file["checkpoint_selection"]["criterion"],
+            )
+            self.assertTrue(report_file["checkpoint_selection"]["safety_gate_enabled"])
+            self.assertIsNotNone(report_file["safety_gate_reference_validation_critical_metrics"])
+            self.assertTrue(report_file["selected_checkpoint_safety_gate"]["enabled"])
+            self.assertIn("validation_critical_metrics", first_epoch)
+            self.assertIn("validation_safety_gate", first_epoch)
+            self.assertIn("validation_safety_gate_passed", first_epoch)
+            self.assertIn("validation_focus_2_5_mbps_over_aggressive_rate_vs_oracle", first_epoch)
+            self.assertIn("validation_spbc_v2_dpo_on_policy_selected_utility_regret_vs_oracle_mean", first_epoch)
 
 
 def build_unit_v2_dataset(

@@ -80,6 +80,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--selection-rebuffer-weight", type=float, default=None)
     parser.add_argument("--selection-over-aggressive-weight", type=float, default=None)
     parser.add_argument("--selection-invalid-weight", type=float, default=None)
+    parser.add_argument(
+        "--enable-safety-gate",
+        action="store_true",
+        help="Activa seleccion constrained: un epoch inseguro frente al checkpoint inicial no puede ser best_epoch.",
+    )
+    parser.add_argument("--safety-global-over-aggressive-tolerance", type=float, default=None)
+    parser.add_argument("--safety-focus-over-aggressive-tolerance", type=float, default=None)
+    parser.add_argument("--safety-spbc-v2-over-aggressive-tolerance", type=float, default=None)
+    parser.add_argument("--safety-utility-regret-tolerance", type=float, default=None)
+    parser.add_argument("--safety-rebuffer-regret-tolerance", type=float, default=None)
     parser.add_argument("--max-pair-weight", type=float, default=None)
     parser.add_argument("--max-training-samples", type=int, default=None)
     parser.add_argument("--max-validation-samples", type=int, default=None)
@@ -134,6 +144,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 def _profile_with_overrides(args: argparse.Namespace):
     profile = profile_by_name(args.profile)
     replacements: dict[str, object] = {}
+    if args.enable_safety_gate:
+        replacements["safety_gate_enabled"] = True
     for arg_name, field_name in (
         ("ce_loss_weight", "ce_loss_weight"),
         ("dpo_loss_weight", "dpo_loss_weight"),
@@ -158,6 +170,11 @@ def _profile_with_overrides(args: argparse.Namespace):
         ("selection_rebuffer_weight", "selection_rebuffer_weight"),
         ("selection_over_aggressive_weight", "selection_over_aggressive_weight"),
         ("selection_invalid_weight", "selection_invalid_weight"),
+        ("safety_global_over_aggressive_tolerance", "safety_global_over_aggressive_tolerance"),
+        ("safety_focus_over_aggressive_tolerance", "safety_focus_over_aggressive_tolerance"),
+        ("safety_spbc_v2_over_aggressive_tolerance", "safety_spbc_v2_over_aggressive_tolerance"),
+        ("safety_utility_regret_tolerance", "safety_utility_regret_tolerance"),
+        ("safety_rebuffer_regret_tolerance", "safety_rebuffer_regret_tolerance"),
         ("max_pair_weight", "max_pair_weight"),
     ):
         value = getattr(args, arg_name)
@@ -197,6 +214,7 @@ def _make_progress_printer(started: float):
                 "train_loss={train_loss:.4f} val_loss={val_loss:.4f} "
                 "top1={top1:.4f} pair_acc={pair_acc:.4f} qoe_gap={qoe_gap:.4f} "
                 "u_regret={u_regret:.4f} rb_regret={rb_regret:.4f} "
+                "over={over:.4f} focus_over={focus_over:.4f} safe={safe} "
                 "selection={selection:.4f} best_epoch={best}{star}"
             ).format(
                 elapsed=elapsed,
@@ -210,6 +228,9 @@ def _make_progress_printer(started: float):
                 qoe_gap=float(event.get("validation_predicted_qoe_gap_mean", 0.0)),
                 u_regret=float(event.get("validation_utility_regret", 0.0)),
                 rb_regret=float(event.get("validation_rebuffer_regret", 0.0)),
+                over=float(event.get("validation_over_aggressive", 0.0)),
+                focus_over=float(event.get("validation_focus_over_aggressive", 0.0)),
+                safe="yes" if event.get("validation_safety_gate_passed") is True else "no",
                 selection=float(event.get("validation_selection_score", 0.0)),
                 best=event.get("best_epoch"),
                 star=" nuevo_mejor" if event.get("best_so_far") is True else "",
