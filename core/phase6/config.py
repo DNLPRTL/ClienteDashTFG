@@ -68,6 +68,13 @@ DEFAULT_PHASE6_CONFIG: Dict[str, Any] = {
             "max_inference_latency_ms": 50.0,
             "diagnostic_only": False,
         },
+        "spbc_abr_v2_dpo_anchor_safe_rank": {
+            "bundle_dir": "/home/daniel/TFG/modelos/phase45_v1/spbc_abr_v2_dpo/full_v2_anchor_safe_rank_v1_bundle",
+            "fallback_controller": "robust_mpc",
+            "verify_hashes": True,
+            "max_inference_latency_ms": 50.0,
+            "diagnostic_only": False,
+        },
     },
 }
 

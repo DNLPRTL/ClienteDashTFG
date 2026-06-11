@@ -158,11 +158,7 @@ class NeuralAbrLiteController(BaseController):
         if self._bundle_load_attempted and self._bundle_load_error_reason:
             raise NeuralAbrRuntimeBundleError(self._bundle_load_error_reason, "bundle load failed previously")
         try:
-            self._bundle = load_neural_abr_runtime_bundle(
-                self.bundle_dir,
-                expected_teacher=self.expected_teacher,
-                verify_hashes=self.verify_hashes,
-            )
+            self._bundle = self._load_runtime_bundle()
         except NeuralAbrRuntimeBundleError as exc:
             self._bundle_load_attempted = True
             self._bundle_load_error_reason = stable_reason(exc.reason)
@@ -174,6 +170,13 @@ class NeuralAbrLiteController(BaseController):
         diagnostics.bundle_hash_ok = 1
         diagnostics.feature_schema_ok = 1
         return self._bundle
+
+    def _load_runtime_bundle(self):
+        return load_neural_abr_runtime_bundle(
+            self.bundle_dir,
+            expected_teacher=self.expected_teacher,
+            verify_hashes=self.verify_hashes,
+        )
 
     def _fallback_decision(
         self,

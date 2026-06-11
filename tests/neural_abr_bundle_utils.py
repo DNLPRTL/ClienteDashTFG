@@ -127,7 +127,7 @@ def minimal_feedback():
         "fragment_duration": 4.0,
         "rates": [37500.0, 93750.0],
         "segment_index": 1,
+        "total_segments": 2,
         "start_segment_request": 1.0,
         "stop_segment_request": 1.5,
     }
-

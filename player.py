@@ -883,6 +883,7 @@ class Player:
             max_level=self.max_level,
             downloaded_bytes=self.downloaded_bytes,
             segment_index=self.cur_index,
+            total_segments=getattr(self, "_active_item_count", None),
             start_segment_request=self.start_segment_request,
             stop_segment_request=self.stop_segment_request,
             last_size=last_size,

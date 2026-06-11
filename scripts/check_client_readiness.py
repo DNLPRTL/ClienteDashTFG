@@ -50,8 +50,11 @@ REQUIRED_IMPORTS = (
     "core.controller.neural_abr_loader",
     "core.controller.neural_abr_runtime_features",
     "core.controller.neural_abr_safety",
+    "core.controller.spbc_abr_v2_dpo",
+    "core.controller.spbc_abr_v2_dpo_loader",
     "core.media_engine.fake",
     "core.media_engine.gst_media_engine",
+    "core.phase45_v1.spbc_v2_dpo_bundle",
     "core.phase6.analysis",
     "core.phase6.catalog",
     "core.phase6.config",
@@ -65,6 +68,8 @@ REQUIRED_IMPORTS = (
     "scripts.phase6_gui",
     "scripts.run_phase6_verificacion_clasica_controlada",
     "scripts.verificar_paquete_phase6",
+    "scripts.export_phase45_v2_spbc_dpo_bundle",
+    "scripts.validate_phase45_v2_spbc_dpo_bundle",
 )
 
 CURRENT_DOCS = (

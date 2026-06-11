@@ -12,6 +12,7 @@ from .rate_based import RateBasedController
 from .robust_mpc import RobustMpcController
 from .sanity_rate import FixedRateController, MaxRateController, MinRateController
 from .scripted_quality import ScriptedQualityController
+from .spbc_abr_v2_dpo import SpbcAbrV2DpoAnchorSafeRankController
 
 
 @dataclass(frozen=True)
@@ -71,6 +72,11 @@ CONTROLLER_REGISTRY = {
         key="neural_abr_lite_teacher_hibrido",
         label="NeuralABR-Lite guarded controller (teacher_hibrido)",
         factory=NeuralAbrLiteTeacherHibridoController,
+    ),
+    "spbc_abr_v2_dpo_anchor_safe_rank": ControllerSpec(
+        key="spbc_abr_v2_dpo_anchor_safe_rank",
+        label="SPBC ABR v2 DPO guarded controller (anchor safe-rank)",
+        factory=SpbcAbrV2DpoAnchorSafeRankController,
     ),
     "fixed_quality": ControllerSpec(
         key="fixed_quality",

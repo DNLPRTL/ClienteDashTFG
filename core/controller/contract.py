@@ -25,6 +25,7 @@ REQUIRED_FEEDBACK_KEYS = (
     "fragment_duration",
     "rates",
     "segment_index",
+    "total_segments",
     "start_segment_request",
     "stop_segment_request",
 )
@@ -49,6 +50,7 @@ FEEDBACK_UNITS = {
     "fragment_duration": "seconds",
     "rates": "bytes_per_second_list",
     "segment_index": "segment_or_item_index",
+    "total_segments": "segment_or_item_count",
     "start_segment_request": "perf_counter_seconds",
     "stop_segment_request": "perf_counter_seconds",
 }
@@ -82,6 +84,7 @@ FEEDBACK_CANONICAL_ALIASES = {
     "fragment_duration": "segment_duration_seconds",
     "rates": "representation_rates",
     "segment_index": "segment_index",
+    "total_segments": "active_segment_count",
     "start_segment_request": "segment_request_start_perf_counter_seconds",
     "stop_segment_request": "segment_request_stop_perf_counter_seconds",
 }
@@ -104,6 +107,7 @@ FEEDBACK_SEMANTIC_STATUS = {
     "fragment_duration": "mpd_segment_context",
     "rates": "mpd_ladder_context",
     "segment_index": "player_runtime_state",
+    "total_segments": "player_runtime_state",
     "start_segment_request": "player_runtime_timing",
     "stop_segment_request": "player_runtime_timing",
 }

@@ -35,6 +35,7 @@ class RuntimeFeedbackTest(unittest.TestCase):
             max_level=2,
             downloaded_bytes=999,
             segment_index=7,
+            total_segments=30,
             start_segment_request=10.0,
             stop_segment_request=11.0,
             last_size=600,
@@ -49,6 +50,7 @@ class RuntimeFeedbackTest(unittest.TestCase):
         self.assertEqual(100.0, feedback["min_rate"])
         self.assertEqual(2.0, feedback["fragment_duration"])
         self.assertEqual(200.0, feedback["bwe"])
+        self.assertEqual(30, feedback["total_segments"])
 
     def test_build_controller_feedback_uses_current_rate_when_throughput_is_missing(self):
         feedback = build_controller_feedback(
@@ -102,6 +104,7 @@ class RuntimeFeedbackTest(unittest.TestCase):
         player.max_level = 1
         player.downloaded_bytes = 321
         player.cur_index = 3
+        player._active_item_count = 12
         player.start_segment_request = 1.5
         player.stop_segment_request = 2.5
 
@@ -116,6 +119,7 @@ class RuntimeFeedbackTest(unittest.TestCase):
             max_level=player.max_level,
             downloaded_bytes=player.downloaded_bytes,
             segment_index=player.cur_index,
+            total_segments=player._active_item_count,
             start_segment_request=player.start_segment_request,
             stop_segment_request=player.stop_segment_request,
             last_size=50,

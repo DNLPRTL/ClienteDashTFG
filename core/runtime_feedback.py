@@ -19,6 +19,7 @@ def build_controller_feedback(
     last_size,
     last_time,
     fragment_duration: Optional[float] = None,
+    total_segments: Optional[int] = None,
 ):
     """Build the current dict-based controller feedback payload."""
     cur = rates[cur_level]
@@ -48,6 +49,7 @@ def build_controller_feedback(
         'fragment_duration': fd,
         'rates': rates,
         'segment_index': segment_index,
+        'total_segments': total_segments,
         'start_segment_request': start_segment_request,
         'stop_segment_request': stop_segment_request,
     }

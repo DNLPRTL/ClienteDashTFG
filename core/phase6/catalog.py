@@ -25,6 +25,7 @@ DEFAULT_CONTROLLER_ALIASES = {
     "robust_mpc": "base_robust_mpc",
     "neural_abr_lite_robust_mpc": "propio_rmp",
     "neural_abr_lite_teacher_hibrido": "propio_th",
+    "spbc_abr_v2_dpo_anchor_safe_rank": "propio_spbc_v2_anchor",
 }
 
 DEFAULT_CONTROLLER_HUMAN_NAMES = {
@@ -35,6 +36,7 @@ DEFAULT_CONTROLLER_HUMAN_NAMES = {
     "robust_mpc": "Robust MPC",
     "neural_abr_lite_robust_mpc": "Propio RMP",
     "neural_abr_lite_teacher_hibrido": "Propio TH",
+    "spbc_abr_v2_dpo_anchor_safe_rank": "Propio SPBC v2 Anchor",
 }
 
 MEDIA_PROFILES = {

@@ -21,7 +21,7 @@ It documents the current implementation; it does not define final QoE, reward, A
 
 Block 14 makes that key order explicit through `core.controller.contract.CURRENT_FEEDBACK_KEYS`, `core.dataset_schema.DEFAULT_SEGMENT_TELEMETRY_FEEDBACK_KEYS`, and `core.dataset_schema.build_default_segment_telemetry_header()`. Readiness checks must use those real keys, not invented examples.
 
-The default feedback keys are: `queued_bytes`, `queued_time`, `cur_bitrate`, `bwe`, `level`, `max_level`, `cur_rate`, `max_rate`, `min_rate`, `max_bitrate`, `min_bitrate`, `last_fragment_size`, `last_download_time`, `downloaded_bytes`, `fragment_duration`, `rates`, `segment_index`, `start_segment_request`, and `stop_segment_request`.
+The default feedback keys are: `queued_bytes`, `queued_time`, `cur_bitrate`, `bwe`, `level`, `max_level`, `cur_rate`, `max_rate`, `min_rate`, `max_bitrate`, `min_bitrate`, `last_fragment_size`, `last_download_time`, `downloaded_bytes`, `fragment_duration`, `rates`, `segment_index`, `total_segments`, `start_segment_request`, and `stop_segment_request`.
 
 Controllers may add feedback keys through `augment_feedback()`. Such extra columns are outside this current-column audit and must receive their own provenance before benchmark use.
 
@@ -48,6 +48,7 @@ Controllers may add feedback keys through `augment_feedback()`. Such extra colum
 | `feedback_fragment_duration` | `segment_telemetry.csv` | `core.runtime_feedback.build_controller_feedback`; parser/player duration context | seconds | Feedback snapshot for current fragment; init rows pass 0. | eval-gated | Not as final score | Segment-duration context, not QoE by itself. |
 | `feedback_rates` | `segment_telemetry.csv` | `core.runtime_feedback.build_controller_feedback`; `Player.rates` | list of bytes per second | Feedback snapshot. | runtime-only | No | Python list serialized by CSV; use manifest/MPD inventory later for robust ladder provenance. |
 | `feedback_segment_index` | `segment_telemetry.csv` | `core.runtime_feedback.build_controller_feedback`; `Player.cur_index` | index | Feedback snapshot. | runtime-only | No | Controller-contract trace only; top-level `segment_index` is row identity. |
+| `feedback_total_segments` | `segment_telemetry.csv` | `core.runtime_feedback.build_controller_feedback`; `Player._active_item_count` | count | Feedback snapshot. | runtime-only | No | Active item count exposed equally to all controllers; used only as runtime context, not as a final metric. |
 | `feedback_start_segment_request` | `segment_telemetry.csv` | `core.runtime_feedback.build_controller_feedback`; `Player.start_segment_request` | `time.perf_counter()` seconds | Request start timestamp for current/last segment. | runtime-only | No | Local monotonic timestamp; not portable across runs. |
 | `feedback_stop_segment_request` | `segment_telemetry.csv` | `core.runtime_feedback.build_controller_feedback`; `Player.stop_segment_request` | `time.perf_counter()` seconds | Request stop timestamp for current/last segment. | runtime-only | No | Local monotonic timestamp; not portable across runs. |
 | `is_init` | `segment_telemetry.csv` | `player.Player.run` row assembly | boolean int | Segment row assembly. | benchmark-neutral; eval-gated | Gate/context only | Init rows are excluded by `use_for_eval`. |

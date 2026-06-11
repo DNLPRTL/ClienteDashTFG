@@ -40,6 +40,7 @@ def complete_feedback(**overrides):
         "fragment_duration": 1.0,
         "rates": [100.0, 200.0, 400.0],
         "segment_index": 0,
+        "total_segments": 3,
         "start_segment_request": 1.0,
         "stop_segment_request": 1.0,
     }
@@ -57,6 +58,7 @@ class ControllerContractTest(unittest.TestCase):
             "bwe",
             "rates",
             "segment_index",
+            "total_segments",
             "start_segment_request",
             "stop_segment_request",
         ]:
@@ -67,6 +69,7 @@ class ControllerContractTest(unittest.TestCase):
         self.assertEqual("bytes_per_second", FEEDBACK_UNITS["bwe"])
         self.assertEqual("bytes_per_second_list", FEEDBACK_UNITS["rates"])
         self.assertEqual("segment_or_item_index", FEEDBACK_UNITS["segment_index"])
+        self.assertEqual("segment_or_item_count", FEEDBACK_UNITS["total_segments"])
         self.assertEqual("bytes_per_second", TARGET_RATE_UNIT)
         self.assertEqual("representation_index", QUALITY_LEVEL_UNIT)
 
