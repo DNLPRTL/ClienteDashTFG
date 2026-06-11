@@ -2,13 +2,20 @@
 
 ## Decision
 
-Implementar `spc_abr_v2_reward_risk` como scorer offline nuevo para el
-dataset `phase45v2_preference_onpolicy_dataset_v1`.
+Implementar `spc_abr_v2_reward_risk` como critico predictivo por accion para
+el dataset `phase45v2_preference_onpolicy_dataset_v1` y sus iteraciones
+DAgger-2.
 
 Este bloque no registra controllers, no exporta bundles, no toca runtime y no
 autoriza benchmark/ranking/ganador/mejora QoE. Su funcion es entrenar una pieza
 predictiva auditable para que el Bloque 7D compare combinaciones de policy +
-scorer con evidencia offline.
+critico con evidencia offline.
+
+Decision actual tras los pilots v1/v2: SPC no se debe optimizar como un segundo
+SPBC ni seleccionarse por ganar como policy autonoma. Su rol principal es
+predecir consecuencias por accion (`reward_n`, rebuffer, gap QoE, smoothness y
+riesgo) para auditar, vetar o reordenar de forma local las acciones propuestas
+por el SPBC congelado.
 
 ## Evidencia usada
 
@@ -54,7 +61,7 @@ El modelo predice por accion:
 - `smoothness_mbps`
 - `target_risk`
 
-La decision offline se calcula como:
+El contrato historico exponia un score compuesto:
 
 ```text
 score =
@@ -64,6 +71,18 @@ score =
   - smoothness_weight * smoothness_mbps
   - qoe_gap_weight * qoe_gap
 ```
+
+Ese score compuesto queda degradado a diagnostico historico. El plan activo
+separa ranking y restricciones:
+
+- ranking primario: `predicted_reward_n_by_action`
+- restricciones/guardias: `predicted_rebuffer_s_by_action` y
+  `predicted_target_risk_probability_by_action`
+- auxiliares de calibracion: `qoe_gap` y `smoothness_mbps`
+
+No volver a restar de forma lineal rebuffer/smoothness/gap sobre `reward_n`
+como receta principal, porque `reward_n = bitrate_mbps - 4.3 * rebuffer_s -
+smoothness_mbps` ya contiene la penalizacion QoE principal.
 
 ## Loss
 
@@ -76,8 +95,12 @@ score =
 
 ## Seleccion de checkpoint
 
-El mejor checkpoint se elige por `validation_selection_score`, no por loss pura.
-El score penaliza:
+El checkpoint historico se elegia por `validation_selection_score`, no por loss
+pura. Para la siguiente iteracion, este criterio debe pasar a ser secundario:
+sirve para diagnosticar `SPC solo`, pero la aceptacion fuerte debe venir de una
+gate hibrida con el SPBC congelado.
+
+El score historico penaliza:
 
 - `selected_utility_regret_vs_best_immediate_mean`
 - `selected_rebuffer_regret_vs_best_immediate_mean`
@@ -151,10 +174,78 @@ Frente al SPBC congelado, el scorer mejora ligeramente rebuffer regret
 una senal util de riesgo/rebuffer, pero como decisor compra esa mejora con
 demasiado coste de utilidad y seguridad.
 
-Decision: no full, no bundle, no controller. El siguiente intento debe convertir
-el fallo en loss/seleccion, igual que se hizo con SPBC: anadir una perdida
-positiva de ranking dentro del conjunto seguro (`safe_utility_rank_loss`) y una
-penalizacion explicita de masa de score sobre acciones
-`over_aggressive_rebuffer`. La receta v2 debe reducir el sesgo de seleccion a
-rebuffer puro y aumentar el peso de over-aggressive, manteniendo comparacion
-contra el SPBC congelado.
+Decision: no full, no bundle, no controller. La hipotesis siguiente fue
+convertir el fallo en loss/seleccion, igual que se hizo con SPBC: anadir una
+perdida positiva de ranking dentro del conjunto seguro
+(`safe_utility_rank_loss`) y una penalizacion explicita de masa de score sobre
+acciones `over_aggressive_rebuffer`. El resultado safe-rank v2 invalido esa
+hipotesis para SPC.
+
+## Addendum 2026-06-10 - resultado safe-rank v2
+
+El pilot multi-seed `pilot_dagger2_reward_risk_safe_rank_seed_*_v2` tampoco
+debe escalar. Dos de las tres seeds seleccionaron `best_epoch=1` y degradaron
+drasticamente la calibracion de riesgo:
+
+```text
+seed_450851 risk_brier=0.152982 risk_fn=0.034779
+seed_450852 risk_brier=0.011859 risk_fn=0.002133
+seed_450853 risk_brier=0.147532 risk_fn=0.035576
+```
+
+Frente al SPBC congelado, todas las seeds empeoran utility regret, rebuffer
+regret y over-aggressive. El foco `2_5_mbps` tambien empeora de forma clara. La
+lectura tecnica es que las perdidas sobre el score compuesto del SPC son
+demasiado invasivas: a diferencia del SPBC, el score del SPC se construye con
+cabezas predictivas (`reward`, `rebuffer`, `risk`, `smoothness`, `qoe_gap`), y
+empujar fuerte ese score puede deformar la calibracion de las cabezas.
+
+Decision: no full, no bundle, no controller. El camino safe-rank/SPC-como-policy
+queda cerrado.
+
+## Addendum 2026-06-11 - reinicio conceptual tras revision externa
+
+Los informes externos convergen con la evidencia local:
+
+- SPC v1 ya mostro senal util de rebuffer/riesgo (`risk_brier` sano en dos
+  seeds y `risk_false_negative_rate` bajo), pero no gano como decisor autonomo.
+- SPC v2 demostro que copiar el safe-rank de SPBC deforma las cabezas
+  predictivas, especialmente riesgo.
+- La funcion natural de SPC no es conducir, sino criticar acciones candidatas.
+
+Rumbo activo:
+
+```text
+spbc_abr_v2_dpo          = conductor / policy decisora
+spc_abr_v2_reward_risk   = copiloto / critico predictivo por accion
+controller futuro        = SPBC propone + SPC audita/veta/reordena localmente
+PPO futuro, si procede   = fine-tuning del SPBC, no del SPC
+```
+
+El siguiente bloque no debe ser `full_v1` ni otro pilot pensado para demostrar
+que `SPC solo` supera al SPBC. El siguiente bloque debe construir primero la
+evaluacion offline hibrida:
+
+```text
+SPBC only
+SPC only reward-only                         # diagnostico, no criterio final
+SPBC + SPC veto-only conservador             # el SPC solo mantiene o baja
+SPBC top-k + SPC rerank con restricciones    # k=2 primero, k=3 despues
+```
+
+La aceptacion de SPC se hara por sistema combinado, no por ego del copiloto. Los
+hard gates internos deben mirar global, `2_5_mbps` y
+`spbc_v2_dpo_on_policy`:
+
+- no empeorar `over_aggressive` frente a `SPBC only`
+- no empeorar `selected_rebuffer_regret_vs_best_immediate_mean`
+- permitir como mucho una degradacion minima y explicita de utility regret si
+  reduce seguridad/rebuffer de forma consistente
+- mantener `risk_brier` y `risk_false_negative_rate` en banda sana
+- reportar `intervention_rate` y `useful_intervention_rate`
+
+Despues de tener ese evaluador, entrenar un `SPC reward-only calibrated` tiene
+sentido, pero su objetivo debe ser predictivo/calibrado: `reward_n` como ranking
+primario; rebuffer/riesgo como restricciones; gap/smoothness como auxiliares.
+No usar perdidas fuertes sobre score compuesto ni seleccionar el modelo solo por
+`SPC solo`.

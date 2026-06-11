@@ -113,6 +113,83 @@ no rompe `2_5_mbps`, `spbc_v2_dpo_on_policy`, `risk_brier` ni
 `risk_false_negative_rate`. Si la v2 vuelve a comprar rebuffer con mas utility
 regret u over-aggressive, no lanzar full.
 
+Resultado observado: el pilot `safe-rank` v2 no se escala. Dos seeds
+seleccionaron `best_epoch=1`, `risk_brier` subio a `0.152982` y `0.147532`, y
+las tres seeds empeoraron utility regret, rebuffer regret y over-aggressive
+frente al SPBC congelado. La causa probable es que las nuevas perdidas empujan
+un score compuesto y deforman las cabezas predictivas.
+
+## Reinicio SPC 2026-06-11 - critico, no segundo conductor
+
+Tras revisar los informes externos y los pilots v1/v2, el siguiente paso no es
+otro entrenamiento largo para demostrar que `SPC solo` gana al SPBC. La
+hipotesis activa es:
+
+```text
+SPBC = conductor / policy decisora
+SPC  = copiloto / critico predictivo por accion
+```
+
+Por tanto, el siguiente bloque operativo debe implementar primero una evaluacion
+offline hibrida. Debe comparar:
+
+```text
+SPBC only
+SPC only reward-only
+SPBC + SPC veto-only conservador
+SPBC top-k + SPC rerank con restricciones
+```
+
+`SPC only reward-only` queda como diagnostico, no como criterio principal de
+aceptacion. El criterio fuerte es que `SPBC + SPC` ayude al conductor sin romper
+global, `2_5_mbps` ni `spbc_v2_dpo_on_policy`.
+
+### Proximo runner esperado
+
+No ejecutar todavia un runner de entrenamiento `reward-only` si no existe antes
+el evaluador hibrido. El siguiente comando real debera ser un script versionado
+de validacion offline. Ruta prevista:
+
+```text
+scripts/run_phase45_v2_spbc_spc_hybrid_offline_wsl.sh
+```
+
+Ese script aun debe implementarse antes de pedir a Daniel que ejecute nada.
+
+Ese runner debe usar:
+
+```text
+SPBC congelado:
+~/TFG/modelos/phase45_v1/spbc_abr_v2_dpo/full_v2_anchor_safe_rank_v1/modelo_spbc_abr_v2_dpo.pt
+
+SPC candidates iniciales:
+pilot_dagger2_reward_risk_anchor_ref_seed_450841_v1
+pilot_dagger2_reward_risk_anchor_ref_seed_450842_v1
+pilot_dagger2_reward_risk_anchor_ref_seed_450843_v1
+```
+
+Usar primero las seeds v1 como criticos es intencionado: no fueron buenas como
+policy autonoma, pero dos seeds conservaron calibracion de riesgo sana. Si el
+evaluador hibrido muestra que el copiloto puede intervenir poco y bien, entonces
+tiene sentido entrenar despues un `SPC reward-only calibrated` nuevo.
+
+### Gates del hibrido
+
+La aceptacion interna exige mirar global, `2_5_mbps` y
+`spbc_v2_dpo_on_policy`:
+
+- no empeorar `over_aggressive` frente a `SPBC only`
+- no empeorar `selected_rebuffer_regret_vs_best_immediate_mean`
+- aceptar solo degradacion minima y explicita de utility regret si reduce
+  seguridad/rebuffer de forma estable
+- mantener `risk_brier` y `risk_false_negative_rate` en banda sana
+- reportar `intervention_rate` y `useful_intervention_rate`
+
+Si el hibrido no aporta con las seeds v1, el siguiente entrenamiento
+`reward-only calibrated` debe redisenarse como predictor/calibrador: ranking por
+`predicted_reward_n_by_action`, rebuffer/riesgo como restricciones y sin
+perdidas fuertes sobre score compuesto.
+
 ## Comandos historicos/manuales
 
 Las secciones siguientes quedan como referencia tecnica. Para ejecucion normal,
