@@ -22,6 +22,7 @@ from core.phase45_v1.spbc_v2_dpo_training import (
     train_spbc_abr_v2_dpo,
     _copy_baseline_loss,
     _loss_components,
+    _ppo_clipped_policy_loss,
     _residual_logit_l2_loss,
     _safe_improvement_rank_loss,
     _safety_gate_result,
@@ -173,6 +174,7 @@ class Phase45V2SpbcDpoTrainingTest(unittest.TestCase):
             self.assertIn("safe_improvement_rank_loss", report_file["validation_metrics"])
             self.assertIn("copy_baseline_loss", report_file["validation_metrics"])
             self.assertIn("residual_logit_l2_loss", report_file["validation_metrics"])
+            self.assertIn("ppo_clip_loss", report_file["validation_metrics"])
             self.assertIn("selected_utility_regret_vs_best_immediate_mean", report_file["validation_metrics"])
             self.assertIn("selected_rebuffer_regret_vs_best_immediate_mean", report_file["validation_metrics"])
             self.assertEqual("validation_selection_score", report_file["checkpoint_selection"]["criterion"])
@@ -184,6 +186,7 @@ class Phase45V2SpbcDpoTrainingTest(unittest.TestCase):
             self.assertIn("safe_improvement_rank_loss", report_file["loss_design"])
             self.assertIn("copy_baseline_loss", report_file["loss_design"])
             self.assertIn("residual_logit_l2_loss", report_file["loss_design"])
+            self.assertIn("ppo_clip_loss", report_file["loss_design"])
             self.assertTrue(report_file["loss_design"]["sample_weights_include_focus_bucket_and_severe_errors"])
 
     def test_training_can_warm_start_from_v2_checkpoint_and_compare_initial_policy(self):
@@ -524,6 +527,64 @@ class Phase45V2SpbcDpoTrainingTest(unittest.TestCase):
 
         self.assertLess(float(same_loss), 1.0e-6)
         self.assertGreater(float(drift_loss), 0.0)
+
+    def test_ppo_clip_loss_rewards_safe_positive_advantage_and_penalizes_over_aggressive(self):
+        ref_logits = torch.tensor([[2.0, 0.0, -1.0]], dtype=torch.float32)
+        mask = torch.tensor([[True, True, True]], dtype=torch.bool)
+        rewards = torch.tensor([[0.0, 1.0, 2.0]], dtype=torch.float32)
+        rebuffer = torch.tensor([[0.0, 0.0, 2.0]], dtype=torch.float32)
+        risks = torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float32)
+        over_aggressive = torch.tensor([[False, False, True]], dtype=torch.bool)
+        weights = torch.tensor([1.0], dtype=torch.float32)
+
+        better_safe_loss = _ppo_clipped_policy_loss(
+            torch.tensor([[0.0, 2.0, -1.0]], dtype=torch.float32),
+            ref_logits,
+            rewards,
+            rebuffer,
+            risks,
+            over_aggressive,
+            mask,
+            weights,
+            clip_epsilon=0.20,
+            advantage_clip=2.0,
+            over_aggressive_penalty=3.0,
+            rebuffer_penalty=0.0,
+            risk_penalty=0.0,
+        )
+        worse_safe_loss = _ppo_clipped_policy_loss(
+            torch.tensor([[2.0, 0.0, -1.0]], dtype=torch.float32),
+            ref_logits,
+            rewards,
+            rebuffer,
+            risks,
+            over_aggressive,
+            mask,
+            weights,
+            clip_epsilon=0.20,
+            advantage_clip=2.0,
+            over_aggressive_penalty=3.0,
+            rebuffer_penalty=0.0,
+            risk_penalty=0.0,
+        )
+        over_aggressive_loss = _ppo_clipped_policy_loss(
+            torch.tensor([[0.0, -1.0, 3.0]], dtype=torch.float32),
+            ref_logits,
+            rewards,
+            rebuffer,
+            risks,
+            over_aggressive,
+            mask,
+            weights,
+            clip_epsilon=0.20,
+            advantage_clip=2.0,
+            over_aggressive_penalty=3.0,
+            rebuffer_penalty=0.0,
+            risk_penalty=0.0,
+        )
+
+        self.assertLess(float(better_safe_loss), float(worse_safe_loss))
+        self.assertGreater(float(over_aggressive_loss), float(worse_safe_loss))
 
     def test_selection_score_prioritizes_regret_rebuffer_and_focus_bucket(self):
         profile = profile_by_name("smoke")

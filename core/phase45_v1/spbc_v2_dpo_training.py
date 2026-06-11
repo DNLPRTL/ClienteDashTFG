@@ -81,6 +81,7 @@ _LOSS_METRIC_NAMES = (
     "safe_improvement_rank_loss",
     "copy_baseline_loss",
     "residual_logit_l2_loss",
+    "ppo_clip_loss",
 )
 
 
@@ -126,6 +127,12 @@ class SpbcV2DpoTrainingProfile:
     copy_baseline_loss_weight: float = 0.0
     copy_baseline_reward_margin: float = 0.0
     residual_logit_l2_loss_weight: float = 0.0
+    ppo_clip_loss_weight: float = 0.0
+    ppo_clip_epsilon: float = 0.08
+    ppo_advantage_clip: float = 2.0
+    ppo_over_aggressive_advantage_penalty: float = 0.0
+    ppo_rebuffer_advantage_penalty: float = 0.0
+    ppo_risk_advantage_penalty: float = 0.0
     decision_reward_fusion_weight: float = 0.12
     decision_rebuffer_fusion_weight: float = 0.30
     decision_risk_fusion_weight: float = 0.18
@@ -184,6 +191,12 @@ class SpbcV2DpoTrainingProfile:
             "copy_baseline_loss_weight": self.copy_baseline_loss_weight,
             "copy_baseline_reward_margin": self.copy_baseline_reward_margin,
             "residual_logit_l2_loss_weight": self.residual_logit_l2_loss_weight,
+            "ppo_clip_loss_weight": self.ppo_clip_loss_weight,
+            "ppo_clip_epsilon": self.ppo_clip_epsilon,
+            "ppo_advantage_clip": self.ppo_advantage_clip,
+            "ppo_over_aggressive_advantage_penalty": self.ppo_over_aggressive_advantage_penalty,
+            "ppo_rebuffer_advantage_penalty": self.ppo_rebuffer_advantage_penalty,
+            "ppo_risk_advantage_penalty": self.ppo_risk_advantage_penalty,
             "decision_reward_fusion_weight": self.decision_reward_fusion_weight,
             "decision_rebuffer_fusion_weight": self.decision_rebuffer_fusion_weight,
             "decision_risk_fusion_weight": self.decision_risk_fusion_weight,
@@ -677,6 +690,7 @@ def train_spbc_abr_v2_dpo(
             "training_safe_improvement_rank_loss": train_metrics["safe_improvement_rank_loss"],
             "training_copy_baseline_loss": train_metrics["copy_baseline_loss"],
             "training_residual_logit_l2_loss": train_metrics["residual_logit_l2_loss"],
+            "training_ppo_clip_loss": train_metrics["ppo_clip_loss"],
             "validation_loss": validation_metrics["loss"],
             "validation_utility_loss": validation_metrics["utility_loss"],
             "validation_rebuffer_loss": validation_metrics["rebuffer_loss"],
@@ -693,6 +707,7 @@ def train_spbc_abr_v2_dpo(
             "validation_safe_improvement_rank_loss": validation_metrics["safe_improvement_rank_loss"],
             "validation_copy_baseline_loss": validation_metrics["copy_baseline_loss"],
             "validation_residual_logit_l2_loss": validation_metrics["residual_logit_l2_loss"],
+            "validation_ppo_clip_loss": validation_metrics["ppo_clip_loss"],
             "validation_top1_accuracy": validation_metrics["top1_accuracy"],
             "validation_pair_preference_accuracy": validation_metrics["pair_preference_accuracy"],
             "validation_predicted_qoe_gap_mean": validation_metrics["predicted_qoe_gap_mean"],
@@ -918,6 +933,16 @@ def train_spbc_abr_v2_dpo(
             "residual_logit_l2_loss": "weighted_L2(policy_logits_minus_frozen_reference_logits)_over_valid_actions",
             "residual_logit_l2_loss_weight": profile.residual_logit_l2_loss_weight,
             "anchored_residual_design": "trainer_only_regularization_no_runtime_residual_wrapper_no_controller_change",
+            "ppo_clip_loss": "offline_reference_expectation_of_clipped_PPO_surrogate_using_per_action_reward_surface",
+            "ppo_clip_loss_weight": profile.ppo_clip_loss_weight,
+            "ppo_clip_epsilon": profile.ppo_clip_epsilon,
+            "ppo_advantage_clip": profile.ppo_advantage_clip,
+            "ppo_advantage_adjustments": {
+                "over_aggressive_penalty": profile.ppo_over_aggressive_advantage_penalty,
+                "rebuffer_penalty": profile.ppo_rebuffer_advantage_penalty,
+                "risk_penalty": profile.ppo_risk_advantage_penalty,
+            },
+            "ppo_design_scope": "offline_safe_policy_improvement_pilot_not_online_RL_not_benchmark",
             "decision_fusion": "policy_logits_plus_predicted_utility_minus_predicted_rebuffer_and_risk",
             "decision_reward_fusion_weight": profile.decision_reward_fusion_weight,
             "decision_rebuffer_fusion_weight": profile.decision_rebuffer_fusion_weight,
@@ -1404,6 +1429,21 @@ def _loss_components(
         mask,
         sample_weights,
     )
+    ppo_clip_loss = _ppo_clipped_policy_loss(
+        logits,
+        ref_logits,
+        rewards,
+        rebuffer_s,
+        target_risks,
+        over_aggressive_actions,
+        mask,
+        sample_weights,
+        clip_epsilon=float(profile.ppo_clip_epsilon),
+        advantage_clip=float(profile.ppo_advantage_clip),
+        over_aggressive_penalty=float(profile.ppo_over_aggressive_advantage_penalty),
+        rebuffer_penalty=float(profile.ppo_rebuffer_advantage_penalty),
+        risk_penalty=float(profile.ppo_risk_advantage_penalty),
+    )
     loss = (
         float(profile.ce_loss_weight) * ce_loss
         + float(profile.dpo_loss_weight) * dpo_loss
@@ -1421,6 +1461,7 @@ def _loss_components(
         + float(profile.safe_improvement_rank_loss_weight) * safe_improvement_rank_loss
         + float(profile.copy_baseline_loss_weight) * copy_baseline_loss
         + float(profile.residual_logit_l2_loss_weight) * residual_logit_l2_loss
+        + float(profile.ppo_clip_loss_weight) * ppo_clip_loss
     )
     return {
         "loss_tensor": loss,
@@ -1441,6 +1482,7 @@ def _loss_components(
         "safe_improvement_rank_loss": safe_improvement_rank_loss.detach(),
         "copy_baseline_loss": copy_baseline_loss.detach(),
         "residual_logit_l2_loss": residual_logit_l2_loss.detach(),
+        "ppo_clip_loss": ppo_clip_loss.detach(),
     }
 
 
@@ -1750,6 +1792,51 @@ def _residual_logit_l2_loss(
     per_sample_loss = (((logits - ref) ** 2) * active_mask.to(dtype=logits.dtype)).sum(dim=1) / valid_counts
     weights = sample_weights.to(device=logits.device, dtype=logits.dtype)
     return (per_sample_loss * weights).sum() / torch.clamp(weights.sum(), min=1.0)
+
+
+def _ppo_clipped_policy_loss(
+    logits: torch.Tensor,
+    ref_logits: torch.Tensor,
+    rewards: torch.Tensor,
+    rebuffer_s: torch.Tensor,
+    target_risks: torch.Tensor,
+    over_aggressive_actions: torch.Tensor,
+    mask: torch.Tensor,
+    sample_weights: torch.Tensor,
+    *,
+    clip_epsilon: float,
+    advantage_clip: float,
+    over_aggressive_penalty: float,
+    rebuffer_penalty: float,
+    risk_penalty: float,
+) -> torch.Tensor:
+    active_mask = mask.to(dtype=torch.bool, device=logits.device)
+    masked_logits = logits.masked_fill(~active_mask, -1.0e9)
+    masked_ref_logits = ref_logits.to(device=logits.device, dtype=logits.dtype).masked_fill(~active_mask, -1.0e9)
+    log_probs = F.log_softmax(masked_logits, dim=1)
+    ref_log_probs = F.log_softmax(masked_ref_logits, dim=1)
+    ref_probs = F.softmax(masked_ref_logits, dim=1) * active_mask.to(dtype=logits.dtype)
+
+    adjusted_rewards = rewards.to(device=logits.device, dtype=logits.dtype)
+    if float(over_aggressive_penalty) > 0.0:
+        over_mask = over_aggressive_actions.to(dtype=torch.bool, device=logits.device) & active_mask
+        adjusted_rewards = adjusted_rewards - float(over_aggressive_penalty) * over_mask.to(dtype=logits.dtype)
+    if float(rebuffer_penalty) > 0.0:
+        capped_rebuffer = torch.clamp(rebuffer_s.to(device=logits.device, dtype=logits.dtype), min=0.0, max=REBUFFER_LOSS_SECONDS_CAP)
+        adjusted_rewards = adjusted_rewards - float(rebuffer_penalty) * capped_rebuffer / max(REBUFFER_LOSS_SECONDS_CAP, 1.0e-6)
+    if float(risk_penalty) > 0.0:
+        adjusted_rewards = adjusted_rewards - float(risk_penalty) * target_risks.to(device=logits.device, dtype=logits.dtype)
+
+    reference_baseline = (ref_probs * adjusted_rewards).sum(dim=1, keepdim=True)
+    advantages = (adjusted_rewards - reference_baseline).masked_fill(~active_mask, 0.0).detach()
+    advantages = torch.clamp(advantages, min=-float(advantage_clip), max=float(advantage_clip))
+    ratio = torch.exp(log_probs - ref_log_probs).clamp(min=0.0, max=10.0)
+    epsilon = max(float(clip_epsilon), 0.0)
+    clipped_ratio = torch.clamp(ratio, min=max(1.0 - epsilon, 0.0), max=1.0 + epsilon)
+    surrogate = torch.minimum(ratio * advantages, clipped_ratio * advantages)
+    per_sample_gain = (ref_probs * surrogate * active_mask.to(dtype=logits.dtype)).sum(dim=1)
+    weights = sample_weights.to(device=logits.device, dtype=logits.dtype)
+    return -(per_sample_gain * weights).sum() / torch.clamp(weights.sum(), min=1.0)
 
 
 def _reference_safe_action_summary(
@@ -2867,6 +2954,12 @@ def _validate_training_args(
         "copy_baseline_loss_weight",
         "copy_baseline_reward_margin",
         "residual_logit_l2_loss_weight",
+        "ppo_clip_loss_weight",
+        "ppo_clip_epsilon",
+        "ppo_advantage_clip",
+        "ppo_over_aggressive_advantage_penalty",
+        "ppo_rebuffer_advantage_penalty",
+        "ppo_risk_advantage_penalty",
         "decision_reward_fusion_weight",
         "decision_rebuffer_fusion_weight",
         "decision_risk_fusion_weight",

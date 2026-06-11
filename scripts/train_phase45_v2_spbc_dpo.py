@@ -81,6 +81,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--copy-baseline-loss-weight", type=float, default=None)
     parser.add_argument("--copy-baseline-reward-margin", type=float, default=None)
     parser.add_argument("--residual-logit-l2-loss-weight", type=float, default=None)
+    parser.add_argument("--ppo-clip-loss-weight", type=float, default=None)
+    parser.add_argument("--ppo-clip-epsilon", type=float, default=None)
+    parser.add_argument("--ppo-advantage-clip", type=float, default=None)
+    parser.add_argument("--ppo-over-aggressive-advantage-penalty", type=float, default=None)
+    parser.add_argument("--ppo-rebuffer-advantage-penalty", type=float, default=None)
+    parser.add_argument("--ppo-risk-advantage-penalty", type=float, default=None)
     parser.add_argument("--decision-reward-fusion-weight", type=float, default=None)
     parser.add_argument("--decision-rebuffer-fusion-weight", type=float, default=None)
     parser.add_argument("--decision-risk-fusion-weight", type=float, default=None)
@@ -186,6 +192,12 @@ def _profile_with_overrides(args: argparse.Namespace):
         ("copy_baseline_loss_weight", "copy_baseline_loss_weight"),
         ("copy_baseline_reward_margin", "copy_baseline_reward_margin"),
         ("residual_logit_l2_loss_weight", "residual_logit_l2_loss_weight"),
+        ("ppo_clip_loss_weight", "ppo_clip_loss_weight"),
+        ("ppo_clip_epsilon", "ppo_clip_epsilon"),
+        ("ppo_advantage_clip", "ppo_advantage_clip"),
+        ("ppo_over_aggressive_advantage_penalty", "ppo_over_aggressive_advantage_penalty"),
+        ("ppo_rebuffer_advantage_penalty", "ppo_rebuffer_advantage_penalty"),
+        ("ppo_risk_advantage_penalty", "ppo_risk_advantage_penalty"),
         ("decision_reward_fusion_weight", "decision_reward_fusion_weight"),
         ("decision_rebuffer_fusion_weight", "decision_rebuffer_fusion_weight"),
         ("decision_risk_fusion_weight", "decision_risk_fusion_weight"),
