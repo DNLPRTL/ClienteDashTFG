@@ -14,7 +14,7 @@ for SEED in 450841 450842 450843; do
   SPC_CHECKPOINT="${HOME}/TFG/modelos/phase45_v1/spc_abr_v2_reward_risk/${SPC_RUN}/modelo_spc_abr_v2_reward_risk.pt"
   LOG="/tmp/phase45_v2_spbc_spc_hybrid_${SPC_RUN}_$(date +%Y%m%d_%H%M%S).log"
 
-  python3 scripts/validate_phase45_v2_spbc_spc_hybrid_offline.py \
+  if python3 scripts/validate_phase45_v2_spbc_spc_hybrid_offline.py \
     --profile pilot \
     --dataset-dir "${DATASET_DIR}" \
     --spbc-checkpoint "${SPBC_CHECKPOINT}" \
@@ -25,8 +25,13 @@ for SEED in 450841 450842 450843; do
     --risk-threshold 0.50 \
     --rebuffer-threshold-s 0.10 \
     --rerank-top-k 2 \
-    2>&1 | tee "${LOG}"
-  echo "Salida ${SPC_RUN}: ${LOG}"
+    >"${LOG}" 2>&1; then
+    echo "Validacion ${SPC_RUN}: OK log=${LOG}"
+  else
+    echo "Validacion ${SPC_RUN}: ERROR log=${LOG}"
+    tail -80 "${LOG}"
+    exit 1
+  fi
 done
 
 python3 scripts/summarize_phase45_v2_spbc_spc_hybrid_offline.py
