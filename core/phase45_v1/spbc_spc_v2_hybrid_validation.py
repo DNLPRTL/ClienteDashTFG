@@ -85,6 +85,8 @@ def validate_spbc_spc_v2_hybrid_offline(
     rebuffer_regret_tolerance: float = 0.0,
     risk_brier_gate: float = 0.02,
     risk_false_negative_gate: float = 0.005,
+    min_intervention_rate: float = 0.0,
+    min_useful_intervention_rate: float = 0.0,
     progress_callback: Callable[[Mapping[str, object]], None] | None = None,
 ) -> Mapping[str, object]:
     _validate_hybrid_args(
@@ -96,6 +98,8 @@ def validate_spbc_spc_v2_hybrid_offline(
         rebuffer_regret_tolerance=rebuffer_regret_tolerance,
         risk_brier_gate=risk_brier_gate,
         risk_false_negative_gate=risk_false_negative_gate,
+        min_intervention_rate=min_intervention_rate,
+        min_useful_intervention_rate=min_useful_intervention_rate,
     )
     started = time.monotonic()
     _emit_progress(progress_callback, "preparing", "Preparando validacion offline SPBC+SPC v2")
@@ -179,6 +183,8 @@ def validate_spbc_spc_v2_hybrid_offline(
             rebuffer_regret_tolerance=rebuffer_regret_tolerance,
             risk_brier_gate=risk_brier_gate,
             risk_false_negative_gate=risk_false_negative_gate,
+            min_intervention_rate=min_intervention_rate,
+            min_useful_intervention_rate=min_useful_intervention_rate,
         )
         for mode in ("spbc_spc_veto_only", "spbc_spc_topk_rerank")
     }
@@ -219,6 +225,8 @@ def validate_spbc_spc_v2_hybrid_offline(
             "risk_threshold": float(risk_threshold),
             "rebuffer_threshold_s": float(rebuffer_threshold_s),
             "rerank_top_k": int(rerank_top_k),
+            "min_intervention_rate": float(min_intervention_rate),
+            "min_useful_intervention_rate": float(min_useful_intervention_rate),
         },
         "mode_metrics": mode_metrics,
         "mode_deltas_vs_spbc_only": {
@@ -269,6 +277,10 @@ class _ModeAccumulator:
         self.by_rollout_source: dict[str, _PolicyMetricTotals] = defaultdict(_PolicyMetricTotals)
         self.interventions = 0
         self.useful_interventions = 0
+        self.intervention_reward_delta_sum = 0.0
+        self.intervention_rebuffer_delta_sum = 0.0
+        self.over_aggressive_fix_count = 0
+        self.over_aggressive_regression_count = 0
 
     def add(
         self,
@@ -285,12 +297,30 @@ class _ModeAccumulator:
             self.interventions += 1
             if _is_useful_intervention(example, spbc_action=spbc_action, selected_action=selected_action):
                 self.useful_interventions += 1
+            self.intervention_reward_delta_sum += float(example.reward_by_action[selected_action]) - float(
+                example.reward_by_action[spbc_action]
+            )
+            self.intervention_rebuffer_delta_sum += float(example.rebuffer_s_by_action[selected_action]) - float(
+                example.rebuffer_s_by_action[spbc_action]
+            )
+            spbc_over = bool(example.over_aggressive_action_by_action[spbc_action])
+            selected_over = bool(example.over_aggressive_action_by_action[selected_action])
+            if spbc_over and not selected_over:
+                self.over_aggressive_fix_count += 1
+            if not spbc_over and selected_over:
+                self.over_aggressive_regression_count += 1
 
     def to_json(self) -> dict[str, object]:
         payload = self.global_totals.to_json(include_losses=False)
         sample_count = max(float(payload.get("sample_count", 0)), 1.0)
         intervention_rate = float(self.interventions) / sample_count
         useful_intervention_rate = float(self.useful_interventions) / max(float(self.interventions), 1.0)
+        harmful_interventions = max(int(self.interventions) - int(self.useful_interventions), 0)
+        harmful_intervention_rate = float(harmful_interventions) / max(float(self.interventions), 1.0)
+        intervention_reward_delta_mean = self.intervention_reward_delta_sum / max(float(self.interventions), 1.0)
+        intervention_rebuffer_delta_mean = self.intervention_rebuffer_delta_sum / max(float(self.interventions), 1.0)
+        over_aggressive_fix_rate = float(self.over_aggressive_fix_count) / max(float(self.interventions), 1.0)
+        over_aggressive_regression_rate = float(self.over_aggressive_regression_count) / max(float(self.interventions), 1.0)
         by_bucket = {key: value.to_json(include_losses=False) for key, value in sorted(self.by_bucket.items())}
         focus = by_bucket.get(FOCUS_THROUGHPUT_BUCKET)
         if focus is None:
@@ -303,6 +333,14 @@ class _ModeAccumulator:
                 "intervention_rate": round(intervention_rate, 6),
                 "useful_intervention_count": int(self.useful_interventions),
                 "useful_intervention_rate": round(useful_intervention_rate, 6),
+                "harmful_intervention_count": int(harmful_interventions),
+                "harmful_intervention_rate": round(harmful_intervention_rate, 6),
+                "intervention_reward_delta_mean": round(intervention_reward_delta_mean, 9),
+                "intervention_rebuffer_delta_mean": round(intervention_rebuffer_delta_mean, 9),
+                "over_aggressive_fix_count": int(self.over_aggressive_fix_count),
+                "over_aggressive_fix_rate": round(over_aggressive_fix_rate, 6),
+                "over_aggressive_regression_count": int(self.over_aggressive_regression_count),
+                "over_aggressive_regression_rate": round(over_aggressive_regression_rate, 6),
                 "by_throughput_bucket": by_bucket,
                 "focus_2_5_mbps": focus,
                 "by_rollout_source": {
@@ -559,6 +597,8 @@ def _hybrid_gate(
     rebuffer_regret_tolerance: float,
     risk_brier_gate: float,
     risk_false_negative_gate: float,
+    min_intervention_rate: float,
+    min_useful_intervention_rate: float,
 ) -> Mapping[str, object]:
     contexts = {
         "global": (metrics, baseline),
@@ -598,14 +638,27 @@ def _hybrid_gate(
         risk_check["risk_brier"] <= float(risk_brier_gate)
         and risk_check["risk_false_negative_rate"] <= float(risk_false_negative_gate)
     )
+    intervention_check = {
+        "intervention_rate": float(metrics.get("intervention_rate", 0.0)),
+        "useful_intervention_rate": float(metrics.get("useful_intervention_rate", 0.0)),
+        "min_intervention_rate": float(min_intervention_rate),
+        "min_useful_intervention_rate": float(min_useful_intervention_rate),
+    }
+    intervention_passed = (
+        intervention_check["intervention_rate"] >= float(min_intervention_rate)
+        and intervention_check["useful_intervention_rate"] >= float(min_useful_intervention_rate)
+    )
     return {
-        "passed": bool(passed and risk_passed),
+        "passed": bool(passed and risk_passed and intervention_passed),
         "checks": checks,
         "risk_calibration": {**risk_check, "passed": bool(risk_passed)},
+        "intervention": {**intervention_check, "passed": bool(intervention_passed)},
         "criteria": {
             "utility_regret_tolerance": float(utility_regret_tolerance),
             "over_aggressive_tolerance": float(over_aggressive_tolerance),
             "rebuffer_regret_tolerance": float(rebuffer_regret_tolerance),
+            "min_intervention_rate": float(min_intervention_rate),
+            "min_useful_intervention_rate": float(min_useful_intervention_rate),
         },
     }
 
@@ -693,6 +746,8 @@ def _validate_hybrid_args(
     rebuffer_regret_tolerance: float,
     risk_brier_gate: float,
     risk_false_negative_gate: float,
+    min_intervention_rate: float,
+    min_useful_intervention_rate: float,
 ) -> None:
     for name, value in (
         ("risk_threshold", risk_threshold),
@@ -702,6 +757,8 @@ def _validate_hybrid_args(
         ("rebuffer_regret_tolerance", rebuffer_regret_tolerance),
         ("risk_brier_gate", risk_brier_gate),
         ("risk_false_negative_gate", risk_false_negative_gate),
+        ("min_intervention_rate", min_intervention_rate),
+        ("min_useful_intervention_rate", min_useful_intervention_rate),
     ):
         if not math.isfinite(float(value)):
             raise SpbcSpcV2HybridValidationError("{0} must be finite".format(name))
@@ -711,6 +768,10 @@ def _validate_hybrid_args(
         raise SpbcSpcV2HybridValidationError("rebuffer_threshold_s must be non-negative")
     if int(rerank_top_k) < 1:
         raise SpbcSpcV2HybridValidationError("rerank_top_k must be >= 1")
+    if not 0.0 <= float(min_intervention_rate) <= 1.0:
+        raise SpbcSpcV2HybridValidationError("min_intervention_rate must be in [0, 1]")
+    if not 0.0 <= float(min_useful_intervention_rate) <= 1.0:
+        raise SpbcSpcV2HybridValidationError("min_useful_intervention_rate must be in [0, 1]")
 
 
 def _emit_progress(
@@ -732,4 +793,3 @@ def _sha256_file(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
-

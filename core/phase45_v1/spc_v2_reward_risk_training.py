@@ -116,6 +116,7 @@ class SpcV2RewardRiskTrainingProfile:
     selection_over_aggressive_weight: float = 0.35
     selection_invalid_weight: float = 10.0
     selection_prediction_loss_weight: float = 0.04
+    selection_risk_false_negative_weight: float = 0.0
     seed: int = 450801
 
     def to_json(self) -> dict[str, object]:
@@ -157,6 +158,7 @@ class SpcV2RewardRiskTrainingProfile:
             "selection_over_aggressive_weight": self.selection_over_aggressive_weight,
             "selection_invalid_weight": self.selection_invalid_weight,
             "selection_prediction_loss_weight": self.selection_prediction_loss_weight,
+            "selection_risk_false_negative_weight": self.selection_risk_false_negative_weight,
             "seed": self.seed,
         }
 
@@ -203,6 +205,47 @@ SPC_V2_REWARD_RISK_TRAINING_PROFILES: dict[str, SpcV2RewardRiskTrainingProfile] 
         shared_hidden_size=192,
         dropout=0.10,
         seed=450831,
+    ),
+    "critic_v1": SpcV2RewardRiskTrainingProfile(
+        name="critic_v1",
+        epochs=18,
+        batch_size=1024,
+        learning_rate=2.0e-4,
+        max_training_samples=None,
+        max_validation_samples=None,
+        history_hidden_size=128,
+        state_hidden_size=96,
+        candidate_hidden_size=48,
+        shared_hidden_size=192,
+        dropout=0.10,
+        best_immediate_ce_loss_weight=0.03,
+        pairwise_score_loss_weight=0.03,
+        reward_loss_weight=1.20,
+        rebuffer_loss_weight=2.00,
+        qoe_gap_loss_weight=0.75,
+        smoothness_loss_weight=0.35,
+        risk_loss_weight=2.20,
+        score_rebuffer_weight=0.0,
+        score_risk_weight=0.0,
+        score_smoothness_weight=0.0,
+        score_qoe_gap_weight=0.0,
+        pairwise_margin_scale=0.08,
+        risk_positive_weight=4.00,
+        focus_bucket_sample_weight=2.20,
+        severe_error_sample_weight=2.00,
+        safe_vs_rebuffer_pair_weight=2.50,
+        over_aggressive_rebuffer_action_weight=4.50,
+        over_aggressive_score_loss_weight=0.0,
+        safe_utility_rank_loss_weight=0.0,
+        safe_utility_margin=0.20,
+        max_pair_weight=6.0,
+        selection_focus_weight=0.0,
+        selection_rebuffer_weight=0.0,
+        selection_over_aggressive_weight=0.0,
+        selection_invalid_weight=0.0,
+        selection_prediction_loss_weight=1.20,
+        selection_risk_false_negative_weight=4.00,
+        seed=450871,
     ),
 }
 
@@ -1221,6 +1264,8 @@ def _selection_score(metrics: Mapping[str, object], profile: SpcV2RewardRiskTrai
             + float(metrics.get("qoe_gap_mae", 0.0))
             + float(metrics.get("risk_brier", 0.0))
         )
+        + float(profile.selection_risk_false_negative_weight)
+        * float(metrics.get("risk_false_negative_rate", 0.0))
     )
     focus = metrics.get("focus_2_5_mbps")
     if isinstance(focus, Mapping) and focus.get("bucket_present"):

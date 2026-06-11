@@ -250,6 +250,25 @@ class Phase45V2SpcRewardRiskTrainingTest(unittest.TestCase):
 
         self.assertLess(_selection_score(good, profile), _selection_score(bad, profile))
 
+    def test_critic_profile_selection_penalizes_risk_false_negative_rate(self):
+        profile = profile_by_name("critic_v1")
+        low_false_negative = {
+            "reward_mae": 0.4,
+            "rebuffer_mae_s": 0.1,
+            "qoe_gap_mae": 0.2,
+            "risk_brier": 0.01,
+            "risk_false_negative_rate": 0.0,
+        }
+        high_false_negative = {
+            **low_false_negative,
+            "risk_false_negative_rate": 0.25,
+        }
+
+        self.assertLess(
+            _selection_score(low_false_negative, profile),
+            _selection_score(high_false_negative, profile),
+        )
+
     def test_evaluation_reports_per_bucket_and_rollout(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

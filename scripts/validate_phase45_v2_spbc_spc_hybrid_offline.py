@@ -73,6 +73,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--rebuffer-regret-tolerance", type=float, default=0.0)
     parser.add_argument("--risk-brier-gate", type=float, default=0.02)
     parser.add_argument("--risk-false-negative-gate", type=float, default=0.005)
+    parser.add_argument("--min-intervention-rate", type=float, default=0.0)
+    parser.add_argument("--min-useful-intervention-rate", type=float, default=0.0)
     parser.add_argument("--skip-dataset-validation", action="store_true")
     parser.add_argument(
         "--quiet-progress",
@@ -109,6 +111,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         rebuffer_regret_tolerance=args.rebuffer_regret_tolerance,
         risk_brier_gate=args.risk_brier_gate,
         risk_false_negative_gate=args.risk_false_negative_gate,
+        min_intervention_rate=args.min_intervention_rate,
+        min_useful_intervention_rate=args.min_useful_intervention_rate,
         progress_callback=progress_callback,
     )
     print(json.dumps(report, indent=2, sort_keys=True))
@@ -166,4 +170,3 @@ def _format_seconds(value: float) -> str:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

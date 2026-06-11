@@ -77,6 +77,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--selection-over-aggressive-weight", type=float, default=None)
     parser.add_argument("--selection-invalid-weight", type=float, default=None)
     parser.add_argument("--selection-prediction-loss-weight", type=float, default=None)
+    parser.add_argument("--selection-risk-false-negative-weight", type=float, default=None)
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--max-training-samples", type=int, default=None)
     parser.add_argument("--max-validation-samples", type=int, default=None)
@@ -155,6 +156,7 @@ def _profile_with_overrides(args: argparse.Namespace):
         ("selection_over_aggressive_weight", "selection_over_aggressive_weight"),
         ("selection_invalid_weight", "selection_invalid_weight"),
         ("selection_prediction_loss_weight", "selection_prediction_loss_weight"),
+        ("selection_risk_false_negative_weight", "selection_risk_false_negative_weight"),
     ):
         value = getattr(args, arg_name)
         if value is not None:

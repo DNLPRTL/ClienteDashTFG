@@ -48,6 +48,11 @@ def main() -> int:
                 "gate=", gate.get("passed"),
                 "intervention=", metrics.get("intervention_rate"),
                 "useful=", metrics.get("useful_intervention_rate"),
+                "harmful=", metrics.get("harmful_intervention_rate"),
+                "d_reward=", metrics.get("intervention_reward_delta_mean"),
+                "d_rebuffer=", metrics.get("intervention_rebuffer_delta_mean"),
+                "fix_over=", metrics.get("over_aggressive_fix_rate"),
+                "regress_over=", metrics.get("over_aggressive_regression_rate"),
                 "global_delta=", _short_delta(delta.get("global", {})),
                 "focus_delta=", _short_delta(delta.get("focus_2_5_mbps", {})),
                 "spbc2_delta=", _short_delta(delta.get("spbc_v2_dpo_on_policy", {})),
@@ -87,4 +92,3 @@ def _spbc2(metrics: object) -> Mapping[str, object]:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

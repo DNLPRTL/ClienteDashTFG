@@ -216,6 +216,30 @@ solo si aumenta `intervention_rate` sin romper global, `2_5_mbps` ni
 correcta es mantener SPBC solo como candidato principal y redisenar el SPC como
 predictor calibrado antes de gastar un full.
 
+### SPC critic/copilot calibrado
+
+Tras rechazar `SPBC residual safe-rank v1`, el siguiente intento SPC no debe
+ser otro `SPC solo` ni safe-rank como policy. El runner nuevo entrena
+`critic_v1`, pensado como critico predictivo, y evalua inmediatamente el rol
+copiloto frente al SPBC congelado:
+
+```bash
+cd ~/TFG/DashClientModular4
+git pull
+bash scripts/run_phase45_v2_spc_critic_copilot_wsl.sh
+```
+
+Resumen:
+
+```bash
+python3 scripts/summarize_phase45_v2_spc_critic_copilot.py
+```
+
+Aceptar solo si el hibrido interviene de forma no trivial, mantiene riesgo en
+banda, no empeora over-aggressive/rebuffer frente a `SPBC only` y no compra
+esas mejoras con una perdida grande de utility. Este runner no exporta bundle,
+no registra controller y no ejecuta Phase 6.
+
 ## Comandos historicos/manuales
 
 Las secciones siguientes quedan como referencia tecnica. Para ejecucion normal,

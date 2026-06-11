@@ -70,6 +70,11 @@ class Phase45V2SpbcSpcHybridValidationTest(unittest.TestCase):
             self.assertIn("spbc_spc_veto_only", report_file["mode_metrics"])
             self.assertIn("spbc_spc_topk_rerank", report_file["mode_metrics"])
             self.assertIn("spbc_spc_veto_only", report_file["hybrid_gates"])
+            veto_metrics = report_file["mode_metrics"]["spbc_spc_veto_only"]
+            self.assertIn("harmful_intervention_rate", veto_metrics)
+            self.assertIn("intervention_reward_delta_mean", veto_metrics)
+            self.assertIn("over_aggressive_fix_rate", veto_metrics)
+            self.assertIn("intervention", report_file["hybrid_gates"]["spbc_spc_veto_only"])
             self.assertIn("risk_brier", report_file["spc_prediction_metrics"])
             self.assertFalse(report_file["benchmark_performed"])
             self.assertFalse(report_file["ranking_performed"])
@@ -132,4 +137,3 @@ def _save_checkpoint(path: Path, payload: dict[str, object]) -> None:
 
 if __name__ == "__main__":
     unittest.main()
-
