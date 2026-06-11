@@ -144,17 +144,24 @@ SPBC top-k + SPC rerank con restricciones
 aceptacion. El criterio fuerte es que `SPBC + SPC` ayude al conductor sin romper
 global, `2_5_mbps` ni `spbc_v2_dpo_on_policy`.
 
-### Proximo runner esperado
+### Runner hibrido offline
 
-No ejecutar todavia un runner de entrenamiento `reward-only` si no existe antes
-el evaluador hibrido. El siguiente comando real debera ser un script versionado
-de validacion offline. Ruta prevista:
+No ejecutar todavia un runner de entrenamiento `reward-only`: primero se evalua
+si las seeds v1 del SPC sirven como copiloto del SPBC congelado.
+
+Ejecutar en WSL2:
+
+```bash
+cd ~/TFG/DashClientModular4
+git pull
+bash scripts/run_phase45_v2_spbc_spc_hybrid_offline_wsl.sh
+```
+
+El runner versionado es:
 
 ```text
 scripts/run_phase45_v2_spbc_spc_hybrid_offline_wsl.sh
 ```
-
-Ese script aun debe implementarse antes de pedir a Daniel que ejecute nada.
 
 Ese runner debe usar:
 
