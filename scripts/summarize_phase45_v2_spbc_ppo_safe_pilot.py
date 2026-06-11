@@ -11,7 +11,7 @@ REPORT_FILENAME = "reporte_entrenamiento_spbc_abr_v2_dpo.json"
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Resume pilots PPO-safe de SPBC sin tratarlos como benchmark.")
+    parser = argparse.ArgumentParser(description="Resume pilots seguros de SPBC sin tratarlos como benchmark.")
     parser.add_argument(
         "--root",
         type=Path,
@@ -134,6 +134,8 @@ def _print_report(path: Path, report: Mapping[str, object], *, include_epochs: b
         _value(source_delta, "selected_utility_regret_vs_oracle_mean"),
         "ppo=",
         _value(metrics, "ppo_clip_loss"),
+        "safe_adv=",
+        _value(metrics, "safe_advantage_policy_loss"),
         "kl=",
         _value(metrics, "reference_kl_loss"),
         "safe_rank=",
@@ -176,8 +178,22 @@ def _print_epoch_diagnostics(report: Mapping[str, object]) -> None:
             _value(epoch, "validation_focus_2_5_mbps_selected_utility_regret_vs_oracle_mean"),
             "spbc2_u=",
             _value(epoch, "validation_spbc_v2_dpo_on_policy_selected_utility_regret_vs_oracle_mean"),
+            "global_under=",
+            _value(epoch, "validation_under_aggressive_rate_vs_oracle"),
+            "focus_under=",
+            _value(epoch, "validation_focus_2_5_mbps_under_aggressive_rate_vs_oracle"),
+            "spbc2_under=",
+            _value(epoch, "validation_spbc_v2_dpo_on_policy_under_aggressive_rate_vs_oracle"),
+            "global_bitrate=",
+            _value(epoch, "validation_predicted_bitrate_kbps_mean"),
+            "focus_bitrate=",
+            _value(epoch, "validation_focus_2_5_mbps_predicted_bitrate_kbps_mean"),
+            "spbc2_bitrate=",
+            _value(epoch, "validation_spbc_v2_dpo_on_policy_predicted_bitrate_kbps_mean"),
             "ppo=",
             _value(epoch, "validation_ppo_clip_loss"),
+            "safe_adv=",
+            _value(epoch, "validation_safe_advantage_policy_loss"),
             "kl=",
             _value(epoch, "validation_reference_kl_loss"),
             "safe_rank=",

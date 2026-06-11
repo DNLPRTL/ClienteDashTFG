@@ -82,6 +82,7 @@ _LOSS_METRIC_NAMES = (
     "copy_baseline_loss",
     "residual_logit_l2_loss",
     "ppo_clip_loss",
+    "safe_advantage_policy_loss",
 )
 
 
@@ -133,6 +134,11 @@ class SpbcV2DpoTrainingProfile:
     ppo_over_aggressive_advantage_penalty: float = 0.0
     ppo_rebuffer_advantage_penalty: float = 0.0
     ppo_risk_advantage_penalty: float = 0.0
+    safe_advantage_policy_loss_weight: float = 0.0
+    safe_advantage_reward_margin: float = 0.005
+    safe_advantage_temperature: float = 0.35
+    safe_advantage_rebuffer_penalty: float = 0.0
+    safe_advantage_risk_penalty: float = 0.0
     decision_reward_fusion_weight: float = 0.12
     decision_rebuffer_fusion_weight: float = 0.30
     decision_risk_fusion_weight: float = 0.18
@@ -197,6 +203,11 @@ class SpbcV2DpoTrainingProfile:
             "ppo_over_aggressive_advantage_penalty": self.ppo_over_aggressive_advantage_penalty,
             "ppo_rebuffer_advantage_penalty": self.ppo_rebuffer_advantage_penalty,
             "ppo_risk_advantage_penalty": self.ppo_risk_advantage_penalty,
+            "safe_advantage_policy_loss_weight": self.safe_advantage_policy_loss_weight,
+            "safe_advantage_reward_margin": self.safe_advantage_reward_margin,
+            "safe_advantage_temperature": self.safe_advantage_temperature,
+            "safe_advantage_rebuffer_penalty": self.safe_advantage_rebuffer_penalty,
+            "safe_advantage_risk_penalty": self.safe_advantage_risk_penalty,
             "decision_reward_fusion_weight": self.decision_reward_fusion_weight,
             "decision_rebuffer_fusion_weight": self.decision_rebuffer_fusion_weight,
             "decision_risk_fusion_weight": self.decision_risk_fusion_weight,
@@ -691,6 +702,7 @@ def train_spbc_abr_v2_dpo(
             "training_copy_baseline_loss": train_metrics["copy_baseline_loss"],
             "training_residual_logit_l2_loss": train_metrics["residual_logit_l2_loss"],
             "training_ppo_clip_loss": train_metrics["ppo_clip_loss"],
+            "training_safe_advantage_policy_loss": train_metrics["safe_advantage_policy_loss"],
             "validation_loss": validation_metrics["loss"],
             "validation_utility_loss": validation_metrics["utility_loss"],
             "validation_rebuffer_loss": validation_metrics["rebuffer_loss"],
@@ -708,6 +720,7 @@ def train_spbc_abr_v2_dpo(
             "validation_copy_baseline_loss": validation_metrics["copy_baseline_loss"],
             "validation_residual_logit_l2_loss": validation_metrics["residual_logit_l2_loss"],
             "validation_ppo_clip_loss": validation_metrics["ppo_clip_loss"],
+            "validation_safe_advantage_policy_loss": validation_metrics["safe_advantage_policy_loss"],
             "validation_top1_accuracy": validation_metrics["top1_accuracy"],
             "validation_pair_preference_accuracy": validation_metrics["pair_preference_accuracy"],
             "validation_predicted_qoe_gap_mean": validation_metrics["predicted_qoe_gap_mean"],
@@ -943,6 +956,15 @@ def train_spbc_abr_v2_dpo(
                 "risk_penalty": profile.ppo_risk_advantage_penalty,
             },
             "ppo_design_scope": "offline_safe_policy_improvement_pilot_not_online_RL_not_benchmark",
+            "safe_advantage_policy_loss": "cross_entropy_to_safe_actions_with_adjusted_reward_above_frozen_reference_action",
+            "safe_advantage_policy_loss_weight": profile.safe_advantage_policy_loss_weight,
+            "safe_advantage_reward_margin": profile.safe_advantage_reward_margin,
+            "safe_advantage_temperature": profile.safe_advantage_temperature,
+            "safe_advantage_adjustments": {
+                "rebuffer_penalty": profile.safe_advantage_rebuffer_penalty,
+                "risk_penalty": profile.safe_advantage_risk_penalty,
+            },
+            "safe_advantage_design_scope": "trainer_only_recovery_of_clear_safe_utility_gain_no_runtime_controller_change",
             "decision_fusion": "policy_logits_plus_predicted_utility_minus_predicted_rebuffer_and_risk",
             "decision_reward_fusion_weight": profile.decision_reward_fusion_weight,
             "decision_rebuffer_fusion_weight": profile.decision_rebuffer_fusion_weight,
@@ -1444,6 +1466,20 @@ def _loss_components(
         rebuffer_penalty=float(profile.ppo_rebuffer_advantage_penalty),
         risk_penalty=float(profile.ppo_risk_advantage_penalty),
     )
+    safe_advantage_policy_loss = _safe_advantage_policy_loss(
+        logits,
+        ref_logits,
+        rewards,
+        rebuffer_s,
+        target_risks,
+        over_aggressive_actions,
+        mask,
+        sample_weights,
+        reward_margin=float(profile.safe_advantage_reward_margin),
+        temperature=float(profile.safe_advantage_temperature),
+        rebuffer_penalty=float(profile.safe_advantage_rebuffer_penalty),
+        risk_penalty=float(profile.safe_advantage_risk_penalty),
+    )
     loss = (
         float(profile.ce_loss_weight) * ce_loss
         + float(profile.dpo_loss_weight) * dpo_loss
@@ -1462,6 +1498,7 @@ def _loss_components(
         + float(profile.copy_baseline_loss_weight) * copy_baseline_loss
         + float(profile.residual_logit_l2_loss_weight) * residual_logit_l2_loss
         + float(profile.ppo_clip_loss_weight) * ppo_clip_loss
+        + float(profile.safe_advantage_policy_loss_weight) * safe_advantage_policy_loss
     )
     return {
         "loss_tensor": loss,
@@ -1483,6 +1520,7 @@ def _loss_components(
         "copy_baseline_loss": copy_baseline_loss.detach(),
         "residual_logit_l2_loss": residual_logit_l2_loss.detach(),
         "ppo_clip_loss": ppo_clip_loss.detach(),
+        "safe_advantage_policy_loss": safe_advantage_policy_loss.detach(),
     }
 
 
@@ -1837,6 +1875,60 @@ def _ppo_clipped_policy_loss(
     per_sample_gain = (ref_probs * surrogate * active_mask.to(dtype=logits.dtype)).sum(dim=1)
     weights = sample_weights.to(device=logits.device, dtype=logits.dtype)
     return -(per_sample_gain * weights).sum() / torch.clamp(weights.sum(), min=1.0)
+
+
+def _safe_advantage_policy_loss(
+    logits: torch.Tensor,
+    ref_logits: torch.Tensor,
+    rewards: torch.Tensor,
+    rebuffer_s: torch.Tensor,
+    target_risks: torch.Tensor,
+    over_aggressive_actions: torch.Tensor,
+    mask: torch.Tensor,
+    sample_weights: torch.Tensor,
+    *,
+    reward_margin: float,
+    temperature: float,
+    rebuffer_penalty: float,
+    risk_penalty: float,
+) -> torch.Tensor:
+    active_mask = mask.to(dtype=torch.bool, device=logits.device)
+    over_mask = over_aggressive_actions.to(dtype=torch.bool, device=logits.device) & active_mask
+    safe_mask = active_mask & ~over_mask
+    masked_logits = logits.masked_fill(~active_mask, -1.0e9)
+    log_probs = F.log_softmax(masked_logits, dim=1)
+    masked_ref_logits = ref_logits.to(device=logits.device, dtype=logits.dtype).masked_fill(~active_mask, -1.0e9)
+
+    adjusted_rewards = rewards.to(device=logits.device, dtype=logits.dtype)
+    if float(rebuffer_penalty) > 0.0:
+        capped_rebuffer = torch.clamp(
+            rebuffer_s.to(device=logits.device, dtype=logits.dtype),
+            min=0.0,
+            max=REBUFFER_LOSS_SECONDS_CAP,
+        )
+        adjusted_rewards = adjusted_rewards - float(rebuffer_penalty) * capped_rebuffer / max(
+            REBUFFER_LOSS_SECONDS_CAP,
+            1.0e-6,
+        )
+    if float(risk_penalty) > 0.0:
+        adjusted_rewards = adjusted_rewards - float(risk_penalty) * target_risks.to(
+            device=logits.device,
+            dtype=logits.dtype,
+        )
+
+    reference_action = masked_ref_logits.argmax(dim=1)
+    reference_reward = torch.gather(adjusted_rewards, 1, reference_action.unsqueeze(1))
+    advantages = (adjusted_rewards - reference_reward).detach()
+    positive_safe_mask = safe_mask & (advantages > float(reward_margin))
+    has_target = positive_safe_mask.any(dim=1)
+    if not bool(has_target.any()):
+        return logits.sum() * 0.0
+
+    target_logits = (advantages / max(float(temperature), 1.0e-6)).masked_fill(~positive_safe_mask, -1.0e9)
+    target_distribution = F.softmax(target_logits, dim=1)
+    per_sample_loss = -(target_distribution * log_probs * positive_safe_mask.to(dtype=logits.dtype)).sum(dim=1)
+    weights = sample_weights.to(device=logits.device, dtype=logits.dtype) * has_target.to(dtype=logits.dtype)
+    return (per_sample_loss * weights).sum() / torch.clamp(weights.sum(), min=1.0)
 
 
 def _reference_safe_action_summary(
@@ -2548,6 +2640,7 @@ def _flatten_epoch_critical_metrics(summary: Mapping[str, object]) -> Mapping[st
         "validation_selected_rebuffer_regret_vs_oracle_mean": global_metrics[
             "selected_rebuffer_regret_vs_oracle_mean"
         ],
+        "validation_predicted_bitrate_kbps_mean": global_metrics["predicted_bitrate_kbps_mean"],
         "validation_focus_2_5_mbps_over_aggressive_rate_vs_oracle": focus_metrics[
             "over_aggressive_rate_vs_oracle"
         ],
@@ -2560,6 +2653,7 @@ def _flatten_epoch_critical_metrics(summary: Mapping[str, object]) -> Mapping[st
         "validation_focus_2_5_mbps_selected_rebuffer_regret_vs_oracle_mean": focus_metrics[
             "selected_rebuffer_regret_vs_oracle_mean"
         ],
+        "validation_focus_2_5_mbps_predicted_bitrate_kbps_mean": focus_metrics["predicted_bitrate_kbps_mean"],
         "validation_spbc_v2_dpo_on_policy_over_aggressive_rate_vs_oracle": source_metrics[
             "over_aggressive_rate_vs_oracle"
         ],
@@ -2571,6 +2665,9 @@ def _flatten_epoch_critical_metrics(summary: Mapping[str, object]) -> Mapping[st
         ],
         "validation_spbc_v2_dpo_on_policy_selected_rebuffer_regret_vs_oracle_mean": source_metrics[
             "selected_rebuffer_regret_vs_oracle_mean"
+        ],
+        "validation_spbc_v2_dpo_on_policy_predicted_bitrate_kbps_mean": source_metrics[
+            "predicted_bitrate_kbps_mean"
         ],
     }
 
@@ -2960,6 +3057,11 @@ def _validate_training_args(
         "ppo_over_aggressive_advantage_penalty",
         "ppo_rebuffer_advantage_penalty",
         "ppo_risk_advantage_penalty",
+        "safe_advantage_policy_loss_weight",
+        "safe_advantage_reward_margin",
+        "safe_advantage_temperature",
+        "safe_advantage_rebuffer_penalty",
+        "safe_advantage_risk_penalty",
         "decision_reward_fusion_weight",
         "decision_rebuffer_fusion_weight",
         "decision_risk_fusion_weight",
@@ -2981,8 +3083,12 @@ def _validate_training_args(
         value = float(getattr(profile, name))
         if not math.isfinite(value) or value < 0.0:
             raise SpbcV2DpoTrainingError("{0} must be finite and non-negative".format(name))
-    if float(profile.utility_temperature) <= 0.0 or float(profile.rebuffer_loss_cap_s) <= 0.0:
-        raise SpbcV2DpoTrainingError("utility_temperature and rebuffer_loss_cap_s must be positive")
+    if (
+        float(profile.utility_temperature) <= 0.0
+        or float(profile.rebuffer_loss_cap_s) <= 0.0
+        or float(profile.safe_advantage_temperature) <= 0.0
+    ):
+        raise SpbcV2DpoTrainingError("utility_temperature, safe_advantage_temperature and rebuffer_loss_cap_s must be positive")
 
 
 def _resolve_limit(value: int | None | str, profile_value: int | None) -> int | None:

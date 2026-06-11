@@ -24,6 +24,7 @@ from core.phase45_v1.spbc_v2_dpo_training import (
     _loss_components,
     _ppo_clipped_policy_loss,
     _residual_logit_l2_loss,
+    _safe_advantage_policy_loss,
     _safe_improvement_rank_loss,
     _safety_gate_result,
     _selection_score,
@@ -175,6 +176,7 @@ class Phase45V2SpbcDpoTrainingTest(unittest.TestCase):
             self.assertIn("copy_baseline_loss", report_file["validation_metrics"])
             self.assertIn("residual_logit_l2_loss", report_file["validation_metrics"])
             self.assertIn("ppo_clip_loss", report_file["validation_metrics"])
+            self.assertIn("safe_advantage_policy_loss", report_file["validation_metrics"])
             self.assertIn("selected_utility_regret_vs_best_immediate_mean", report_file["validation_metrics"])
             self.assertIn("selected_rebuffer_regret_vs_best_immediate_mean", report_file["validation_metrics"])
             self.assertEqual("validation_selection_score", report_file["checkpoint_selection"]["criterion"])
@@ -187,6 +189,7 @@ class Phase45V2SpbcDpoTrainingTest(unittest.TestCase):
             self.assertIn("copy_baseline_loss", report_file["loss_design"])
             self.assertIn("residual_logit_l2_loss", report_file["loss_design"])
             self.assertIn("ppo_clip_loss", report_file["loss_design"])
+            self.assertIn("safe_advantage_policy_loss", report_file["loss_design"])
             self.assertTrue(report_file["loss_design"]["sample_weights_include_focus_bucket_and_severe_errors"])
 
     def test_training_can_warm_start_from_v2_checkpoint_and_compare_initial_policy(self):
@@ -585,6 +588,61 @@ class Phase45V2SpbcDpoTrainingTest(unittest.TestCase):
 
         self.assertLess(float(better_safe_loss), float(worse_safe_loss))
         self.assertGreater(float(over_aggressive_loss), float(worse_safe_loss))
+
+    def test_safe_advantage_policy_loss_targets_clear_safe_gain_only(self):
+        ref_logits = torch.tensor([[3.0, 0.0, -1.0], [3.0, 0.0, -1.0]], dtype=torch.float32)
+        mask = torch.tensor([[True, True, True], [True, True, True]], dtype=torch.bool)
+        rewards = torch.tensor([[0.0, 0.50, 1.00], [0.0, 0.02, 1.00]], dtype=torch.float32)
+        rebuffer = torch.zeros((2, 3), dtype=torch.float32)
+        risks = torch.zeros((2, 3), dtype=torch.float32)
+        over_aggressive = torch.tensor([[False, False, True], [False, False, True]], dtype=torch.bool)
+        weights = torch.tensor([1.0, 1.0], dtype=torch.float32)
+
+        bad_loss = _safe_advantage_policy_loss(
+            torch.tensor([[3.0, 0.0, -1.0], [3.0, 0.0, -1.0]], dtype=torch.float32),
+            ref_logits,
+            rewards,
+            rebuffer,
+            risks,
+            over_aggressive,
+            mask,
+            weights,
+            reward_margin=0.05,
+            temperature=0.25,
+            rebuffer_penalty=0.0,
+            risk_penalty=0.0,
+        )
+        good_loss = _safe_advantage_policy_loss(
+            torch.tensor([[0.0, 3.0, -1.0], [3.0, 0.0, -1.0]], dtype=torch.float32),
+            ref_logits,
+            rewards,
+            rebuffer,
+            risks,
+            over_aggressive,
+            mask,
+            weights,
+            reward_margin=0.05,
+            temperature=0.25,
+            rebuffer_penalty=0.0,
+            risk_penalty=0.0,
+        )
+        no_target_loss = _safe_advantage_policy_loss(
+            torch.tensor([[3.0, 0.0, -1.0]], dtype=torch.float32),
+            ref_logits[:1],
+            torch.tensor([[0.0, 0.02, 1.00]], dtype=torch.float32),
+            rebuffer[:1],
+            risks[:1],
+            over_aggressive[:1],
+            mask[:1],
+            weights[:1],
+            reward_margin=0.05,
+            temperature=0.25,
+            rebuffer_penalty=0.0,
+            risk_penalty=0.0,
+        )
+
+        self.assertGreater(float(bad_loss), float(good_loss))
+        self.assertLess(float(no_target_loss), 1.0e-6)
 
     def test_selection_score_prioritizes_regret_rebuffer_and_focus_bucket(self):
         profile = profile_by_name("smoke")

@@ -87,6 +87,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--ppo-over-aggressive-advantage-penalty", type=float, default=None)
     parser.add_argument("--ppo-rebuffer-advantage-penalty", type=float, default=None)
     parser.add_argument("--ppo-risk-advantage-penalty", type=float, default=None)
+    parser.add_argument("--safe-advantage-policy-loss-weight", type=float, default=None)
+    parser.add_argument("--safe-advantage-reward-margin", type=float, default=None)
+    parser.add_argument("--safe-advantage-temperature", type=float, default=None)
+    parser.add_argument("--safe-advantage-rebuffer-penalty", type=float, default=None)
+    parser.add_argument("--safe-advantage-risk-penalty", type=float, default=None)
     parser.add_argument("--decision-reward-fusion-weight", type=float, default=None)
     parser.add_argument("--decision-rebuffer-fusion-weight", type=float, default=None)
     parser.add_argument("--decision-risk-fusion-weight", type=float, default=None)
@@ -198,6 +203,11 @@ def _profile_with_overrides(args: argparse.Namespace):
         ("ppo_over_aggressive_advantage_penalty", "ppo_over_aggressive_advantage_penalty"),
         ("ppo_rebuffer_advantage_penalty", "ppo_rebuffer_advantage_penalty"),
         ("ppo_risk_advantage_penalty", "ppo_risk_advantage_penalty"),
+        ("safe_advantage_policy_loss_weight", "safe_advantage_policy_loss_weight"),
+        ("safe_advantage_reward_margin", "safe_advantage_reward_margin"),
+        ("safe_advantage_temperature", "safe_advantage_temperature"),
+        ("safe_advantage_rebuffer_penalty", "safe_advantage_rebuffer_penalty"),
+        ("safe_advantage_risk_penalty", "safe_advantage_risk_penalty"),
         ("decision_reward_fusion_weight", "decision_reward_fusion_weight"),
         ("decision_rebuffer_fusion_weight", "decision_rebuffer_fusion_weight"),
         ("decision_risk_fusion_weight", "decision_risk_fusion_weight"),
