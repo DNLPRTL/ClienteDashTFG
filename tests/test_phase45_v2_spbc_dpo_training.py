@@ -20,7 +20,10 @@ from core.phase45_v1.spbc_v2_dpo_training import (
     load_spbc_v2_dpo_examples,
     profile_by_name,
     train_spbc_abr_v2_dpo,
+    _copy_baseline_loss,
     _loss_components,
+    _residual_logit_l2_loss,
+    _safe_improvement_rank_loss,
     _safety_gate_result,
     _selection_score,
 )
@@ -167,6 +170,9 @@ class Phase45V2SpbcDpoTrainingTest(unittest.TestCase):
             self.assertIn("over_aggressive_margin_loss", report_file["validation_metrics"])
             self.assertIn("over_aggressive_reference_excess_loss", report_file["validation_metrics"])
             self.assertIn("safe_utility_rank_loss", report_file["validation_metrics"])
+            self.assertIn("safe_improvement_rank_loss", report_file["validation_metrics"])
+            self.assertIn("copy_baseline_loss", report_file["validation_metrics"])
+            self.assertIn("residual_logit_l2_loss", report_file["validation_metrics"])
             self.assertIn("selected_utility_regret_vs_best_immediate_mean", report_file["validation_metrics"])
             self.assertIn("selected_rebuffer_regret_vs_best_immediate_mean", report_file["validation_metrics"])
             self.assertEqual("validation_selection_score", report_file["checkpoint_selection"]["criterion"])
@@ -175,6 +181,9 @@ class Phase45V2SpbcDpoTrainingTest(unittest.TestCase):
             self.assertIn("decision_fusion", report_file["loss_design"])
             self.assertIn("over_aggressive_margin_loss", report_file["loss_design"])
             self.assertIn("safe_utility_rank_loss", report_file["loss_design"])
+            self.assertIn("safe_improvement_rank_loss", report_file["loss_design"])
+            self.assertIn("copy_baseline_loss", report_file["loss_design"])
+            self.assertIn("residual_logit_l2_loss", report_file["loss_design"])
             self.assertTrue(report_file["loss_design"]["sample_weights_include_focus_bucket_and_severe_errors"])
 
     def test_training_can_warm_start_from_v2_checkpoint_and_compare_initial_policy(self):
@@ -418,6 +427,103 @@ class Phase45V2SpbcDpoTrainingTest(unittest.TestCase):
         self.assertGreater(float(wrong_losses["safe_utility_rank_loss"]), 0.0)
         self.assertLess(float(best_losses["safe_utility_rank_loss"]), 1.0e-6)
         self.assertGreater(float(wrong_losses["loss"]), float(best_losses["loss"]))
+
+    def test_safe_improvement_rank_loss_only_promotes_clear_safe_gain_against_reference(self):
+        ref_logits = torch.tensor([[4.0, 1.0, 0.0]], dtype=torch.float32)
+        mask = torch.tensor([[True, True, True]], dtype=torch.bool)
+        over_aggressive = torch.tensor([[False, False, True]], dtype=torch.bool)
+        sample_weights = torch.tensor([1.0], dtype=torch.float32)
+        rewards_with_gain = torch.tensor([[0.0, 0.30, -1.0]], dtype=torch.float32)
+        rewards_without_gain = torch.tensor([[0.0, 0.02, -1.0]], dtype=torch.float32)
+
+        bad_loss = _safe_improvement_rank_loss(
+            torch.tensor([[3.0, 0.0, 0.0]], dtype=torch.float32),
+            ref_logits,
+            rewards_with_gain,
+            over_aggressive,
+            mask,
+            sample_weights,
+            reward_margin=0.05,
+            margin=0.50,
+        )
+        good_loss = _safe_improvement_rank_loss(
+            torch.tensor([[0.0, 3.0, 0.0]], dtype=torch.float32),
+            ref_logits,
+            rewards_with_gain,
+            over_aggressive,
+            mask,
+            sample_weights,
+            reward_margin=0.05,
+            margin=0.50,
+        )
+        no_gain_loss = _safe_improvement_rank_loss(
+            torch.tensor([[3.0, 0.0, 0.0]], dtype=torch.float32),
+            ref_logits,
+            rewards_without_gain,
+            over_aggressive,
+            mask,
+            sample_weights,
+            reward_margin=0.05,
+            margin=0.50,
+        )
+
+        self.assertGreater(float(bad_loss), 0.0)
+        self.assertLess(float(good_loss), 1.0e-6)
+        self.assertLess(float(no_gain_loss), 1.0e-6)
+
+    def test_copy_baseline_loss_only_applies_without_clear_safe_improvement(self):
+        ref_logits = torch.tensor([[3.0, 0.0, -1.0]], dtype=torch.float32)
+        drift_logits = torch.tensor([[0.0, 3.0, -1.0]], dtype=torch.float32)
+        mask = torch.tensor([[True, True, True]], dtype=torch.bool)
+        over_aggressive = torch.tensor([[False, False, True]], dtype=torch.bool)
+        sample_weights = torch.tensor([1.0], dtype=torch.float32)
+        rewards_without_gain = torch.tensor([[0.0, 0.01, -1.0]], dtype=torch.float32)
+        rewards_with_gain = torch.tensor([[0.0, 0.50, -1.0]], dtype=torch.float32)
+
+        drift_loss = _copy_baseline_loss(
+            drift_logits,
+            ref_logits,
+            rewards_without_gain,
+            over_aggressive,
+            mask,
+            sample_weights,
+            reward_margin=0.05,
+        )
+        copied_loss = _copy_baseline_loss(
+            ref_logits,
+            ref_logits,
+            rewards_without_gain,
+            over_aggressive,
+            mask,
+            sample_weights,
+            reward_margin=0.05,
+        )
+        clear_gain_loss = _copy_baseline_loss(
+            drift_logits,
+            ref_logits,
+            rewards_with_gain,
+            over_aggressive,
+            mask,
+            sample_weights,
+            reward_margin=0.05,
+        )
+
+        self.assertGreater(float(drift_loss), float(copied_loss))
+        self.assertLess(float(copied_loss), 1.0e-6)
+        self.assertLess(float(clear_gain_loss), 1.0e-6)
+
+    def test_residual_logit_l2_loss_tracks_valid_logit_drift(self):
+        ref_logits = torch.tensor([[1.0, 2.0, 9.0]], dtype=torch.float32)
+        same_logits = torch.tensor([[1.0, 2.0, -4.0]], dtype=torch.float32)
+        drift_logits = torch.tensor([[3.0, 2.0, -4.0]], dtype=torch.float32)
+        mask = torch.tensor([[True, True, False]], dtype=torch.bool)
+        sample_weights = torch.tensor([1.0], dtype=torch.float32)
+
+        same_loss = _residual_logit_l2_loss(same_logits, ref_logits, mask, sample_weights)
+        drift_loss = _residual_logit_l2_loss(drift_logits, ref_logits, mask, sample_weights)
+
+        self.assertLess(float(same_loss), 1.0e-6)
+        self.assertGreater(float(drift_loss), 0.0)
 
     def test_selection_score_prioritizes_regret_rebuffer_and_focus_bucket(self):
         profile = profile_by_name("smoke")

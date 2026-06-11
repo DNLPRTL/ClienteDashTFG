@@ -78,6 +78,9 @@ _LOSS_METRIC_NAMES = (
     "over_aggressive_margin_loss",
     "over_aggressive_reference_excess_loss",
     "safe_utility_rank_loss",
+    "safe_improvement_rank_loss",
+    "copy_baseline_loss",
+    "residual_logit_l2_loss",
 )
 
 
@@ -118,6 +121,11 @@ class SpbcV2DpoTrainingProfile:
     over_aggressive_margin: float = 0.25
     safe_utility_rank_loss_weight: float = 0.0
     safe_utility_margin: float = 0.25
+    safe_improvement_rank_loss_weight: float = 0.0
+    safe_improvement_reward_margin: float = 0.0
+    copy_baseline_loss_weight: float = 0.0
+    copy_baseline_reward_margin: float = 0.0
+    residual_logit_l2_loss_weight: float = 0.0
     decision_reward_fusion_weight: float = 0.12
     decision_rebuffer_fusion_weight: float = 0.30
     decision_risk_fusion_weight: float = 0.18
@@ -171,6 +179,11 @@ class SpbcV2DpoTrainingProfile:
             "over_aggressive_margin": self.over_aggressive_margin,
             "safe_utility_rank_loss_weight": self.safe_utility_rank_loss_weight,
             "safe_utility_margin": self.safe_utility_margin,
+            "safe_improvement_rank_loss_weight": self.safe_improvement_rank_loss_weight,
+            "safe_improvement_reward_margin": self.safe_improvement_reward_margin,
+            "copy_baseline_loss_weight": self.copy_baseline_loss_weight,
+            "copy_baseline_reward_margin": self.copy_baseline_reward_margin,
+            "residual_logit_l2_loss_weight": self.residual_logit_l2_loss_weight,
             "decision_reward_fusion_weight": self.decision_reward_fusion_weight,
             "decision_rebuffer_fusion_weight": self.decision_rebuffer_fusion_weight,
             "decision_risk_fusion_weight": self.decision_risk_fusion_weight,
@@ -661,6 +674,9 @@ def train_spbc_abr_v2_dpo(
             "training_over_aggressive_margin_loss": train_metrics["over_aggressive_margin_loss"],
             "training_over_aggressive_reference_excess_loss": train_metrics["over_aggressive_reference_excess_loss"],
             "training_safe_utility_rank_loss": train_metrics["safe_utility_rank_loss"],
+            "training_safe_improvement_rank_loss": train_metrics["safe_improvement_rank_loss"],
+            "training_copy_baseline_loss": train_metrics["copy_baseline_loss"],
+            "training_residual_logit_l2_loss": train_metrics["residual_logit_l2_loss"],
             "validation_loss": validation_metrics["loss"],
             "validation_utility_loss": validation_metrics["utility_loss"],
             "validation_rebuffer_loss": validation_metrics["rebuffer_loss"],
@@ -674,6 +690,9 @@ def train_spbc_abr_v2_dpo(
                 "over_aggressive_reference_excess_loss"
             ],
             "validation_safe_utility_rank_loss": validation_metrics["safe_utility_rank_loss"],
+            "validation_safe_improvement_rank_loss": validation_metrics["safe_improvement_rank_loss"],
+            "validation_copy_baseline_loss": validation_metrics["copy_baseline_loss"],
+            "validation_residual_logit_l2_loss": validation_metrics["residual_logit_l2_loss"],
             "validation_top1_accuracy": validation_metrics["top1_accuracy"],
             "validation_pair_preference_accuracy": validation_metrics["pair_preference_accuracy"],
             "validation_predicted_qoe_gap_mean": validation_metrics["predicted_qoe_gap_mean"],
@@ -890,6 +909,15 @@ def train_spbc_abr_v2_dpo(
             "safe_utility_rank_loss": "margin_ranking_best_reward_action_inside_valid_non_over_aggressive_action_set",
             "safe_utility_rank_loss_weight": profile.safe_utility_rank_loss_weight,
             "safe_utility_margin": profile.safe_utility_margin,
+            "safe_improvement_rank_loss": "margin_promotes_best_safe_reward_action_only_when_it_improves_frozen_reference_action_by_reward_margin",
+            "safe_improvement_rank_loss_weight": profile.safe_improvement_rank_loss_weight,
+            "safe_improvement_reward_margin": profile.safe_improvement_reward_margin,
+            "copy_baseline_loss": "masked_KL(frozen_reference_distribution || policy_distribution)_when_no_clear_safe_improvement_exists",
+            "copy_baseline_loss_weight": profile.copy_baseline_loss_weight,
+            "copy_baseline_reward_margin": profile.copy_baseline_reward_margin,
+            "residual_logit_l2_loss": "weighted_L2(policy_logits_minus_frozen_reference_logits)_over_valid_actions",
+            "residual_logit_l2_loss_weight": profile.residual_logit_l2_loss_weight,
+            "anchored_residual_design": "trainer_only_regularization_no_runtime_residual_wrapper_no_controller_change",
             "decision_fusion": "policy_logits_plus_predicted_utility_minus_predicted_rebuffer_and_risk",
             "decision_reward_fusion_weight": profile.decision_reward_fusion_weight,
             "decision_rebuffer_fusion_weight": profile.decision_rebuffer_fusion_weight,
@@ -1351,6 +1379,31 @@ def _loss_components(
         sample_weights,
         margin=float(profile.safe_utility_margin),
     )
+    safe_improvement_rank_loss = _safe_improvement_rank_loss(
+        logits,
+        ref_logits,
+        rewards,
+        over_aggressive_actions,
+        mask,
+        sample_weights,
+        reward_margin=float(profile.safe_improvement_reward_margin),
+        margin=float(profile.safe_utility_margin),
+    )
+    copy_baseline_loss = _copy_baseline_loss(
+        logits,
+        ref_logits,
+        rewards,
+        over_aggressive_actions,
+        mask,
+        sample_weights,
+        reward_margin=float(profile.copy_baseline_reward_margin),
+    )
+    residual_logit_l2_loss = _residual_logit_l2_loss(
+        logits,
+        ref_logits,
+        mask,
+        sample_weights,
+    )
     loss = (
         float(profile.ce_loss_weight) * ce_loss
         + float(profile.dpo_loss_weight) * dpo_loss
@@ -1365,6 +1418,9 @@ def _loss_components(
         + float(profile.over_aggressive_margin_loss_weight) * over_aggressive_margin_loss
         + float(profile.over_aggressive_reference_excess_loss_weight) * over_aggressive_reference_excess_loss
         + float(profile.safe_utility_rank_loss_weight) * safe_utility_rank_loss
+        + float(profile.safe_improvement_rank_loss_weight) * safe_improvement_rank_loss
+        + float(profile.copy_baseline_loss_weight) * copy_baseline_loss
+        + float(profile.residual_logit_l2_loss_weight) * residual_logit_l2_loss
     )
     return {
         "loss_tensor": loss,
@@ -1382,6 +1438,9 @@ def _loss_components(
         "over_aggressive_margin_loss": over_aggressive_margin_loss.detach(),
         "over_aggressive_reference_excess_loss": over_aggressive_reference_excess_loss.detach(),
         "safe_utility_rank_loss": safe_utility_rank_loss.detach(),
+        "safe_improvement_rank_loss": safe_improvement_rank_loss.detach(),
+        "copy_baseline_loss": copy_baseline_loss.detach(),
+        "residual_logit_l2_loss": residual_logit_l2_loss.detach(),
     }
 
 
@@ -1617,6 +1676,115 @@ def _safe_utility_rank_loss(
     per_sample_loss = torch.where(has_competing_safe, per_sample_loss, torch.zeros_like(per_sample_loss))
     weights = sample_weights.to(device=logits.device, dtype=logits.dtype) * has_competing_safe.to(dtype=logits.dtype)
     return (per_sample_loss * weights).sum() / torch.clamp(weights.sum(), min=1.0)
+
+
+def _safe_improvement_rank_loss(
+    logits: torch.Tensor,
+    ref_logits: torch.Tensor,
+    rewards: torch.Tensor,
+    over_aggressive_actions: torch.Tensor,
+    mask: torch.Tensor,
+    sample_weights: torch.Tensor,
+    *,
+    reward_margin: float,
+    margin: float,
+) -> torch.Tensor:
+    summary = _reference_safe_action_summary(
+        ref_logits,
+        rewards,
+        over_aggressive_actions,
+        mask,
+        reward_margin=reward_margin,
+    )
+    active_mask = mask.to(dtype=torch.bool, device=logits.device)
+    masked_logits = logits.masked_fill(~active_mask, -1.0e9)
+    baseline_logits = torch.gather(masked_logits, 1, summary["baseline_action"].unsqueeze(1)).squeeze(1)
+    best_safe_logits = torch.gather(masked_logits, 1, summary["best_safe_action"].unsqueeze(1)).squeeze(1)
+    per_sample_loss = F.relu(float(margin) + baseline_logits - best_safe_logits)
+    weights = sample_weights.to(device=logits.device, dtype=logits.dtype) * summary["has_clear_improvement"].to(
+        dtype=logits.dtype
+    )
+    return (per_sample_loss * weights).sum() / torch.clamp(weights.sum(), min=1.0)
+
+
+def _copy_baseline_loss(
+    logits: torch.Tensor,
+    ref_logits: torch.Tensor,
+    rewards: torch.Tensor,
+    over_aggressive_actions: torch.Tensor,
+    mask: torch.Tensor,
+    sample_weights: torch.Tensor,
+    *,
+    reward_margin: float,
+) -> torch.Tensor:
+    summary = _reference_safe_action_summary(
+        ref_logits,
+        rewards,
+        over_aggressive_actions,
+        mask,
+        reward_margin=reward_margin,
+    )
+    active_mask = mask.to(dtype=torch.bool, device=logits.device)
+    masked_logits = logits.masked_fill(~active_mask, -1.0e9)
+    masked_ref_logits = ref_logits.to(device=logits.device, dtype=logits.dtype).masked_fill(~active_mask, -1.0e9)
+    log_probs = F.log_softmax(masked_logits, dim=1)
+    ref_log_probs = F.log_softmax(masked_ref_logits, dim=1)
+    ref_probabilities = F.softmax(masked_ref_logits, dim=1)
+    per_sample_loss = (
+        ref_probabilities * (ref_log_probs - log_probs) * active_mask.to(dtype=logits.dtype)
+    ).sum(dim=1)
+    copy_mask = ~summary["has_clear_improvement"]
+    weights = sample_weights.to(device=logits.device, dtype=logits.dtype) * copy_mask.to(dtype=logits.dtype)
+    return (per_sample_loss * weights).sum() / torch.clamp(weights.sum(), min=1.0)
+
+
+def _residual_logit_l2_loss(
+    logits: torch.Tensor,
+    ref_logits: torch.Tensor,
+    mask: torch.Tensor,
+    sample_weights: torch.Tensor,
+) -> torch.Tensor:
+    active_mask = mask.to(dtype=torch.bool, device=logits.device)
+    ref = ref_logits.to(device=logits.device, dtype=logits.dtype)
+    valid_counts = torch.clamp(active_mask.sum(dim=1).to(dtype=logits.dtype), min=1.0)
+    per_sample_loss = (((logits - ref) ** 2) * active_mask.to(dtype=logits.dtype)).sum(dim=1) / valid_counts
+    weights = sample_weights.to(device=logits.device, dtype=logits.dtype)
+    return (per_sample_loss * weights).sum() / torch.clamp(weights.sum(), min=1.0)
+
+
+def _reference_safe_action_summary(
+    ref_logits: torch.Tensor,
+    rewards: torch.Tensor,
+    over_aggressive_actions: torch.Tensor,
+    mask: torch.Tensor,
+    *,
+    reward_margin: float,
+) -> dict[str, torch.Tensor]:
+    active_mask = mask.to(dtype=torch.bool, device=ref_logits.device)
+    rewards = rewards.to(device=ref_logits.device, dtype=ref_logits.dtype)
+    masked_ref_logits = ref_logits.masked_fill(~active_mask, -1.0e9)
+    baseline_action = masked_ref_logits.argmax(dim=1)
+    baseline_reward = torch.gather(rewards, 1, baseline_action.unsqueeze(1)).squeeze(1)
+
+    over_mask = over_aggressive_actions.to(dtype=torch.bool, device=ref_logits.device) & active_mask
+    safe_mask = active_mask & ~over_mask
+    has_safe = safe_mask.any(dim=1)
+    effective_safe_mask = torch.where(has_safe.unsqueeze(1), safe_mask, active_mask)
+    safe_rewards = rewards.masked_fill(~effective_safe_mask, -1.0e9)
+    best_safe_action = safe_rewards.argmax(dim=1)
+    best_safe_reward = torch.gather(rewards, 1, best_safe_action.unsqueeze(1)).squeeze(1)
+    has_clear_improvement = (
+        has_safe
+        & (best_safe_action != baseline_action)
+        & (best_safe_reward > baseline_reward + float(reward_margin))
+    )
+    return {
+        "baseline_action": baseline_action,
+        "baseline_reward": baseline_reward,
+        "best_safe_action": best_safe_action,
+        "best_safe_reward": best_safe_reward,
+        "has_clear_improvement": has_clear_improvement,
+    }
 
 
 def _policy_observations(
@@ -2692,6 +2860,13 @@ def _validate_training_args(
         "over_aggressive_margin_loss_weight",
         "over_aggressive_reference_excess_loss_weight",
         "over_aggressive_margin",
+        "safe_utility_rank_loss_weight",
+        "safe_utility_margin",
+        "safe_improvement_rank_loss_weight",
+        "safe_improvement_reward_margin",
+        "copy_baseline_loss_weight",
+        "copy_baseline_reward_margin",
+        "residual_logit_l2_loss_weight",
         "decision_reward_fusion_weight",
         "decision_rebuffer_fusion_weight",
         "decision_risk_fusion_weight",
