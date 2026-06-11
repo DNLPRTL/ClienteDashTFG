@@ -197,6 +197,25 @@ Si el hibrido no aporta con las seeds v1, el siguiente entrenamiento
 `predicted_reward_n_by_action`, rebuffer/riesgo como restricciones y sin
 perdidas fuertes sobre score compuesto.
 
+### Barrido de veto-only
+
+Tras el primer hibrido, si `veto_only` es el unico modo con senal sana pero
+interviene muy poco, ejecutar un barrido barato de umbrales sobre la seed con
+mejor gate/calibracion:
+
+```bash
+cd ~/TFG/DashClientModular4
+git pull
+bash scripts/run_phase45_v2_spbc_spc_hybrid_veto_sweep_wsl.sh
+```
+
+Este runner no entrena. Evalua `pilot_dagger2_reward_risk_anchor_ref_seed_450842_v1`
+con varias combinaciones de `risk_threshold` y `rebuffer_threshold_s`. Aceptar
+solo si aumenta `intervention_rate` sin romper global, `2_5_mbps` ni
+`spbc_v2_dpo_on_policy`. Si no aparece un veto no trivial y estable, la decision
+correcta es mantener SPBC solo como candidato principal y redisenar el SPC como
+predictor calibrado antes de gastar un full.
+
 ## Comandos historicos/manuales
 
 Las secciones siguientes quedan como referencia tecnica. Para ejecucion normal,
