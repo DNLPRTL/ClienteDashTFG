@@ -2,9 +2,10 @@
 
 Fecha: 2026-06-12
 
-Estado del documento: informe objetivo para pedir ayuda externa. No contiene
-propuestas de solucion, recomendaciones de siguiente experimento, ranking,
-benchmark ni afirmaciones de mejora de QoE.
+Estado del documento: informe objetivo autosuficiente para pedir ayuda externa.
+Debe poder leerlo una IA externa sin acceso al chat y entender el estado como
+si viera el proyecto. No contiene propuestas de solucion, recomendaciones de
+siguiente experimento, ranking, benchmark ni afirmaciones de mejora de QoE.
 
 ## Solicitud a ChatGPT u otra IA
 
@@ -42,6 +43,9 @@ rebuild/phase3-from-phase2
 Commits relevantes recientes:
 
 ```text
+7f1af61 feat(phase45): add softer hard-negative qh scorer
+f2c2f02 feat(phase45): add hard-negative QH scorer profile
+d5d637e docs(phase45): update QH scorer blockage report
 ddd3d8a chore(phase45): add QH scorer error analysis
 94f75b2 feat(phase45): add temporal GRU QH scorer profile
 d9510cb chore(phase45): require GPU for adv regret runbook
@@ -326,6 +330,8 @@ qh_scorer_pilot_plus_dataset_pilot_seed450922_v1     REVIEW  mlp         0.80228
 qh_scorer_pilot_rank_dataset_pilot_seed450923_v1     REVIEW  mlp         0.792070  0.476182     1.599998  0.001179     0.183065  mean_regret_q_h
 qh_scorer_pilot_adv_regret_dataset_pilot_seed450924_v1 REVIEW mlp         0.788844  0.395739     1.450001  0.002946     0.221505  mean_regret_q_h
 qh_scorer_pilot_adv_regret_gru_dataset_pilot_seed450925_v1 REVIEW gru     0.764516  0.442516     1.650000  0.007661     0.226747  mean_regret_q_h
+qh_scorer_pilot_adv_regret_hardneg_dataset_pilot_seed450926_v1 REVIEW mlp    0.797177  0.401737     1.550001  0.004714     0.210753  mean_regret_q_h
+qh_scorer_pilot_adv_regret_hardneg_v2_dataset_pilot_seed450927_v1 REVIEW mlp 0.803898  0.417399     1.471334  0.002357     0.207258  mean_regret_q_h
 ```
 
 ### 1. `pilot`
@@ -561,7 +567,128 @@ regret_gt_1_0_rate=0.099194
 regret_gt_2_0_rate=0.044086
 ```
 
-## Comparacion factual entre los ultimos dos intentos
+### 6. `pilot_adv_regret_hardneg_v1`
+
+Ruta:
+
+```text
+/home/danie/TFG/modelos/phase45_v3/qh_scorer/qh_scorer_pilot_adv_regret_hardneg_dataset_pilot_seed450926_v1
+```
+
+Checkpoint:
+
+```text
+/home/danie/TFG/modelos/phase45_v3/qh_scorer/qh_scorer_pilot_adv_regret_hardneg_dataset_pilot_seed450926_v1/modelo_phase45_v3_qh_scorer.pt
+sha256=4f066f30c4c95acd6c820f295147effae72d2488770a507cb53c36dd4a633ed8
+```
+
+Perfil:
+
+```text
+model_architecture=shared_mlp_qh_candidate_scorer
+epochs=48
+batch_size=512
+learning_rate=0.00014
+hidden_sizes=[384,192,96]
+ce_loss_weight=0.05
+q_value_loss_weight=0.0
+expected_regret_loss_weight=1.2
+tail_regret_loss_weight=1.25
+structured_cost_hinge_loss_weight=2.0
+catastrophic_prob_loss_weight=2.4
+catastrophic_regret_threshold=2.0
+slice_weight_max=5.0
+seed=450926
+```
+
+Resultado:
+
+```text
+status=REVIEW
+failed=['mean_regret_q_h']
+top1_accuracy=0.797177
+mean_regret_q_h=0.401737
+p95_regret_q_h=1.550001
+high_capacity_predicted_action0_rate=0.004714
+predicted_action0_rate=0.210753
+regret_gt_0_5_rate=0.136828
+regret_gt_1_0_rate=0.086828
+regret_gt_2_0_rate=0.041667
+regret_gt_5_0_rate=0.009140
+regret_gt_20_0_rate=0.002016
+top_hard_negative_violation_mean=0.851295
+top_hard_negative_violation_p95=5.054992
+training_sample_weight_summary.mean=3.854708
+training_sample_weight_summary.p95=5.0
+training_sample_weight_summary.max=5.0
+```
+
+Lectura factual: se reducen algunas tasas de regret bajo/medio frente al MLP
+`pilot_adv_regret_v1`, pero empeora `mean_regret_q_h` y `p95_regret_q_h`. La
+distribucion de pesos queda muy saturada, con `p95=max=5.0`.
+
+### 7. `pilot_adv_regret_hardneg_v2`
+
+Ruta:
+
+```text
+/home/danie/TFG/modelos/phase45_v3/qh_scorer/qh_scorer_pilot_adv_regret_hardneg_v2_dataset_pilot_seed450927_v1
+```
+
+Checkpoint:
+
+```text
+/home/danie/TFG/modelos/phase45_v3/qh_scorer/qh_scorer_pilot_adv_regret_hardneg_v2_dataset_pilot_seed450927_v1/modelo_phase45_v3_qh_scorer.pt
+sha256=2f18c8ba310157e9cb6637aeb6215aef7fc9bd04069d38bc877cf9d5c95e2bae
+```
+
+Perfil:
+
+```text
+model_architecture=shared_mlp_qh_candidate_scorer
+epochs=44
+batch_size=512
+learning_rate=0.00016
+hidden_sizes=[384,192,96]
+ce_loss_weight=0.06
+q_value_loss_weight=0.0
+expected_regret_loss_weight=1.45
+tail_regret_loss_weight=1.0
+structured_cost_hinge_loss_weight=0.75
+catastrophic_prob_loss_weight=0.85
+catastrophic_regret_threshold=5.0
+slice_weight_max=3.0
+seed=450927
+```
+
+Resultado:
+
+```text
+status=REVIEW
+failed=['mean_regret_q_h']
+top1_accuracy=0.803898
+mean_regret_q_h=0.417399
+p95_regret_q_h=1.471334
+high_capacity_predicted_action0_rate=0.002357
+predicted_action0_rate=0.207258
+regret_gt_0_5_rate=0.132527
+regret_gt_1_0_rate=0.084409
+regret_gt_2_0_rate=0.040457
+regret_gt_5_0_rate=0.009140
+regret_gt_20_0_rate=0.002151
+top_hard_negative_violation_mean=0.722507
+top_hard_negative_violation_p95=4.296047
+training_sample_weight_summary.mean=2.327064
+training_sample_weight_summary.p95=3.0
+training_sample_weight_summary.max=3.0
+```
+
+Lectura factual: la v2 reduce saturacion de pesos, mejora `top1_accuracy`,
+mejora `high_capacity_predicted_action0_rate`, mejora `p95_regret_q_h` frente a
+hardneg v1, pero empeora el gate principal `mean_regret_q_h`. Por tanto no hay
+avance de paso.
+
+## Comparacion factual entre intentos recientes
 
 `pilot_adv_regret_v1` frente a `pilot_adv_regret_gru_v1`:
 
@@ -577,6 +704,36 @@ regret_gt_2_0_rate: 0.037769 -> 0.044086
 
 Hecho observado: en este pilot, el GRU temporal no mejora el MLP
 `pilot_adv_regret_v1`; empeora las metricas principales de validacion offline.
+
+`pilot_adv_regret_v1` frente a `pilot_adv_regret_hardneg_v1`:
+
+```text
+mean_regret_q_h: 0.395739 -> 0.401737
+p95_regret_q_h: 1.450001 -> 1.550001
+top1_accuracy: 0.788844 -> 0.797177
+high_capacity_predicted_action0_rate: 0.002946 -> 0.004714
+regret_gt_0_5_rate: 0.139247 -> 0.136828
+regret_gt_1_0_rate: 0.089382 -> 0.086828
+regret_gt_2_0_rate: 0.037769 -> 0.041667
+```
+
+Hecho observado: hardneg v1 mejora top1 y reduce parte del regret bajo/medio,
+pero empeora el regret medio, p95 y `regret_gt_2_0_rate`.
+
+`pilot_adv_regret_v1` frente a `pilot_adv_regret_hardneg_v2`:
+
+```text
+mean_regret_q_h: 0.395739 -> 0.417399
+p95_regret_q_h: 1.450001 -> 1.471334
+top1_accuracy: 0.788844 -> 0.803898
+high_capacity_predicted_action0_rate: 0.002946 -> 0.002357
+regret_gt_0_5_rate: 0.139247 -> 0.132527
+regret_gt_1_0_rate: 0.089382 -> 0.084409
+regret_gt_2_0_rate: 0.037769 -> 0.040457
+```
+
+Hecho observado: hardneg v2 mejora top1, anti-colapso de alta capacidad y tasas
+de regret bajo/medio, pero empeora `mean_regret_q_h` y no supera el gate.
 
 ## Analisis de errores generado
 
@@ -614,6 +771,36 @@ Salida:
 
 ```text
 /home/danie/TFG/modelos/phase45_v3/qh_scorer/qh_scorer_pilot_adv_regret_gru_dataset_pilot_seed450925_v1/analisis_errores_phase45_v3_qh_scorer.json
+```
+
+Comando ejecutado para hardneg v1:
+
+```bash
+python3 scripts/analyze_phase45_v3_qh_scorer_errors.py \
+  --run-name qh_scorer_pilot_adv_regret_hardneg_dataset_pilot_seed450926_v1 \
+  --dataset-dir ~/TFG/datasets_normalizados/phase45_v3/qh_closed_loop_pilot \
+  --top-n 25
+```
+
+Salida:
+
+```text
+/home/danie/TFG/modelos/phase45_v3/qh_scorer/qh_scorer_pilot_adv_regret_hardneg_dataset_pilot_seed450926_v1/analisis_errores_phase45_v3_qh_scorer.json
+```
+
+Comando ejecutado para hardneg v2:
+
+```bash
+python3 scripts/analyze_phase45_v3_qh_scorer_errors.py \
+  --run-name qh_scorer_pilot_adv_regret_hardneg_v2_dataset_pilot_seed450927_v1 \
+  --dataset-dir ~/TFG/datasets_normalizados/phase45_v3/qh_closed_loop_pilot \
+  --top-n 25
+```
+
+Salida:
+
+```text
+/home/danie/TFG/modelos/phase45_v3/qh_scorer/qh_scorer_pilot_adv_regret_hardneg_v2_dataset_pilot_seed450927_v1/analisis_errores_phase45_v3_qh_scorer.json
 ```
 
 ### Resumen de error - mejor MLP
@@ -795,6 +982,117 @@ startup_conservative count=1860 mean=0.386426 p95=2.471927 gt2=0.053226
 Hecho observado: el GRU empeora respecto al MLP precisamente en varios buckets
 que ya eran problematicos en el MLP.
 
+### Resumen de error - hardneg v1
+
+Overall:
+
+```text
+count=7440
+mean_regret_q_h=0.401737
+p50_regret_q_h=0.0
+p95_regret_q_h=1.550001
+max_regret_q_h=127.994537
+regret_gt_0_5_rate=0.136828
+regret_gt_1_0_rate=0.086828
+regret_gt_2_0_rate=0.041667
+```
+
+Por estado de alta capacidad:
+
+```text
+high_capacity_state=false count=5743 mean=0.498078 p95=2.142618 gt2=0.051019
+high_capacity_state=true  count=1697 mean=0.075701 p95=0.000000 gt2=0.010018
+```
+
+Por bucket de buffer:
+
+```text
+00_04s   count=248  mean=0.760336 p95=5.810799 gt2=0.145161
+04_08s   count=3167 mean=0.481941 p95=2.937300 gt2=0.061572
+08_16s   count=1676 mean=0.467018 p95=1.549999 gt2=0.037589
+16_32s   count=914  mean=0.477007 p95=1.000000 gt2=0.010941
+32s_plus count=1435 mean=0.038571 p95=0.000000 gt2=0.004181
+```
+
+Por bucket de throughput:
+
+```text
+lte_1_mbps count=1680 mean=0.190541 p95=0.900000 gt2=0.004167
+1_2_mbps   count=1080 mean=0.217551 p95=1.045502 gt2=0.004630
+2_5_mbps   count=2280 mean=0.623662 p95=3.000002 gt2=0.075877
+5_20_mbps  count=1560 mean=0.429976 p95=3.000002 gt2=0.053846
+gt_20_mbps count=840  mean=0.406132 p95=1.449999 gt2=0.048810
+```
+
+Por rollout policy:
+
+```text
+qh_minus_one         count=1860 mean=0.273806 p95=1.449999 gt2=0.019355
+qh_oracle            count=1860 mean=0.333915 p95=1.350000 gt2=0.031720
+qh_plus_one          count=1860 mean=0.603520 p95=2.471927 gt2=0.056452
+startup_conservative count=1860 mean=0.395707 p95=3.099998 gt2=0.059140
+```
+
+### Resumen de error - hardneg v2
+
+Overall:
+
+```text
+count=7440
+mean_regret_q_h=0.417399
+p50_regret_q_h=0.0
+p95_regret_q_h=1.471334
+max_regret_q_h=180.045441
+regret_gt_0_5_rate=0.132527
+regret_gt_1_0_rate=0.084409
+regret_gt_2_0_rate=0.040457
+```
+
+Por estado de alta capacidad:
+
+```text
+high_capacity_state=false count=5743 mean=0.523714 p95=2.017864 gt2=0.050496
+high_capacity_state=true  count=1697 mean=0.057610 p95=0.000000 gt2=0.006482
+```
+
+Por bucket de buffer:
+
+```text
+00_04s   count=248  mean=0.760336 p95=5.810799 gt2=0.145161
+04_08s   count=3167 mean=0.524274 p95=2.761271 gt2=0.061257
+08_16s   count=1676 mean=0.452171 p95=1.450001 gt2=0.034606
+16_32s   count=914  mean=0.489252 p95=1.000000 gt2=0.010941
+32s_plus count=1435 mean=0.035888 p95=0.000000 gt2=0.002091
+```
+
+Por bucket de throughput:
+
+```text
+lte_1_mbps count=1680 mean=0.186339 p95=0.900002 gt2=0.005357
+1_2_mbps   count=1080 mean=0.213769 p95=1.023003 gt2=0.007407
+2_5_mbps   count=2280 mean=0.638181 p95=3.000002 gt2=0.078070
+5_20_mbps  count=1560 mean=0.418122 p95=1.892227 gt2=0.045513
+gt_20_mbps count=840  mean=0.540726 p95=0.000000 gt2=0.041667
+```
+
+Por rollout policy:
+
+```text
+qh_minus_one         count=1860 mean=0.262330 p95=1.449999 gt2=0.018280
+qh_oracle            count=1860 mean=0.338338 p95=1.350000 gt2=0.035484
+qh_plus_one          count=1860 mean=0.684314 p95=2.813971 gt2=0.058602
+startup_conservative count=1860 mean=0.384616 p95=1.905354 gt2=0.049462
+```
+
+Top error hardneg v2:
+
+```text
+sample=trace_roma_4g_nbiot_5g_nsa...qh_plus_one...segment_0001
+regret=180.045441 target_action=0 predicted_action=2 buffer=4.000s
+throughput_bucket=gt_20_mbps variability_bucket=high_variability
+recent_rebuffer_s=0.6363347120585428
+```
+
 ## Estado actual del bloqueo
 
 No hay PASS del scorer pilot v3. El mejor resultado actual es:
@@ -807,6 +1105,14 @@ status=REVIEW
 mean_regret_q_h=0.395739
 gate_mean_regret_q_h=0.35
 exceso_absoluto=0.045739
+```
+
+Los dos intentos posteriores con hard-negative no mejoran el mejor resultado:
+
+```text
+hardneg_v1 mean_regret_q_h=0.401737
+hardneg_v2 mean_regret_q_h=0.417399
+best_previous mean_regret_q_h=0.395739
 ```
 
 Gates del mejor intento:
@@ -830,6 +1136,21 @@ El avance numerico existe, pero no hay avance de paso:
 El pipeline no deberia avanzar a full/integracion bajo el gate actual porque el
 mejor mean_regret_q_h observado es 0.395739.
 ```
+
+Tampoco deberia seguir lanzando variaciones de loss/perfil sin auditoria
+previa, porque ya hay mas de dos ejecuciones sin avance de paso:
+
+```text
+pilot_adv_regret_v1: mejor pero FAIL
+pilot_adv_regret_gru_v1: empeora
+pilot_adv_regret_hardneg_v1: no mejora el gate
+pilot_adv_regret_hardneg_v2: no mejora el gate
+```
+
+Fallo de proceso reconocido: el informe anterior era amplio, pero no estaba
+actualizado con los hard-negative ni explicitaba de forma suficientemente dura
+que el documento debe ser autosuficiente para una IA externa sin contexto del
+chat. Esta version corrige ese punto.
 
 ## Observaciones factuales del bloqueo
 
@@ -889,6 +1210,35 @@ MLP mean_regret_q_h=0.395739
 GRU mean_regret_q_h=0.442516
 ```
 
+9. Los hard-negative tampoco reducen el bloqueo en este pilot.
+
+```text
+best MLP mean_regret_q_h=0.395739
+hardneg v1 mean_regret_q_h=0.401737
+hardneg v2 mean_regret_q_h=0.417399
+```
+
+10. Hardneg v1 saturo pesos de entrenamiento.
+
+```text
+training_sample_weight_summary.mean=3.854708
+training_sample_weight_summary.p95=5.0
+training_sample_weight_summary.max=5.0
+```
+
+11. Hardneg v2 redujo la saturacion, pero no redujo el gate principal.
+
+```text
+training_sample_weight_summary.mean=2.327064
+training_sample_weight_summary.p95=3.0
+training_sample_weight_summary.max=3.0
+mean_regret_q_h=0.417399
+```
+
+12. La combinacion de buena `top1_accuracy` y mal `mean_regret_q_h` indica que
+el problema no es solo clasificar la accion mas frecuente, sino evitar errores
+raros pero muy costosos en el espacio `Q_H`.
+
 ## Comandos de reproduccion usados
 
 Generacion/validacion dataset pilot:
@@ -917,6 +1267,22 @@ git pull
 bash scripts/run_phase45_v3_qh_scorer_pilot_adv_regret_gru_wsl.sh
 ```
 
+Entrenamiento `pilot_adv_regret_hardneg_v1`:
+
+```bash
+cd ~/TFG/DashClientModular4
+git pull
+bash scripts/run_phase45_v3_qh_scorer_pilot_adv_regret_hardneg_wsl.sh
+```
+
+Entrenamiento `pilot_adv_regret_hardneg_v2`:
+
+```bash
+cd ~/TFG/DashClientModular4
+git pull
+bash scripts/run_phase45_v3_qh_scorer_pilot_adv_regret_hardneg_v2_wsl.sh
+```
+
 Analisis de errores:
 
 ```bash
@@ -930,17 +1296,33 @@ python3 scripts/analyze_phase45_v3_qh_scorer_errors.py \
   --run-name qh_scorer_pilot_adv_regret_gru_dataset_pilot_seed450925_v1 \
   --dataset-dir ~/TFG/datasets_normalizados/phase45_v3/qh_closed_loop_pilot \
   --top-n 0
+python3 scripts/analyze_phase45_v3_qh_scorer_errors.py \
+  --run-name qh_scorer_pilot_adv_regret_hardneg_dataset_pilot_seed450926_v1 \
+  --dataset-dir ~/TFG/datasets_normalizados/phase45_v3/qh_closed_loop_pilot \
+  --top-n 25
+python3 scripts/analyze_phase45_v3_qh_scorer_errors.py \
+  --run-name qh_scorer_pilot_adv_regret_hardneg_v2_dataset_pilot_seed450927_v1 \
+  --dataset-dir ~/TFG/datasets_normalizados/phase45_v3/qh_closed_loop_pilot \
+  --top-n 25
 ```
 
 ## Validaciones locales de codigo
 
-Validaciones realizadas tras anadir el analizador de errores:
+Validaciones realizadas durante esta linea:
 
 ```text
-git diff --check: PASS
-python -m unittest tests.test_phase45_v3_qh_scorer_losses tests.test_phase45_v3_dataset: PASS
-python -m unittest discover: 429 tests OK
-python scripts/check_client_readiness.py --strict: PASS
+tras anadir analizador de errores:
+  git diff --check: PASS
+  python -m unittest tests.test_phase45_v3_qh_scorer_losses tests.test_phase45_v3_dataset: PASS
+  python -m unittest discover: 429 tests OK
+  python scripts/check_client_readiness.py --strict: PASS
+
+tras anadir hardneg v2:
+  git diff --check: PASS
+  python -m unittest tests.test_phase45_v3_dataset tests.test_phase45_v3_qh_scorer_losses: 14 tests OK
+  bash -n scripts/run_phase45_v3_qh_scorer_pilot_adv_regret_hardneg_v2_wsl.sh: PASS
+  python -m unittest discover: 435 tests OK
+  python scripts/check_client_readiness.py --strict: PASS
 ```
 
 ## Preguntas objetivas para ayuda externa
@@ -962,3 +1344,17 @@ oracle o de distribucion de trazas?
 5. Que inconsistencias potenciales deberian descartarse entre dataset,
 normalizacion, features visibles, mask de acciones, target `Q_H`, reward
 `qoe_linear_v1` y dinamica runtime antes de continuar?
+
+6. Puede el gate `mean_regret_q_h <= 0.35` estar midiendo correctamente el
+riesgo que se quiere controlar si `top1_accuracy` sube, pero unos pocos errores
+extremos dominan la media?
+
+7. Los valores extremos de regret, por ejemplo `180.045441` en hardneg v2,
+son esperables por la dinamica de `Q_H` y el reward, o sugieren revisar oracle,
+normalizacion, mascara de acciones, estados de buffer/rebuffer o labels de
+rollout?
+
+8. Que comprobaciones objetivas faltan para distinguir entre estas categorias:
+problema de representacion del estado, problema de targets `Q_H`, problema de
+mezcla de datasets/semanticas, problema de arquitectura del scorer o problema
+de umbral/gate?

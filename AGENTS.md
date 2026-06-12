@@ -145,6 +145,13 @@ pesados/generados.
     relevante, lo ejecutado, artefactos, rutas, metricas, gates, estado actual y
     bloqueo observado. No debe proponer soluciones ni decisiones; solo debe
     documentar hechos verificables y la pregunta de ayuda.
+14. Un informe de bloqueo debe ser autosuficiente: debe poder leerlo una IA
+    externa sin acceso a este chat y entender como si viera el proyecto. Debe
+    incluir objetivo, arquitectura, entorno, hardware, datasets, rutas,
+    commits/scripts, modelo, perfiles, comandos, salidas clave, comparativas,
+    fallos anteriores, hipotesis descartadas o no verificadas, restricciones de
+    no benchmark/no ranking y preguntas objetivas. Si el informe no permite
+    reconstruir el estado completo, se considera incompleto.
 
 ## Phase 3 Rebuild guardrails
 
