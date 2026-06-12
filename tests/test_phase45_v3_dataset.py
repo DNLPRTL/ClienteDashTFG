@@ -50,6 +50,8 @@ class Phase45V3DatasetTest(unittest.TestCase):
         self.assertEqual("pilot_adv_regret_v1", training_profile_by_name("pilot_adv_regret_v1").name)
         self.assertGreater(training_profile_by_name("pilot_adv_regret_v1").expected_regret_loss_weight, 0.0)
         self.assertEqual(0.0, training_profile_by_name("pilot_adv_regret_v1").q_value_loss_weight)
+        self.assertEqual("pilot_adv_regret_gru_v1", training_profile_by_name("pilot_adv_regret_gru_v1").name)
+        self.assertEqual("gru_candidate_qh_scorer", training_profile_by_name("pilot_adv_regret_gru_v1").model_architecture)
 
     def test_builds_valid_qh_dataset_with_closed_loop_client_contract(self):
         with tempfile.TemporaryDirectory() as temp_dir:

@@ -17,7 +17,7 @@ from torch.nn import functional as F
 from torch.utils.data import DataLoader, TensorDataset
 
 from core.neural_abr.artifacts import ensure_existing_dir, prepare_output_dir, read_jsonl, write_json
-from core.neural_abr.constants import CANDIDATE_VECTOR_NAMES, CONTEXT_VECTOR_NAMES
+from core.neural_abr.constants import CANDIDATE_VECTOR_NAMES, CONTEXT_VECTOR_NAMES, DEFAULT_CONTEXT_HISTORY_LENGTH
 from core.neural_abr.features import flatten_candidate_features, flatten_context_features
 from core.phase45_v3.constants import (
     MEDIA_PROFILE_ID,
@@ -55,6 +55,8 @@ class QhScorerTrainingProfile:
     hidden_sizes: tuple[int, ...]
     max_training_samples: int | None
     max_validation_samples: int | None
+    model_architecture: str = "shared_mlp_qh_candidate_scorer"
+    history_gru_hidden_size: int = 64
     ce_loss_weight: float = 0.45
     q_value_loss_weight: float = 1.0
     pairwise_rank_loss_weight: float = 0.0
@@ -86,6 +88,8 @@ class QhScorerTrainingProfile:
             "hidden_sizes": list(self.hidden_sizes),
             "max_training_samples": self.max_training_samples,
             "max_validation_samples": self.max_validation_samples,
+            "model_architecture": self.model_architecture,
+            "history_gru_hidden_size": self.history_gru_hidden_size,
             "ce_loss_weight": self.ce_loss_weight,
             "q_value_loss_weight": self.q_value_loss_weight,
             "pairwise_rank_loss_weight": self.pairwise_rank_loss_weight,
@@ -193,6 +197,37 @@ QH_SCORER_TRAINING_PROFILES: dict[str, QhScorerTrainingProfile] = {
         top1_accuracy_floor=0.55,
         seed=450924,
     ),
+    "pilot_adv_regret_gru_v1": QhScorerTrainingProfile(
+        name="pilot_adv_regret_gru_v1",
+        epochs=44,
+        batch_size=512,
+        learning_rate=1.5e-4,
+        hidden_sizes=(384, 192, 96),
+        max_training_samples=None,
+        max_validation_samples=None,
+        model_architecture="gru_candidate_qh_scorer",
+        history_gru_hidden_size=96,
+        ce_loss_weight=0.08,
+        q_value_loss_weight=0.0,
+        pairwise_rank_loss_weight=0.70,
+        pairwise_margin_scale=0.60,
+        pairwise_q_gap_cap=5.0,
+        pairwise_use_denormalized_q_gap=True,
+        soft_q_kl_loss_weight=1.20,
+        q_softmax_temperature=0.35,
+        expected_regret_loss_weight=1.60,
+        tail_regret_loss_weight=0.90,
+        tail_regret_fraction=0.25,
+        advantage_huber_loss_weight=0.45,
+        advantage_scale=1.0,
+        top_vs_bad_margin_loss_weight=1.20,
+        top_vs_bad_regret_threshold=0.50,
+        top_vs_bad_margin_scale=0.45,
+        top_vs_bad_gap_cap=5.0,
+        mean_regret_tolerance=0.35,
+        top1_accuracy_floor=0.55,
+        seed=450925,
+    ),
     "full_v1": QhScorerTrainingProfile(
         name="full_v1",
         epochs=28,
@@ -272,6 +307,74 @@ class Phase45V3QhScorer(nn.Module):
         }
 
 
+class Phase45V3TemporalGruQhScorer(nn.Module):
+    def __init__(
+        self,
+        context_dim: int,
+        candidate_dim: int,
+        hidden_sizes: Sequence[int],
+        history_gru_hidden_size: int,
+        history_length: int = DEFAULT_CONTEXT_HISTORY_LENGTH,
+    ) -> None:
+        super().__init__()
+        self.context_dim = int(context_dim)
+        self.candidate_dim = int(candidate_dim)
+        self.hidden_sizes = tuple(int(value) for value in hidden_sizes)
+        self.history_length = int(history_length)
+        self.history_gru_hidden_size = int(history_gru_hidden_size)
+        history_width = 2 * self.history_length
+        if self.context_dim <= history_width:
+            raise Phase45V3QhScorerTrainingError("context_dim must include history and scalar features")
+        self.scalar_dim = self.context_dim - history_width
+        self.history_gru = nn.GRU(
+            input_size=2,
+            hidden_size=self.history_gru_hidden_size,
+            batch_first=True,
+        )
+        layers: list[nn.Module] = []
+        width = self.history_gru_hidden_size + self.scalar_dim + self.candidate_dim
+        for hidden in self.hidden_sizes:
+            layers.append(nn.Linear(width, int(hidden)))
+            layers.append(nn.ReLU())
+            width = int(hidden)
+        layers.append(nn.Linear(width, 1))
+        self.scorer = nn.Sequential(*layers)
+
+    def forward(self, context: torch.Tensor, candidates: torch.Tensor, action_mask: torch.Tensor) -> torch.Tensor:
+        if context.ndim != 2 or candidates.ndim != 3 or action_mask.ndim != 2:
+            raise Phase45V3QhScorerTrainingError("invalid temporal Q_H scorer tensor ranks")
+        if context.shape[0] != candidates.shape[0] or action_mask.shape != candidates.shape[:2]:
+            raise Phase45V3QhScorerTrainingError("temporal Q_H scorer tensor dimensions do not align")
+        if context.shape[1] != self.context_dim or candidates.shape[2] != self.candidate_dim:
+            raise Phase45V3QhScorerTrainingError("temporal Q_H scorer feature dimensions do not align")
+        batch, candidate_count, _ = candidates.shape
+        throughput_history = context[:, : self.history_length]
+        download_time_history = context[:, self.history_length : 2 * self.history_length]
+        scalars = context[:, 2 * self.history_length :]
+        history = torch.stack((throughput_history, download_time_history), dim=2)
+        _history_output, hidden = self.history_gru(history)
+        history_embedding = hidden[-1]
+        state_embedding = torch.cat((history_embedding, scalars), dim=1)
+        expanded_state = state_embedding.unsqueeze(1).expand(batch, candidate_count, state_embedding.shape[1])
+        scorer_input = torch.cat((expanded_state, candidates), dim=2)
+        raw = self.scorer(scorer_input.reshape(batch * candidate_count, -1)).reshape(batch, candidate_count)
+        return raw.masked_fill(~action_mask.to(dtype=torch.bool, device=raw.device), -1.0e9)
+
+    def config(self) -> Mapping[str, object]:
+        return {
+            "schema_id": QH_SCORER_MODEL_CONFIG_SCHEMA_ID,
+            "model_key": PHASE45_V3_QH_SCORER_MODEL_KEY,
+            "model_type": "gru_candidate_qh_scorer",
+            "context_dim": self.context_dim,
+            "candidate_dim": self.candidate_dim,
+            "history_length": self.history_length,
+            "history_gru_hidden_size": self.history_gru_hidden_size,
+            "scalar_dim": self.scalar_dim,
+            "hidden_sizes": list(self.hidden_sizes),
+            "controller_registered": False,
+        }
+
+
 def training_profile_by_name(name: str) -> QhScorerTrainingProfile:
     key = str(name).strip()
     if key not in QH_SCORER_TRAINING_PROFILES:
@@ -304,11 +407,7 @@ def train_phase45_v3_qh_scorer(
     normalization = fit_qh_scorer_normalization(train_examples)
     train_tensors = examples_to_tensors(train_examples, normalization)
     validation_tensors = examples_to_tensors(validation_examples, normalization)
-    model = Phase45V3QhScorer(
-        context_dim=len(CONTEXT_VECTOR_NAMES),
-        candidate_dim=len(CANDIDATE_VECTOR_NAMES),
-        hidden_sizes=profile.hidden_sizes,
-    ).to(active_device)
+    model = _build_qh_scorer_model(profile).to(active_device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=float(profile.learning_rate), weight_decay=1.0e-5)
     train_loader = DataLoader(
         TensorDataset(*train_tensors),
@@ -468,8 +567,25 @@ def examples_to_tensors(
     )
 
 
+def _build_qh_scorer_model(profile: QhScorerTrainingProfile) -> nn.Module:
+    if profile.model_architecture == "shared_mlp_qh_candidate_scorer":
+        return Phase45V3QhScorer(
+            context_dim=len(CONTEXT_VECTOR_NAMES),
+            candidate_dim=len(CANDIDATE_VECTOR_NAMES),
+            hidden_sizes=profile.hidden_sizes,
+        )
+    if profile.model_architecture == "gru_candidate_qh_scorer":
+        return Phase45V3TemporalGruQhScorer(
+            context_dim=len(CONTEXT_VECTOR_NAMES),
+            candidate_dim=len(CANDIDATE_VECTOR_NAMES),
+            hidden_sizes=profile.hidden_sizes,
+            history_gru_hidden_size=profile.history_gru_hidden_size,
+        )
+    raise Phase45V3QhScorerTrainingError("unknown Q_H scorer architecture: {0}".format(profile.model_architecture))
+
+
 def evaluate_qh_scorer(
-    model: Phase45V3QhScorer,
+    model: nn.Module,
     tensors: tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor],
     normalization: QhScorerNormalization,
     device: torch.device,
@@ -512,7 +628,7 @@ def evaluate_qh_scorer(
 
 
 def _loss_for_batch(
-    model: Phase45V3QhScorer,
+    model: nn.Module,
     batch: Sequence[torch.Tensor],
     profile: QhScorerTrainingProfile,
     normalization: QhScorerNormalization | None = None,

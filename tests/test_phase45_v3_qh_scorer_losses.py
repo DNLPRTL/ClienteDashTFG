@@ -5,7 +5,9 @@ from dataclasses import replace
 
 import torch
 
+from core.neural_abr.constants import CANDIDATE_VECTOR_NAMES, CONTEXT_VECTOR_NAMES
 from core.phase45_v3.qh_scorer_training import (
+    Phase45V3TemporalGruQhScorer,
     _expected_regret_loss,
     _soft_q_target_probs,
     _top_vs_bad_margin_loss,
@@ -61,6 +63,29 @@ class Phase45V3QhScorerLossesTest(unittest.TestCase):
         loss = _top_vs_bad_margin_loss(scores, q_values, valid, profile)
 
         self.assertEqual(0.0, float(loss))
+
+    def test_temporal_gru_scorer_masks_invalid_actions(self):
+        model = Phase45V3TemporalGruQhScorer(
+            context_dim=len(CONTEXT_VECTOR_NAMES),
+            candidate_dim=len(CANDIDATE_VECTOR_NAMES),
+            hidden_sizes=(16,),
+            history_gru_hidden_size=8,
+        )
+        context = torch.zeros((2, len(CONTEXT_VECTOR_NAMES)), dtype=torch.float32)
+        candidates = torch.zeros((2, 6, len(CANDIDATE_VECTOR_NAMES)), dtype=torch.float32)
+        mask = torch.tensor(
+            [
+                [True, True, False, True, True, True],
+                [True, False, False, False, True, True],
+            ]
+        )
+
+        scores = model(context, candidates, mask)
+
+        self.assertEqual((2, 6), tuple(scores.shape))
+        self.assertLess(float(scores[0, 2]), -1.0e8)
+        self.assertLess(float(scores[1, 1]), -1.0e8)
+        self.assertEqual("gru_candidate_qh_scorer", model.config()["model_type"])
 
 
 if __name__ == "__main__":

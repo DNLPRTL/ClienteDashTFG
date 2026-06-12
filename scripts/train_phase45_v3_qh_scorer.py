@@ -38,6 +38,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--batch-size", type=int, default=None)
     parser.add_argument("--learning-rate", type=float, default=None)
     parser.add_argument("--hidden-sizes", default=None, help="Capas ocultas separadas por coma, por ejemplo 384,192,96.")
+    parser.add_argument("--model-architecture", default=None)
+    parser.add_argument("--history-gru-hidden-size", type=int, default=None)
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--ce-loss-weight", type=float, default=None)
     parser.add_argument("--q-value-loss-weight", type=float, default=None)
@@ -82,6 +84,8 @@ def _profile_with_overrides(args: argparse.Namespace):
         "batch_size",
         "learning_rate",
         "seed",
+        "model_architecture",
+        "history_gru_hidden_size",
         "ce_loss_weight",
         "q_value_loss_weight",
         "pairwise_rank_loss_weight",
