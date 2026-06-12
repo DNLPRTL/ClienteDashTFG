@@ -54,9 +54,9 @@ class QhActionValue:
         return {
             "action": self.action,
             "feasible": self.feasible,
-            "q_h_reward_n": self.q_h_reward_n,
-            "first_step_reward_n": self.first_step_reward_n,
-            "total_rebuffer_s": self.total_rebuffer_s,
+            "q_h_reward_n": _finite_json_number(self.q_h_reward_n),
+            "first_step_reward_n": _finite_json_number(self.first_step_reward_n),
+            "total_rebuffer_s": _finite_json_number(self.total_rebuffer_s),
             "switch_count": self.switch_count,
             "best_sequence": list(self.best_sequence),
             "horizon_segments_evaluated": self.horizon_segments_evaluated,
@@ -299,3 +299,11 @@ def _infeasible_action(action: int, reason: str) -> QhActionValue:
         evaluated_sequence_count=0,
         reason=reason,
     )
+
+
+def _finite_json_number(value: object) -> float | None:
+    try:
+        parsed = float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
+    return parsed if math.isfinite(parsed) else None
