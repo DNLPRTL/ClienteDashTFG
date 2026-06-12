@@ -58,6 +58,21 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--top-vs-bad-regret-threshold", type=float, default=None)
     parser.add_argument("--top-vs-bad-margin-scale", type=float, default=None)
     parser.add_argument("--top-vs-bad-gap-cap", type=float, default=None)
+    parser.add_argument("--structured-cost-hinge-loss-weight", type=float, default=None)
+    parser.add_argument("--structured-cost-margin-scale", type=float, default=None)
+    parser.add_argument("--structured-cost-gap-cap", type=float, default=None)
+    parser.add_argument("--catastrophic-prob-loss-weight", type=float, default=None)
+    parser.add_argument("--catastrophic-regret-threshold", type=float, default=None)
+    parser.add_argument("--catastrophic-regret-cap", type=float, default=None)
+    parser.add_argument("--catastrophic-regret-power", type=float, default=None)
+    parser.add_argument("--slice-weight-throughput-2-5", type=float, default=None)
+    parser.add_argument("--slice-weight-buffer-0-4", type=float, default=None)
+    parser.add_argument("--slice-weight-buffer-4-16", type=float, default=None)
+    parser.add_argument("--slice-weight-buffer-16-32", type=float, default=None)
+    parser.add_argument("--slice-weight-rollout-qh-plus-one", type=float, default=None)
+    parser.add_argument("--slice-weight-max-regret-5", type=float, default=None)
+    parser.add_argument("--slice-weight-max-regret-20", type=float, default=None)
+    parser.add_argument("--slice-weight-max", type=float, default=None)
     args = parser.parse_args(argv)
 
     dataset_profile = args.dataset_profile or args.profile
@@ -103,6 +118,21 @@ def _profile_with_overrides(args: argparse.Namespace):
         "top_vs_bad_regret_threshold",
         "top_vs_bad_margin_scale",
         "top_vs_bad_gap_cap",
+        "structured_cost_hinge_loss_weight",
+        "structured_cost_margin_scale",
+        "structured_cost_gap_cap",
+        "catastrophic_prob_loss_weight",
+        "catastrophic_regret_threshold",
+        "catastrophic_regret_cap",
+        "catastrophic_regret_power",
+        "slice_weight_throughput_2_5",
+        "slice_weight_buffer_0_4",
+        "slice_weight_buffer_4_16",
+        "slice_weight_buffer_16_32",
+        "slice_weight_rollout_qh_plus_one",
+        "slice_weight_max_regret_5",
+        "slice_weight_max_regret_20",
+        "slice_weight_max",
     )
     for field in direct_fields:
         value = getattr(args, field)
@@ -139,6 +169,7 @@ def _print_compact(report: dict[str, object]) -> None:
     print(
         "phase45_v3_qh_scorer status={status} device={device} "
         "top1={top1_accuracy} mean_regret={mean_regret_q_h} p95_regret={p95_regret_q_h} "
+        "gt2={regret_gt_2_0_rate} gt5={regret_gt_5_0_rate} gt20={regret_gt_20_0_rate} "
         "high_capacity_action0={high_capacity_predicted_action0_rate} "
         "predicted_actions={predicted_action_distribution} failed={failed} model={model_path} sha256={sha}".format(
             status=report["status"],
@@ -146,6 +177,9 @@ def _print_compact(report: dict[str, object]) -> None:
             top1_accuracy=metrics["top1_accuracy"],
             mean_regret_q_h=metrics["mean_regret_q_h"],
             p95_regret_q_h=metrics["p95_regret_q_h"],
+            regret_gt_2_0_rate=metrics.get("regret_gt_2_0_rate", "NA"),
+            regret_gt_5_0_rate=metrics.get("regret_gt_5_0_rate", "NA"),
+            regret_gt_20_0_rate=metrics.get("regret_gt_20_0_rate", "NA"),
             high_capacity_predicted_action0_rate=metrics["high_capacity_predicted_action0_rate"],
             predicted_action_distribution=metrics["predicted_action_distribution"],
             failed=gates["failed"],

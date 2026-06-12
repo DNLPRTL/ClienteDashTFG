@@ -52,6 +52,9 @@ class Phase45V3DatasetTest(unittest.TestCase):
         self.assertEqual(0.0, training_profile_by_name("pilot_adv_regret_v1").q_value_loss_weight)
         self.assertEqual("pilot_adv_regret_gru_v1", training_profile_by_name("pilot_adv_regret_gru_v1").name)
         self.assertEqual("gru_candidate_qh_scorer", training_profile_by_name("pilot_adv_regret_gru_v1").model_architecture)
+        self.assertEqual("pilot_adv_regret_hardneg_v1", training_profile_by_name("pilot_adv_regret_hardneg_v1").name)
+        self.assertGreater(training_profile_by_name("pilot_adv_regret_hardneg_v1").structured_cost_hinge_loss_weight, 0.0)
+        self.assertGreater(training_profile_by_name("pilot_adv_regret_hardneg_v1").catastrophic_prob_loss_weight, 0.0)
 
     def test_builds_valid_qh_dataset_with_closed_loop_client_contract(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -161,6 +164,8 @@ class Phase45V3DatasetTest(unittest.TestCase):
             self.assertEqual("PASS", report["status"])
             self.assertEqual("phase45_v3_qh_scorer", report["model_key"])
             self.assertIn("pairwise_rank_loss_weight", report["profile"])
+            self.assertFalse(report["sample_weight_metadata_used_as_model_input"])
+            self.assertIn("training_sample_weight_summary", report)
             self.assertTrue((model_dir / QH_SCORER_MODEL_FILENAME).is_file())
             self.assertIn("top1_accuracy", report["final_validation"])
 
