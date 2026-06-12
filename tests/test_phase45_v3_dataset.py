@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import tempfile
 import unittest
 from dataclasses import replace
@@ -19,6 +20,7 @@ from core.phase45_v3.dataset import build_phase45_v3_qh_dataset
 from core.phase45_v3.profiles import Phase45V3DatasetProfile
 from core.phase45_v3.qh_scorer_training import (
     QH_SCORER_MODEL_FILENAME,
+    _sample_to_arrays,
     train_phase45_v3_qh_scorer,
     training_profile_by_name,
 )
@@ -93,6 +95,16 @@ class Phase45V3DatasetTest(unittest.TestCase):
             self.assertEqual(6, len(first["qh_targets"]["action_values"]))
             self.assertTrue(first["qh_targets"]["future_information_is_target_only"])
             self.assertFalse(first["audit"]["rollout_action_is_model_target"])
+
+            sample_with_infeasible_action = copy.deepcopy(first)
+            selected_action = int(sample_with_infeasible_action["qh_targets"]["selected_action"])
+            infeasible_action = 0 if selected_action != 0 else 1
+            sample_with_infeasible_action["qh_targets"]["action_values"][infeasible_action]["q_h_reward_n"] = None
+            _context, _candidates, effective_mask, q_values, _selected, _high_capacity = _sample_to_arrays(
+                sample_with_infeasible_action
+            )
+            self.assertFalse(effective_mask[infeasible_action])
+            self.assertEqual(-1.0e9, q_values[infeasible_action])
 
     def test_trains_qh_scorer_smoke_checkpoint_from_unit_dataset(self):
         with tempfile.TemporaryDirectory() as temp_dir:

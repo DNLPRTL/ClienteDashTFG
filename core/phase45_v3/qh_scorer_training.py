@@ -327,7 +327,7 @@ def fit_qh_scorer_normalization(examples: Sequence[Mapping[str, object]]) -> QhS
         context, candidate_rows, _mask, q_row, _selected, _high = _sample_to_arrays(example)
         contexts.append(context)
         candidates.extend(candidate_rows)
-        q_values.extend(value for value in q_row if math.isfinite(value))
+        q_values.extend(value for value, valid in zip(q_row, _mask) if valid and math.isfinite(value))
     context_mean, context_std = _mean_std_rows(contexts)
     candidate_mean, candidate_std = _mean_std_rows(candidates)
     q_mean, q_std = _mean_std(q_values)
@@ -436,13 +436,20 @@ def _sample_to_arrays(
         raise Phase45V3QhScorerTrainingError("unexpected Q_H target id")
     context = flatten_context_features(context_mapping)  # type: ignore[arg-type]
     candidates = tuple(flatten_candidate_features(candidate) for candidate in candidates_raw)  # type: ignore[arg-type]
-    action_mask = tuple(bool(value) for value in action_mask_raw)  # type: ignore[arg-type]
-    q_by_action: dict[int, float] = {}
+    ladder_action_mask = tuple(bool(value) for value in action_mask_raw)  # type: ignore[arg-type]
+    q_by_action: dict[int, float | None] = {}
     for item in qh_targets["action_values"]:  # type: ignore[index]
         if not isinstance(item, Mapping):
             raise Phase45V3QhScorerTrainingError("invalid Q_H action value row")
-        q_by_action[int(item["action"])] = _finite_float(item.get("q_h_reward_n"))
-    q_values = tuple(q_by_action.get(index, -1.0e9) for index in range(len(candidates)))
+        q_by_action[int(item["action"])] = _optional_finite_float(item.get("q_h_reward_n"))
+    q_values = tuple(
+        q_by_action[index] if q_by_action.get(index) is not None else -1.0e9
+        for index in range(len(candidates))
+    )
+    action_mask = tuple(
+        bool(ladder_action_mask[index]) and q_by_action.get(index) is not None
+        for index in range(len(candidates))
+    )
     selected_action = int(qh_targets["selected_action"])
     if selected_action < 0 or selected_action >= len(action_mask) or not action_mask[selected_action]:
         raise Phase45V3QhScorerTrainingError("selected Q_H action is invalid under mask")
@@ -521,7 +528,9 @@ def _normalize_vector(values: Sequence[float], mean: Sequence[float], std: Seque
     return [(float(value) - float(mean[index])) / float(std[index]) for index, value in enumerate(values)]
 
 
-def _finite_float(value: object) -> float:
+def _optional_finite_float(value: object) -> float | None:
+    if value is None:
+        return None
     try:
         parsed = float(value)  # type: ignore[arg-type]
     except (TypeError, ValueError) as exc:
