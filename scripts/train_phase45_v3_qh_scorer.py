@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from dataclasses import replace
 from pathlib import Path
 from typing import Sequence
 
@@ -33,6 +34,28 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--run-name", default=None)
     parser.add_argument("--device", default=None, help="cpu, cuda o vacio para autodetectar.")
     parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument("--epochs", type=int, default=None)
+    parser.add_argument("--batch-size", type=int, default=None)
+    parser.add_argument("--learning-rate", type=float, default=None)
+    parser.add_argument("--hidden-sizes", default=None, help="Capas ocultas separadas por coma, por ejemplo 384,192,96.")
+    parser.add_argument("--seed", type=int, default=None)
+    parser.add_argument("--ce-loss-weight", type=float, default=None)
+    parser.add_argument("--q-value-loss-weight", type=float, default=None)
+    parser.add_argument("--pairwise-rank-loss-weight", type=float, default=None)
+    parser.add_argument("--pairwise-margin-scale", type=float, default=None)
+    parser.add_argument("--pairwise-q-gap-cap", type=float, default=None)
+    parser.add_argument("--pairwise-use-denormalized-q-gap", action="store_true", default=None)
+    parser.add_argument("--soft-q-kl-loss-weight", type=float, default=None)
+    parser.add_argument("--q-softmax-temperature", type=float, default=None)
+    parser.add_argument("--expected-regret-loss-weight", type=float, default=None)
+    parser.add_argument("--tail-regret-loss-weight", type=float, default=None)
+    parser.add_argument("--tail-regret-fraction", type=float, default=None)
+    parser.add_argument("--advantage-huber-loss-weight", type=float, default=None)
+    parser.add_argument("--advantage-scale", type=float, default=None)
+    parser.add_argument("--top-vs-bad-margin-loss-weight", type=float, default=None)
+    parser.add_argument("--top-vs-bad-regret-threshold", type=float, default=None)
+    parser.add_argument("--top-vs-bad-margin-scale", type=float, default=None)
+    parser.add_argument("--top-vs-bad-gap-cap", type=float, default=None)
     args = parser.parse_args(argv)
 
     dataset_profile = args.dataset_profile or args.profile
@@ -42,13 +65,68 @@ def main(argv: Sequence[str] | None = None) -> int:
     report = train_phase45_v3_qh_scorer(
         dataset_dir,
         output_dir,
-        training_profile_by_name(args.profile),
+        _profile_with_overrides(args),
         overwrite=args.overwrite,
         device=args.device,
     )
     _print_compact(report)
     print(json.dumps(report, indent=2, sort_keys=True))
     return 0 if report["status"] == "PASS" else 1
+
+
+def _profile_with_overrides(args: argparse.Namespace):
+    profile = training_profile_by_name(args.profile)
+    overrides: dict[str, object] = {}
+    direct_fields = (
+        "epochs",
+        "batch_size",
+        "learning_rate",
+        "seed",
+        "ce_loss_weight",
+        "q_value_loss_weight",
+        "pairwise_rank_loss_weight",
+        "pairwise_margin_scale",
+        "pairwise_q_gap_cap",
+        "pairwise_use_denormalized_q_gap",
+        "soft_q_kl_loss_weight",
+        "q_softmax_temperature",
+        "expected_regret_loss_weight",
+        "tail_regret_loss_weight",
+        "tail_regret_fraction",
+        "advantage_huber_loss_weight",
+        "advantage_scale",
+        "top_vs_bad_margin_loss_weight",
+        "top_vs_bad_regret_threshold",
+        "top_vs_bad_margin_scale",
+        "top_vs_bad_gap_cap",
+    )
+    for field in direct_fields:
+        value = getattr(args, field)
+        if value is not None:
+            overrides[field] = value
+    if args.hidden_sizes is not None:
+        overrides["hidden_sizes"] = _parse_hidden_sizes(args.hidden_sizes)
+    profile = replace(profile, **overrides)
+    if (
+        "pairwise_use_denormalized_q_gap" not in overrides
+        and float(profile.pairwise_rank_loss_weight) > 0.0
+        and (
+            float(profile.soft_q_kl_loss_weight) > 0.0
+            or float(profile.expected_regret_loss_weight) > 0.0
+            or float(profile.tail_regret_loss_weight) > 0.0
+            or float(profile.advantage_huber_loss_weight) > 0.0
+            or float(profile.top_vs_bad_margin_loss_weight) > 0.0
+        )
+    ):
+        profile = replace(profile, pairwise_use_denormalized_q_gap=True)
+    return profile
+
+
+def _parse_hidden_sizes(raw: str) -> tuple[int, ...]:
+    values = tuple(int(part.strip()) for part in str(raw).split(",") if part.strip())
+    if not values or any(value <= 0 for value in values):
+        raise argparse.ArgumentTypeError("--hidden-sizes debe contener enteros positivos separados por coma")
+    return values
 
 
 def _print_compact(report: dict[str, object]) -> None:

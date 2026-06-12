@@ -60,6 +60,18 @@ class QhScorerTrainingProfile:
     pairwise_rank_loss_weight: float = 0.0
     pairwise_margin_scale: float = 1.0
     pairwise_q_gap_cap: float = 4.0
+    pairwise_use_denormalized_q_gap: bool = False
+    soft_q_kl_loss_weight: float = 0.0
+    q_softmax_temperature: float = 1.0
+    expected_regret_loss_weight: float = 0.0
+    tail_regret_loss_weight: float = 0.0
+    tail_regret_fraction: float = 0.20
+    advantage_huber_loss_weight: float = 0.0
+    advantage_scale: float = 1.0
+    top_vs_bad_margin_loss_weight: float = 0.0
+    top_vs_bad_regret_threshold: float = 0.50
+    top_vs_bad_margin_scale: float = 1.0
+    top_vs_bad_gap_cap: float = 4.0
     high_capacity_action0_tolerance: float = 0.05
     mean_regret_tolerance: float = 0.35
     top1_accuracy_floor: float = 0.50
@@ -79,6 +91,18 @@ class QhScorerTrainingProfile:
             "pairwise_rank_loss_weight": self.pairwise_rank_loss_weight,
             "pairwise_margin_scale": self.pairwise_margin_scale,
             "pairwise_q_gap_cap": self.pairwise_q_gap_cap,
+            "pairwise_use_denormalized_q_gap": self.pairwise_use_denormalized_q_gap,
+            "soft_q_kl_loss_weight": self.soft_q_kl_loss_weight,
+            "q_softmax_temperature": self.q_softmax_temperature,
+            "expected_regret_loss_weight": self.expected_regret_loss_weight,
+            "tail_regret_loss_weight": self.tail_regret_loss_weight,
+            "tail_regret_fraction": self.tail_regret_fraction,
+            "advantage_huber_loss_weight": self.advantage_huber_loss_weight,
+            "advantage_scale": self.advantage_scale,
+            "top_vs_bad_margin_loss_weight": self.top_vs_bad_margin_loss_weight,
+            "top_vs_bad_regret_threshold": self.top_vs_bad_regret_threshold,
+            "top_vs_bad_margin_scale": self.top_vs_bad_margin_scale,
+            "top_vs_bad_gap_cap": self.top_vs_bad_gap_cap,
             "high_capacity_action0_tolerance": self.high_capacity_action0_tolerance,
             "mean_regret_tolerance": self.mean_regret_tolerance,
             "top1_accuracy_floor": self.top1_accuracy_floor,
@@ -139,6 +163,35 @@ QH_SCORER_TRAINING_PROFILES: dict[str, QhScorerTrainingProfile] = {
         mean_regret_tolerance=0.35,
         top1_accuracy_floor=0.55,
         seed=450923,
+    ),
+    "pilot_adv_regret_v1": QhScorerTrainingProfile(
+        name="pilot_adv_regret_v1",
+        epochs=40,
+        batch_size=512,
+        learning_rate=1.8e-4,
+        hidden_sizes=(384, 192, 96),
+        max_training_samples=None,
+        max_validation_samples=None,
+        ce_loss_weight=0.08,
+        q_value_loss_weight=0.0,
+        pairwise_rank_loss_weight=0.70,
+        pairwise_margin_scale=0.60,
+        pairwise_q_gap_cap=5.0,
+        pairwise_use_denormalized_q_gap=True,
+        soft_q_kl_loss_weight=1.20,
+        q_softmax_temperature=0.35,
+        expected_regret_loss_weight=1.60,
+        tail_regret_loss_weight=0.90,
+        tail_regret_fraction=0.25,
+        advantage_huber_loss_weight=0.45,
+        advantage_scale=1.0,
+        top_vs_bad_margin_loss_weight=1.20,
+        top_vs_bad_regret_threshold=0.50,
+        top_vs_bad_margin_scale=0.45,
+        top_vs_bad_gap_cap=5.0,
+        mean_regret_tolerance=0.35,
+        top1_accuracy_floor=0.55,
+        seed=450924,
     ),
     "full_v1": QhScorerTrainingProfile(
         name="full_v1",
@@ -266,28 +319,34 @@ def train_phase45_v3_qh_scorer(
 
     epochs = []
     best_state = None
-    best_score = math.inf
+    best_score: tuple[float, float, float, float] | None = None
     started = time.time()
     for epoch in range(1, int(profile.epochs) + 1):
         model.train()
         train_losses = []
+        train_loss_parts: dict[str, float] = {}
         for batch in train_loader:
             batch = tuple(tensor.to(active_device) for tensor in batch)
-            loss, loss_parts = _loss_for_batch(model, batch, profile)
+            loss, loss_parts = _loss_for_batch(model, batch, profile, normalization)
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 5.0)
             optimizer.step()
             train_losses.append(float(loss.detach().cpu()))
+            for name, value in loss_parts.items():
+                train_loss_parts[name] = train_loss_parts.get(name, 0.0) + float(value)
         validation_metrics = evaluate_qh_scorer(model, validation_tensors, normalization, active_device)
         epoch_record = {
             "epoch": epoch,
             "train_loss_mean": round(sum(train_losses) / float(len(train_losses)), 6) if train_losses else 0.0,
+            "train_loss_components": {
+                name: round(value / float(max(len(train_losses), 1)), 6) for name, value in sorted(train_loss_parts.items())
+            },
             "validation": validation_metrics,
         }
         epochs.append(epoch_record)
         selection_score = _selection_score(validation_metrics, profile)
-        if selection_score < best_score:
+        if best_score is None or selection_score < best_score:
             best_score = selection_score
             best_state = {key: value.detach().cpu() for key, value in model.state_dict().items()}
 
@@ -428,13 +487,20 @@ def evaluate_qh_scorer(
     high_mask = high_capacity > 0.5
     predicted_cpu = predicted.detach().cpu().tolist()
     selected_cpu = selected.detach().cpu().tolist()
+    regret_cpu = regret.detach().cpu().tolist()
     return {
         "sample_count": int(selected.shape[0]),
         "top1_accuracy": round(float(accuracy.mean().detach().cpu()), 6),
         "mean_regret_q_h": round(float(regret.mean().detach().cpu()), 6),
-        "p95_regret_q_h": round(_quantile(regret.detach().cpu().tolist(), 0.95), 6),
+        "p95_regret_q_h": round(_quantile(regret_cpu, 0.95), 6),
+        "regret_gt_0_5_rate": round(_ratio(sum(1 for value in regret_cpu if float(value) > 0.5), len(regret_cpu)), 6),
+        "regret_gt_1_0_rate": round(_ratio(sum(1 for value in regret_cpu if float(value) > 1.0), len(regret_cpu)), 6),
+        "regret_gt_2_0_rate": round(_ratio(sum(1 for value in regret_cpu if float(value) > 2.0), len(regret_cpu)), 6),
         "predicted_action_distribution": _histogram(predicted_cpu),
         "target_action_distribution": _histogram(selected_cpu),
+        "mean_regret_by_target_action": _mean_by_action(regret_cpu, selected_cpu),
+        "mean_regret_by_predicted_action": _mean_by_action(regret_cpu, predicted_cpu),
+        "confusion_target_predicted": _confusion_matrix(selected_cpu, predicted_cpu),
         "predicted_action0_rate": round(_ratio(sum(1 for item in predicted_cpu if int(item) == 0), len(predicted_cpu)), 6),
         "target_action0_rate": round(_ratio(sum(1 for item in selected_cpu if int(item) == 0), len(selected_cpu)), 6),
         "high_capacity_safe_state_count": int(high_mask.sum().detach().cpu()),
@@ -449,23 +515,51 @@ def _loss_for_batch(
     model: Phase45V3QhScorer,
     batch: Sequence[torch.Tensor],
     profile: QhScorerTrainingProfile,
+    normalization: QhScorerNormalization | None = None,
 ) -> tuple[torch.Tensor, Mapping[str, float]]:
-    context, candidates, masks, q_values, selected, _high_capacity = batch
+    context, candidates, masks, q_values_norm, selected, _high_capacity = batch
     scores = model(context, candidates, masks)
     ce_loss = F.cross_entropy(scores, selected)
     valid = masks.to(dtype=torch.bool)
-    q_value_loss = F.smooth_l1_loss(scores[valid], q_values[valid])
-    pairwise_rank_loss = _pairwise_qh_rank_loss(scores, q_values, valid, selected, profile)
+    q_values = _denormalize_q_values(q_values_norm, normalization)
+    q_value_loss = (
+        F.smooth_l1_loss(scores[valid], q_values_norm[valid])
+        if float(profile.q_value_loss_weight) > 0.0
+        else scores.new_tensor(0.0)
+    )
+    pairwise_q_values = q_values if profile.pairwise_use_denormalized_q_gap else q_values_norm
+    pairwise_rank_loss = _pairwise_qh_rank_loss(scores, pairwise_q_values, valid, selected, profile)
+    soft_q_kl_loss = _soft_q_kl_loss(scores, q_values, valid, profile)
+    expected_regret_loss, per_sample_expected_regret = _expected_regret_loss(scores, q_values, valid, profile)
+    tail_regret_loss = _tail_regret_loss(per_sample_expected_regret, profile)
+    advantage_huber_loss = _advantage_huber_loss(scores, q_values, valid, profile)
+    top_vs_bad_margin_loss = _top_vs_bad_margin_loss(scores, q_values, valid, profile)
     loss = (
         float(profile.ce_loss_weight) * ce_loss
         + float(profile.q_value_loss_weight) * q_value_loss
         + float(profile.pairwise_rank_loss_weight) * pairwise_rank_loss
+        + float(profile.soft_q_kl_loss_weight) * soft_q_kl_loss
+        + float(profile.expected_regret_loss_weight) * expected_regret_loss
+        + float(profile.tail_regret_loss_weight) * tail_regret_loss
+        + float(profile.advantage_huber_loss_weight) * advantage_huber_loss
+        + float(profile.top_vs_bad_margin_loss_weight) * top_vs_bad_margin_loss
     )
     return loss, {
         "ce_loss": float(ce_loss.detach().cpu()),
         "q_value_loss": float(q_value_loss.detach().cpu()),
         "pairwise_rank_loss": float(pairwise_rank_loss.detach().cpu()),
+        "soft_q_kl_loss": float(soft_q_kl_loss.detach().cpu()),
+        "expected_regret_loss": float(expected_regret_loss.detach().cpu()),
+        "tail_regret_loss": float(tail_regret_loss.detach().cpu()),
+        "advantage_huber_loss": float(advantage_huber_loss.detach().cpu()),
+        "top_vs_bad_margin_loss": float(top_vs_bad_margin_loss.detach().cpu()),
     }
+
+
+def _denormalize_q_values(q_values_norm: torch.Tensor, normalization: QhScorerNormalization | None) -> torch.Tensor:
+    if normalization is None:
+        return q_values_norm
+    return q_values_norm * float(normalization.q_value_std) + float(normalization.q_value_mean)
 
 
 def _pairwise_qh_rank_loss(
@@ -488,6 +582,109 @@ def _pairwise_qh_rank_loss(
     margin = float(profile.pairwise_margin_scale) * q_gap
     score_gap = selected_scores - scores
     return F.relu(margin - score_gap)[negative_mask].mean()
+
+
+def _soft_q_kl_loss(
+    scores: torch.Tensor,
+    q_values: torch.Tensor,
+    valid: torch.Tensor,
+    profile: QhScorerTrainingProfile,
+) -> torch.Tensor:
+    if float(profile.soft_q_kl_loss_weight) <= 0.0:
+        return scores.new_tensor(0.0)
+    target_probs = _soft_q_target_probs(q_values, valid, float(profile.q_softmax_temperature))
+    pred_log_probs = F.log_softmax(scores.masked_fill(~valid, -1.0e9), dim=1)
+    target_log_probs = torch.log(torch.clamp(target_probs, min=1.0e-12))
+    kl_by_sample = (target_probs * (target_log_probs - pred_log_probs)).masked_fill(~valid, 0.0).sum(dim=1)
+    return kl_by_sample.mean()
+
+
+def _soft_q_target_probs(q_values: torch.Tensor, valid: torch.Tensor, temperature: float) -> torch.Tensor:
+    tau = max(float(temperature), 1.0e-6)
+    q_best = _masked_max(q_values, valid).unsqueeze(1)
+    advantage = torch.where(valid, q_values - q_best, torch.zeros_like(q_values))
+    target_logits = (advantage / tau).masked_fill(~valid, -1.0e9)
+    return F.softmax(target_logits, dim=1).masked_fill(~valid, 0.0)
+
+
+def _expected_regret_loss(
+    scores: torch.Tensor,
+    q_values: torch.Tensor,
+    valid: torch.Tensor,
+    profile: QhScorerTrainingProfile,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    if float(profile.expected_regret_loss_weight) <= 0.0 and float(profile.tail_regret_loss_weight) <= 0.0:
+        empty = scores.new_tensor(0.0)
+        return empty, scores.new_zeros(scores.shape[0])
+    q_best = _masked_max(q_values, valid).unsqueeze(1)
+    regret = torch.clamp(q_best - q_values, min=0.0).masked_fill(~valid, 0.0)
+    pred_probs = F.softmax(scores.masked_fill(~valid, -1.0e9), dim=1).masked_fill(~valid, 0.0)
+    per_sample = (pred_probs * regret).sum(dim=1)
+    return per_sample.mean(), per_sample
+
+
+def _tail_regret_loss(per_sample_expected_regret: torch.Tensor, profile: QhScorerTrainingProfile) -> torch.Tensor:
+    if float(profile.tail_regret_loss_weight) <= 0.0:
+        return per_sample_expected_regret.new_tensor(0.0)
+    if per_sample_expected_regret.numel() == 0:
+        return per_sample_expected_regret.new_tensor(0.0)
+    fraction = min(max(float(profile.tail_regret_fraction), 0.0), 1.0)
+    if fraction <= 0.0:
+        return per_sample_expected_regret.new_tensor(0.0)
+    top_count = max(int(math.ceil(float(per_sample_expected_regret.numel()) * fraction)), 1)
+    return torch.topk(per_sample_expected_regret, k=top_count, largest=True).values.mean()
+
+
+def _advantage_huber_loss(
+    scores: torch.Tensor,
+    q_values: torch.Tensor,
+    valid: torch.Tensor,
+    profile: QhScorerTrainingProfile,
+) -> torch.Tensor:
+    if float(profile.advantage_huber_loss_weight) <= 0.0:
+        return scores.new_tensor(0.0)
+    q_best = _masked_max(q_values, valid).unsqueeze(1)
+    advantage = torch.where(valid, q_values - q_best, torch.zeros_like(q_values))
+    advantage = advantage / max(float(profile.advantage_scale), 1.0e-6)
+    centered_scores = scores - _masked_mean(scores, valid).unsqueeze(1)
+    centered_advantage = advantage - _masked_mean(advantage, valid).unsqueeze(1)
+    return F.smooth_l1_loss(centered_scores[valid], centered_advantage[valid])
+
+
+def _top_vs_bad_margin_loss(
+    scores: torch.Tensor,
+    q_values: torch.Tensor,
+    valid: torch.Tensor,
+    profile: QhScorerTrainingProfile,
+) -> torch.Tensor:
+    if float(profile.top_vs_bad_margin_loss_weight) <= 0.0:
+        return scores.new_tensor(0.0)
+    q_masked = q_values.masked_fill(~valid, -torch.inf)
+    best_idx = torch.argmax(q_masked, dim=1).unsqueeze(1)
+    best_scores = torch.gather(scores, 1, best_idx)
+    q_best = torch.gather(q_values, 1, best_idx)
+    regret = torch.clamp(q_best - q_values, min=0.0).masked_fill(~valid, 0.0)
+    bad_mask = valid & (regret >= float(profile.top_vs_bad_regret_threshold))
+    if not bool(bad_mask.any().detach().cpu()):
+        return scores.new_tensor(0.0)
+    capped_regret = torch.clamp(regret, max=float(profile.top_vs_bad_gap_cap))
+    margin = capped_regret * float(profile.top_vs_bad_margin_scale)
+    score_gap = best_scores - scores
+    raw = F.softplus(margin - score_gap)
+    weights = capped_regret / max(float(profile.top_vs_bad_gap_cap), 1.0e-6)
+    weighted = raw[bad_mask] * weights[bad_mask]
+    denominator = torch.clamp(weights[bad_mask].sum(), min=1.0e-6)
+    return weighted.sum() / denominator
+
+
+def _masked_max(values: torch.Tensor, valid: torch.Tensor) -> torch.Tensor:
+    return values.masked_fill(~valid, -torch.inf).max(dim=1).values
+
+
+def _masked_mean(values: torch.Tensor, valid: torch.Tensor) -> torch.Tensor:
+    clean_values = values.masked_fill(~valid, 0.0)
+    counts = valid.to(dtype=values.dtype).sum(dim=1).clamp_min(1.0)
+    return clean_values.sum(dim=1) / counts
 
 
 def _sample_to_arrays(
@@ -547,16 +744,21 @@ def _evaluate_training_gates(metrics: Mapping[str, object], profile: QhScorerTra
     return {"failed": failed, "gates": gates}
 
 
-def _selection_score(metrics: Mapping[str, object], profile: QhScorerTrainingProfile) -> float:
+def _selection_score(metrics: Mapping[str, object], profile: QhScorerTrainingProfile) -> tuple[float, float, float, float]:
+    anti_collapse_excess = max(
+        float(metrics["high_capacity_predicted_action0_rate"]) - profile.high_capacity_action0_tolerance,
+        0.0,
+    )
     return (
-        float(metrics["mean_regret_q_h"])
-        + 0.25 * (1.0 - float(metrics["top1_accuracy"]))
-        + 2.0 * max(float(metrics["high_capacity_predicted_action0_rate"]) - profile.high_capacity_action0_tolerance, 0.0)
+        float(metrics["mean_regret_q_h"]),
+        float(metrics["p95_regret_q_h"]),
+        -float(metrics["top1_accuracy"]),
+        anti_collapse_excess,
     )
 
 
 def _resolve_device(device: str | None) -> torch.device:
-    if device:
+    if device and str(device).strip().lower() not in {"auto", "default"}:
         return torch.device(device)
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -610,6 +812,26 @@ def _optional_finite_float(value: object) -> float | None:
 
 def _histogram(values: Sequence[int]) -> dict[str, int]:
     return dict(sorted(Counter(str(int(value)) for value in values).items()))
+
+
+def _mean_by_action(values: Sequence[float], actions: Sequence[int]) -> dict[str, float]:
+    totals: dict[int, float] = {}
+    counts: dict[int, int] = {}
+    for value, action in zip(values, actions):
+        key = int(action)
+        totals[key] = totals.get(key, 0.0) + float(value)
+        counts[key] = counts.get(key, 0) + 1
+    return {str(key): round(totals[key] / float(counts[key]), 6) for key in sorted(totals)}
+
+
+def _confusion_matrix(targets: Sequence[int], predictions: Sequence[int]) -> dict[str, dict[str, int]]:
+    matrix: dict[int, Counter[str]] = {}
+    for target, prediction in zip(targets, predictions):
+        target_key = int(target)
+        if target_key not in matrix:
+            matrix[target_key] = Counter()
+        matrix[target_key][str(int(prediction))] += 1
+    return {str(target): dict(sorted(counter.items())) for target, counter in sorted(matrix.items())}
 
 
 def _ratio(numerator: int, denominator: int) -> float:

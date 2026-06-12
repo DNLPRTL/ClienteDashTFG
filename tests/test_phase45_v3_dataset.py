@@ -47,6 +47,9 @@ class Phase45V3DatasetTest(unittest.TestCase):
         self.assertEqual("pilot_rank", training_profile_by_name("pilot_rank").name)
         self.assertGreater(training_profile_by_name("pilot_rank").pairwise_rank_loss_weight, 0.0)
         self.assertLess(training_profile_by_name("pilot_rank").ce_loss_weight, training_profile_by_name("pilot").ce_loss_weight)
+        self.assertEqual("pilot_adv_regret_v1", training_profile_by_name("pilot_adv_regret_v1").name)
+        self.assertGreater(training_profile_by_name("pilot_adv_regret_v1").expected_regret_loss_weight, 0.0)
+        self.assertEqual(0.0, training_profile_by_name("pilot_adv_regret_v1").q_value_loss_weight)
 
     def test_builds_valid_qh_dataset_with_closed_loop_client_contract(self):
         with tempfile.TemporaryDirectory() as temp_dir:
