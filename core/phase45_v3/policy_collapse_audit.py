@@ -189,7 +189,17 @@ def _resolve_result_file(root: Path, filename: str, required: bool = True) -> Pa
         if candidate.is_file():
             return candidate
     if required:
-        raise PolicyCollapseAuditError("missing {0} under {1}".format(filename, root))
+        raise PolicyCollapseAuditError(
+            "missing {0} under {1}. Expected either {2} or {3}. "
+            "If this package still lives in Windows, try "
+            "/mnt/c/Users/danie/Documents/TFG/{4}".format(
+                filename,
+                root,
+                root / filename,
+                root / "02_resultados" / filename,
+                root.name,
+            )
+        )
     return None
 
 
