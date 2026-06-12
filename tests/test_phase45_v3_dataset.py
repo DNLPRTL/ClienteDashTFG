@@ -42,6 +42,8 @@ class Phase45V3DatasetTest(unittest.TestCase):
             from core.phase45_v3.constants import DATASET_SCHEMA_ID
 
         self.assertEqual("phase45_v3_closed_loop_qh_dataset_v1", DATASET_SCHEMA_ID)
+        self.assertEqual("pilot_plus", training_profile_by_name("pilot_plus").name)
+        self.assertLess(training_profile_by_name("pilot_plus").learning_rate, training_profile_by_name("pilot").learning_rate)
 
     def test_builds_valid_qh_dataset_with_closed_loop_client_contract(self):
         with tempfile.TemporaryDirectory() as temp_dir:
