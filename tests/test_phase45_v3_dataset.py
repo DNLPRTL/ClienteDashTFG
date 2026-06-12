@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 from unittest import mock
 
@@ -16,6 +17,11 @@ from core.phase45_v3.constants import (
 )
 from core.phase45_v3.dataset import build_phase45_v3_qh_dataset
 from core.phase45_v3.profiles import Phase45V3DatasetProfile
+from core.phase45_v3.qh_scorer_training import (
+    QH_SCORER_MODEL_FILENAME,
+    train_phase45_v3_qh_scorer,
+    training_profile_by_name,
+)
 from core.phase45_v3.validation import validate_phase45_v3_dataset_dir
 from scripts.summarize_phase45_v3_qh_dataset import summarize_phase45_v3_qh_dataset
 from tests.test_phase45_v1_dataset import build_manifest_with_trace_files
@@ -87,6 +93,53 @@ class Phase45V3DatasetTest(unittest.TestCase):
             self.assertEqual(6, len(first["qh_targets"]["action_values"]))
             self.assertTrue(first["qh_targets"]["future_information_is_target_only"])
             self.assertFalse(first["audit"]["rollout_action_is_model_target"])
+
+    def test_trains_qh_scorer_smoke_checkpoint_from_unit_dataset(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            manifest = build_manifest_with_trace_files(root)
+            output_dir = root / "datasets_normalizados" / "phase45_v3" / "unit_qh"
+            model_dir = root / "modelos" / "phase45_v3" / "qh_scorer" / "unit"
+            dataset_profile = Phase45V3DatasetProfile(
+                name="unit",
+                train_window_count=2,
+                validation_window_count=1,
+                qh_horizon_segments=2,
+                qh_beam_width=4,
+                max_windows_per_trace=1,
+                synthetic_max_fraction=0.50,
+                dataset_max_fraction=1.0,
+                semantics_max_fraction=1.0,
+                seed="unit-phase45-v3",
+                rollouts_per_window=2,
+            )
+            build_phase45_v3_qh_dataset(
+                manifest,
+                output_dir=output_dir,
+                profile=dataset_profile,
+                overwrite=True,
+                trace_path_rewrites=(PathRewriteRule("/home/daniel/TFG", str(root)),),
+            )
+            training_profile = replace(
+                training_profile_by_name("smoke"),
+                max_training_samples=96,
+                max_validation_samples=48,
+                top1_accuracy_floor=0.0,
+                mean_regret_tolerance=999.0,
+            )
+
+            report = train_phase45_v3_qh_scorer(
+                output_dir,
+                model_dir,
+                training_profile,
+                overwrite=True,
+                device="cpu",
+            )
+
+            self.assertEqual("PASS", report["status"])
+            self.assertEqual("phase45_v3_qh_scorer", report["model_key"])
+            self.assertTrue((model_dir / QH_SCORER_MODEL_FILENAME).is_file())
+            self.assertIn("top1_accuracy", report["final_validation"])
 
 
 if __name__ == "__main__":
