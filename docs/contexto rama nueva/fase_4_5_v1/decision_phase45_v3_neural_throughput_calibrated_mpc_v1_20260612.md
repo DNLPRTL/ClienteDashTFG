@@ -198,3 +198,63 @@ Decision de calibracion:
 
 Esta calibracion sigue siendo diagnostica. No autoriza benchmark, ranking,
 ganador ni afirmacion de mejora QoE.
+
+## Segundo piloto diagnostico tras calibracion
+
+Segundo piloto WSL/ROCm sobre el mismo preset diagnostico:
+
+```text
+~/TFG/runs_phase45_v3/neural_mpc_pilot_v1_seed451001
+generated_at_utc=2026-06-12T09:55:57+00:00
+```
+
+Resultado:
+
+```text
+status=PASS
+failed_gates=[]
+session_count=32
+window_count=8
+```
+
+Gates clave:
+
+- `bucket_2_5_mbps_rebuffer_delta_vs_robust_mpc_mean=+0.08001783155587106 s`
+  frente al umbral diagnostico `<= +1.0 s`;
+- `high_capacity_action0_rate=0.0` con `row_count=54`;
+- `high_capacity_mean_bitrate_ratio_vs_robust_mpc=1.0`;
+- `fallback_rate=0.0`;
+- `invalid_action_count=0`;
+- `qoe_delta_vs_robust_mpc_mean=-0.010293264076880151`.
+
+Comparado con el primer piloto, el fallo de rebuffer en `2_5_mbps` baja de:
+
+```text
++1.3203728087318694 s -> +0.08001783155587106 s
+```
+
+La ventana previamente problematica:
+
+```text
+trace_fcc_measuring_broadband_america_unit_26710_curr_httpgetmt_csv_acb8d18f84f0
+```
+
+queda reducida a:
+
+```text
+rebuffer_delta_s=+0.4000891577793553
+qoe_delta=-0.04901277928170755
+bitrate_delta_kbps=+86.66666666666674
+```
+
+Lectura permitida:
+
+- la calibracion del planner corrige el fallo diagnostico observado;
+- el bloqueo original de colapso a accion 0 no reaparece;
+- no se debe seguir ajustando contra este mismo piloto de 8 ventanas para evitar
+  sobreajuste diagnostico;
+- el siguiente paso debe ser ampliar el diagnostico con mas ventanas y/o
+  semillas antes de hablar de candidato formal.
+
+Esta lectura no autoriza benchmark, ranking, ganador ni afirmacion de mejora
+QoE.
