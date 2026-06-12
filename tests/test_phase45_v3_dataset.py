@@ -44,6 +44,9 @@ class Phase45V3DatasetTest(unittest.TestCase):
         self.assertEqual("phase45_v3_closed_loop_qh_dataset_v1", DATASET_SCHEMA_ID)
         self.assertEqual("pilot_plus", training_profile_by_name("pilot_plus").name)
         self.assertLess(training_profile_by_name("pilot_plus").learning_rate, training_profile_by_name("pilot").learning_rate)
+        self.assertEqual("pilot_rank", training_profile_by_name("pilot_rank").name)
+        self.assertGreater(training_profile_by_name("pilot_rank").pairwise_rank_loss_weight, 0.0)
+        self.assertLess(training_profile_by_name("pilot_rank").ce_loss_weight, training_profile_by_name("pilot").ce_loss_weight)
 
     def test_builds_valid_qh_dataset_with_closed_loop_client_contract(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -152,6 +155,7 @@ class Phase45V3DatasetTest(unittest.TestCase):
 
             self.assertEqual("PASS", report["status"])
             self.assertEqual("phase45_v3_qh_scorer", report["model_key"])
+            self.assertIn("pairwise_rank_loss_weight", report["profile"])
             self.assertTrue((model_dir / QH_SCORER_MODEL_FILENAME).is_file())
             self.assertIn("top1_accuracy", report["final_validation"])
 

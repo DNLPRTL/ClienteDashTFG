@@ -57,6 +57,9 @@ class QhScorerTrainingProfile:
     max_validation_samples: int | None
     ce_loss_weight: float = 0.45
     q_value_loss_weight: float = 1.0
+    pairwise_rank_loss_weight: float = 0.0
+    pairwise_margin_scale: float = 1.0
+    pairwise_q_gap_cap: float = 4.0
     high_capacity_action0_tolerance: float = 0.05
     mean_regret_tolerance: float = 0.35
     top1_accuracy_floor: float = 0.50
@@ -73,6 +76,9 @@ class QhScorerTrainingProfile:
             "max_validation_samples": self.max_validation_samples,
             "ce_loss_weight": self.ce_loss_weight,
             "q_value_loss_weight": self.q_value_loss_weight,
+            "pairwise_rank_loss_weight": self.pairwise_rank_loss_weight,
+            "pairwise_margin_scale": self.pairwise_margin_scale,
+            "pairwise_q_gap_cap": self.pairwise_q_gap_cap,
             "high_capacity_action0_tolerance": self.high_capacity_action0_tolerance,
             "mean_regret_tolerance": self.mean_regret_tolerance,
             "top1_accuracy_floor": self.top1_accuracy_floor,
@@ -116,6 +122,23 @@ QH_SCORER_TRAINING_PROFILES: dict[str, QhScorerTrainingProfile] = {
         mean_regret_tolerance=0.35,
         top1_accuracy_floor=0.55,
         seed=450922,
+    ),
+    "pilot_rank": QhScorerTrainingProfile(
+        name="pilot_rank",
+        epochs=28,
+        batch_size=512,
+        learning_rate=2.5e-4,
+        hidden_sizes=(256, 128, 64),
+        max_training_samples=None,
+        max_validation_samples=None,
+        ce_loss_weight=0.25,
+        q_value_loss_weight=0.80,
+        pairwise_rank_loss_weight=1.10,
+        pairwise_margin_scale=1.0,
+        pairwise_q_gap_cap=4.0,
+        mean_regret_tolerance=0.35,
+        top1_accuracy_floor=0.55,
+        seed=450923,
     ),
     "full_v1": QhScorerTrainingProfile(
         name="full_v1",
@@ -432,8 +455,39 @@ def _loss_for_batch(
     ce_loss = F.cross_entropy(scores, selected)
     valid = masks.to(dtype=torch.bool)
     q_value_loss = F.smooth_l1_loss(scores[valid], q_values[valid])
-    loss = float(profile.ce_loss_weight) * ce_loss + float(profile.q_value_loss_weight) * q_value_loss
-    return loss, {"ce_loss": float(ce_loss.detach().cpu()), "q_value_loss": float(q_value_loss.detach().cpu())}
+    pairwise_rank_loss = _pairwise_qh_rank_loss(scores, q_values, valid, selected, profile)
+    loss = (
+        float(profile.ce_loss_weight) * ce_loss
+        + float(profile.q_value_loss_weight) * q_value_loss
+        + float(profile.pairwise_rank_loss_weight) * pairwise_rank_loss
+    )
+    return loss, {
+        "ce_loss": float(ce_loss.detach().cpu()),
+        "q_value_loss": float(q_value_loss.detach().cpu()),
+        "pairwise_rank_loss": float(pairwise_rank_loss.detach().cpu()),
+    }
+
+
+def _pairwise_qh_rank_loss(
+    scores: torch.Tensor,
+    q_values: torch.Tensor,
+    valid: torch.Tensor,
+    selected: torch.Tensor,
+    profile: QhScorerTrainingProfile,
+) -> torch.Tensor:
+    if float(profile.pairwise_rank_loss_weight) <= 0.0:
+        return scores.new_tensor(0.0)
+    action_indices = torch.arange(scores.shape[1], device=scores.device).unsqueeze(0)
+    selected_column = selected.unsqueeze(1)
+    negative_mask = valid & (action_indices != selected_column)
+    if not bool(negative_mask.any().detach().cpu()):
+        return scores.new_tensor(0.0)
+    selected_scores = torch.gather(scores, 1, selected_column)
+    selected_q = torch.gather(q_values, 1, selected_column)
+    q_gap = torch.clamp(selected_q - q_values, min=0.0, max=float(profile.pairwise_q_gap_cap))
+    margin = float(profile.pairwise_margin_scale) * q_gap
+    score_gap = selected_scores - scores
+    return F.relu(margin - score_gap)[negative_mask].mean()
 
 
 def _sample_to_arrays(
