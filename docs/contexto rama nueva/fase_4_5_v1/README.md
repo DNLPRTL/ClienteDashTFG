@@ -189,3 +189,21 @@ Salidas externas previstas:
 ```text
 ~/TFG/modelos/phase45_v1/spc_abr_v1/<profile>/
 ```
+
+## Decision Phase45 v3: Neural Throughput-Calibrated MPC
+
+Tras el bloqueo del `phase45_v3_qh_scorer` como controller directo, la nueva
+linea principal queda documentada en:
+
+```text
+docs/contexto rama nueva/fase_4_5_v1/decision_phase45_v3_neural_throughput_calibrated_mpc_v1_20260612.md
+```
+
+Decision:
+
+- parar `Q_H scorer` como driver principal;
+- conservarlo como diagnostico/ablacion;
+- abrir `phase45_v3_neural_throughput_calibrated_mpc_v1`;
+- entrenar un predictor de cuantiles de throughput futuro;
+- decidir acciones con un planner MPC explicito sobre `qoe_linear_v1`;
+- evaluar primero en closed-loop offline diagnostico, sin benchmark ni ranking.
