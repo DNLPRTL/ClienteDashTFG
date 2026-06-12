@@ -74,7 +74,7 @@ PROFILES: dict[str, Phase45V3DatasetProfile] = {
         dataset_max_fraction=0.40,
         semantics_max_fraction=0.55,
         seed="phase45_v3_pilot_qh_dataset_seed",
-        rollouts_per_window=3,
+        rollouts_per_window=4,
     ),
     "full_v1": Phase45V3DatasetProfile(
         name="full_v1",
@@ -87,7 +87,7 @@ PROFILES: dict[str, Phase45V3DatasetProfile] = {
         dataset_max_fraction=0.35,
         semantics_max_fraction=0.50,
         seed="phase45_v3_full_qh_dataset_seed",
-        rollouts_per_window=3,
+        rollouts_per_window=4,
     ),
 }
 

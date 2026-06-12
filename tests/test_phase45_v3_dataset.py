@@ -16,6 +16,7 @@ from core.phase45_v3.constants import (
 from core.phase45_v3.dataset import build_phase45_v3_qh_dataset
 from core.phase45_v3.profiles import Phase45V3DatasetProfile
 from core.phase45_v3.validation import validate_phase45_v3_dataset_dir
+from scripts.summarize_phase45_v3_qh_dataset import summarize_phase45_v3_qh_dataset
 from tests.test_phase45_v1_dataset import build_manifest_with_trace_files
 
 
@@ -61,6 +62,9 @@ class Phase45V3DatasetTest(unittest.TestCase):
             self.assertEqual("qoe_linear_v1", summary["closed_loop_client_parity"]["qoe_formula_version"])
             self.assertEqual("PASS", leakage["status"])
             self.assertEqual("PASS", qh_audit["status"])
+            compact_summary = summarize_phase45_v3_qh_dataset(output_dir)
+            self.assertEqual("PASS", compact_summary["status"])
+            self.assertEqual(2, compact_summary["rollouts_per_window"])
 
             first = training_rows[0]
             self.assertNotIn("trace_id", first["model_inputs"]["context"])
