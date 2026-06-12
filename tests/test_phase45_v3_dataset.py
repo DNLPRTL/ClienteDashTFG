@@ -55,6 +55,15 @@ class Phase45V3DatasetTest(unittest.TestCase):
         self.assertEqual("pilot_adv_regret_hardneg_v1", training_profile_by_name("pilot_adv_regret_hardneg_v1").name)
         self.assertGreater(training_profile_by_name("pilot_adv_regret_hardneg_v1").structured_cost_hinge_loss_weight, 0.0)
         self.assertGreater(training_profile_by_name("pilot_adv_regret_hardneg_v1").catastrophic_prob_loss_weight, 0.0)
+        self.assertEqual("pilot_adv_regret_hardneg_v2", training_profile_by_name("pilot_adv_regret_hardneg_v2").name)
+        self.assertLess(
+            training_profile_by_name("pilot_adv_regret_hardneg_v2").slice_weight_max,
+            training_profile_by_name("pilot_adv_regret_hardneg_v1").slice_weight_max,
+        )
+        self.assertGreaterEqual(
+            training_profile_by_name("pilot_adv_regret_hardneg_v2").catastrophic_regret_threshold,
+            training_profile_by_name("pilot_adv_regret_hardneg_v1").catastrophic_regret_threshold,
+        )
 
     def test_builds_valid_qh_dataset_with_closed_loop_client_contract(self):
         with tempfile.TemporaryDirectory() as temp_dir:

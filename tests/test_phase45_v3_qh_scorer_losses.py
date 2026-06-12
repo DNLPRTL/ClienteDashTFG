@@ -154,6 +154,29 @@ class Phase45V3QhScorerLossesTest(unittest.TestCase):
         self.assertEqual(5.0, weight)
         self.assertFalse(sample["metadata"]["metadata_is_model_input"])
 
+    def test_hardneg_v2_keeps_slice_weight_less_saturated_than_v1(self):
+        profile = training_profile_by_name("pilot_adv_regret_hardneg_v2")
+        sample = {
+            "model_inputs": {"context": {"buffer_s": 3.0}},
+            "metadata": {
+                "metadata_is_model_input": False,
+                "throughput_bucket": "2_5_mbps",
+                "rollout_policy": "qh_plus_one",
+                "dataset_id": "not_used_for_weight",
+            },
+            "qh_targets": {
+                "action_values": [
+                    {"action": 0, "q_h_reward_n": 0.0},
+                    {"action": 1, "q_h_reward_n": -30.0},
+                ]
+            },
+        }
+
+        weight = _sample_weight_for_example(sample, profile)
+
+        self.assertEqual(3.0, weight)
+        self.assertLess(weight, training_profile_by_name("pilot_adv_regret_hardneg_v1").slice_weight_max)
+
     def test_temporal_gru_scorer_masks_invalid_actions(self):
         model = Phase45V3TemporalGruQhScorer(
             context_dim=len(CONTEXT_VECTOR_NAMES),
