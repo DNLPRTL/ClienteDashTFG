@@ -108,10 +108,10 @@ loss = pinball + crossing_penalty + temporal_smoothness_penalty
 Planner:
 
 ```text
-buffer < 4s        -> q10
-4s <= buffer < 8s  -> q25
-8s <= buffer <16s  -> blend(q25,q50)
-buffer >=16s       -> q50
+buffer < 4s         -> q10
+4s <= buffer < 12s  -> q25
+12s <= buffer <20s  -> blend(q25,q50)
+buffer >=20s        -> q50
 ```
 
 El MPC enumera secuencias con:
@@ -160,3 +160,41 @@ separado entre predictor, cuantiles, planner o features.
 No se borra, pero no debe seguir consumiendo ejecuciones como via principal
 salvo auditoria objetiva de inconsistencia en oracle, mascara, buffer, reward o
 features.
+
+## Calibracion posterior al primer piloto diagnostico
+
+Primer piloto WSL/ROCm:
+
+```text
+~/TFG/runs_phase45_v3/neural_mpc_pilot_v1_seed451001
+```
+
+Lectura objetiva del reporte:
+
+- no hubo colapso high-capacity a accion 0;
+- `fallback_rate=0.0`;
+- `invalid_action_count=0`;
+- `high_capacity_mean_bitrate_ratio_vs_robust_mpc=1.0`;
+- estado global `REVIEW` por fallo en
+  `bucket_2_5_mbps_rebuffer_delta_vs_robust_mpc_mean`;
+- valor observado: `+1.3203728087318694 s`;
+- umbral diagnostico: `<= +1.0 s`.
+
+El fallo no corresponde al bloqueo previo de Q_H/SPBC. El sintoma nuevo es
+agresividad excesiva en una ventana `2_5_mbps`, especialmente en:
+
+```text
+trace_fcc_measuring_broadband_america_unit_26710_curr_httpgetmt_csv_acb8d18f84f0
+```
+
+Decision de calibracion:
+
+- mantener predictor, dataset y training intactos;
+- no abrir otra arquitectura;
+- no relajar gates;
+- hacer mas prudente solo la seleccion de cuantiles por buffer medio;
+- retrasar la mezcla `q25/q50` para no usar prediccion mediana con colchones de
+  buffer todavia fragiles en redes `2_5_mbps`.
+
+Esta calibracion sigue siendo diagnostica. No autoriza benchmark, ranking,
+ganador ni afirmacion de mejora QoE.

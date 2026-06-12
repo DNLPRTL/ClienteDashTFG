@@ -54,6 +54,30 @@ class Phase45V3NeuralMpcPlannerTest(unittest.TestCase):
         self.assertEqual((450_000.0,) * 5, plan)
         self.assertLessEqual(decision.action, 1)
 
+    def test_medium_buffer_keeps_q25_before_blending(self):
+        prediction = tuple((1_000_000.0, 2_200_000.0, 4_000_000.0, 8_000_000.0) for _ in range(5))
+
+        plan, label = select_throughput_plan_for_buffer(
+            prediction,
+            quantiles=(0.10, 0.25, 0.50, 0.75),
+            buffer_s=10.0,
+        )
+
+        self.assertEqual("q25", label)
+        self.assertEqual((2_200_000.0,) * 5, plan)
+
+    def test_high_medium_buffer_blends_q25_and_q50(self):
+        prediction = tuple((1_000_000.0, 2_000_000.0, 4_000_000.0, 8_000_000.0) for _ in range(5))
+
+        plan, label = select_throughput_plan_for_buffer(
+            prediction,
+            quantiles=(0.10, 0.25, 0.50, 0.75),
+            buffer_s=16.0,
+        )
+
+        self.assertEqual("blend_q25_q50", label)
+        self.assertEqual((3_000_000.0,) * 5, plan)
+
 
 if __name__ == "__main__":
     unittest.main()

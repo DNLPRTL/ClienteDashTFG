@@ -21,6 +21,9 @@ DEFAULT_NEURAL_MPC_HORIZON = 5
 DEFAULT_NEURAL_MPC_QUANTILES = (0.10, 0.25, 0.50, 0.75)
 DEFAULT_REBUFFER_WEIGHT = 4.3
 DEFAULT_SWITCH_WEIGHT = 1.0
+NEURAL_MPC_Q10_BUFFER_MAX_S = 4.0
+NEURAL_MPC_Q25_BUFFER_MAX_S = 12.0
+NEURAL_MPC_BLEND_BUFFER_MAX_S = 20.0
 
 
 class Phase45V3NeuralMpcError(ValueError):
@@ -213,12 +216,13 @@ def select_throughput_plan_for_buffer(
     q10 = _nearest_quantile_index(quantiles, 0.10)
     q25 = _nearest_quantile_index(quantiles, 0.25)
     q50 = _nearest_quantile_index(quantiles, 0.50)
-    if float(buffer_s) < 4.0:
+    if float(buffer_s) < NEURAL_MPC_Q10_BUFFER_MAX_S:
         return tuple(row[q10] for row in prediction), "q10"
-    if float(buffer_s) < 8.0:
+    if float(buffer_s) < NEURAL_MPC_Q25_BUFFER_MAX_S:
         return tuple(row[q25] for row in prediction), "q25"
-    if float(buffer_s) < 16.0:
-        alpha = min(max((16.0 - float(buffer_s)) / 8.0, 0.0), 1.0)
+    if float(buffer_s) < NEURAL_MPC_BLEND_BUFFER_MAX_S:
+        blend_width_s = NEURAL_MPC_BLEND_BUFFER_MAX_S - NEURAL_MPC_Q25_BUFFER_MAX_S
+        alpha = min(max((NEURAL_MPC_BLEND_BUFFER_MAX_S - float(buffer_s)) / blend_width_s, 0.0), 1.0)
         return tuple(alpha * row[q25] + (1.0 - alpha) * row[q50] for row in prediction), "blend_q25_q50"
     return tuple(row[q50] for row in prediction), "q50"
 
