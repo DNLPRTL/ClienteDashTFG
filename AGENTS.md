@@ -139,6 +139,12 @@ pesados/generados.
     muchos flags, heredocs o bucles extensos. Crear o reutilizar scripts
     versionados en `scripts/` y dar comandos cortos tipo `git pull` + `bash
     scripts/<script>.sh`.
+13. Si una linea de trabajo queda bloqueada durante mas de dos ejecuciones sin
+    avanzar de paso, generar automaticamente un informe objetivo para pedir
+    ayuda externa a ChatGPT u otra IA. El informe debe incluir todo el contexto
+    relevante, lo ejecutado, artefactos, rutas, metricas, gates, estado actual y
+    bloqueo observado. No debe proponer soluciones ni decisiones; solo debe
+    documentar hechos verificables y la pregunta de ayuda.
 
 ## Phase 3 Rebuild guardrails
 
