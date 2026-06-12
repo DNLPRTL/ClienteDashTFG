@@ -3,6 +3,7 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from core.neural_abr.artifacts import read_json, read_jsonl
 from core.phase45_v1.paths import PathRewriteRule
@@ -21,6 +22,19 @@ from tests.test_phase45_v1_dataset import build_manifest_with_trace_files
 
 
 class Phase45V3DatasetTest(unittest.TestCase):
+    def test_constants_import_does_not_require_torch(self):
+        original_import = __import__
+
+        def guarded_import(name, *args, **kwargs):
+            if name == "torch":
+                raise AssertionError("phase45_v3 constants import must not require torch")
+            return original_import(name, *args, **kwargs)
+
+        with mock.patch("builtins.__import__", side_effect=guarded_import):
+            from core.phase45_v3.constants import DATASET_SCHEMA_ID
+
+        self.assertEqual("phase45_v3_closed_loop_qh_dataset_v1", DATASET_SCHEMA_ID)
+
     def test_builds_valid_qh_dataset_with_closed_loop_client_contract(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
