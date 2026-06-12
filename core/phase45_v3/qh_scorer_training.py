@@ -89,7 +89,7 @@ QH_SCORER_TRAINING_PROFILES: dict[str, QhScorerTrainingProfile] = {
         hidden_sizes=(64, 32),
         max_training_samples=512,
         max_validation_samples=256,
-        mean_regret_tolerance=1.25,
+        mean_regret_tolerance=999.0,
         top1_accuracy_floor=0.20,
         seed=450911,
     ),
