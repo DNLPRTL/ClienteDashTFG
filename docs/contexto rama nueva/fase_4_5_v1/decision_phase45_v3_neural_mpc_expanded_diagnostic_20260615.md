@@ -368,3 +368,55 @@ Ordenar las filas de cuantiles en inferencia es un postproceso estandar y
 auditable para convertir la salida neural en una funcion cuantilica valida
 antes de entregarla al MPC. No usa futuro, no cambia el dataset, no relaja
 gates y no convierte la ejecucion en benchmark.
+
+## Resultado tras postproceso monotono
+
+Se repitio el diagnostico ampliado con el mismo runbook tras aplicar
+postproceso monotono a las filas de cuantiles emitidas por el predictor cargado
+desde checkpoint.
+
+Salida pegada:
+
+```text
+generated_at_utc=2026-06-15T07:59:40+00:00
+status=PASS
+all_reports_passed=true
+status_counts={"PASS": 3}
+failed_gate_counts={}
+report_count=3
+```
+
+Agregados principales:
+
+```text
+fallback_rate_max=0.0
+invalid_action_count_max=0.0
+high_capacity_action0_rate_max=0.0
+high_capacity_mean_bitrate_ratio_min=1.0
+bucket_2_5_mbps_rebuffer_delta_max=0.27579423542196324
+bucket_2_5_mbps_rebuffer_delta_mean=0.13003514111964062
+qoe_delta_vs_robust_mpc_mean_across_seeds=-0.029581542074422484
+qoe_delta_vs_robust_mpc_min=-0.03866672119106131
+```
+
+Resultados por seed:
+
+```text
+451001 PASS fallback_rate=0.0 qoe_delta=-0.022622277302046315 model_sha256=8a07e0d88355f51893bcc8812d647e435d9aaad51e0cc50cee52ff23fa5d8599
+451002 PASS fallback_rate=0.0 qoe_delta=-0.027455627730159825 model_sha256=cda995abb753cd497ca1cdb5907e416d91aa6e163d91b211d113c77d3fa00300
+451003 PASS fallback_rate=0.0 qoe_delta=-0.03866672119106131 model_sha256=39146c5d6d923353d66871156d2dfc51ade8e4b9355e79ce5c855a89b36067da
+```
+
+Decision:
+
+- el diagnostico ampliado queda superado;
+- se puede preparar `candidate_model_experimental_v1` como concepto operativo;
+- no se selecciona ganador;
+- no se afirma mejora QoE;
+- no se integra runtime todavia;
+- el siguiente bloque debe definir empaquetado reproducible, readiness del
+  candidato y contrato de integracion posterior.
+
+La seed canonica inicial para preparar el contenedor experimental sera
+`451001` por politica previa de seed base, no por ranking. Las otras seeds se
+conservan como evidencia diagnostica de estabilidad.

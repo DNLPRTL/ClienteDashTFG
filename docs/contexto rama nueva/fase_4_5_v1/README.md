@@ -216,3 +216,13 @@ docs/contexto rama nueva/fase_4_5_v1/decision_phase45_v3_neural_mpc_expanded_dia
 
 Este runbook aumenta cobertura diagnostica con varias seeds y mas ventanas. No
 convierte el resultado en benchmark, ranking, ganador ni claim de mejora QoE.
+
+Tras superar el diagnostico ampliado, la preparacion de candidato IA
+experimental queda documentada en:
+
+```text
+docs/contexto rama nueva/fase_4_5_v1/decision_phase45_v3_neural_mpc_experimental_candidate_20260615.md
+```
+
+Este bloque solo prepara readiness reproducible del candidato. No crea bundle,
+no integra runtime y no autoriza comparacion formal.
