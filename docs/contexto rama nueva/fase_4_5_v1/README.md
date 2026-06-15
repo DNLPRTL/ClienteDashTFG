@@ -207,3 +207,12 @@ Decision:
 - entrenar un predictor de cuantiles de throughput futuro;
 - decidir acciones con un planner MPC explicito sobre `qoe_linear_v1`;
 - evaluar primero en closed-loop offline diagnostico, sin benchmark ni ranking.
+
+El siguiente diagnostico ampliado queda documentado en:
+
+```text
+docs/contexto rama nueva/fase_4_5_v1/decision_phase45_v3_neural_mpc_expanded_diagnostic_20260615.md
+```
+
+Este runbook aumenta cobertura diagnostica con varias seeds y mas ventanas. No
+convierte el resultado en benchmark, ranking, ganador ni claim de mejora QoE.
