@@ -4,7 +4,11 @@ import unittest
 from dataclasses import replace
 
 from core.phase45_v3.abr_closed_loop_env import default_phase45_v3_ladder, initial_closed_loop_state
-from core.phase45_v3.neural_mpc_controller import plan_neural_mpc_action, select_throughput_plan_for_buffer
+from core.phase45_v3.neural_mpc_controller import (
+    _monotonicize_quantile_row,
+    plan_neural_mpc_action,
+    select_throughput_plan_for_buffer,
+)
 
 
 class Phase45V3NeuralMpcPlannerTest(unittest.TestCase):
@@ -77,6 +81,12 @@ class Phase45V3NeuralMpcPlannerTest(unittest.TestCase):
 
         self.assertEqual("blend_q25_q50", label)
         self.assertEqual((3_000_000.0,) * 5, plan)
+
+    def test_checkpoint_quantile_rows_are_monotonicized(self):
+        self.assertEqual(
+            (1_000_000.0, 2_000_000.0, 3_000_000.0, 4_000_000.0),
+            _monotonicize_quantile_row((3_000_000.0, 1_000_000.0, 4_000_000.0, 2_000_000.0)),
+        )
 
 
 if __name__ == "__main__":

@@ -310,3 +310,61 @@ No queda autorizado:
 - ganador;
 - claim de mejora QoE;
 - integracion runtime del controller sin contrato posterior.
+
+## Resultado del primer diagnostico ampliado
+
+Ejecucion WSL/ROCm:
+
+```text
+run_root=/home/danie/TFG/runs_phase45_v3/neural_mpc_expanded_diag_v1
+model_root=/home/danie/TFG/modelos/phase45_v3/throughput_quantile_predictor/expanded_diag_v1
+seeds=451001,451002,451003
+window_count=32 por seed
+session_count=128 por seed
+```
+
+Resultado:
+
+```text
+status=REVIEW
+all_reports_passed=false
+failed_gate_counts={"fallback_rate": 3}
+```
+
+Lectura objetiva:
+
+- el diagnostico ampliado no permite avanzar todavia a candidato IA
+  experimental;
+- todos los fallos son por `fallback_rate`;
+- no reaparece colapso high-capacity a accion 0:
+  `high_capacity_action0_rate_max=0.0`;
+- no hay acciones invalidas: `invalid_action_count_max=0.0`;
+- el ratio high-capacity frente a `robust_mpc` se mantiene:
+  `high_capacity_mean_bitrate_ratio_min=1.0`;
+- el rebuffer extra en `2_5_mbps` queda bajo el umbral diagnostico:
+  `bucket_2_5_mbps_rebuffer_delta_max=0.27579423542196324`;
+- `qoe_delta_vs_robust_mpc_mean_across_seeds=-0.03270654207442248`.
+
+Se inspeccionaron ventanas con `fallback_count` alto y la causa reproducida fue:
+
+```text
+Phase45V3NeuralMpcError: prediction quantiles cross
+```
+
+Decision:
+
+- no relajar el gate `fallback_rate == 0`;
+- no declarar candidato;
+- no ajustar contra QoE ni rebuffer, porque esos gates no son el problema;
+- aplicar postproceso monotono determinista sobre las filas de cuantiles
+  emitidas por el predictor cargado desde checkpoint;
+- repetir el diagnostico ampliado con el mismo runbook.
+
+Justificacion:
+
+El modelo se entrena con penalizacion de cruce de cuantiles, pero esa
+penalizacion no garantiza monotonia exacta en todos los estados closed-loop.
+Ordenar las filas de cuantiles en inferencia es un postproceso estandar y
+auditable para convertir la salida neural en una funcion cuantilica valida
+antes de entregarla al MPC. No usa futuro, no cambia el dataset, no relaja
+gates y no convierte la ejecucion en benchmark.

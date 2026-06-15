@@ -152,7 +152,7 @@ class TorchThroughputQuantilePredictor:
                 log_ratio = float(prediction_log_ratio[horizon_index, quantile_index])
                 predicted = float(base_tp) * math.exp(max(min(log_ratio, math.log(4.0)), math.log(0.15)))
                 row.append(min(max(predicted, 0.15 * float(base_tp)), 4.0 * float(base_tp)))
-            rows.append(tuple(row))
+            rows.append(_monotonicize_quantile_row(row))
         return tuple(rows)
 
 
@@ -287,6 +287,10 @@ def _nearest_quantile_index(quantiles: Sequence[float], target: float) -> int:
     if not values:
         raise Phase45V3NeuralMpcError("quantiles must not be empty")
     return min(range(len(values)), key=lambda index: abs(values[index] - float(target)))
+
+
+def _monotonicize_quantile_row(row: Sequence[float]) -> tuple[float, ...]:
+    return tuple(sorted(float(value) for value in row))
 
 
 def _normalize_vector(values: Sequence[float], mean: Sequence[float], std: Sequence[float]) -> tuple[float, ...]:
