@@ -226,3 +226,19 @@ docs/contexto rama nueva/fase_4_5_v1/decision_phase45_v3_neural_mpc_experimental
 
 Este bloque solo prepara readiness reproducible del candidato. No crea bundle,
 no integra runtime y no autoriza comparacion formal.
+
+Tras recibir readiness `READY`, el siguiente bloque define exportacion a bundle
+experimental externo, todavia sin integracion runtime:
+
+```bash
+bash scripts/export_phase45_v3_neural_mpc_experimental_bundle_wsl.sh
+bash scripts/print_phase45_v3_neural_mpc_experimental_bundle_summary_wsl.sh
+```
+
+El bundle se escribe fuera del repositorio en:
+
+```text
+~/TFG/modelos/phase45_v3/neural_mpc_experimental_candidate_v1
+```
+
+Sigue sin ser benchmark, ranking, ganador ni claim de mejora QoE.

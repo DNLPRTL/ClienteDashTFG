@@ -139,3 +139,85 @@ Permanece prohibido:
 - llamar benchmark al diagnostico;
 - commitear modelos, datasets, runs o reportes externos;
 - integrar runtime sin contrato explicito posterior.
+
+## Bundle experimental externo definido
+
+Tras recibir readiness `READY`, se define el bundle experimental externo:
+
+```text
+/home/danie/TFG/modelos/phase45_v3/neural_mpc_experimental_candidate_v1
+```
+
+Este bundle no vive en Git. Git solo versiona el contrato, exportador,
+validador y tests.
+
+Archivos esperados:
+
+```text
+manifiesto_bundle_neural_mpc_phase45_v3.json
+modelo_phase45_v3_throughput_quantile.pt
+configuracion_phase45_v3_throughput_quantile.json
+normalizacion_phase45_v3_throughput_quantile.json
+tarjeta_modelo_neural_mpc_phase45_v3.json
+contrato_inferencia_neural_mpc_phase45_v3.json
+politica_respaldo_neural_mpc_phase45_v3.json
+reporte_export_bundle_neural_mpc_phase45_v3.json
+```
+
+El manifiesto incluye:
+
+- `schema_id=phase45_v3_neural_mpc_experimental_bundle_v1`;
+- seed canonica;
+- hash SHA256 real del checkpoint;
+- readiness multi-seed;
+- contrato de no benchmark/no ranking;
+- `runtime_controller_integrated=false`;
+- `phase6_formal_evaluation_performed=false`.
+
+## Scripts del bundle
+
+Exportar y validar en WSL2/ROCm:
+
+```bash
+bash scripts/export_phase45_v3_neural_mpc_experimental_bundle_wsl.sh
+```
+
+Imprimir el JSON pegable para el chat:
+
+```bash
+bash scripts/print_phase45_v3_neural_mpc_experimental_bundle_summary_wsl.sh
+```
+
+Validar solo manifiesto y hashes:
+
+```bash
+python3 scripts/validate_phase45_v3_neural_mpc_experimental_bundle.py
+```
+
+El exportador se niega a crear el bundle si:
+
+- alguna seed no esta en `PASS`;
+- hay gates fallidos;
+- falta un checkpoint;
+- el hash reportado del checkpoint canonico no coincide con el fichero real;
+- el output intenta escribirse dentro del repositorio.
+
+## Estado despues de crear el bundle
+
+Si el export termina en `PASS`, el estado permitido sera:
+
+```text
+bundle experimental externo creado
+controller_integrated=false
+benchmark_performed=false
+ranking_performed=false
+qoe_claims_authorized=false
+```
+
+Esto permite preparar una validacion de carga/contrato en Ubuntu cliente. No
+permite todavia:
+
+- integrar el controller en registry runtime;
+- ejecutar Phase 6 formal;
+- llamar benchmark a la validacion;
+- afirmar mejora de QoE o ganador.
