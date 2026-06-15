@@ -7,6 +7,7 @@ venv/
 .vscode/
 logs/
 analysis_output/
+output/
 runs/
 tmp_runs/
 *.zip
