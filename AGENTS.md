@@ -47,7 +47,8 @@ docs/contexto rama nueva/fase_4_5_v1/abr ia md/
 ```
 
 Antes de decidir modelo, entrenamiento, dataset derivado o controller para
-Fase 4-5 v1, leer ese corpus operativo y documentar la decision nueva.
+Fase 4-5 v1, leer ese corpus operativo, leer el proceso estandar de desarrollo
+IA ABR y documentar la decision nueva.
 
 ## Documentos obligatorios por ejecucion
 
@@ -56,6 +57,7 @@ Antes de hacer cambios relevantes, leer siempre:
 ```text
 docs/arquitectura y procedimientos estandar tfg dash/arquitectura_y_procedimientos_estandar_tfg_dash.md
 docs/arquitectura y procedimientos estandar tfg dash/TFG_PLAN_GENERICO.md
+docs/contexto rama nueva/fase_4_5_v1/proceso_desarrollo_ia_abr.md
 ```
 
 Usar tambien como contexto secundario, cuando haga falta:

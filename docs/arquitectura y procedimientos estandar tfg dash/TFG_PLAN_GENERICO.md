@@ -140,6 +140,18 @@ Para Fase 4-5 v1, el paso previo obligatorio es leer los `.md` nuevos del corpus
 `abr ia md/` y documentar una decision nueva. No se debe restaurar ni continuar
 un plan anterior si Daniel lo ha eliminado explicitamente.
 
+Las iteraciones IA ABR de Fase 4-5 v1 deben seguir el embudo documentado en:
+
+```text
+docs/contexto rama nueva/fase_4_5_v1/proceso_desarrollo_ia_abr.md
+```
+
+Ese proceso exige empezar por decision documentada y dataset pilot, continuar
+por entrenamiento pilot y multi-seed solo si hay avance real, y retrasar bundle,
+runtime, Phase 6 diagnostico/rapido y full training hasta que los gates previos
+lo justifiquen. Ninguna linea IA debe saltar directamente de una idea a
+controller integrado o a dataset full.
+
 ## 5. Flujo PDF -> MD -> Codex
 
 Flujo recomendado para cada paper o fuente:
