@@ -255,3 +255,15 @@ Scripts principales:
 bash scripts/validate_phase45_v3_neural_mpc_experimental_bundle_ubuntu_cliente.sh
 bash scripts/print_phase45_v3_neural_mpc_experimental_bundle_summary_ubuntu_cliente.sh
 ```
+
+La integracion guarded del controller runtime queda documentada en:
+
+```text
+docs/contexto rama nueva/fase_4_5_v1/runbook_phase45_v3_neural_mpc_runtime_controller_20260615.md
+```
+
+Smoke obligatorio en Ubuntu cliente:
+
+```bash
+bash scripts/smoke_phase45_v3_neural_mpc_runtime_controller_ubuntu_cliente.sh
+```

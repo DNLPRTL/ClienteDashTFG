@@ -75,6 +75,13 @@ DEFAULT_PHASE6_CONFIG: Dict[str, Any] = {
             "max_inference_latency_ms": 50.0,
             "diagnostic_only": False,
         },
+        "phase45_v3_neural_throughput_calibrated_mpc_v1": {
+            "bundle_dir": "/home/daniel/TFG/modelos/phase45_v3/neural_mpc_experimental_candidate_v1",
+            "fallback_controller": "robust_mpc",
+            "verify_hashes": True,
+            "max_inference_latency_ms": 50.0,
+            "diagnostic_only": False,
+        },
     },
 }
 

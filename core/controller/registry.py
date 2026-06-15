@@ -8,6 +8,7 @@ from .fixed_quality import FixedQualityController
 from .max_quality_controller import MaxQualityController
 from .mpc import MpcController
 from .neural_abr_lite import NeuralAbrLiteRobustMpcController, NeuralAbrLiteTeacherHibridoController
+from .phase45_v3_neural_mpc import Phase45V3NeuralMpcController
 from .rate_based import RateBasedController
 from .robust_mpc import RobustMpcController
 from .sanity_rate import FixedRateController, MaxRateController, MinRateController
@@ -77,6 +78,11 @@ CONTROLLER_REGISTRY = {
         key="spbc_abr_v2_dpo_anchor_safe_rank",
         label="SPBC ABR v2 DPO guarded controller (anchor safe-rank)",
         factory=SpbcAbrV2DpoAnchorSafeRankController,
+    ),
+    "phase45_v3_neural_throughput_calibrated_mpc_v1": ControllerSpec(
+        key="phase45_v3_neural_throughput_calibrated_mpc_v1",
+        label="Phase45 v3 Neural Throughput-Calibrated MPC",
+        factory=Phase45V3NeuralMpcController,
     ),
     "fixed_quality": ControllerSpec(
         key="fixed_quality",
