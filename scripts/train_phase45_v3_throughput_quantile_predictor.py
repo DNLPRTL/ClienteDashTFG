@@ -46,9 +46,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--seed", type=int, default=None)
     args = parser.parse_args(argv)
 
+    training_profile = throughput_quantile_training_profile_by_name(args.profile)
     dataset_profile = args.dataset_profile or args.profile
     dataset_dir = args.dataset_dir or DEFAULT_DATASET_ROOT / "throughput_quantile_{0}_v1".format(dataset_profile)
-    run_name = args.run_name or "pilot_v1_seed{0}".format(args.seed or throughput_quantile_training_profile_by_name(args.profile).seed)
+    run_name = args.run_name or "{0}_seed{1}".format(training_profile.name, args.seed or training_profile.seed)
     output_dir = args.output_dir or DEFAULT_MODEL_ROOT / run_name
     report = train_phase45_v3_throughput_quantile_predictor(
         dataset_dir,

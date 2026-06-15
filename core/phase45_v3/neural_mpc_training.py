@@ -101,6 +101,16 @@ THROUGHPUT_QUANTILE_TRAINING_PROFILES: dict[str, ThroughputQuantileTrainingProfi
         horizon_segments=5,
         seed=451001,
     ),
+    "full_v1": ThroughputQuantileTrainingProfile(
+        name="full_v1",
+        epochs=60,
+        batch_size=2048,
+        learning_rate=3.0e-4,
+        hidden_sizes=(256, 128, 64),
+        quantiles=(0.10, 0.25, 0.50, 0.75),
+        horizon_segments=5,
+        seed=452001,
+    ),
 }
 
 
