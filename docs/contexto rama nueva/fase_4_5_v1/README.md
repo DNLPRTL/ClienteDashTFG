@@ -242,3 +242,16 @@ El bundle se escribe fuera del repositorio en:
 ```
 
 Sigue sin ser benchmark, ranking, ganador ni claim de mejora QoE.
+
+La validacion del bundle en Ubuntu cliente queda documentada en:
+
+```text
+docs/contexto rama nueva/fase_4_5_v1/runbook_phase45_v3_neural_mpc_bundle_ubuntu_cliente_20260615.md
+```
+
+Scripts principales:
+
+```bash
+bash scripts/validate_phase45_v3_neural_mpc_experimental_bundle_ubuntu_cliente.sh
+bash scripts/print_phase45_v3_neural_mpc_experimental_bundle_summary_ubuntu_cliente.sh
+```
