@@ -476,12 +476,21 @@ class Phase6RunnerAndGuiTest(unittest.TestCase):
             protocol, sessions = build_phase6_protocol_and_plan(config, "diagnostico", tmp_path / "package")
             client_config = build_client_config(config, sessions[0])
 
-        self.assertEqual(27, len(sessions))
+        expected_sessions = (
+            len(protocol["trace_windows"])
+            * len(protocol["media_profiles"])
+            * len(protocol["controllers"])
+            * int(config["experiment"]["repetitions"])
+        )
+        self.assertEqual(expected_sessions, len(sessions))
         self.assertFalse(protocol["benchmark_capable"])
         self.assertFalse(protocol["ranking_capable"])
         self.assertEqual(6, protocol["preset_runtime"]["max_media_segments"])
         self.assertEqual(90.0, protocol["preset_runtime"]["network_window_duration_s"])
-        self.assertEqual(810.0, protocol["preset_runtime"]["estimated_total_duration_s"])
+        self.assertEqual(
+            float(expected_sessions) * float(protocol["preset_runtime"]["estimated_session_duration_s"]),
+            protocol["preset_runtime"]["estimated_total_duration_s"],
+        )
         self.assertEqual(6, client_config["playback"]["max_media_segments"])
         self.assertEqual(90.0, client_config["network_replay"]["window_duration_s"])
 

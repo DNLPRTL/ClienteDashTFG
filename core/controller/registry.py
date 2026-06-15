@@ -8,7 +8,7 @@ from .fixed_quality import FixedQualityController
 from .max_quality_controller import MaxQualityController
 from .mpc import MpcController
 from .neural_abr_lite import NeuralAbrLiteRobustMpcController, NeuralAbrLiteTeacherHibridoController
-from .phase45_v3_neural_mpc import Phase45V3NeuralMpcController
+from .phase45_v3_neural_mpc import Phase45V3NeuralMpcController, Phase45V3NeuralMpcV2Controller
 from .rate_based import RateBasedController
 from .robust_mpc import RobustMpcController
 from .sanity_rate import FixedRateController, MaxRateController, MinRateController
@@ -83,6 +83,11 @@ CONTROLLER_REGISTRY = {
         key="phase45_v3_neural_throughput_calibrated_mpc_v1",
         label="Phase45 v3 Neural Throughput-Calibrated MPC",
         factory=Phase45V3NeuralMpcController,
+    ),
+    "phase45_v3_neural_throughput_calibrated_mpc_v2": ControllerSpec(
+        key="phase45_v3_neural_throughput_calibrated_mpc_v2",
+        label="Phase45 v3 Neural Throughput-Calibrated MPC v2",
+        factory=Phase45V3NeuralMpcV2Controller,
     ),
     "fixed_quality": ControllerSpec(
         key="fixed_quality",

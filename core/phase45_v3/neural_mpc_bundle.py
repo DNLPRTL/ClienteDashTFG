@@ -15,6 +15,7 @@ from core.phase45_v3.neural_mpc_controller import (
     DEFAULT_REBUFFER_WEIGHT,
     DEFAULT_SWITCH_WEIGHT,
     NEURAL_MPC_BLEND_BUFFER_MAX_S,
+    NEURAL_MPC_CONTROLLER_KEYS,
     NEURAL_MPC_CONTROLLER_KEY,
     NEURAL_MPC_Q10_BUFFER_MAX_S,
     NEURAL_MPC_Q25_BUFFER_MAX_S,
@@ -68,8 +69,12 @@ def export_phase45_v3_neural_mpc_experimental_bundle(
     output_dir: object,
     canonical_seed: str = "451001",
     seeds: Sequence[str] = ("451001", "451002", "451003"),
+    controller_key: str = NEURAL_MPC_CONTROLLER_KEY,
+    candidate_key: str | None = None,
     overwrite: bool = False,
 ) -> Mapping[str, object]:
+    clean_controller_key = _validate_controller_key(controller_key)
+    clean_candidate_key = str(candidate_key or clean_controller_key)
     model_root_path = _ensure_existing_dir_outside_repo(model_root, "phase45_v3 neural mpc model root")
     run_root_path = _ensure_existing_dir_outside_repo(run_root, "phase45_v3 neural mpc run root")
     output_path = prepare_output_dir(output_dir, overwrite=overwrite, purpose="phase45_v3 neural mpc experimental bundle")
@@ -79,6 +84,7 @@ def export_phase45_v3_neural_mpc_experimental_bundle(
         run_root=run_root_path,
         canonical_seed=canonical_seed,
         seeds=seeds,
+        candidate_key=clean_candidate_key,
     )
     if readiness["status"] != "READY":
         raise Phase45V3NeuralMpcBundleError("candidate readiness is not READY; do not export bundle")
@@ -116,6 +122,7 @@ def export_phase45_v3_neural_mpc_experimental_bundle(
             readiness=readiness,
             model_config=model_config,
             normalization=normalization,
+            controller_key=clean_controller_key,
         ),
     )
     write_json(output_path / NEURAL_MPC_BUNDLE_INFERENCE_CONTRACT_FILENAME, build_neural_mpc_inference_contract())
@@ -127,7 +134,7 @@ def export_phase45_v3_neural_mpc_experimental_bundle(
         "decision": "EXPERIMENTAL_BUNDLE_READY_VALIDATE_IN_UBUNTU_CLIENTE",
         "bundle_dir": str(output_path),
         "manifest": str(output_path / NEURAL_MPC_BUNDLE_MANIFEST_FILENAME),
-        "controller_key": NEURAL_MPC_CONTROLLER_KEY,
+        "controller_key": clean_controller_key,
         "model_key": PHASE45_V3_THROUGHPUT_QUANTILE_MODEL_KEY,
         "canonical_seed": canonical_seed_value,
         "canonical_checkpoint_path": str(source_checkpoint),
@@ -147,8 +154,8 @@ def export_phase45_v3_neural_mpc_experimental_bundle(
         {
             "created_at_utc": _utc_now(),
             "phase": "fase_4_5_v3_neural_mpc_v1",
-            "candidate_key": NEURAL_MPC_CONTROLLER_KEY,
-            "controller_key": NEURAL_MPC_CONTROLLER_KEY,
+            "candidate_key": clean_candidate_key,
+            "controller_key": clean_controller_key,
             "model_key": PHASE45_V3_THROUGHPUT_QUANTILE_MODEL_KEY,
             "model_family": "Neural throughput quantile predictor plus explicit MPC",
             "training_method": "future_throughput_quantile_prediction",
@@ -180,6 +187,7 @@ def collect_neural_mpc_candidate_readiness(
     run_root: object,
     canonical_seed: str = "451001",
     seeds: Sequence[str] = ("451001", "451002", "451003"),
+    candidate_key: str = NEURAL_MPC_CONTROLLER_KEY,
 ) -> Mapping[str, object]:
     model_root_path = _ensure_existing_dir_outside_repo(model_root, "phase45_v3 neural mpc model root")
     run_root_path = _ensure_existing_dir_outside_repo(run_root, "phase45_v3 neural mpc run root")
@@ -237,7 +245,7 @@ def collect_neural_mpc_candidate_readiness(
     return {
         "schema_id": "phase45_v3_neural_mpc_experimental_candidate_readiness_v1",
         "generated_at_utc": _utc_now(),
-        "candidate_key": NEURAL_MPC_CONTROLLER_KEY,
+        "candidate_key": str(candidate_key),
         "candidate_stage": "experimental_bundle_input_readiness",
         "status": "READY" if all_passed and canonical_ready else "REVIEW",
         "model_root": str(model_root_path),
@@ -269,7 +277,7 @@ def validate_phase45_v3_neural_mpc_bundle_dir(
     manifest = read_json(bundle_path / NEURAL_MPC_BUNDLE_MANIFEST_FILENAME)
     if manifest.get("schema_id") != NEURAL_MPC_BUNDLE_SCHEMA_ID:
         raise Phase45V3NeuralMpcBundleError("bundle manifest schema_id is invalid")
-    if manifest.get("controller_key") != NEURAL_MPC_CONTROLLER_KEY:
+    if manifest.get("controller_key") not in NEURAL_MPC_CONTROLLER_KEYS:
         raise Phase45V3NeuralMpcBundleError("bundle manifest controller_key is invalid")
     if manifest.get("model_key") != PHASE45_V3_THROUGHPUT_QUANTILE_MODEL_KEY:
         raise Phase45V3NeuralMpcBundleError("bundle manifest model_key is invalid")
@@ -334,11 +342,12 @@ def build_neural_mpc_model_card(
     readiness: Mapping[str, object],
     model_config: Mapping[str, object],
     normalization: Mapping[str, object],
+    controller_key: str = NEURAL_MPC_CONTROLLER_KEY,
 ) -> Mapping[str, object]:
     return {
         "schema_id": "phase45_v3_neural_mpc_model_card_v1",
         "human_readable_name": "Tarjeta del modelo Neural Throughput-Calibrated MPC Phase45 v3",
-        "controller_key": NEURAL_MPC_CONTROLLER_KEY,
+        "controller_key": _validate_controller_key(controller_key),
         "model_key": PHASE45_V3_THROUGHPUT_QUANTILE_MODEL_KEY,
         "model_family": "MLP predictor de cuantiles de throughput futuro mas MPC explicito",
         "source_checkpoint": str(source_checkpoint),
@@ -488,6 +497,13 @@ def _failed_gates(report: Mapping[str, object]) -> list[str]:
 
 def _mapping(value: object) -> Mapping[str, object]:
     return value if isinstance(value, Mapping) else {}
+
+
+def _validate_controller_key(value: object) -> str:
+    key = str(value).strip()
+    if key not in NEURAL_MPC_CONTROLLER_KEYS:
+        raise Phase45V3NeuralMpcBundleError("invalid Neural-MPC controller_key: {0}".format(value))
+    return key
 
 
 def _optional_sha256(path: Path) -> str | None:

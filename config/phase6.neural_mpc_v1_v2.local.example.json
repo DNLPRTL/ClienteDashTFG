@@ -1,0 +1,41 @@
+{
+  "controller_display_names": {
+    "phase45_v3_neural_throughput_calibrated_mpc_v1": "Propio Neural-MPC v1",
+    "phase45_v3_neural_throughput_calibrated_mpc_v2": "Propio Neural-MPC v2 full"
+  },
+  "controller_params": {
+    "phase45_v3_neural_throughput_calibrated_mpc_v1": {
+      "bundle_dir": "/home/daniel/TFG/modelos/phase45_v3/neural_mpc_experimental_candidate_v1",
+      "diagnostic_only": false,
+      "fallback_controller": "robust_mpc",
+      "max_inference_latency_ms": 50.0,
+      "verify_hashes": true
+    },
+    "phase45_v3_neural_throughput_calibrated_mpc_v2": {
+      "bundle_dir": "/home/daniel/TFG/modelos/phase45_v3/neural_mpc_experimental_candidate_v2",
+      "diagnostic_only": false,
+      "fallback_controller": "robust_mpc",
+      "max_inference_latency_ms": 50.0,
+      "verify_hashes": true
+    }
+  },
+  "experiment": {
+    "controllers": [
+      "rate_based",
+      "bola",
+      "robust_mpc",
+      "phase45_v3_neural_throughput_calibrated_mpc_v1",
+      "phase45_v3_neural_throughput_calibrated_mpc_v2"
+    ],
+    "engine": "fake",
+    "include_synthetic_diagnostic": true,
+    "media_profile_ids": [],
+    "preset": "diagnostico",
+    "repetitions": 1,
+    "seed": 606
+  },
+  "paths": {
+    "output_root": "/home/daniel/TFG/runs_trazas/phase6/validacion_comparativa_neural_mpc_v1_v2"
+  },
+  "schema_version": "phase6_config_v1"
+}

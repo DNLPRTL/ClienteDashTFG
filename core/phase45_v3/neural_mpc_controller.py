@@ -17,6 +17,8 @@ from core.controller.robust_mpc import RobustMpcController
 
 
 NEURAL_MPC_CONTROLLER_KEY = "phase45_v3_neural_throughput_calibrated_mpc_v1"
+NEURAL_MPC_V2_CONTROLLER_KEY = "phase45_v3_neural_throughput_calibrated_mpc_v2"
+NEURAL_MPC_CONTROLLER_KEYS = (NEURAL_MPC_CONTROLLER_KEY, NEURAL_MPC_V2_CONTROLLER_KEY)
 DEFAULT_NEURAL_MPC_HORIZON = 5
 DEFAULT_NEURAL_MPC_QUANTILES = (0.10, 0.25, 0.50, 0.75)
 DEFAULT_REBUFFER_WEIGHT = 4.3

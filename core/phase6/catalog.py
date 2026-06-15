@@ -27,6 +27,7 @@ DEFAULT_CONTROLLER_ALIASES = {
     "neural_abr_lite_teacher_hibrido": "propio_th",
     "spbc_abr_v2_dpo_anchor_safe_rank": "propio_spbc_v2_anchor",
     "phase45_v3_neural_throughput_calibrated_mpc_v1": "propio_neural_mpc_v1",
+    "phase45_v3_neural_throughput_calibrated_mpc_v2": "propio_neural_mpc_v2",
 }
 
 DEFAULT_CONTROLLER_HUMAN_NAMES = {
@@ -39,6 +40,7 @@ DEFAULT_CONTROLLER_HUMAN_NAMES = {
     "neural_abr_lite_teacher_hibrido": "Propio TH",
     "spbc_abr_v2_dpo_anchor_safe_rank": "Propio SPBC v2 Anchor",
     "phase45_v3_neural_throughput_calibrated_mpc_v1": "Propio Neural-MPC v1",
+    "phase45_v3_neural_throughput_calibrated_mpc_v2": "Propio Neural-MPC v2",
 }
 
 MEDIA_PROFILES = {

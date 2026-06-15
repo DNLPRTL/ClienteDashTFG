@@ -31,6 +31,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
     parser.add_argument("--canonical-seed", default="451001")
     parser.add_argument("--seeds", default=DEFAULT_SEEDS)
+    parser.add_argument("--controller-key", default="phase45_v3_neural_throughput_calibrated_mpc_v1")
+    parser.add_argument("--candidate-key", default=None)
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args(argv)
 
@@ -40,6 +42,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         output_dir=args.output_dir,
         canonical_seed=str(args.canonical_seed),
         seeds=_parse_seeds(args.seeds),
+        controller_key=str(args.controller_key),
+        candidate_key=args.candidate_key,
         overwrite=bool(args.overwrite),
     )
     print(json.dumps(report, indent=2, sort_keys=True))

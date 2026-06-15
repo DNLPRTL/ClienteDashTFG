@@ -36,6 +36,7 @@ from core.phase45_v3.neural_mpc_bundle import (
 from core.phase45_v3.neural_mpc_controller import (
     DEFAULT_NEURAL_MPC_HORIZON,
     NEURAL_MPC_CONTROLLER_KEY,
+    NEURAL_MPC_V2_CONTROLLER_KEY,
     plan_neural_mpc_action,
 )
 from core.phase45_v3.throughput_quantile_dataset import harmonic_mean_bps
@@ -46,6 +47,7 @@ from core.phase45_v3.throughput_quantile_model import (
 
 
 DEFAULT_NEURAL_MPC_BUNDLE_DIR = "/home/daniel/TFG/modelos/phase45_v3/neural_mpc_experimental_candidate_v1"
+DEFAULT_NEURAL_MPC_V2_BUNDLE_DIR = "/home/daniel/TFG/modelos/phase45_v3/neural_mpc_experimental_candidate_v2"
 DEFAULT_FALLBACK_CONTROLLER = "robust_mpc"
 
 
@@ -297,6 +299,15 @@ class Phase45V3NeuralMpcController(BaseController):
             bundle_configured=1 if self.bundle_dir.strip() else 0,
             diagnostic_only=1 if self.diagnostic_only else 0,
         )
+
+
+class Phase45V3NeuralMpcV2Controller(Phase45V3NeuralMpcController):
+    name = NEURAL_MPC_V2_CONTROLLER_KEY
+
+    def __init__(self, bundle_dir: object | None = None, **kwargs) -> None:
+        super().__init__(bundle_dir=bundle_dir or DEFAULT_NEURAL_MPC_V2_BUNDLE_DIR, **kwargs)
+        self.name = NEURAL_MPC_V2_CONTROLLER_KEY
+        self.controller_key = NEURAL_MPC_V2_CONTROLLER_KEY
 
 
 def _validate_bundle(bundle_dir: object, verify_hashes: bool) -> Mapping[str, object]:

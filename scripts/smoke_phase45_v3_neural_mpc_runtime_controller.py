@@ -25,11 +25,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         description="Smoke no-benchmark del controller runtime Neural-MPC Phase45 v3."
     )
     parser.add_argument("--bundle-dir", type=Path, default=DEFAULT_BUNDLE_DIR)
+    parser.add_argument("--controller-key", default=NEURAL_MPC_CONTROLLER_KEY)
     parser.add_argument("--max-inference-latency-ms", type=float, default=1000.0)
     args = parser.parse_args(argv)
 
     controller = create_controller(
-        NEURAL_MPC_CONTROLLER_KEY,
+        str(args.controller_key),
         {
             "bundle_dir": str(args.bundle_dir),
             "fallback_controller": "robust_mpc",
@@ -57,7 +58,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "generated_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "status": status,
         "decision": "RUNTIME_CONTROLLER_LOADS_AND_SELECTS" if status == "PASS" else "CHECK_RUNTIME_DIAGNOSTICS",
-        "controller_key": NEURAL_MPC_CONTROLLER_KEY,
+        "controller_key": str(args.controller_key),
         "bundle_dir": str(args.bundle_dir),
         "selected_rate_Bps": selected_rate,
         "selected_level": selected_level,

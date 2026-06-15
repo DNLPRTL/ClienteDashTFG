@@ -13,6 +13,7 @@ from core.phase45_v3.neural_mpc_bundle import (
     export_phase45_v3_neural_mpc_experimental_bundle,
     validate_phase45_v3_neural_mpc_bundle_dir,
 )
+from core.phase45_v3.neural_mpc_controller import NEURAL_MPC_V2_CONTROLLER_KEY
 from core.phase45_v3.neural_mpc_evaluation import NEURAL_MPC_CLOSED_LOOP_REPORT_FILENAME
 from core.phase45_v3.neural_mpc_training import (
     THROUGHPUT_QUANTILE_MODEL_CONFIG_FILENAME,
@@ -54,6 +55,33 @@ class Phase45V3NeuralMpcBundleTests(unittest.TestCase):
             self.assertTrue(manifest["no_final_ranking"])
             self.assertFalse(manifest["runtime_controller_integrated"])
             self.assertIn(NEURAL_MPC_BUNDLE_MODEL_FILENAME, manifest["files"])
+
+    def test_exports_v2_bundle_with_v2_controller_key(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            model_root = root / "modelos" / "full_v1_neural_mpc_v2"
+            run_root = root / "runs" / "neural_mpc_full_v1_v2"
+            output_dir = root / "bundle" / "neural_mpc_experimental_candidate_v2"
+            seeds = ("452001", "452002", "452003")
+            for seed in seeds:
+                self._write_seed_artifacts(model_root, run_root, seed)
+
+            report = export_phase45_v3_neural_mpc_experimental_bundle(
+                model_root=model_root,
+                run_root=run_root,
+                output_dir=output_dir,
+                canonical_seed="452003",
+                seeds=seeds,
+                controller_key=NEURAL_MPC_V2_CONTROLLER_KEY,
+                candidate_key=NEURAL_MPC_V2_CONTROLLER_KEY,
+                overwrite=True,
+            )
+            validation = validate_phase45_v3_neural_mpc_bundle_dir(output_dir)
+
+            self.assertEqual("PASS", report["status"])
+            self.assertEqual(NEURAL_MPC_V2_CONTROLLER_KEY, report["controller_key"])
+            self.assertEqual(NEURAL_MPC_V2_CONTROLLER_KEY, validation["manifest"]["controller_key"])
+            self.assertEqual(NEURAL_MPC_V2_CONTROLLER_KEY, validation["manifest"]["candidate_key"])
 
     def test_export_rejects_review_readiness(self) -> None:
         with tempfile.TemporaryDirectory() as temp_root:
