@@ -80,19 +80,22 @@ def main(argv: Sequence[str] | None = None) -> int:
     prudent = controllers.get(MPC_PRUDENTE_CONTROLLER_KEY, {})
     robust = controllers.get("robust_mpc", {})
     paired = report["paired_vs_robust_mpc"].get(MPC_PRUDENTE_CONTROLLER_KEY, {})
-    variable = paired.get("by_variability", {}).get("variable", {})
+    bucket_2_5 = paired.get("servable_by_throughput_bucket", {}).get("2_5_mbps", {})
     print(
-        "MPC_PRUDENTE_DIAGNOSTIC status={st} prudent_qoe={pq} robust_qoe={rq} "
-        "prudent_rebuffer={pr} robust_rebuffer={rr} qoe_delta={qd} rebuffer_delta={rd} "
-        "variable_rebuffer_delta={vrd} fallback={fb} invalid={inv}".format(
+        "MPC_PRUDENTE_DIAGNOSTIC status={st} servable_windows={sw}/{tw} "
+        "prudent_qoe_servable={pq} robust_qoe_servable={rq} "
+        "qoe_delta_servable={qd} rebuffer_delta_servable={rd} "
+        "2_5mbps_qoe_delta={q25} 2_5mbps_rebuffer_delta={r25} "
+        "fallback={fb} invalid={inv}".format(
             st=report["status"],
-            pq=round(float(prudent.get("qoe_linear_mean", 0.0)), 4),
-            rq=round(float(robust.get("qoe_linear_mean", 0.0)), 4),
-            pr=round(float(prudent.get("total_rebuffer_s", 0.0)), 3),
-            rr=round(float(robust.get("total_rebuffer_s", 0.0)), 3),
-            qd=round(float(paired.get("qoe_delta_mean", 0.0)), 4),
-            rd=round(float(paired.get("rebuffer_delta_s_mean", 0.0)), 4),
-            vrd=round(float(variable.get("rebuffer_delta_s_mean", 0.0)), 4),
+            sw=report["servable_window_count"],
+            tw=report["window_count"],
+            pq=round(float(prudent.get("qoe_linear_mean_servable", 0.0)), 4),
+            rq=round(float(robust.get("qoe_linear_mean_servable", 0.0)), 4),
+            qd=round(float(paired.get("servable_qoe_delta_mean", 0.0)), 4),
+            rd=round(float(paired.get("servable_rebuffer_delta_s_mean", 0.0)), 4),
+            q25=round(float(bucket_2_5.get("qoe_delta_mean", 0.0)), 4),
+            r25=round(float(bucket_2_5.get("rebuffer_delta_s_mean", 0.0)), 4),
             fb=prudent.get("fallback_count", 0),
             inv=prudent.get("invalid_action_count", 0),
         )
