@@ -27,15 +27,7 @@ fi
 echo "== Extrayendo tamanos reales de segmento (8 perfiles 4s) =="
 python3 scripts/extraer_tamanos_reales_segmentos.py --all --base-url "$BASE_URL"
 
-echo "== Subiendo descriptores a GitHub =="
-git add media_profiles/segment_sizes
-if git diff --cached --quiet; then
-  echo "Sin cambios nuevos en los descriptores (ya estaban actualizados)."
-else
-  git commit -m "data(media): tablas reales de tamano de segmento VBR (perfiles 4s)"
-  git push
-  echo "Descriptores subidos."
-fi
-
 echo
-echo "LISTO. Pega la linea que empieza por: SEGMENT_SIZE_EXTRACTION status=..."
+echo "LISTO. Solo se han GENERADO los descriptores en media_profiles/segment_sizes/."
+echo "NO se commitea ni se sube nada desde aqui (de eso se encarga Claude en Windows)."
+echo "Pega la linea que empieza por: SEGMENT_SIZE_EXTRACTION status=..."
