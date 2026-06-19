@@ -228,15 +228,22 @@ def _controller_metrics(session_rows) -> Mapping[str, object]:
     out = {}
     for controller, rows in sorted(by_controller.items()):
         servable_rows = [r for r in rows if r["servable"]]
+        servable_qoe = [float(r["qoe_linear_mean"]) for r in servable_rows]
         high_rows = sum(int(r["high_capacity_row_count"]) for r in rows)
         high_action0 = sum(int(r["high_capacity_action0_count"]) for r in rows)
         out[controller] = {
             "session_count": len(rows),
             "servable_session_count": len(servable_rows),
             "qoe_linear_mean_all": _mean([float(r["qoe_linear_mean"]) for r in rows]),
-            "qoe_linear_mean_servable": _mean([float(r["qoe_linear_mean"]) for r in servable_rows]),
+            "qoe_linear_mean_servable": _mean(servable_qoe),
+            # Cola (peor caso): donde el control consciente del riesgo debe ganar.
+            "qoe_servable_p05": _percentile(servable_qoe, 0.05),
+            "qoe_servable_p10": _percentile(servable_qoe, 0.10),
+            "qoe_servable_p25": _percentile(servable_qoe, 0.25),
+            "qoe_servable_min": min(servable_qoe) if servable_qoe else 0.0,
             "total_rebuffer_s_all": sum(float(r["total_rebuffer_s"]) for r in rows),
             "total_rebuffer_s_servable": sum(float(r["total_rebuffer_s"]) for r in servable_rows),
+            "stall_session_count_servable": sum(1 for r in servable_rows if int(r["stall_count"]) > 0),
             "mean_bitrate_kbps_servable": _mean([float(r["mean_bitrate_kbps"]) for r in servable_rows]),
             "high_capacity_row_count": high_rows,
             "high_capacity_action0_rate": _ratio(high_action0, high_rows),
@@ -245,6 +252,14 @@ def _controller_metrics(session_rows) -> Mapping[str, object]:
             "by_throughput_bucket": _bucket_breakdown(rows, "throughput_bucket"),
         }
     return out
+
+
+def _percentile(values, q) -> float:
+    clean = sorted(float(v) for v in values if math.isfinite(float(v)))
+    if not clean:
+        return 0.0
+    index = min(max(int(round(float(q) * (len(clean) - 1))), 0), len(clean) - 1)
+    return clean[index]
 
 
 def _bucket_breakdown(rows, key) -> Mapping[str, object]:
