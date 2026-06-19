@@ -279,6 +279,26 @@ def _min(values: Sequence[float]) -> float:
     return min(clean) if clean else 0.0
 
 
+def _max(values: Sequence[float]) -> float:
+    clean = [float(value) for value in values]
+    return max(clean) if clean else 0.0
+
+
+def _worst_frac_mean(values: Sequence[float], frac: float) -> float:
+    # Media de la peor fracción (mayor rebuffer) — SafeSABR worst-5%.
+    clean = sorted((float(value) for value in values), reverse=True)
+    if not clean:
+        return 0.0
+    count = max(1, int(math.ceil(float(frac) * len(clean))))
+    return sum(clean[:count]) / count
+
+
+def _rate(rows: Sequence[Mapping[str, Any]], key: str, threshold: float) -> float:
+    if not rows:
+        return 0.0
+    return sum(1 for row in rows if _float(row.get(key)) > threshold) / len(rows)
+
+
 def aggregate_summaries(summaries: Sequence[Mapping[str, Any]]) -> List[Dict[str, Any]]:
     real = [row for row in summaries if _int(row.get("evaluable")) and not _bool(row.get("synthetic"))]
     by_controller: Dict[str, List[Mapping[str, Any]]] = defaultdict(list)
@@ -309,12 +329,14 @@ def aggregate_summaries(summaries: Sequence[Mapping[str, Any]]) -> List[Dict[str
                 "total_rebuffer_s_mean": _mean(_values(rows, "total_rebuffer_s")),
                 "rebuffer_ratio_mean": _mean(_values(rows, "rebuffer_ratio")),
                 "rebuffer_ratio_p95": _percentile(_values(rows, "rebuffer_ratio"), 95.0),
+                # Sesiones catastróficas (SafeSABR/Fugu): cola de rebuffer.
+                "total_rebuffer_s_p95": _percentile(_values(rows, "total_rebuffer_s"), 95.0),
+                "total_rebuffer_s_max": _max(_values(rows, "total_rebuffer_s")),
+                "worst_5pct_rebuffer_mean_s": _worst_frac_mean(_values(rows, "total_rebuffer_s"), 0.05),
+                "session_gt_5s_rebuffer_rate": _rate(rows, "total_rebuffer_s", 5.0),
+                "session_gt_10s_rebuffer_rate": _rate(rows, "total_rebuffer_s", 10.0),
                 "stall_event_count_mean": _mean(_values(rows, "stall_event_count")),
-                "stall_session_rate": (
-                    sum(1 for row in rows if _float(row.get("stall_event_count")) > 0.0) / len(rows)
-                    if rows
-                    else 0.0
-                ),
+                "stall_session_rate": _rate(rows, "stall_event_count", 0.0),
                 "smoothness_penalty_mean": _mean(_values(rows, "smoothness_penalty")),
                 "positive_smoothness_mbps_mean": _mean(_values(rows, "positive_smoothness_mbps")),
                 "negative_smoothness_mbps_mean": _mean(_values(rows, "negative_smoothness_mbps")),
@@ -367,8 +389,14 @@ def paired_statistics(summaries: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
             )
 
     by_controller: Dict[str, List[float]] = defaultdict(list)
+    worst_by_controller: Dict[str, Mapping[str, Any]] = {}
     for item in deltas:
-        by_controller[item["controller_alias"]].append(float(item["delta_qoe_linear"]))
+        alias = item["controller_alias"]
+        by_controller[alias].append(float(item["delta_qoe_linear"]))
+        if alias not in worst_by_controller or float(item["delta_qoe_linear"]) < float(
+            worst_by_controller[alias]["delta_qoe_linear"]
+        ):
+            worst_by_controller[alias] = item
 
     comparisons = []
     for alias in sorted(by_controller):
@@ -386,6 +414,7 @@ def paired_statistics(summaries: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
                 "delta_qoe_linear_p05": _percentile(values, 5.0),
                 "delta_qoe_linear_p25": _percentile(values, 25.0),
                 "delta_qoe_linear_worst": _min(values),
+                "worst_scenario_key": str(worst_by_controller.get(alias, {}).get("scenario_key", "")),
                 "sign_test_p_value": sign_test_exact(values),
             }
         )
@@ -826,16 +855,29 @@ def render_validation_markdown(package: Mapping[str, Any]) -> str:
                 _float(row.get("rebuffer_ratio_p95")),
             )
         )
+    lines.extend(["", "## Sesiones catastroficas (cola de rebuffer)", ""])
+    for row in package["aggregates"]:
+        lines.append(
+            "- {0}: rebuffer_P95={1:.2f}s, peor_sesion={2:.2f}s, worst5%_medio={3:.2f}s, sesiones>5s={4:.0%}, sesiones>10s={5:.0%}".format(
+                row.get("controller_display_name"),
+                _float(row.get("total_rebuffer_s_p95")),
+                _float(row.get("total_rebuffer_s_max")),
+                _float(row.get("worst_5pct_rebuffer_mean_s")),
+                _float(row.get("session_gt_5s_rebuffer_rate")),
+                _float(row.get("session_gt_10s_rebuffer_rate")),
+            )
+        )
     tail_deltas = _mapping(package.get("statistics")).get("deltas_vs_baseline", [])
     if tail_deltas:
         lines.extend(["", "## Peor caso vs baseline (robust_mpc)", ""])
         for row in tail_deltas:
             lines.append(
-                "- {0}: delta QoE media={1:+.3f}, P5={2:+.3f}, peor={3:+.3f}".format(
+                "- {0}: delta QoE media={1:+.3f}, P5={2:+.3f}, peor={3:+.3f} (peor ventana: {4})".format(
                     row.get("controller_alias"),
                     _float(row.get("delta_qoe_linear_mean")),
                     _float(row.get("delta_qoe_linear_p05")),
                     _float(row.get("delta_qoe_linear_worst")),
+                    row.get("worst_scenario_key", ""),
                 )
             )
     plot_rows = _plot_manifest_rows(package)

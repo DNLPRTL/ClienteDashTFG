@@ -27,7 +27,7 @@ _NUMERIC_DEFAULTS = {
 }
 
 
-def _summary(alias, window, qoe, rebuffer_ratio=0.0, stall_events=0):
+def _summary(alias, window, qoe, rebuffer_ratio=0.0, stall_events=0, total_rebuffer_s=0.0):
     row = {
         "evaluable": 1,
         "synthetic": False,
@@ -41,6 +41,7 @@ def _summary(alias, window, qoe, rebuffer_ratio=0.0, stall_events=0):
         "stall_event_count": int(stall_events),
     }
     row.update(_NUMERIC_DEFAULTS)
+    row["total_rebuffer_s"] = float(total_rebuffer_s)
     return row
 
 
@@ -48,9 +49,15 @@ def _summaries():
     windows = ["tw0", "tw1", "tw2", "tw3", "tw4"]
     robust_qoe = [1.0, 2.0, 3.0, 4.0, 5.0]
     prudent_qoe = [1.5, 2.0, 3.0, 3.5, 4.0]
+    robust_rebuf = [0.0, 0.0, 6.0, 12.0, 20.0]
     rows = []
     for i, w in enumerate(windows):
-        rows.append(_summary("base_robust_mpc", w, robust_qoe[i], rebuffer_ratio=0.01 * i, stall_events=1 if i < 2 else 0))
+        rows.append(
+            _summary(
+                "base_robust_mpc", w, robust_qoe[i],
+                rebuffer_ratio=0.01 * i, stall_events=1 if i < 2 else 0, total_rebuffer_s=robust_rebuf[i],
+            )
+        )
         rows.append(_summary("propio_mpc_prudente", w, prudent_qoe[i], rebuffer_ratio=0.005 * i, stall_events=0))
     return rows
 
@@ -70,6 +77,11 @@ class Phase6TailMetricsTest(unittest.TestCase):
         self.assertAlmostEqual(robust["stall_session_rate"], 0.4)
         # el prudente no tiene stalls
         self.assertAlmostEqual(aggregates["propio_mpc_prudente"]["stall_session_rate"], 0.0)
+        # sesiones catastroficas (robust: rebuffer [0,0,6,12,20])
+        self.assertAlmostEqual(robust["total_rebuffer_s_max"], 20.0)
+        self.assertAlmostEqual(robust["session_gt_5s_rebuffer_rate"], 0.6)
+        self.assertAlmostEqual(robust["session_gt_10s_rebuffer_rate"], 0.4)
+        self.assertAlmostEqual(robust["worst_5pct_rebuffer_mean_s"], 20.0)
 
     def test_paired_has_worst_case_delta(self):
         stats = paired_statistics(_summaries())

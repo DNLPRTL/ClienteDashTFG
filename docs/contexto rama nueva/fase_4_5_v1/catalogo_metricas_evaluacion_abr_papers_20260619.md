@@ -62,9 +62,17 @@ En `core/phase6/analysis.py` (nativo, con gráfica y markdown):
   (fracción de sesiones con stall).
 - **Delta vs baseline** (`paired_statistics`): `delta_qoe_linear_p05`,
   `delta_qoe_linear_p25`, `delta_qoe_linear_worst` (peor caso relativo a robust_mpc).
+- **Sesiones catastróficas** (SafeSABR/Fugu): `total_rebuffer_s_p95`,
+  `total_rebuffer_s_max`, `worst_5pct_rebuffer_mean_s`, `session_gt_5s_rebuffer_rate`,
+  `session_gt_10s_rebuffer_rate`; y `worst_scenario_key` (la peor ventana, tipo
+  `real_006`) en los deltas vs baseline.
 - **Gráfica**: `qoe_robustez_peor_caso` (media / mediana / P5 por controller).
-- **Markdown**: secciones "Robustez y peor caso (cola de QoE)" y "Peor caso vs
-  baseline".
+- **Markdown**: secciones "Robustez y peor caso (cola de QoE)", "Sesiones
+  catastroficas (cola de rebuffer)" y "Peor caso vs baseline".
+
+Pendiente (con el controller runtime): telemetría v4 interna — `chosen_quantile`,
+`risk_mode`/alpha, error CBR vs VBR real por segmento, predicted_rebuffer vs
+realized_rebuffer — que Codex sugiere y que emitirá el controller integrado.
 
 ## 5. Métricas para defender NUESTRO controller
 
