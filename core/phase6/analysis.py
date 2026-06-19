@@ -266,6 +266,19 @@ def summarize_session(
     return summary, chunks
 
 
+def _std(values: Sequence[float]) -> float:
+    clean = [float(value) for value in values]
+    if len(clean) < 2:
+        return 0.0
+    mean = sum(clean) / len(clean)
+    return math.sqrt(sum((value - mean) ** 2 for value in clean) / (len(clean) - 1))
+
+
+def _min(values: Sequence[float]) -> float:
+    clean = [float(value) for value in values]
+    return min(clean) if clean else 0.0
+
+
 def aggregate_summaries(summaries: Sequence[Mapping[str, Any]]) -> List[Dict[str, Any]]:
     real = [row for row in summaries if _int(row.get("evaluable")) and not _bool(row.get("synthetic"))]
     by_controller: Dict[str, List[Mapping[str, Any]]] = defaultdict(list)
@@ -283,12 +296,25 @@ def aggregate_summaries(summaries: Sequence[Mapping[str, Any]]) -> List[Dict[str
                 "qoe_linear_mean": _mean(_values(rows, "qoe_linear_mean")),
                 "qoe_linear_ci95_low": bootstrap_ci(_values(rows, "qoe_linear_mean"))[0],
                 "qoe_linear_ci95_high": bootstrap_ci(_values(rows, "qoe_linear_mean"))[1],
+                # Robustez / cola (peor caso) — BayesMPC: worst-case QoE; MERINA/SODA: estabilidad.
+                "qoe_linear_std": _std(_values(rows, "qoe_linear_mean")),
+                "qoe_linear_min": _min(_values(rows, "qoe_linear_mean")),
+                "qoe_linear_p05": _percentile(_values(rows, "qoe_linear_mean"), 5.0),
+                "qoe_linear_p10": _percentile(_values(rows, "qoe_linear_mean"), 10.0),
+                "qoe_linear_p25": _percentile(_values(rows, "qoe_linear_mean"), 25.0),
+                "qoe_linear_median": _percentile(_values(rows, "qoe_linear_mean"), 50.0),
                 "qoe_log_mean": _mean(_values(rows, "qoe_log_mean")),
                 "avg_bitrate_kbps": _mean(_values(rows, "avg_bitrate_kbps")),
                 "avg_quality_mbps": _mean(_values(rows, "avg_quality_mbps")),
                 "total_rebuffer_s_mean": _mean(_values(rows, "total_rebuffer_s")),
                 "rebuffer_ratio_mean": _mean(_values(rows, "rebuffer_ratio")),
+                "rebuffer_ratio_p95": _percentile(_values(rows, "rebuffer_ratio"), 95.0),
                 "stall_event_count_mean": _mean(_values(rows, "stall_event_count")),
+                "stall_session_rate": (
+                    sum(1 for row in rows if _float(row.get("stall_event_count")) > 0.0) / len(rows)
+                    if rows
+                    else 0.0
+                ),
                 "smoothness_penalty_mean": _mean(_values(rows, "smoothness_penalty")),
                 "positive_smoothness_mbps_mean": _mean(_values(rows, "positive_smoothness_mbps")),
                 "negative_smoothness_mbps_mean": _mean(_values(rows, "negative_smoothness_mbps")),
@@ -356,6 +382,10 @@ def paired_statistics(summaries: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
                 "delta_qoe_linear_mean": _mean(values),
                 "delta_qoe_linear_ci95_low": ci_low,
                 "delta_qoe_linear_ci95_high": ci_high,
+                # Peor caso relativo al baseline (cola de las diferencias emparejadas).
+                "delta_qoe_linear_p05": _percentile(values, 5.0),
+                "delta_qoe_linear_p25": _percentile(values, 25.0),
+                "delta_qoe_linear_worst": _min(values),
                 "sign_test_p_value": sign_test_exact(values),
             }
         )
@@ -671,6 +701,13 @@ def generate_phase6_plots(
             plt=plt,
         ),
     )
+    _run_plot(
+        manifest,
+        plot_id="qoe_robustez_peor_caso",
+        output_path=plots_dir / "qoe_robustez_peor_caso.png",
+        source_count=len(aggregates),
+        plotter=lambda path: _plot_qoe_tail(aggregates, path, plt),
+    )
     manifest.append(
         {
             "plot_id": "metricas_deferred",
@@ -685,6 +722,30 @@ def generate_phase6_plots(
         json.dumps({"schema_version": "phase6_plot_manifest_v1", "plots": manifest}, indent=2, sort_keys=True),
         encoding="utf-8",
     )
+
+
+def _plot_qoe_tail(aggregates: Sequence[Mapping[str, Any]], output_path: Path, plt) -> None:
+    rows = list(aggregates)
+    if not rows:
+        raise ValueError("no aggregates for tail plot")
+    labels = [str(row.get("controller_display_name", row.get("controller_alias", ""))) for row in rows]
+    mean = [_float(row.get("qoe_linear_mean")) for row in rows]
+    median = [_float(row.get("qoe_linear_median")) for row in rows]
+    p05 = [_float(row.get("qoe_linear_p05")) for row in rows]
+    positions = list(range(len(rows)))
+    width = 0.25
+    fig, ax = plt.subplots(figsize=(max(6.0, len(rows) * 1.6), 4.0))
+    ax.bar([p - width for p in positions], mean, width, label="media")
+    ax.bar(list(positions), median, width, label="mediana")
+    ax.bar([p + width for p in positions], p05, width, label="P5 (peor caso)")
+    ax.set_xticks(list(positions))
+    ax.set_xticklabels(labels, rotation=30, ha="right")
+    ax.set_ylabel("QoE linear")
+    ax.set_title("Robustez / peor caso de QoE por controller")
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=120)
+    plt.close(fig)
 
 
 def render_validation_markdown(package: Mapping[str, Any]) -> str:
@@ -751,6 +812,32 @@ def render_validation_markdown(package: Mapping[str, Any]) -> str:
                 _float(row.get("switching_rate_mean")),
             )
         )
+    lines.extend(["", "## Robustez y peor caso (cola de QoE)", ""])
+    for row in package["aggregates"]:
+        lines.append(
+            "- {0}: media={1:.3f}, mediana={2:.3f}, P5={3:.3f}, min={4:.3f}, std={5:.3f}, sesiones_con_stall={6:.0%}, rebuffer_P95={7:.3f}".format(
+                row.get("controller_display_name"),
+                _float(row.get("qoe_linear_mean")),
+                _float(row.get("qoe_linear_median")),
+                _float(row.get("qoe_linear_p05")),
+                _float(row.get("qoe_linear_min")),
+                _float(row.get("qoe_linear_std")),
+                _float(row.get("stall_session_rate")),
+                _float(row.get("rebuffer_ratio_p95")),
+            )
+        )
+    tail_deltas = _mapping(package.get("statistics")).get("deltas_vs_baseline", [])
+    if tail_deltas:
+        lines.extend(["", "## Peor caso vs baseline (robust_mpc)", ""])
+        for row in tail_deltas:
+            lines.append(
+                "- {0}: delta QoE media={1:+.3f}, P5={2:+.3f}, peor={3:+.3f}".format(
+                    row.get("controller_alias"),
+                    _float(row.get("delta_qoe_linear_mean")),
+                    _float(row.get("delta_qoe_linear_p05")),
+                    _float(row.get("delta_qoe_linear_worst")),
+                )
+            )
     plot_rows = _plot_manifest_rows(package)
     if plot_rows:
         lines.extend(["", "## Graficas", ""])
