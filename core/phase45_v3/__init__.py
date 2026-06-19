@@ -9,6 +9,8 @@ __all__ = [
     "default_phase45_v3_ladder",
     "evaluate_qh_actions",
     "profile_by_name",
+    "spbc_policy_training_profile_by_name",
+    "train_phase45_v3_spbc_policy",
     "validate_phase45_v3_closedloop_spbc_spc_dataset_dir",
     "validate_phase45_v3_dataset_dir",
 ]
@@ -35,6 +37,16 @@ def __getattr__(name: str):
         from core.phase45_v3.qh_oracle import QhOracleConfig, evaluate_qh_actions
 
         return {"QhOracleConfig": QhOracleConfig, "evaluate_qh_actions": evaluate_qh_actions}[name]
+    if name in ("spbc_policy_training_profile_by_name", "train_phase45_v3_spbc_policy"):
+        from core.phase45_v3.spbc_policy_training import (
+            spbc_policy_training_profile_by_name,
+            train_phase45_v3_spbc_policy,
+        )
+
+        return {
+            "spbc_policy_training_profile_by_name": spbc_policy_training_profile_by_name,
+            "train_phase45_v3_spbc_policy": train_phase45_v3_spbc_policy,
+        }[name]
     if name == "validate_phase45_v3_dataset_dir":
         from core.phase45_v3.validation import validate_phase45_v3_dataset_dir
 
