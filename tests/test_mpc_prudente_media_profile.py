@@ -72,12 +72,25 @@ class MediaProfileLoaderTests(unittest.TestCase):
         with self.assertRaises(ContentLadderError):
             ladder.segment_size_bytes(0, 3)  # fuera de rango
 
-    def test_faithful_ladder_clip_segment_count(self):
+    def test_faithful_ladder_window_length_limits_segments(self):
         profile = MediaProfileSegmentSizes.from_mapping(_synthetic_descriptor())
         ladder = profile.to_faithful_ladder(segment_count=2)
         self.assertEqual(ladder.segment_count, 2)
+        self.assertEqual(ladder.segment_size_bytes(0, 1), 120000)
         with self.assertRaises(ContentLadderError):
             ladder.segment_size_bytes(0, 2)
+
+    def test_faithful_ladder_cycles_when_window_longer_than_media(self):
+        profile = MediaProfileSegmentSizes.from_mapping(_synthetic_descriptor())  # 3 segmentos reales
+        ladder = profile.to_faithful_ladder(segment_count=5)
+        # seg 3 y 4 ciclan al inicio del medio real
+        self.assertEqual(ladder.segment_size_bytes(0, 3), ladder.segment_size_bytes(0, 0))
+        self.assertEqual(ladder.segment_size_bytes(0, 4), ladder.segment_size_bytes(0, 1))
+
+    def test_faithful_ladder_start_offset(self):
+        profile = MediaProfileSegmentSizes.from_mapping(_synthetic_descriptor())
+        ladder = profile.to_faithful_ladder(start_offset=1)
+        self.assertEqual(ladder.segment_size_bytes(0, 0), 120000)  # real[0][1]
 
     def test_faithful_ladder_drives_closed_loop_engine_with_real_sizes(self):
         # Demuestra que el motor congelado usa los tamaños reales sin tocarlo.

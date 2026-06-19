@@ -43,10 +43,12 @@ class MediaFaithfulLadder:
     media_profile_id: str
     representations: tuple[Representation, ...]
     segment_duration_s: float
-    segment_count: int
+    segment_count: int  # longitud de la ventana (puede diferir del medio real)
     max_buffer_s: float
-    # tabla real: _segment_bytes[representation_index][segment_index] = bytes
+    # tabla real completa: _segment_bytes[representation_index][segment_real] = bytes
     _segment_bytes: tuple[tuple[int, ...], ...]
+    real_segment_count: int
+    start_offset: int = 0
 
     @property
     def representation_count(self) -> int:
@@ -80,7 +82,9 @@ class MediaFaithfulLadder:
             raise ContentLadderError("segment_index must be an integer")
         if segment_index < 0 or segment_index >= self.segment_count:
             raise ContentLadderError("segment_index is outside the content duration")
-        return int(self._segment_bytes[representation_index][segment_index])
+        # Ventanas más largas que el medio real ciclan sobre los segmentos reales.
+        real_index = (self.start_offset + segment_index) % self.real_segment_count
+        return int(self._segment_bytes[representation_index][real_index])
 
     def cbr_nominal_bytes(self, representation_index: int) -> float:
         return self.bitrate_bps(representation_index) * self.segment_duration_s / 8.0
@@ -171,24 +175,24 @@ class MediaProfileSegmentSizes:
         *,
         max_buffer_s: float = DEFAULT_MAX_BUFFER_S,
         segment_count: int | None = None,
+        start_offset: int = 0,
     ) -> MediaFaithfulLadder:
         count = self.segment_count if segment_count is None else int(segment_count)
-        if count <= 0 or count > self.segment_count:
-            raise MediaProfileError(
-                "segment_count fuera de rango (1..{0}): {1}".format(self.segment_count, count)
-            )
+        if count <= 0:
+            raise MediaProfileError("segment_count debe ser positivo: {0}".format(count))
         representations = tuple(
             Representation(representation_index=index, bitrate_bps=int(bitrate))
             for index, bitrate in enumerate(self.bitrates_bps)
         )
-        clipped = tuple(rep_sizes[:count] for rep_sizes in self._segment_bytes)
         return MediaFaithfulLadder(
             media_profile_id=self.media_profile_id,
             representations=representations,
             segment_duration_s=self.segment_duration_s,
             segment_count=count,
             max_buffer_s=float(max_buffer_s),
-            _segment_bytes=clipped,
+            _segment_bytes=self._segment_bytes,
+            real_segment_count=self.segment_count,
+            start_offset=int(start_offset) % self.segment_count,
         )
 
     def cbr_comparison(self) -> Mapping[str, object]:

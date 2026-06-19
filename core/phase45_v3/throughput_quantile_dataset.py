@@ -4,7 +4,7 @@ import math
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Mapping, Sequence
+from typing import Callable, Mapping, Sequence
 
 from core.neural_abr.artifacts import ensure_existing_dir, prepare_output_dir, read_json, read_jsonl, write_json, write_jsonl
 from core.neural_abr.features import build_context_features, flatten_context_features, reject_forbidden_model_inputs
@@ -91,6 +91,7 @@ def build_phase45_v3_throughput_quantile_dataset(
     trace_path_rewrites: Sequence[PathRewriteRule] = (),
     horizon_segments: int = DEFAULT_THROUGHPUT_QUANTILE_HORIZON,
     quantiles: Sequence[float] = DEFAULT_THROUGHPUT_QUANTILES,
+    ladder_factory: Callable[[float, int], object] | None = None,
 ) -> Mapping[str, object]:
     output_path = prepare_output_dir(output_dir, overwrite=overwrite, purpose="phase45_v3 throughput quantile dataset")
     clean_quantiles = _validate_quantiles(quantiles)
@@ -104,12 +105,20 @@ def build_phase45_v3_throughput_quantile_dataset(
     validation_windows = _limited_windows(plan["validation_windows"], max_validation_windows)  # type: ignore[index]
     segment_duration_s = float(plan["sampling_policy"]["segment_duration_s"])  # type: ignore[index]
     segment_count = int(plan["segment_count_per_window"])
-    ladder = default_phase45_v3_ladder(
-        segment_duration_s=segment_duration_s,
-        segment_count=segment_count,
-        representation_kbps=representation_kbps,
-        max_buffer_s=PHASE45_V3_DEFAULT_MAX_BUFFER_S,
-    )
+    if ladder_factory is not None:
+        # Línea MPC Prudente: ladder fiel con tamaños reales (VBR) del medio.
+        ladder = ladder_factory(segment_duration_s, segment_count)
+        representation_kbps = tuple(int(bitrate) // 1000 for bitrate in ladder.bitrates_bps)
+    else:
+        ladder = default_phase45_v3_ladder(
+            segment_duration_s=segment_duration_s,
+            segment_count=segment_count,
+            representation_kbps=representation_kbps,
+            max_buffer_s=PHASE45_V3_DEFAULT_MAX_BUFFER_S,
+        )
+    ladder_manifest = ladder.to_manifest() if hasattr(ladder, "to_manifest") else {}
+    segment_size_source = str(ladder_manifest.get("segment_size_source", "bitrate_times_duration_bytes"))
+    faithful_media_profile_id = ladder_manifest.get("media_profile_id")
 
     samples_by_role: dict[str, list[Mapping[str, object]]] = {TRAINING_ROLE: [], VALIDATION_ROLE: []}
     skipped_windows: list[Mapping[str, object]] = []
@@ -181,6 +190,8 @@ def build_phase45_v3_throughput_quantile_dataset(
         horizon_segments=int(horizon_segments),
         quantiles=clean_quantiles,
         leakage_audit=leakage_audit,
+        segment_size_source=segment_size_source,
+        media_profile_id_override=faithful_media_profile_id,
     )
 
     write_json(output_path / THROUGHPUT_QUANTILE_SUMMARY_FILENAME, summary)
@@ -515,6 +526,8 @@ def _build_summary(
     horizon_segments: int,
     quantiles: Sequence[float],
     leakage_audit: Mapping[str, object],
+    segment_size_source: str = "bitrate_times_duration_bytes",
+    media_profile_id_override: object | None = None,
 ) -> Mapping[str, object]:
     return {
         "schema_id": THROUGHPUT_QUANTILE_DATASET_SCHEMA_ID,
@@ -525,7 +538,8 @@ def _build_summary(
         "output_dir": str(output_path),
         "profile": profile.to_json(),
         "source_plan_schema_id": plan.get("schema_id"),
-        "media_profile_id": MEDIA_PROFILE_ID,
+        "media_profile_id": str(media_profile_id_override) if media_profile_id_override else MEDIA_PROFILE_ID,
+        "segment_size_source": segment_size_source,
         "representation_kbps": [int(value) for value in representation_kbps],
         "segment_duration_s": float(plan["sampling_policy"]["segment_duration_s"]),  # type: ignore[index]
         "segment_count": int(plan["segment_count_per_window"]),
