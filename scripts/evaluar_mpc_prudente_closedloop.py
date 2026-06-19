@@ -43,6 +43,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--tfg-root", type=Path, default=TFG_ROOT)
     parser.add_argument("--controllers", default="{0},robust_mpc,bola,neural_mpc".format(MPC_PRUDENTE_CONTROLLER_KEY))
     parser.add_argument("--max-validation-windows", type=int, default=None)
+    parser.add_argument("--risk-alpha", type=float, default=None, help="alpha CVaR fijo para barrer (None=adaptativo por buffer).")
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--trace-path-rewrite", action="append", default=[], metavar="OLD=NEW")
     parser.add_argument("--no-default-trace-path-rewrites", action="store_true")
@@ -71,6 +72,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         overwrite=args.overwrite,
         max_validation_windows=args.max_validation_windows,
         controllers=tuple(c.strip() for c in str(args.controllers).split(",") if c.strip()),
+        prudent_risk_alpha=args.risk_alpha,
         trace_path_rewrites=tuple(rewrites),
         device=args.device,
     )

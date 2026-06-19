@@ -26,7 +26,7 @@ from core.controller.bola import BolaController
 from core.controller.rate_based import RateBasedController
 from core.controller.robust_mpc import RobustMpcController
 from core.mpc_prudente.media_profile import DEFAULT_MAX_BUFFER_S, MediaProfileSegmentSizes
-from core.mpc_prudente.planner import MPC_PRUDENTE_CONTROLLER_KEY, PrudentMpcController
+from core.mpc_prudente.planner import MPC_PRUDENTE_CONTROLLER_KEY, PrudentMpcController, buffer_risk_alpha
 from core.neural_abr.artifacts import prepare_output_dir, write_json
 from core.phase45_v1.dataset import load_trace_window
 from core.phase45_v1.paths import PathRewriteRule
@@ -68,6 +68,7 @@ def evaluate_mpc_prudente_closed_loop(
     max_validation_windows: int | None = None,
     max_buffer_s: float = DEFAULT_MAX_BUFFER_S,
     servable_mean_kbps: float = DEFAULT_SERVABLE_MEAN_KBPS,
+    prudent_risk_alpha: float | None = None,
     trace_path_rewrites: Sequence[PathRewriteRule] = (),
     device: str | None = "cpu",
 ) -> Mapping[str, object]:
@@ -94,7 +95,7 @@ def evaluate_mpc_prudente_closed_loop(
             servable = float(loaded_trace.throughput_mean_kbps) >= float(servable_mean_kbps)
             for controller_key in controller_keys:
                 session_rows.append(
-                    _run_session(window, loaded_trace, ladder, controller_key, predictor, servable)
+                    _run_session(window, loaded_trace, ladder, controller_key, predictor, servable, prudent_risk_alpha)
                 )
         except Exception as exc:  # noqa: BLE001 - skips auditados.
             skipped.append(
@@ -121,6 +122,7 @@ def evaluate_mpc_prudente_closed_loop(
         "predictor_checkpoint": str(predictor_checkpoint),
         "predictor_model_sha256": predictor.model_sha256,
         "servable_mean_kbps_floor": float(servable_mean_kbps),
+        "prudent_risk_alpha": "adaptive" if prudent_risk_alpha is None else float(prudent_risk_alpha),
         "window_count": len(windows),
         "servable_window_count": servable_window_count,
         "session_count": len(session_rows),
@@ -137,10 +139,10 @@ def evaluate_mpc_prudente_closed_loop(
     return report
 
 
-def _run_session(window, loaded_trace, ladder, controller_key, predictor, servable):
+def _run_session(window, loaded_trace, ladder, controller_key, predictor, servable, prudent_risk_alpha=None):
     network_model = TraceDrivenNetworkModel(loaded_trace, end_policy=END_POLICY_LOOP, max_loops=5)
     env = AbrClosedLoopEnv(ladder=ladder, network_model=network_model)
-    controller = _make_controller(controller_key, predictor)
+    controller = _make_controller(controller_key, predictor, prudent_risk_alpha)
     rows = []
     invalid_actions = 0
     fallback_count = 0
@@ -193,9 +195,17 @@ def _run_session(window, loaded_trace, ladder, controller_key, predictor, servab
     }
 
 
-def _make_controller(controller_key, predictor):
+def _make_controller(controller_key, predictor, prudent_risk_alpha=None):
     if controller_key == MPC_PRUDENTE_CONTROLLER_KEY:
-        return PrudentMpcController(predictor, quantiles=predictor.quantiles, horizon_segments=predictor.horizon_segments)
+        risk_alpha_fn = (
+            (lambda buffer_s: float(prudent_risk_alpha)) if prudent_risk_alpha is not None else buffer_risk_alpha
+        )
+        return PrudentMpcController(
+            predictor,
+            quantiles=predictor.quantiles,
+            horizon_segments=predictor.horizon_segments,
+            risk_alpha_fn=risk_alpha_fn,
+        )
     if controller_key == "neural_mpc":
         return NeuralThroughputCalibratedMpcController(
             predictor, quantiles=predictor.quantiles, horizon_segments=predictor.horizon_segments
