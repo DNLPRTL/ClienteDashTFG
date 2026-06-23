@@ -82,6 +82,30 @@ class MpcPrudenteDatasetTest(unittest.TestCase):
             self.assertEqual("synthetic_test", summary["media_profile_id"])
             self.assertEqual([300, 750, 1200, 1850, 2850, 4300], summary["representation_kbps"])
 
+    def test_builds_multimedia_dataset(self):
+        from core.mpc_prudente.dataset import build_mpc_prudente_multimedia_dataset
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            manifest = build_manifest_with_trace_files(root)
+            media_dir = root / "media_profiles" / "segment_sizes"
+            _write_synthetic_media_profile(media_dir, "synthetic_a")
+            _write_synthetic_media_profile(media_dir, "synthetic_b")
+            output_dir = root / "datasets" / "multimedia_unit"
+            profile = Phase45V3DatasetProfile(
+                name="unit", train_window_count=2, validation_window_count=1, qh_horizon_segments=3,
+                qh_beam_width=4, max_windows_per_trace=1, synthetic_max_fraction=0.5,
+                dataset_max_fraction=1.0, semantics_max_fraction=1.0, seed="unit-mm", rollouts_per_window=2,
+            )
+            result = build_mpc_prudente_multimedia_dataset(
+                manifest, output_dir=output_dir, profile=profile,
+                media_profile_ids=("synthetic_a", "synthetic_b"), media_profile_base_dir=str(media_dir),
+                overwrite=True, horizon_segments=3,
+                trace_path_rewrites=(PathRewriteRule("/home/daniel/TFG", str(root)),),
+            )
+            self.assertEqual("PASS", result["status"])
+            self.assertEqual(["synthetic_a", "synthetic_b"], result["media_profile_ids"])
+
 
 if __name__ == "__main__":
     unittest.main()

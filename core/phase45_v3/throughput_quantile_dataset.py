@@ -107,7 +107,8 @@ def build_phase45_v3_throughput_quantile_dataset(
     segment_count = int(plan["segment_count_per_window"])
     if ladder_factory is not None:
         # Línea MPC Prudente: ladder fiel con tamaños reales (VBR) del medio.
-        ladder = ladder_factory(segment_duration_s, segment_count)
+        # La factoría recibe la ventana → puede ROTAR el medio por ventana (multi-vídeo).
+        ladder = ladder_factory(segment_duration_s, segment_count, None)
         representation_kbps = tuple(int(bitrate) // 1000 for bitrate in ladder.bitrates_bps)
     else:
         ladder = default_phase45_v3_ladder(
@@ -136,6 +137,11 @@ def build_phase45_v3_throughput_quantile_dataset(
                             "resolved_normalized_trace_path": str(resolved_trace_path),
                         }
                     )
+                window_ladder = (
+                    ladder_factory(segment_duration_s, segment_count, window)
+                    if ladder_factory is not None
+                    else ladder
+                )
                 for rollout_index in range(int(profile.rollouts_per_window)):
                     rollout_policy = THROUGHPUT_QUANTILE_ROLLOUT_POLICIES[
                         int(rollout_index) % len(THROUGHPUT_QUANTILE_ROLLOUT_POLICIES)
@@ -145,7 +151,7 @@ def build_phase45_v3_throughput_quantile_dataset(
                             window=window,
                             data_role=data_role,
                             loaded_trace=loaded_trace,
-                            ladder=ladder,
+                            ladder=window_ladder,
                             rollout_policy=rollout_policy,
                             horizon_segments=int(horizon_segments),
                             quantiles=clean_quantiles,

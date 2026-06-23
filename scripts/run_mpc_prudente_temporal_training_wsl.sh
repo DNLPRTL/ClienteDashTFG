@@ -9,7 +9,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-MEDIA="${MPC_PRUDENTE_MEDIA_PROFILE_ID:-paseo_almunecar_10min_30fps_4s}"
+# Por defecto entrena sobre el dataset MULTI-VÍDEO (sin sesgo a un solo vídeo).
+MEDIA="${MPC_PRUDENTE_MEDIA_PROFILE_ID:-multimedia}"
 PROFILE="${MPC_PRUDENTE_TEMPORAL_PROFILE:-full}"
 DATASET_DIR="${MPC_PRUDENTE_DATASET_DIR:-$HOME/TFG/datasets_normalizados/mpc_prudente/throughput_quantile_full_v1_${MEDIA}}"
 MODEL_DIR="${MPC_PRUDENTE_TEMPORAL_MODEL_DIR:-$HOME/TFG/modelos/mpc_prudente/temporal_predictor/${PROFILE}_${MEDIA}}"
