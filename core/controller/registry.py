@@ -7,6 +7,7 @@ from .bba import BbaController
 from .fixed_quality import FixedQualityController
 from .max_quality_controller import MaxQualityController
 from .mpc import MpcController
+from .mpc_prudente_runtime import MpcPrudenteRuntimeController
 from .neural_abr_lite import NeuralAbrLiteRobustMpcController, NeuralAbrLiteTeacherHibridoController
 from .phase45_v3_neural_mpc import Phase45V3NeuralMpcController, Phase45V3NeuralMpcV2Controller
 from .rate_based import RateBasedController
@@ -88,6 +89,11 @@ CONTROLLER_REGISTRY = {
         key="phase45_v3_neural_throughput_calibrated_mpc_v2",
         label="Phase45 v3 Neural Throughput-Calibrated MPC v2",
         factory=Phase45V3NeuralMpcV2Controller,
+    ),
+    "mpc_prudente_v1": ControllerSpec(
+        key="mpc_prudente_v1",
+        label="MPC Neuronal Prudente (media-faithful, risk-aware)",
+        factory=MpcPrudenteRuntimeController,
     ),
     "fixed_quality": ControllerSpec(
         key="fixed_quality",
