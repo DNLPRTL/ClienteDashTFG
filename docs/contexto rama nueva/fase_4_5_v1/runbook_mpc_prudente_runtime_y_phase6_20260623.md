@@ -69,10 +69,17 @@ python3 scripts/run_phase6_validacion_comparativa.py --config config/phase6.loca
 python3 scripts/verificar_paquete_phase6.py --package-root <paquete_generado>
 ```
 
-### 7. (Ubuntu cliente) Phase 6 RAPIDO si diagnostico pasa
+### 7. (Ubuntu cliente) Phase 6 COMPARATIVA — el resultado formal (recomendado)
+Preset nuevo `comparativa`: 12 ventanas reales (balanceadas por capacidad/
+variabilidad) + 3 sintéticas, 30 segmentos, 300 s, **autorizado para ranking**.
+Solo `robust_mpc` + `mpc_prudente_v1` (cara a cara eficiente, ~1 h).
 ```bash
-python3 scripts/run_phase6_validacion_comparativa.py --config config/phase6.local.json --preset rapido
+python3 scripts/run_phase6_validacion_comparativa.py --config config/phase6.local.json --preset comparativa
+python3 scripts/verificar_paquete_phase6.py --package-root <paquete>
 ```
+(El config de ejemplo ya trae `preset=comparativa` y `controllers=[robust_mpc, mpc_prudente_v1]`.)
+En la GUI: el preset `comparativa` aparece solo en el desplegable y `Propio MPC
+Prudente` en los checkboxes (la interfaz es data-driven; no hubo que tocarla).
 
 ## Qué mirar en los resultados (la vara correcta, ya nativa en Phase 6)
 

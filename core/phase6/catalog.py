@@ -128,6 +128,18 @@ PRESET_SPECS = {
         "timeout_seconds": 900.0,
         "estimated_session_duration_s": 125.0,
     },
+    "comparativa": {
+        "preset": "comparativa",
+        "real_windows": 12,
+        "synthetic_windows": 3,
+        "media_profile_ids": ["paseo_10min_30fps_4s"],
+        "benchmark_capable": True,
+        "ranking_capable": True,
+        "max_media_segments": 30,
+        "network_window_duration_s": 300.0,
+        "timeout_seconds": 900.0,
+        "estimated_session_duration_s": 125.0,
+    },
     "equilibrado": {
         "preset": "equilibrado",
         "real_windows": 24,

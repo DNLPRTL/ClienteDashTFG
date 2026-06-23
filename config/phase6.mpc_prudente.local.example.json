@@ -15,15 +15,13 @@
   },
   "experiment": {
     "controllers": [
-      "rate_based",
-      "bola",
       "robust_mpc",
       "mpc_prudente_v1"
     ],
     "engine": "fake",
     "include_synthetic_diagnostic": true,
     "media_profile_ids": [],
-    "preset": "diagnostico",
+    "preset": "comparativa",
     "repetitions": 1,
     "seed": 606
   },

@@ -460,7 +460,7 @@ def evaluate_gates(
     summaries: Sequence[Mapping[str, Any]],
 ) -> Dict[str, Any]:
     preset = str(protocol.get("preset", ""))
-    preset_capable = bool(protocol.get("benchmark_capable")) and preset in {"equilibrado", "extendido"}
+    preset_capable = bool(protocol.get("benchmark_capable")) and preset in {"comparativa", "equilibrado", "extendido"}
     real_required = [row for row in summaries if not _bool(row.get("synthetic"))]
     synthetic_rows = [row for row in summaries if _bool(row.get("synthetic"))]
     missing_or_bad = [
