@@ -358,6 +358,15 @@ def _decode_subprocess_output(output: Any) -> str:
     return str(output)
 
 
+def _controller_params_for_session(config: Mapping[str, Any], session: Mapping[str, Any]) -> Dict[str, Any]:
+    # Multi-vídeo: el controller propio recibe el media del vídeo que reproduce esta
+    # sesión, para planificar con sus tamaños reales (VBR). Los clásicos lo ignoran.
+    params = dict(controller_params(config, str(session["controller_key"])))
+    if str(session.get("controller_key", "")).startswith("mpc_prudente"):
+        params["media_profile_id"] = str(session.get("media_profile_id", params.get("media_profile_id", "")))
+    return params
+
+
 def build_client_config(config: Mapping[str, Any], session: Mapping[str, Any]) -> Dict[str, Any]:
     config = apply_preset_overrides(config, str(session.get("preset", _mapping(config.get("experiment")).get("preset", "rapido"))))
     playback = _mapping(config.get("playback"))
@@ -373,7 +382,7 @@ def build_client_config(config: Mapping[str, Any], session: Mapping[str, Any]) -
         },
         "controller": {
             "name": session["controller_key"],
-            "params": controller_params(config, str(session["controller_key"])),
+            "params": _controller_params_for_session(config, session),
         },
         "playback": {
             "initial_quality": int(playback.get("initial_quality", 0) or 0),

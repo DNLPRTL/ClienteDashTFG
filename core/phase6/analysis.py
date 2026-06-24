@@ -460,7 +460,7 @@ def evaluate_gates(
     summaries: Sequence[Mapping[str, Any]],
 ) -> Dict[str, Any]:
     preset = str(protocol.get("preset", ""))
-    preset_capable = bool(protocol.get("benchmark_capable")) and preset in {"comparativa", "equilibrado", "extendido"}
+    preset_capable = bool(protocol.get("benchmark_capable")) and preset in {"comparativa", "tfg_final", "equilibrado", "extendido"}
     real_required = [row for row in summaries if not _bool(row.get("synthetic"))]
     synthetic_rows = [row for row in summaries if _bool(row.get("synthetic"))]
     missing_or_bad = [
@@ -737,6 +737,13 @@ def generate_phase6_plots(
         source_count=len(aggregates),
         plotter=lambda path: _plot_qoe_tail(aggregates, path, plt),
     )
+    _run_plot(
+        manifest,
+        plot_id="stalls_por_controller",
+        output_path=plots_dir / "stalls_por_controller.png",
+        source_count=len(aggregates),
+        plotter=lambda path: _plot_stalls(aggregates, path, plt),
+    )
     manifest.append(
         {
             "plot_id": "metricas_deferred",
@@ -772,6 +779,34 @@ def _plot_qoe_tail(aggregates: Sequence[Mapping[str, Any]], output_path: Path, p
     ax.set_ylabel("QoE linear")
     ax.set_title("Robustez / peor caso de QoE por controller")
     ax.legend()
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=120)
+    plt.close(fig)
+
+
+def _plot_stalls(aggregates: Sequence[Mapping[str, Any]], output_path: Path, plt) -> None:
+    rows = list(aggregates)
+    if not rows:
+        raise ValueError("no aggregates for stalls plot")
+    labels = [str(row.get("controller_display_name", row.get("controller_alias", ""))) for row in rows]
+    stalls = [_float(row.get("stall_event_count_mean")) for row in rows]
+    gt5 = [100.0 * _float(row.get("session_gt_5s_rebuffer_rate")) for row in rows]
+    gt10 = [100.0 * _float(row.get("session_gt_10s_rebuffer_rate")) for row in rows]
+    positions = list(range(len(rows)))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(max(8.0, len(rows) * 1.8), 4.2))
+    ax1.bar(positions, stalls, color="#c0392b")
+    ax1.set_xticks(positions)
+    ax1.set_xticklabels(labels, rotation=30, ha="right")
+    ax1.set_ylabel("stalls medios por sesion")
+    ax1.set_title("Numero de stalls por controller")
+    width = 0.4
+    ax2.bar([p - width / 2 for p in positions], gt5, width, label=">5 s", color="#e67e22")
+    ax2.bar([p + width / 2 for p in positions], gt10, width, label=">10 s", color="#8e44ad")
+    ax2.set_xticks(positions)
+    ax2.set_xticklabels(labels, rotation=30, ha="right")
+    ax2.set_ylabel("% de sesiones")
+    ax2.set_title("Sesiones con rebuffer significativo")
+    ax2.legend()
     fig.tight_layout()
     fig.savefig(output_path, dpi=120)
     plt.close(fig)
@@ -855,11 +890,12 @@ def render_validation_markdown(package: Mapping[str, Any]) -> str:
                 _float(row.get("rebuffer_ratio_p95")),
             )
         )
-    lines.extend(["", "## Sesiones catastroficas (cola de rebuffer)", ""])
+    lines.extend(["", "## Stalls y sesiones catastroficas (cola de rebuffer)", ""])
     for row in package["aggregates"]:
         lines.append(
-            "- {0}: rebuffer_P95={1:.2f}s, peor_sesion={2:.2f}s, worst5%_medio={3:.2f}s, sesiones>5s={4:.0%}, sesiones>10s={5:.0%}".format(
+            "- {0}: stalls/sesion={1:.2f}, rebuffer_P95={2:.2f}s, peor_sesion={3:.2f}s, worst5%_medio={4:.2f}s, sesiones>5s={5:.0%}, sesiones>10s={6:.0%}".format(
                 row.get("controller_display_name"),
+                _float(row.get("stall_event_count_mean")),
                 _float(row.get("total_rebuffer_s_p95")),
                 _float(row.get("total_rebuffer_s_max")),
                 _float(row.get("worst_5pct_rebuffer_mean_s")),

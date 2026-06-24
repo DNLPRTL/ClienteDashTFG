@@ -16,6 +16,13 @@ class Phase6ComparativaPresetTest(unittest.TestCase):
         self.assertEqual(spec["max_media_segments"], 30)
         self.assertEqual(spec["media_profile_ids"], ["paseo_10min_30fps_4s"])
 
+    def test_tfg_final_preset_multivideo_and_rankable(self):
+        self.assertIn("tfg_final", PRESET_NAMES)
+        spec = preset_spec("tfg_final")
+        self.assertTrue(spec["benchmark_capable"] and spec["ranking_capable"])
+        self.assertEqual(len(spec["media_profile_ids"]), 4)  # paseo+blender x 30/60fps
+        self.assertIn("blender_10min_60fps_4s", spec["media_profile_ids"])
+
     def test_comparativa_authorizes_ranking_gate(self):
         from core.phase6.analysis import evaluate_gates
 

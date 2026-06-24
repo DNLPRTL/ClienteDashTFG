@@ -139,6 +139,17 @@ class RealDescriptorTests(unittest.TestCase):
         ids = available_media_profiles()
         self.assertIn(self.PROFILE_ID, ids)
 
+    def test_phase6_media_id_resolves_to_descriptor(self):
+        from core.mpc_prudente.media_profile import resolve_media_descriptor_id
+
+        self.assertEqual(resolve_media_descriptor_id("paseo_10min_30fps_4s"), "paseo_almunecar_10min_30fps_4s")
+        self.assertEqual(resolve_media_descriptor_id("blender_10min_60fps_4s"), "blender_sunflower_10min_60fps_4s")
+        # un id que ya es de descriptor se devuelve igual
+        self.assertEqual(resolve_media_descriptor_id(self.PROFILE_ID), self.PROFILE_ID)
+        # cargar por el id corto de Phase 6 funciona
+        profile = MediaProfileSegmentSizes.load_by_id("paseo_10min_30fps_4s")
+        self.assertEqual(profile.representation_count, 6)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -27,6 +27,24 @@ DEFAULT_MAX_BUFFER_S = 60.0
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SEGMENT_SIZES_DIR = os.path.join(REPO_ROOT, "media_profiles", "segment_sizes")
 
+# Los ids de media de Phase 6 (cortos) mapean a los ids de descriptor (del MPD real).
+PHASE6_MEDIA_ID_TO_DESCRIPTOR = {
+    "paseo_10min_30fps_4s": "paseo_almunecar_10min_30fps_4s",
+    "paseo_10min_60fps_4s": "paseo_almunecar_10min_60fps_4s",
+    "blender_10min_30fps_4s": "blender_sunflower_10min_30fps_4s",
+    "blender_10min_60fps_4s": "blender_sunflower_10min_60fps_4s",
+    "preflight_paseo_1min_30fps_4s": "paseo_almunecar_1min_30fps_4s",
+}
+
+
+def resolve_media_descriptor_id(media_profile_id: str, *, base_dir: str | None = None) -> str:
+    """Resuelve un id de Phase 6 (corto) al id de descriptor VBR (del MPD real)."""
+    directory = base_dir or SEGMENT_SIZES_DIR
+    mid = str(media_profile_id)
+    if os.path.isfile(os.path.join(directory, mid + ".json")):
+        return mid
+    return PHASE6_MEDIA_ID_TO_DESCRIPTOR.get(mid, mid)
+
 
 class MediaProfileError(ValueError):
     """Raised when a media profile descriptor is missing or malformed."""
@@ -126,7 +144,8 @@ class MediaProfileSegmentSizes:
     @classmethod
     def load_by_id(cls, media_profile_id: str, *, base_dir: str | None = None) -> "MediaProfileSegmentSizes":
         directory = base_dir or SEGMENT_SIZES_DIR
-        return cls.load(os.path.join(directory, media_profile_id + ".json"))
+        resolved = resolve_media_descriptor_id(media_profile_id, base_dir=directory)
+        return cls.load(os.path.join(directory, resolved + ".json"))
 
     @classmethod
     def from_mapping(cls, data: Mapping[str, object]) -> "MediaProfileSegmentSizes":

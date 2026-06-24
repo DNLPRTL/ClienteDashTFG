@@ -25,13 +25,17 @@
   },
   "experiment": {
     "controllers": [
+      "rate_based",
+      "bba",
+      "bola",
       "robust_mpc",
+      "mpc_prudente_v1",
       "mpc_prudente_v2"
     ],
     "engine": "fake",
     "include_synthetic_diagnostic": true,
     "media_profile_ids": [],
-    "preset": "comparativa",
+    "preset": "tfg_final",
     "repetitions": 1,
     "seed": 606
   },

@@ -152,6 +152,23 @@ PRESET_SPECS = {
         "timeout_seconds": 900.0,
         "estimated_session_duration_s": 125.0,
     },
+    "tfg_final": {
+        "preset": "tfg_final",
+        "real_windows": 12,
+        "synthetic_windows": 3,
+        "media_profile_ids": [
+            "paseo_10min_30fps_4s",
+            "blender_10min_30fps_4s",
+            "paseo_10min_60fps_4s",
+            "blender_10min_60fps_4s",
+        ],
+        "benchmark_capable": True,
+        "ranking_capable": True,
+        "max_media_segments": 30,
+        "network_window_duration_s": 300.0,
+        "timeout_seconds": 900.0,
+        "estimated_session_duration_s": 125.0,
+    },
     "extendido": {
         "preset": "extendido",
         "real_windows": 48,
