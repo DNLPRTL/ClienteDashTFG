@@ -32,11 +32,14 @@ from core.controller.phase45_v3_neural_mpc import (
     _state_from_payload,
 )
 from core.controller.robust_mpc import RobustMpcController
-from core.mpc_prudente.bundle import MpcPrudenteBundleError, MpcPrudenteRuntimeBundle
+from core.mpc_prudente.bundle import MpcPrudenteBundleError
 from core.mpc_prudente.media_profile import MediaProfileError, MediaProfileSegmentSizes
 from core.mpc_prudente.planner import MPC_PRUDENTE_CONTROLLER_KEY, plan_prudent_action
+from core.mpc_prudente.temporal_bundle import load_prudent_runtime_bundle
 
+MPC_PRUDENTE_TEMPORAL_CONTROLLER_KEY = "mpc_prudente_v2"
 DEFAULT_MPC_PRUDENTE_BUNDLE_DIR = "/home/daniel/TFG/modelos/mpc_prudente/runtime_bundle_v1"
+DEFAULT_MPC_PRUDENTE_TEMPORAL_BUNDLE_DIR = "/home/daniel/TFG/modelos/mpc_prudente/temporal_runtime_bundle_v1"
 DEFAULT_MEDIA_PROFILE_ID = "paseo_almunecar_10min_30fps_4s"
 DEFAULT_FALLBACK_CONTROLLER = "robust_mpc"
 DEFAULT_MAX_BUFFER_S = 60.0
@@ -173,7 +176,7 @@ class MpcPrudenteRuntimeController(BaseController):
             diagnostics.bundle_hash_ok = 1
             diagnostics.feature_schema_ok = 1
             return self._bundle
-        self._bundle = MpcPrudenteRuntimeBundle(self.bundle_dir, verify_hashes=self.verify_hashes)
+        self._bundle = load_prudent_runtime_bundle(self.bundle_dir, verify_hashes=self.verify_hashes)
         self._bundle_load_attempted = True
         diagnostics.bundle_loaded = 1
         diagnostics.bundle_schema_ok = 1
@@ -234,4 +237,20 @@ class MpcPrudenteRuntimeController(BaseController):
         )
 
 
-__all__ = ["MpcPrudenteRuntimeController", "MpcPrudenteRuntimeBundle"]
+class MpcPrudenteTemporalRuntimeController(MpcPrudenteRuntimeController):
+    """v2: predictor temporal (ensemble GRU). Mismo planner prudente; bundle temporal."""
+
+    name = MPC_PRUDENTE_TEMPORAL_CONTROLLER_KEY
+
+    def __init__(self, bundle_dir: object | None = None, **kwargs) -> None:
+        super().__init__(bundle_dir=bundle_dir or DEFAULT_MPC_PRUDENTE_TEMPORAL_BUNDLE_DIR, **kwargs)
+        self.name = MPC_PRUDENTE_TEMPORAL_CONTROLLER_KEY
+        self.controller_key = MPC_PRUDENTE_TEMPORAL_CONTROLLER_KEY
+
+    def _base_diagnostics(self):
+        diagnostics = super()._base_diagnostics()
+        diagnostics.model_label = "MPC Neuronal Prudente (temporal ensemble)"
+        return diagnostics
+
+
+__all__ = ["MpcPrudenteRuntimeController", "MpcPrudenteTemporalRuntimeController"]

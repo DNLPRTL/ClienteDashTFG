@@ -1,10 +1,20 @@
 {
   "controller_display_names": {
-    "mpc_prudente_v1": "Propio MPC Prudente"
+    "mpc_prudente_v1": "Propio MPC Prudente (MLP)",
+    "mpc_prudente_v2": "Propio MPC Prudente v2 (temporal)"
   },
   "controller_params": {
     "mpc_prudente_v1": {
       "bundle_dir": "/home/daniel/TFG/modelos/mpc_prudente/runtime_bundle_v1",
+      "media_profile_id": "paseo_almunecar_10min_30fps_4s",
+      "risk_alpha": 0.75,
+      "diagnostic_only": false,
+      "fallback_controller": "robust_mpc",
+      "max_inference_latency_ms": 50.0,
+      "verify_hashes": true
+    },
+    "mpc_prudente_v2": {
+      "bundle_dir": "/home/daniel/TFG/modelos/mpc_prudente/temporal_runtime_bundle_v1",
       "media_profile_id": "paseo_almunecar_10min_30fps_4s",
       "risk_alpha": 0.75,
       "diagnostic_only": false,
@@ -16,7 +26,7 @@
   "experiment": {
     "controllers": [
       "robust_mpc",
-      "mpc_prudente_v1"
+      "mpc_prudente_v2"
     ],
     "engine": "fake",
     "include_synthetic_diagnostic": true,
