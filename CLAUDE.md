@@ -40,12 +40,13 @@ los mismos documentos canónicos** para no divergir.
 Antes de proponer cambios técnicos, leer/recordar:
 
 ```text
+docs/contexto rama nueva/fase_4_5_v1/HANDOFF_mpc_prudente_estado_completo_20260624.md  <- LÉEME 1º (estado completo + resultado final)
 AGENTS.md
 docs/arquitectura y procedimientos estandar tfg dash/arquitectura_y_procedimientos_estandar_tfg_dash.md
 docs/arquitectura y procedimientos estandar tfg dash/TFG_PLAN_GENERICO.md
 docs/contexto rama nueva/fase_4_5_v1/proceso_desarrollo_ia_abr.md
-docs/contexto rama nueva/fase_4_5_v1/plan_maestro_controller_ia_claude_20260619.md   <- PLAN ACTIVO
-docs/contexto_para_ia/CONTEXTO_ABSOLUTO_DASHCLIENTMODULAR4_20260615.md                <- estado completo
+docs/contexto rama nueva/fase_4_5_v1/plan_maestro_controller_ia_claude_20260619.md
+docs/contexto_para_ia/CONTEXTO_ABSOLUTO_DASHCLIENTMODULAR4_20260615.md
 ```
 
 Contexto secundario cuando haga falta: `docs/contexto rama nueva/`,
@@ -101,5 +102,10 @@ bajo `~/TFG/...` (Linux) o `C:\Users\danie\Documents\TFG\...`.
   (más agresiva, más rebuffer; peor QoE que v1 y que `robust_mpc`).
 - Líneas abandonadas: SPBC/SPC, Q_H scorer (se conservan como **resultados
   negativos** para la memoria).
-- **Línea nueva activa: `phase45_v4` — Neural-MPC fiel-al-medio y consciente-del-riesgo.**
-  Ver `plan_maestro_controller_ia_claude_20260619.md`.
+- **Línea activa: MPC Neuronal Prudente (`mpc_prudente_v1` MLP, `mpc_prudente_v2`
+  temporal ensemble).** Predictor neuronal de cuantiles (supervisado) + planner MPC
+  prudente (CVaR) con tamaños VBR reales. PARTE TÉCNICA TERMINADA.
+- **Resultado final (Phase 6 `tfg_final`, 360 sesiones, 6 controllers, 4 vídeos):**
+  v2 temporal = QoE media más alta (2.013), empatado estadísticamente con robust_mpc
+  (sign_p=0.54) y con menos rebuffering (stalls 0.29 vs 0.44, >5s 12% vs 23%); v2 > v1.
+  Todo en `HANDOFF_mpc_prudente_estado_completo_20260624.md`. PENDIENTE: la memoria.
