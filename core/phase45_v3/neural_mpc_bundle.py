@@ -178,7 +178,8 @@ def export_phase45_v3_neural_mpc_experimental_bundle(
     )
 
     validate_phase45_v3_neural_mpc_bundle_dir(output_path)
-    return report | {"manifest_payload": manifest}
+    # {**a, **b} en vez de "a | b" por compatibilidad con Python 3.8 (Ubuntu cliente).
+    return {**report, "manifest_payload": manifest}
 
 
 def collect_neural_mpc_candidate_readiness(

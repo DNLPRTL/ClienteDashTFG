@@ -152,7 +152,8 @@ def export_spbc_v2_dpo_inference_bundle(
         "phase6_formal_evaluation_performed": False,
     }
     write_json(output_path / SPBC_V2_DPO_BUNDLE_EXPORT_REPORT_FILENAME, report)
-    return report | {"manifest_payload": manifest}
+    # {**a, **b} en vez de "a | b" por compatibilidad con Python 3.8 (Ubuntu cliente).
+    return {**report, "manifest_payload": manifest}
 
 
 def validate_spbc_v2_dpo_bundle_dir(bundle_dir: object, verify_hashes: bool = True) -> Mapping[str, object]:
