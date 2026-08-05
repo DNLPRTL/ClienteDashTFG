@@ -113,7 +113,7 @@ class Result:
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
-    parser = argparse.ArgumentParser(description="Check ClienteDashPrudente client-readiness gate.")
+    parser = argparse.ArgumentParser(description="Check ClienteDashTFG client-readiness gate.")
     parser.add_argument("--strict", action="store_true", help="Fail on any non-allowlisted warning.")
     args = parser.parse_args(argv)
     return run_checks(strict=args.strict)
@@ -147,7 +147,7 @@ def run_checks(strict: bool = False, stream: Optional[TextIO] = None) -> int:
     fails = [r for r in results if r.status == "FAIL"]
     unallowlisted_warns = [r for r in warns if r.code not in STRICT_ALLOWED_WARN_CODES]
 
-    _write(stream, "ClienteDashPrudente client readiness check")
+    _write(stream, "ClienteDashTFG client readiness check")
     _write(stream, "Strict: {0}".format("yes" if strict else "no"))
     _write(stream, "")
     for result in results:

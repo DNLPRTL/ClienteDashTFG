@@ -2,7 +2,7 @@
 # MPC Prudente — dataset FULL fiel (medio VBR real). Para el predictor temporal.
 #
 #   wsl -d Ubuntu-24.04
-#   cd ~/TFG/ClienteDashPrudente
+#   cd ~/TFG/ClienteDashTFG
 #   git pull
 #   source ~/venvs/rocm721/bin/activate
 #   bash scripts/generar_dataset_full_mpc_prudente_wsl.sh

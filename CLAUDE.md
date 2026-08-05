@@ -22,13 +22,13 @@ los mismos documentos canónicos** para no divergir.
   - WSL2 entrenamiento:
     ```bash
     wsl -d Ubuntu-24.04
-    cd ~/TFG/ClienteDashPrudente
+    cd ~/TFG/ClienteDashTFG
     git pull
     source ~/venvs/rocm721/bin/activate
     ```
   - Ubuntu cliente validación:
     ```bash
-    cd ~/TFG/ClienteDashPrudente
+    cd ~/TFG/ClienteDashTFG
     git pull
     ```
 - **Sincronía con Codex:** cada cambio relevante se acompaña de un `.md` de
@@ -59,9 +59,9 @@ decisión / doc operativo.
 
 | Entorno | Rol | Ruta |
 |---|---|---|
-| Windows físico | desarrollo, tests rápidos, commits, push | `C:\Users\danie\Documents\TFG\ClienteDashPrudente` |
-| WSL2 Ubuntu ROCm | entrenamiento IA pesado (GPU AMD RX 7800 XT) | `~/TFG/ClienteDashPrudente`, venv `~/venvs/rocm721` |
-| Ubuntu cliente | validación real, Phase 6, evidencia | `~/TFG/ClienteDashPrudente` |
+| Windows físico | desarrollo, tests rápidos, commits, push | `C:\Users\danie\Documents\TFG\ClienteDashTFG` |
+| WSL2 Ubuntu ROCm | entrenamiento IA pesado (GPU AMD RX 7800 XT) | `~/TFG/ClienteDashTFG`, venv `~/venvs/rocm721` |
+| Ubuntu cliente | validación real, Phase 6, evidencia | `~/TFG/ClienteDashTFG` |
 | Ubuntu servidor | sirve MPD/segmentos/inits por HTTP | `192.168.1.132:/var/www/html/dash` |
 
 Si Windows y Ubuntu cliente discrepan, **manda Ubuntu cliente**. Artefactos

@@ -4,7 +4,7 @@
 # (sin sesgo a uno solo). Para el predictor temporal.
 #
 #   wsl -d Ubuntu-24.04
-#   cd ~/TFG/ClienteDashPrudente && git pull
+#   cd ~/TFG/ClienteDashTFG && git pull
 #   source ~/venvs/rocm721/bin/activate
 #   bash scripts/generar_dataset_multimedia_mpc_prudente_wsl.sh
 set -euo pipefail

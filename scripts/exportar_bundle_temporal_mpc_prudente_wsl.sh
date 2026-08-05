@@ -4,7 +4,7 @@
 # Ubuntu cliente para Phase 6.
 #
 #   wsl -d Ubuntu-24.04
-#   cd ~/TFG/ClienteDashPrudente && git pull
+#   cd ~/TFG/ClienteDashTFG && git pull
 #   source ~/venvs/rocm721/bin/activate
 #   bash scripts/exportar_bundle_temporal_mpc_prudente_wsl.sh
 set -euo pipefail

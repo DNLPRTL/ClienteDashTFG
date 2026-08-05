@@ -3951,3 +3951,65 @@ primary_session_metric = qoe_linear_mean
 Frase metodologica valida:
 
 > El proyecto busca un controller IA ABR propio defendible, integrado como controller normal del cliente, evaluado solo mediante protocolo Phase 6 reproducible con trazas, media profile, QoE y gates congelados.
+
+
+posdata, acabo de enviar otro prompt por lo que no se habra incluido en el contexto, es esto,
+
+
+
+Procesado durante 8m 43s
+La salida del dataset full está bien: PASS, targets=PASS, leakage=PASS, fallback_count=0, max_buffer_s=60.0. Lo más importante: en alta capacidad el target casi nunca cae a acción 0 (0.005697), así que el dataset no reproduce el colapso viejo.
+
+Pero ojo: el oracle elige acción 5 muchísimo (393287 muestras). Eso no es malo por sí mismo, pero significa que el primer SPBC no debe ser una copia tonta de clase mayoritaria. Por eso he preparado un entrenamiento SPBC puro con soft labels + regret + penalización de acciones catastróficas.
+
+Plan
+
+HECHO: dataset full SPBC/SPC cerrado validado.
+HECHO: implementar entrenamiento phase45_v3_spbc_policy como un solo modelo.
+HECHO: sin SPC runtime, sin bundle, sin tocar Neural-MPC.
+HECHO: tests completos: 456 tests OK.
+SIGUIENTE: lanzar una seed pilot desde el full dataset.
+PENDIENTE: si pasa, multi-seed.
+PENDIENTE: si queda REVIEW, análisis de errores antes de otra variante.
+He hecho commit y push: 83a8b2e feat(phase45): add spbc policy training.
+
+Ejecuta en WSL:
+
+cd ~/TFG/DashClientModular4
+git pull
+source ~/venvs/rocm721/bin/activate
+bash scripts/run_phase45_v3_spbc_policy_pilot_from_full_wsl.sh
+Pégame la línea compacta que empieza por:
+
+phase45_v3_spbc_policy status=...
+Nos fijaremos sobre todo en mean_regret, high_capacity_action0, catastrophic, predicted_actions y si queda PASS o REVIEW.
+
+
+decision_phase45_v3_spbc_policy_v1_20260619.md
+Documento · MD
+
+Se editaron 6 archivos
++1,243
+-0
+
+core/phase45_v3/__init__.py
++12
+-0
+
+core/phase45_v3/spbc_policy_training.py
++857
+-0
+
+docs/contexto rama nueva/fase_4_5_v1/decision_phase45_v3_spbc_policy_v1_20260619.md
++97
+-0
+
+scripts/run_phase45_v3_spbc_policy_pilot_from_full_wsl.sh
++26
+-0
+
+scripts/train_phase45_v3_spbc_policy.py
++117
+-0
+
+tests/test_phase45_v3_spbc_policy_training.py

@@ -1,9 +1,9 @@
-# Renombrado del proyecto a ClienteDashPrudente + scripts y fase6 en castellano
+# Renombrado del proyecto a ClienteDashTFG + scripts y fase6 en castellano
 
 | Campo | Valor |
 |---|---|
 | Fecha | 2026-08-05 |
-| Nombre nuevo | **ClienteDashPrudente** (antes DashClientModular4) — el artefacto (cliente DASH) + la contribución (controller prudente) |
+| Nombre nuevo | **ClienteDashTFG** (antes DashClientModular4) — elegido por Daniel: el cliente DASH del TFG, a secas |
 | Validación | 489 tests OK · comprobar_cliente --strict 104 OK/0 FAIL |
 
 ## 1. Paquete y scripts renombrados (git mv)
@@ -37,16 +37,16 @@ Los módulos de líneas congeladas (phase45_*) no se tocan.
 
 ## 2. Renombrado del proyecto
 
-- Repo GitHub: `DNLPRTL/DashClientModular4` → `DNLPRTL/ClienteDashPrudente`
+- Repo GitHub: `DNLPRTL/DashClientModular4` → `DNLPRTL/ClienteDashTFG`
   (GitHub redirige la URL antigua, así que los `git pull` viejos no se rompen,
   pero conviene actualizar el remote).
 - Referencias internas actualizadas: CLAUDE.md, AGENTS.md, README, arquitectura
   estándar, TFG_PLAN_GENERICO, HANDOFF, docs/defensa, todos los scripts/*.sh
-  (`cd ~/TFG/ClienteDashPrudente`), defaults de `core/fase6/configuracion.py` y
-  `config/fase6.example.yaml` (`/home/daniel/TFG/ClienteDashPrudente`).
+  (`cd ~/TFG/ClienteDashTFG`), defaults de `core/fase6/configuracion.py` y
+  `config/fase6.example.yaml` (`/home/daniel/TFG/ClienteDashTFG`).
 - Renombrado de carpetas EN CADA MÁQUINA (lo hace Daniel, comandos en el chat):
-  Windows `C:\Users\danie\Documents\TFG\ClienteDashPrudente`, WSL y Ubuntu
-  cliente `~/TFG/ClienteDashPrudente` + `git remote set-url` + ajustar
+  Windows `C:\Users\danie\Documents\TFG\ClienteDashTFG`, WSL y Ubuntu
+  cliente `~/TFG/ClienteDashTFG` + `git remote set-url` + ajustar
   `repo_root` en `config/phase6.local.json` del cliente.
 - El paquete de evidencia y los artefactos externos NO se mueven (viven bajo
   `~/TFG/...`, fuera del repo; sus rutas no contienen el nombre del repo).

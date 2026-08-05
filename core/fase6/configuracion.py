@@ -17,7 +17,7 @@ CONFIG_FASE6_POR_DEFECTO: Dict[str, Any] = {
     "paths": {
         "manifest_path": "/home/daniel/TFG/manifests_trazas/phase3/final/phase3_trace_manifest_curated.json",
         "output_root": "/home/daniel/TFG/runs_trazas/phase6/validacion_comparativa",
-        "repo_root": "/home/daniel/TFG/ClienteDashPrudente",
+        "repo_root": "/home/daniel/TFG/ClienteDashTFG",
         "python": "python",
         "trace_path_rewrites": [],
     },

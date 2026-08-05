@@ -120,11 +120,11 @@ def build_markdown() -> str:
 
 def add_title(lines: list[str], now: str, git_head: str) -> None:
     lines.extend([
-        "# Contexto absoluto tecnico - ClienteDashPrudente",
+        "# Contexto absoluto tecnico - ClienteDashTFG",
         "",
         "| Campo | Valor |",
         "|---|---|",
-        f"| Proyecto | `ClienteDashPrudente` |",
+        f"| Proyecto | `ClienteDashTFG` |",
         f"| Ruta Windows | `{REPO_ROOT}` |",
         f"| Raiz TFG Windows | `{TFG_ROOT}` |",
         f"| Fecha de generacion | `{now}` |",
@@ -308,9 +308,9 @@ def add_environment_architecture(lines: list[str]) -> None:
         "",
         "| Entorno | Ruta/estado | Papel |",
         "|---|---|---|",
-        "| Windows fisico | `C:\\Users\\danie\\Documents\\TFG\\ClienteDashPrudente` | Desarrollo, tests rapidos, docs, commits, push |",
-        "| WSL2 Ubuntu ROCm | `~/TFG/ClienteDashPrudente`, venv `~/venvs/rocm721` | Entrenamiento IA pesado y generacion de artefactos externos |",
-        "| Ubuntu cliente | `~/TFG/ClienteDashPrudente` | Validacion real, Phase 6, paquetes de evidencia |",
+        "| Windows fisico | `C:\\Users\\danie\\Documents\\TFG\\ClienteDashTFG` | Desarrollo, tests rapidos, docs, commits, push |",
+        "| WSL2 Ubuntu ROCm | `~/TFG/ClienteDashTFG`, venv `~/venvs/rocm721` | Entrenamiento IA pesado y generacion de artefactos externos |",
+        "| Ubuntu cliente | `~/TFG/ClienteDashTFG` | Validacion real, Phase 6, paquetes de evidencia |",
         "| Ubuntu servidor | `/var/www/html/dash` | Servir MPD/segmentos/inits por HTTP |",
         "",
         "Estado WSL2/ROCm observado y documentado:",
@@ -328,7 +328,7 @@ def add_environment_architecture(lines: list[str]) -> None:
         "",
         "```bash",
         "wsl -d Ubuntu-24.04",
-        "cd ~/TFG/ClienteDashPrudente",
+        "cd ~/TFG/ClienteDashTFG",
         "git pull",
         "source ~/venvs/rocm721/bin/activate",
         "python3 -c \"import torch; print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0))\"",
@@ -889,7 +889,7 @@ def add_phase6_method(lines: list[str]) -> None:
         "schema_version=phase6_config_v1",
         "manifest_path=/home/daniel/TFG/manifests_trazas/phase3/final/phase3_trace_manifest_curated.json",
         "output_root=/home/daniel/TFG/runs_trazas/phase6/validacion_comparativa",
-        "repo_root=/home/daniel/TFG/ClienteDashPrudente",
+        "repo_root=/home/daniel/TFG/ClienteDashTFG",
         "engine=fake",
         "seed=606",
         "decision_interval_s=4.0",
@@ -1153,7 +1153,7 @@ def add_command_protocols(lines: list[str]) -> None:
         "Sincronizacion Ubuntu cliente:",
         "",
         "```bash",
-        "cd ~/TFG/ClienteDashPrudente",
+        "cd ~/TFG/ClienteDashTFG",
         "git pull",
         "```",
         "",
@@ -1161,7 +1161,7 @@ def add_command_protocols(lines: list[str]) -> None:
         "",
         "```bash",
         "wsl -d Ubuntu-24.04",
-        "cd ~/TFG/ClienteDashPrudente",
+        "cd ~/TFG/ClienteDashTFG",
         "git pull",
         "source ~/venvs/rocm721/bin/activate",
         "python3 -c \"import torch; print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0))\"",
@@ -1170,7 +1170,7 @@ def add_command_protocols(lines: list[str]) -> None:
         "Phase 6 comparativa:",
         "",
         "```bash",
-        "cd ~/TFG/ClienteDashPrudente",
+        "cd ~/TFG/ClienteDashTFG",
         "git pull",
         "python scripts/ejecutar_fase6.py --preset diagnostico",
         "python scripts/verificar_paquete_fase6.py --package-root <paquete>",
@@ -1731,7 +1731,7 @@ def render_pdf(markdown: str, output_path: Path) -> None:
         leftMargin=1.35 * cm,
         topMargin=1.25 * cm,
         bottomMargin=1.25 * cm,
-        title="Contexto absoluto tecnico - ClienteDashPrudente",
+        title="Contexto absoluto tecnico - ClienteDashTFG",
         author="Codex",
     )
     doc.build(story, onFirstPage=page_footer, onLaterPages=page_footer)
@@ -1740,7 +1740,7 @@ def render_pdf(markdown: str, output_path: Path) -> None:
 def page_footer(canvas, doc) -> None:
     canvas.saveState()
     canvas.setFont("Helvetica", 7)
-    canvas.drawString(1.35 * 28.3465, 0.65 * 28.3465, "ClienteDashPrudente - contexto tecnico")
+    canvas.drawString(1.35 * 28.3465, 0.65 * 28.3465, "ClienteDashTFG - contexto tecnico")
     canvas.drawRightString(19.65 * 28.3465, 0.65 * 28.3465, f"Pagina {doc.page}")
     canvas.restoreState()
 

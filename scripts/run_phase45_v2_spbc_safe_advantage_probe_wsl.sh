@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd "${HOME}/TFG/ClienteDashPrudente"
+cd "${HOME}/TFG/ClienteDashTFG"
 git pull
 source "${HOME}/venvs/rocm721/bin/activate"
 

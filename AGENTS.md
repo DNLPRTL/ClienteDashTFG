@@ -1,6 +1,6 @@
 ﻿# AGENTS.md
 
-Guia permanente de trabajo para `ClienteDashPrudente`.
+Guia permanente de trabajo para `ClienteDashTFG`.
 
 ## Estado actual
 
@@ -98,7 +98,7 @@ Distribucion: Ubuntu-24.04 en WSL2
 Venv GPU: ~/venvs/rocm721
 Torch observado: 2.9.1+rocm7.2.1
 GPU observada: AMD Radeon RX 7800 XT
-Repo recomendado dentro de WSL: ~/TFG/ClienteDashPrudente
+Repo recomendado dentro de WSL: ~/TFG/ClienteDashTFG
 Raiz pesada recomendada dentro de WSL: ~/TFG
 ```
 
@@ -288,7 +288,7 @@ python scripts/comprobar_cliente.py --strict
 En Ubuntu cliente, Daniel sincronizara con:
 
 ```bash
-cd ~/TFG/ClienteDashPrudente
+cd ~/TFG/ClienteDashTFG
 git pull
 ```
 
@@ -296,11 +296,11 @@ Despues ejecutara el smoke/runbook indicado para la fase. Si Windows y Ubuntu
 cliente discrepan, manda Ubuntu cliente.
 
 En WSL2 para entrenamiento IA con GPU, Daniel sincronizara o clonara el repo en
-`~/TFG/ClienteDashPrudente`, activara `~/venvs/rocm721` y comprobara PyTorch:
+`~/TFG/ClienteDashTFG`, activara `~/venvs/rocm721` y comprobara PyTorch:
 
 ```bash
 wsl -d Ubuntu-24.04
-cd ~/TFG/ClienteDashPrudente
+cd ~/TFG/ClienteDashTFG
 git pull
 source ~/venvs/rocm721/bin/activate
 python3 -c "import torch; print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0))"

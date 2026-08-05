@@ -1,4 +1,4 @@
-# ClienteDashPrudente
+# ClienteDashTFG
 
 Modular DASH client for a TFG project. Phase 1 client hardening is ready to close after the Block 14 readiness gate: the repository is a stable technical base for returning to Phase 0 methodology before adding real ABR algorithms.
 
