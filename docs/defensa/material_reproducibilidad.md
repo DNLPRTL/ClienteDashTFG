@@ -40,26 +40,26 @@ core/controller/mpc_prudente_runtime.py # NUESTROS v1 y v2 (runtime)
 
 ### Línea propia MPC Prudente (entrenamiento + planner + bundles)
 ```text
-core/mpc_prudente/media_profile.py     # ladder con tamaños VBR reales
-core/mpc_prudente/dataset.py           # dataset fiel (single y multi-vídeo)
-core/mpc_prudente/training.py          # entrenamiento MLP + calibración (v1)
-core/mpc_prudente/temporal_model.py    # GRU + ensemble_quantiles (v2)
-core/mpc_prudente/temporal_training.py # entrenamiento del ensemble (v2)
-core/mpc_prudente/planner.py           # planner CVaR con tamaños reales
-core/mpc_prudente/bundle.py            # bundle runtime v1 + helpers comunes
-core/mpc_prudente/temporal_bundle.py   # bundle runtime v2 + dispatcher
-core/mpc_prudente/evaluation.py        # diagnóstico closed-loop offline
+core/mpc_prudente/perfil_medio.py           # escalera con tamaños VBR reales
+core/mpc_prudente/dataset_fiel.py           # dataset fiel (single y multi-vídeo)
+core/mpc_prudente/entrenamiento.py          # entrenamiento MLP + calibración (v1)
+core/mpc_prudente/modelo_temporal.py        # GRU + ensemble (v2)
+core/mpc_prudente/entrenamiento_temporal.py # entrenamiento del ensemble (v2)
+core/mpc_prudente/planificador.py           # planner CVaR con tamaños reales
+core/mpc_prudente/bundle.py                 # bundle runtime v1 + helpers comunes
+core/mpc_prudente/bundle_temporal.py        # bundle runtime v2 + dispatcher
+core/mpc_prudente/diagnostico.py            # diagnóstico closed-loop offline
 core/phase45_v3/                       # base reutilizada (dataset cuantiles, env closed-loop, MLP)
 core/neural_abr/                       # base reutilizada (features, safety, bundles, ladder)
 ```
 
 ### Phase 6 (evaluación formal)
 ```text
-core/phase6/catalog.py       # presets (tfg_final) y perfiles de medio
-core/phase6/selection.py     # selección determinista de ventanas eval
-core/phase6/config.py        # carga de config
-core/phase6/analysis.py      # métricas, estadística pareada, gates, plots
-core/phase6/verification.py  # verificación automática del paquete
+core/phase6/catalogo.py      # presets (tfg_final) y perfiles de medio
+core/phase6/seleccion.py     # selección determinista de ventanas eval
+core/phase6/configuracion.py # carga de config
+core/phase6/analisis.py      # métricas, estadística pareada, gates, plots
+core/phase6/verificacion.py  # verificación automática del paquete
 scripts/run_phase6_validacion_comparativa.py   # runner (orquesta las 360 sesiones)
 ```
 
@@ -101,7 +101,7 @@ Paseo_Almunecar_10min_30fps/4sec/  +  Paseo_Almunecar_10min_60fps/4sec/
 Blender_Sunflower_10min_30fps/4sec/  +  Blender_Sunflower_10min_60fps/4sec/
 ```
 
-Las URLs concretas están en `core/phase6/catalog.py` (MEDIA_PROFILES); en otro PC
+Las URLs concretas están en `core/phase6/catalogo.py` (MEDIA_PROFILES); en otro PC
 basta cambiar la IP en la config local. Los 6 niveles son
 300/750/1200/1850/2850/4300 kbps, codificación VBR (por eso existen las tablas del
 Bloque 1).
@@ -118,7 +118,7 @@ Bloque 1).
 ```
 
 Este paquete permite re-derivar TODOS los números de la memoria sin re-ejecutar
-nada (`analyze_phase6_run` sobre el paquete los recalcula desde la telemetría).
+nada (`analizar_paquete_phase6` sobre el paquete los recalcula desde la telemetría).
 
 ---
 

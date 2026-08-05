@@ -13,17 +13,17 @@ import sys
 from pathlib import Path
 from typing import Sequence
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+RAIZ_REPO = Path(__file__).resolve().parents[1]
+if str(RAIZ_REPO) not in sys.path:
+    sys.path.insert(0, str(RAIZ_REPO))
 
 from core.mpc_prudente.bundle import (
-    DEFAULT_RISK_ALPHA,
-    export_mpc_prudente_bundle,
-    validate_mpc_prudente_bundle_dir,
+    RISK_ALPHA_POR_DEFECTO,
+    exportar_bundle_mpc_prudente,
+    validar_dir_bundle_mpc_prudente,
 )
 
-TFG_ROOT = REPO_ROOT.parent
+TFG_ROOT = RAIZ_REPO.parent
 DEFAULT_MODEL_ROOT = TFG_ROOT / "modelos" / "mpc_prudente" / "throughput_quantile_predictor"
 DEFAULT_BUNDLE_DIR = TFG_ROOT / "modelos" / "mpc_prudente" / "runtime_bundle_v1"
 
@@ -35,21 +35,21 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--seed", type=int, default=451001)
     parser.add_argument("--training-dir", type=Path, default=None)
     parser.add_argument("--bundle-dir", type=Path, default=DEFAULT_BUNDLE_DIR)
-    parser.add_argument("--risk-alpha", type=float, default=DEFAULT_RISK_ALPHA)
+    parser.add_argument("--risk-alpha", type=float, default=RISK_ALPHA_POR_DEFECTO)
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args(argv)
 
     training_dir = args.training_dir or (
         DEFAULT_MODEL_ROOT / "{0}_{1}_seed{2}".format(args.train_profile, args.media_profile_id, args.seed)
     )
-    result = export_mpc_prudente_bundle(
+    result = exportar_bundle_mpc_prudente(
         training_dir,
         args.bundle_dir,
         media_profile_id=args.media_profile_id,
         risk_alpha=float(args.risk_alpha),
         overwrite=args.overwrite,
     )
-    validation = validate_mpc_prudente_bundle_dir(args.bundle_dir)
+    validation = validar_dir_bundle_mpc_prudente(args.bundle_dir)
     print(json.dumps({"export": result, "validation": validation}, indent=2, sort_keys=True, default=str))
     print(
         "MPC_PRUDENTE_BUNDLE status={st} risk_alpha={a} media={m} bundle_dir={d}".format(

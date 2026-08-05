@@ -15,9 +15,9 @@ except ImportError:  # pragma: no cover
 @unittest.skipUnless(HAS_TORCH, "torch required")
 class TemporalModelTest(unittest.TestCase):
     def test_forward_is_monotonic(self):
-        from core.mpc_prudente.temporal_model import TemporalQuantilePredictor
+        from core.mpc_prudente.modelo_temporal import PredictorTemporalCuantiles
 
-        model = TemporalQuantilePredictor(
+        model = PredictorTemporalCuantiles(
             seq_features=2, scalar_dim=7, horizon_segments=3, quantiles=(0.10, 0.25, 0.50, 0.75),
             gru_hidden=8, mlp_hidden=(8,), dropout=0.0,
         )
@@ -27,10 +27,10 @@ class TemporalModelTest(unittest.TestCase):
         self.assertTrue(bool((diffs >= -1e-6).all()))  # cuantiles monótonos
 
     def test_ensemble_widens_lower_tail(self):
-        from core.mpc_prudente.temporal_model import ensemble_quantiles
+        from core.mpc_prudente.modelo_temporal import combinar_cuantiles_ensemble
 
         preds = torch.randn(4, 2, 3, 4).sort(dim=3).values  # 4 miembros monótonos
-        combined = ensemble_quantiles(preds, (0.10, 0.25, 0.50, 0.75), downside_widen=1.0)
+        combined = combinar_cuantiles_ensemble(preds, (0.10, 0.25, 0.50, 0.75), downside_widen=1.0)
         self.assertEqual(tuple(combined.shape), (2, 3, 4))
         diffs = combined[:, :, 1:] - combined[:, :, :-1]
         self.assertTrue(bool((diffs >= -1e-6).all()))
@@ -39,39 +39,39 @@ class TemporalModelTest(unittest.TestCase):
 @unittest.skipUnless(HAS_TORCH, "torch required")
 class TemporalTrainingSmokeTest(unittest.TestCase):
     def test_trains_ensemble_and_audits_calibration(self):
-        from core.mpc_prudente.dataset import build_mpc_prudente_dataset
-        from core.mpc_prudente.temporal_training import (
-            TemporalTrainingProfile,
-            train_mpc_prudente_temporal_ensemble,
+        from core.mpc_prudente.dataset_fiel import construir_dataset_mpc_prudente
+        from core.mpc_prudente.entrenamiento_temporal import (
+            PerfilEntrenamientoTemporal,
+            entrenar_ensemble_temporal_mpc_prudente,
         )
         from core.phase45_v1.paths import PathRewriteRule
         from core.phase45_v3.profiles import Phase45V3DatasetProfile
-        from tests.test_mpc_prudente_dataset import _write_synthetic_media_profile
+        from tests.test_mpc_prudente_dataset import _escribir_perfil_medio_sintetico
         from tests.test_phase45_v1_dataset import build_manifest_with_trace_files
 
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             manifest = build_manifest_with_trace_files(root)
             media_dir = root / "media_profiles" / "segment_sizes"
-            _write_synthetic_media_profile(media_dir, "synthetic_test")
+            _escribir_perfil_medio_sintetico(media_dir, "synthetic_test")
             dataset_dir = root / "datasets" / "mpc_prudente_unit"
             dataset_profile = Phase45V3DatasetProfile(
                 name="unit", train_window_count=2, validation_window_count=1, qh_horizon_segments=5,
                 qh_beam_width=4, max_windows_per_trace=1, synthetic_max_fraction=0.5,
                 dataset_max_fraction=1.0, semantics_max_fraction=1.0, seed="unit-temporal", rollouts_per_window=2,
             )
-            build_mpc_prudente_dataset(
+            construir_dataset_mpc_prudente(
                 manifest, output_dir=dataset_dir, profile=dataset_profile,
-                media_profile_id="synthetic_test", media_profile_base_dir=str(media_dir),
+                media_profile_id="synthetic_test", dir_base_perfiles=str(media_dir),
                 overwrite=True, horizon_segments=5,
                 trace_path_rewrites=(PathRewriteRule("/home/daniel/TFG", str(root)),),
             )
 
-            profile = TemporalTrainingProfile(
+            profile = PerfilEntrenamientoTemporal(
                 name="unit", ensemble_size=2, epochs=2, batch_size=64, learning_rate=1.0e-3,
                 gru_hidden=12, mlp_hidden=(12,), quantiles=(0.10, 0.25, 0.50, 0.75), horizon_segments=5, base_seed=1,
             )
-            report = train_mpc_prudente_temporal_ensemble(
+            report = entrenar_ensemble_temporal_mpc_prudente(
                 dataset_dir, root / "model", profile, overwrite=True, device="cpu"
             )
             self.assertIn(report["status"], ("PASS", "REVIEW"))

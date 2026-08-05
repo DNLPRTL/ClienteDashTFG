@@ -20,7 +20,7 @@ from core.phase45_v1.spbc_v2_dpo_training import (
     SPBC_V2_DPO_MODEL_KEY,
     SpbcAbrV2DpoPolicy,
 )
-from core.phase6.catalog import discover_comparable_controllers
+from core.phase6.catalogo import descubrir_controllers_comparables
 from tests.spbc_v2_dpo_bundle_utils import build_minimal_spbc_v2_dpo_bundle, minimal_spbc_feedback
 
 
@@ -54,7 +54,7 @@ class SpbcV2DpoControllerTest(unittest.TestCase):
         self.assertIn(SPBC_V2_DPO_CONTROLLER_KEY, CONTROLLER_REGISTRY)
         self.assertIn(SPBC_V2_DPO_CONTROLLER_KEY, available)
 
-        discovered = {item["controller_key"]: item for item in discover_comparable_controllers({})}
+        discovered = {item["controller_key"]: item for item in descubrir_controllers_comparables({})}
         self.assertIn(SPBC_V2_DPO_CONTROLLER_KEY, discovered)
         self.assertEqual("propio_spbc_v2_anchor", discovered[SPBC_V2_DPO_CONTROLLER_KEY]["alias"])
 

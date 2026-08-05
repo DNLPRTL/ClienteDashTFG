@@ -7,10 +7,10 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from core.phase6.analysis import analyze_phase6_run, sign_test_exact
-from core.phase6.config import DEFAULT_PHASE6_CONFIG
-from core.phase6.selection import select_trace_windows
-from core.phase6.verification import verify_phase6_package
+from core.phase6.analisis import analizar_paquete_phase6, test_de_signos_exacto
+from core.phase6.configuracion import CONFIG_PHASE6_POR_DEFECTO
+from core.phase6.seleccion import seleccionar_ventanas_trazas
+from core.phase6.verificacion import verificar_paquete_phase6
 from core.trace_replay.controlled_downloader import (
     TraceControlledDownloader,
     clip_loaded_trace_window,
@@ -18,7 +18,7 @@ from core.trace_replay.controlled_downloader import (
 )
 from core.trace_replay.loader import load_normalized_trace_csv
 from scripts.phase6_gui import build_phase6_command, parse_phase6_progress_line
-from scripts.run_phase6_validacion_comparativa import build_client_config, build_phase6_protocol_and_plan, run_session
+from scripts.run_phase6_validacion_comparativa import construir_config_cliente, construir_protocolo_y_plan_phase6, ejecutar_sesion
 
 
 class Phase6SelectionTest(unittest.TestCase):
@@ -30,8 +30,8 @@ class Phase6SelectionTest(unittest.TestCase):
             manifest["traces"].append(_trace(100 + index, split="eval", synthetic=True))
         manifest["traces"].append(_trace(999, split="train", synthetic=False))
 
-        config = dict(DEFAULT_PHASE6_CONFIG)
-        windows = select_trace_windows(manifest, "rapido", config)
+        config = dict(CONFIG_PHASE6_POR_DEFECTO)
+        windows = seleccionar_ventanas_trazas(manifest, "rapido", config)
 
         self.assertEqual(10, len(windows))
         self.assertEqual(8, sum(1 for window in windows if not window["synthetic"]))
@@ -49,7 +49,7 @@ class Phase6SelectionTest(unittest.TestCase):
         for index in range(2):
             manifest["traces"].append(_trace(100 + index, split="eval", synthetic=True, mean_kbps=100.0, max_kbps=100.0))
 
-        windows = select_trace_windows(manifest, "rapido", dict(DEFAULT_PHASE6_CONFIG))
+        windows = seleccionar_ventanas_trazas(manifest, "rapido", dict(CONFIG_PHASE6_POR_DEFECTO))
 
         self.assertEqual(8, sum(1 for window in windows if not window["synthetic"]))
         self.assertEqual(2, sum(1 for window in windows if window["synthetic"]))
@@ -179,7 +179,7 @@ class Phase6AnalysisTest(unittest.TestCase):
             )
             (protocol_dir / "session_plan.json").write_text(json.dumps({"sessions": sessions}), encoding="utf-8")
 
-            package = analyze_phase6_run(root, generate_plots=False)
+            package = analizar_paquete_phase6(root, generate_plots=False)
 
             self.assertTrue((root / "02_resultados" / "resultados_para_validar.md").is_file())
             self.assertTrue((root / "02_resultados" / "session_summary.csv").is_file())
@@ -209,7 +209,7 @@ class Phase6AnalysisTest(unittest.TestCase):
             )
             (protocol_dir / "session_plan.json").write_text(json.dumps({"sessions": [session]}), encoding="utf-8")
 
-            package = analyze_phase6_run(root, generate_plots=False)
+            package = analizar_paquete_phase6(root, generate_plots=False)
             summary_rows = _read_csv(root / "02_resultados" / "session_summary.csv")
             raw_rows = _read_csv(root / "02_resultados" / "raw_chunks.csv")
 
@@ -223,7 +223,7 @@ class Phase6AnalysisTest(unittest.TestCase):
         self.assertEqual("diagnostico", package["protocol"]["preset"])
 
     def test_sign_test_exact_handles_clear_direction(self):
-        self.assertLess(sign_test_exact([1.0] * 8), 0.01)
+        self.assertLess(test_de_signos_exacto([1.0] * 8), 0.01)
 
     def test_analysis_resolves_copied_package_run_paths(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -250,7 +250,7 @@ class Phase6AnalysisTest(unittest.TestCase):
             )
             (protocol_dir / "session_plan.json").write_text(json.dumps({"sessions": [planned_session]}), encoding="utf-8")
 
-            package = analyze_phase6_run(root, generate_plots=False)
+            package = analizar_paquete_phase6(root, generate_plots=False)
 
         self.assertEqual(1, package["session_counts"]["evaluable"])
         self.assertEqual(1, package["session_counts"]["completed"])
@@ -278,7 +278,7 @@ class Phase6AnalysisTest(unittest.TestCase):
             )
             (protocol_dir / "session_plan.json").write_text(json.dumps({"sessions": [session]}), encoding="utf-8")
 
-            package = analyze_phase6_run(root, generate_plots=False)
+            package = analizar_paquete_phase6(root, generate_plots=False)
 
         self.assertEqual(0, package["session_counts"]["evaluable"])
         self.assertEqual([], package["aggregates"])
@@ -312,7 +312,7 @@ class Phase6AnalysisTest(unittest.TestCase):
             )
             (protocol_dir / "session_plan.json").write_text(json.dumps({"sessions": sessions}), encoding="utf-8")
 
-            analyze_phase6_run(root, generate_plots=True)
+            analizar_paquete_phase6(root, generate_plots=True)
             manifest = json.loads((root / "03_graficas" / "plot_manifest.json").read_text(encoding="utf-8"))
 
         self.assertTrue(any(row["status"] == "generated" for row in manifest["plots"]))
@@ -339,9 +339,9 @@ class Phase6AnalysisTest(unittest.TestCase):
                 encoding="utf-8",
             )
             (protocol_dir / "session_plan.json").write_text(json.dumps({"sessions": [session, synthetic_session]}), encoding="utf-8")
-            analyze_phase6_run(root, generate_plots=False)
+            analizar_paquete_phase6(root, generate_plots=False)
 
-            ok = verify_phase6_package(root, require_plots=False)
+            ok = verificar_paquete_phase6(root, require_plots=False)
 
             failed_root = Path(tmp) / "phase6_verify_failed"
             failed_session = _session(failed_root, alias="base_robust_mpc", synthetic=False)
@@ -361,9 +361,9 @@ class Phase6AnalysisTest(unittest.TestCase):
                 encoding="utf-8",
             )
             (failed_protocol / "session_plan.json").write_text(json.dumps({"sessions": [failed_session]}), encoding="utf-8")
-            analyze_phase6_run(failed_root, generate_plots=False)
+            analizar_paquete_phase6(failed_root, generate_plots=False)
 
-            bad = verify_phase6_package(failed_root, require_plots=False)
+            bad = verificar_paquete_phase6(failed_root, require_plots=False)
 
         self.assertTrue(ok["all_checks_passed"])
         self.assertFalse(bad["all_checks_passed"])
@@ -389,7 +389,7 @@ class Phase6AnalysisTest(unittest.TestCase):
             )
             (protocol_dir / "session_plan.json").write_text(json.dumps({"sessions": [session]}), encoding="utf-8")
 
-            package = analyze_phase6_run(root, generate_plots=False)
+            package = analizar_paquete_phase6(root, generate_plots=False)
             summary = _read_csv(root / "02_resultados" / "session_summary.csv")[0]
             chunks = _read_csv(root / "02_resultados" / "raw_chunks.csv")
             markdown = (root / "02_resultados" / "resultados_para_validar.md").read_text(encoding="utf-8")
@@ -425,7 +425,7 @@ class Phase6AnalysisTest(unittest.TestCase):
             )
             (protocol_dir / "session_plan.json").write_text(json.dumps({"sessions": [session]}), encoding="utf-8")
 
-            package = analyze_phase6_run(root, generate_plots=False)
+            package = analizar_paquete_phase6(root, generate_plots=False)
 
         self.assertFalse(package["gates"]["gate_items"]["propios_with_verified_neural_inference"])
         self.assertIn(session["session_id"], package["gates"]["violations"]["neural_audit_violations"])
@@ -441,7 +441,7 @@ class Phase6RunnerAndGuiTest(unittest.TestCase):
             traces = [_trace(index, split="eval", synthetic=False, path=trace_path.as_posix()) for index in range(8)]
             traces += [_trace(100 + index, split="eval", synthetic=True, path=trace_path.as_posix()) for index in range(2)]
             manifest_path.write_text(json.dumps({"traces": traces}), encoding="utf-8")
-            config = dict(DEFAULT_PHASE6_CONFIG)
+            config = dict(CONFIG_PHASE6_POR_DEFECTO)
             config["paths"] = dict(config["paths"])
             config["paths"]["manifest_path"] = manifest_path.as_posix()
             config["paths"]["output_root"] = (tmp_path / "out").as_posix()
@@ -449,8 +449,8 @@ class Phase6RunnerAndGuiTest(unittest.TestCase):
             config["experiment"]["controllers"] = ["rate_based", "robust_mpc"]
 
             package_root = tmp_path / "package"
-            protocol, sessions = build_phase6_protocol_and_plan(config, "rapido", package_root)
-            client_config = build_client_config(config, sessions[0])
+            protocol, sessions = construir_protocolo_y_plan_phase6(config, "rapido", package_root)
+            client_config = construir_config_cliente(config, sessions[0])
 
         self.assertFalse(protocol["benchmark_capable"])
         self.assertEqual(20, len(sessions))
@@ -468,13 +468,13 @@ class Phase6RunnerAndGuiTest(unittest.TestCase):
             traces = [_trace(index, split="eval", synthetic=False, path=trace_path.as_posix()) for index in range(2)]
             traces += [_trace(100, split="eval", synthetic=True, path=trace_path.as_posix())]
             manifest_path.write_text(json.dumps({"traces": traces}), encoding="utf-8")
-            config = dict(DEFAULT_PHASE6_CONFIG)
+            config = dict(CONFIG_PHASE6_POR_DEFECTO)
             config["paths"] = dict(config["paths"])
             config["paths"]["manifest_path"] = manifest_path.as_posix()
             config["paths"]["output_root"] = (tmp_path / "out").as_posix()
 
-            protocol, sessions = build_phase6_protocol_and_plan(config, "diagnostico", tmp_path / "package")
-            client_config = build_client_config(config, sessions[0])
+            protocol, sessions = construir_protocolo_y_plan_phase6(config, "diagnostico", tmp_path / "package")
+            client_config = construir_config_cliente(config, sessions[0])
 
         expected_sessions = (
             len(protocol["trace_windows"])
@@ -537,7 +537,7 @@ class Phase6RunnerAndGuiTest(unittest.TestCase):
                 "window_start_s": 0.0,
                 "window_duration_s": 90.0,
             }
-            config = dict(DEFAULT_PHASE6_CONFIG)
+            config = dict(CONFIG_PHASE6_POR_DEFECTO)
             config["execution"] = dict(config["execution"])
             config["execution"]["resume"] = False
             config["paths"] = dict(config["paths"])
@@ -546,7 +546,7 @@ class Phase6RunnerAndGuiTest(unittest.TestCase):
 
             completed = mock.Mock(returncode=0, stdout=b"linea valida\nbyte raro: \x98\n")
             with mock.patch("scripts.run_phase6_validacion_comparativa.subprocess.run", return_value=completed):
-                result = run_session(config, session)
+                result = ejecutar_sesion(config, session)
 
             log_text = command_log_path.read_text(encoding="utf-8")
 

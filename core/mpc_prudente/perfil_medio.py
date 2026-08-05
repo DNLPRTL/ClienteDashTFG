@@ -1,6 +1,6 @@
 """Tamaños reales (VBR) de segmento por representación.
 
-Carga los descriptores de `media_profiles/segment_sizes/<id>.json` (extraídos del
+Carga los descriptores de `perfiles_medio/segment_sizes/<id>.json` (extraídos del
 servidor con `scripts/extraer_tamanos_reales_segmentos.py`) y construye un ladder
 compatible con `ContentLadder` cuyo `segment_size_bytes()` devuelve el peso real
 del segmento, no la aproximación CBR `bitrate * duración / 8`.
@@ -15,14 +15,14 @@ from typing import Mapping, Sequence
 
 from core.neural_abr.content_ladder import ContentLadderError, Representation
 
-MEDIA_PROFILE_SEGMENT_SIZES_SCHEMA_ID = "media_profile_segment_sizes_v1"
-DEFAULT_MAX_BUFFER_S = 60.0
+SCHEMA_ID_TAMANOS_SEGMENTOS = "media_profile_segment_sizes_v1"
+MAX_BUFFER_S_POR_DEFECTO = 60.0
 
-REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-SEGMENT_SIZES_DIR = os.path.join(REPO_ROOT, "media_profiles", "segment_sizes")
+RAIZ_REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DIR_TAMANOS_SEGMENTOS = os.path.join(RAIZ_REPO, "media_profiles", "segment_sizes")
 
 # Los ids de media de Phase 6 (cortos) mapean a los ids de descriptor (del MPD real).
-PHASE6_MEDIA_ID_TO_DESCRIPTOR = {
+MAPA_ID_PHASE6_A_DESCRIPTOR = {
     "paseo_10min_30fps_4s": "paseo_almunecar_10min_30fps_4s",
     "paseo_10min_60fps_4s": "paseo_almunecar_10min_60fps_4s",
     "blender_10min_30fps_4s": "blender_sunflower_10min_30fps_4s",
@@ -31,21 +31,21 @@ PHASE6_MEDIA_ID_TO_DESCRIPTOR = {
 }
 
 
-def resolve_media_descriptor_id(media_profile_id: str, *, base_dir: str | None = None) -> str:
+def resolver_id_descriptor_medio(media_profile_id: str, *, base_dir: str | None = None) -> str:
     """Resuelve un id de Phase 6 (corto) al id de descriptor VBR (del MPD real)."""
-    directory = base_dir or SEGMENT_SIZES_DIR
+    directory = base_dir or DIR_TAMANOS_SEGMENTOS
     mid = str(media_profile_id)
     if os.path.isfile(os.path.join(directory, mid + ".json")):
         return mid
-    return PHASE6_MEDIA_ID_TO_DESCRIPTOR.get(mid, mid)
+    return MAPA_ID_PHASE6_A_DESCRIPTOR.get(mid, mid)
 
 
-class MediaProfileError(ValueError):
-    """Raised when a media profile descriptor is missing or malformed."""
+class ErrorPerfilMedio(ValueError):
+    """Error por descriptor de perfil de medio ausente o malformado."""
 
 
 @dataclass(frozen=True)
-class MediaFaithfulLadder:
+class EscaleraFiel:
     """Ladder con la interfaz de `ContentLadder` pero tamaños reales por segmento."""
 
     media_profile_id: str
@@ -80,19 +80,19 @@ class MediaFaithfulLadder:
 
     def validate_representation_index(self, representation_index: int) -> None:
         if isinstance(representation_index, bool) or not isinstance(representation_index, int):
-            raise ContentLadderError("representation_index must be an integer")
+            raise ContentLadderError("representation_index debe ser un entero")
         if representation_index < 0 or representation_index >= self.representation_count:
-            raise ContentLadderError("representation_index is outside the ladder")
+            raise ContentLadderError("representation_index fuera de la escalera")
 
     def segment_size_bytes(self, representation_index: int, segment_index: int) -> int:
         self.validate_representation_index(representation_index)
         if isinstance(segment_index, bool) or not isinstance(segment_index, int):
-            raise ContentLadderError("segment_index must be an integer")
+            raise ContentLadderError("segment_index debe ser un entero")
         if segment_index < 0 or segment_index >= self.segment_count:
-            raise ContentLadderError("segment_index is outside the content duration")
+            raise ContentLadderError("segment_index fuera de la duracion del contenido")
         # Ventanas más largas que el medio real ciclan sobre los segmentos reales.
-        real_index = (self.start_offset + segment_index) % self.real_segment_count
-        return int(self._segment_bytes[representation_index][real_index])
+        indice_real = (self.start_offset + segment_index) % self.real_segment_count
+        return int(self._segment_bytes[representation_index][indice_real])
 
     def cbr_nominal_bytes(self, representation_index: int) -> float:
         return self.bitrate_bps(representation_index) * self.segment_duration_s / 8.0
@@ -110,8 +110,8 @@ class MediaFaithfulLadder:
 
 
 @dataclass(frozen=True)
-class MediaProfileSegmentSizes:
-    """Descriptor cargado de `media_profiles/segment_sizes/<id>.json`."""
+class PerfilTamanosSegmentos:
+    """Descriptor cargado de `perfiles_medio/segment_sizes/<id>.json`."""
 
     media_profile_id: str
     mpd_url: str
@@ -124,28 +124,28 @@ class MediaProfileSegmentSizes:
     vbr_cv_max: float
 
     @classmethod
-    def load(cls, path: str) -> "MediaProfileSegmentSizes":
+    def cargar(cls, path: str) -> "PerfilTamanosSegmentos":
         if not os.path.isfile(path):
-            raise MediaProfileError("media profile no encontrado: {0}".format(path))
+            raise ErrorPerfilMedio("media profile no encontrado: {0}".format(path))
         with open(path, "r", encoding="utf-8") as handle:
             data = json.load(handle)
-        return cls.from_mapping(data)
+        return cls.desde_dict(data)
 
     @classmethod
-    def load_by_id(cls, media_profile_id: str, *, base_dir: str | None = None) -> "MediaProfileSegmentSizes":
-        directory = base_dir or SEGMENT_SIZES_DIR
-        resolved = resolve_media_descriptor_id(media_profile_id, base_dir=directory)
-        return cls.load(os.path.join(directory, resolved + ".json"))
+    def cargar_por_id(cls, media_profile_id: str, *, base_dir: str | None = None) -> "PerfilTamanosSegmentos":
+        directory = base_dir or DIR_TAMANOS_SEGMENTOS
+        resolved = resolver_id_descriptor_medio(media_profile_id, base_dir=directory)
+        return cls.cargar(os.path.join(directory, resolved + ".json"))
 
     @classmethod
-    def from_mapping(cls, data: Mapping[str, object]) -> "MediaProfileSegmentSizes":
-        if data.get("schema_id") != MEDIA_PROFILE_SEGMENT_SIZES_SCHEMA_ID:
-            raise MediaProfileError(
+    def desde_dict(cls, data: Mapping[str, object]) -> "PerfilTamanosSegmentos":
+        if data.get("schema_id") != SCHEMA_ID_TAMANOS_SEGMENTOS:
+            raise ErrorPerfilMedio(
                 "schema_id inesperado: {0}".format(data.get("schema_id"))
             )
         reps_raw = data.get("representations")
         if not isinstance(reps_raw, Sequence) or not reps_raw:
-            raise MediaProfileError("descriptor sin representations")
+            raise ErrorPerfilMedio("descriptor sin representations")
 
         reps_sorted = sorted(reps_raw, key=lambda r: int(r["bandwidth_bps"]))
         bitrates: list[int] = []
@@ -155,13 +155,13 @@ class MediaProfileSegmentSizes:
             bitrates.append(int(rep["bandwidth_bps"]))
             sizes = tuple(int(v) for v in rep["segment_bytes"])
             if not sizes:
-                raise MediaProfileError("representation sin segment_bytes")
+                raise ErrorPerfilMedio("representation sin segment_bytes")
             if any(v <= 0 for v in sizes):
-                raise MediaProfileError("segment_bytes con valores no positivos")
+                raise ErrorPerfilMedio("segment_bytes con valores no positivos")
             segment_bytes.append(sizes)
             seg_counts.add(len(sizes))
         if len(seg_counts) != 1:
-            raise MediaProfileError(
+            raise ErrorPerfilMedio(
                 "representations con distinto número de segmentos: {0}".format(sorted(seg_counts))
             )
 
@@ -179,21 +179,21 @@ class MediaProfileSegmentSizes:
     def segment_size_bytes(self, representation_index: int, segment_index: int) -> int:
         return int(self._segment_bytes[representation_index][segment_index])
 
-    def to_faithful_ladder(
+    def a_escalera_fiel(
         self,
         *,
-        max_buffer_s: float = DEFAULT_MAX_BUFFER_S,
+        max_buffer_s: float = MAX_BUFFER_S_POR_DEFECTO,
         segment_count: int | None = None,
         start_offset: int = 0,
-    ) -> MediaFaithfulLadder:
+    ) -> EscaleraFiel:
         count = self.segment_count if segment_count is None else int(segment_count)
         if count <= 0:
-            raise MediaProfileError("segment_count debe ser positivo: {0}".format(count))
+            raise ErrorPerfilMedio("segment_count debe ser positivo: {0}".format(count))
         representations = tuple(
             Representation(representation_index=index, bitrate_bps=int(bitrate))
             for index, bitrate in enumerate(self.bitrates_bps)
         )
-        return MediaFaithfulLadder(
+        return EscaleraFiel(
             media_profile_id=self.media_profile_id,
             representations=representations,
             segment_duration_s=self.segment_duration_s,
@@ -204,7 +204,7 @@ class MediaProfileSegmentSizes:
             start_offset=int(start_offset) % self.segment_count,
         )
 
-    def cbr_comparison(self) -> Mapping[str, object]:
+    def comparacion_cbr(self) -> Mapping[str, object]:
         """Evidencia VBR: real vs CBR nominal por representación (para la memoria)."""
         rows = []
         for index, bitrate in enumerate(self.bitrates_bps):
@@ -225,8 +225,8 @@ class MediaProfileSegmentSizes:
         return {"media_profile_id": self.media_profile_id, "representations": rows}
 
 
-def available_media_profiles(base_dir: str | None = None) -> tuple[str, ...]:
-    directory = base_dir or SEGMENT_SIZES_DIR
+def perfiles_medio_disponibles(base_dir: str | None = None) -> tuple[str, ...]:
+    directory = base_dir or DIR_TAMANOS_SEGMENTOS
     if not os.path.isdir(directory):
         return ()
     ids = [

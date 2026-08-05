@@ -17,12 +17,12 @@ from core.output_artifacts import (
 )
 
 
-REFERENCE_CONTROLLER_ALIAS = "base_robust_mpc"
-PROPIOS_PREFIXES = ("propio_",)
-PLOT_MANIFEST_FILENAME = "plot_manifest.json"
+ALIAS_CONTROLLER_REFERENCIA = "base_robust_mpc"
+PREFIJOS_PROPIOS = ("propio_",)
+FICHERO_MANIFIESTO_GRAFICAS = "plot_manifest.json"
 
 
-def analyze_phase6_run(package_root: str | Path, *, generate_plots: bool = True) -> Dict[str, Any]:
+def analizar_paquete_phase6(package_root: str | Path, *, generate_plots: bool = True) -> Dict[str, Any]:
     root = Path(package_root)
     protocol_dir = root / "00_protocolo"
     results_dir = root / "02_resultados"
@@ -32,30 +32,30 @@ def analyze_phase6_run(package_root: str | Path, *, generate_plots: bool = True)
     plots_dir.mkdir(parents=True, exist_ok=True)
     report_dir.mkdir(parents=True, exist_ok=True)
 
-    protocol = _read_json(protocol_dir / "protocolo_validacion.json")
-    session_plan = _read_json(protocol_dir / "session_plan.json")
+    protocol = _leer_json(protocol_dir / "protocolo_validacion.json")
+    session_plan = _leer_json(protocol_dir / "session_plan.json")
     sessions = session_plan.get("sessions", []) if isinstance(session_plan, Mapping) else []
 
     raw_chunks: List[Dict[str, Any]] = []
     summaries: List[Dict[str, Any]] = []
     for session in sessions:
-        summary, chunks = summarize_session(session, package_root=root)
+        summary, chunks = resumir_sesion(session, package_root=root)
         summaries.append(summary)
         raw_chunks.extend(chunks)
 
-    _write_csv(results_dir / "raw_chunks.csv", raw_chunks)
-    _write_csv(results_dir / "session_summary.csv", summaries)
+    _escribir_csv(results_dir / "raw_chunks.csv", raw_chunks)
+    _escribir_csv(results_dir / "session_summary.csv", summaries)
 
-    aggregates = aggregate_summaries(summaries)
-    statistics = paired_statistics(summaries)
-    gates = evaluate_gates(protocol, sessions, summaries)
-    ranking = build_ranking(aggregates, statistics, gates)
+    aggregates = agregar_resumenes(summaries)
+    statistics = estadistica_pareada(summaries)
+    gates = evaluar_gates(protocol, sessions, summaries)
+    ranking = construir_ranking(aggregates, statistics, gates)
 
     package = {
         "schema_version": "phase6_results_v1",
         "package_root": str(root),
-        "protocol": _public_protocol(protocol),
-        "session_counts": _session_counts(summaries),
+        "protocol": _protocolo_publico(protocol),
+        "session_counts": _conteos_sesiones(summaries),
         "gates": gates,
         "aggregates": aggregates,
         "statistics": statistics,
@@ -66,13 +66,13 @@ def analyze_phase6_run(package_root: str | Path, *, generate_plots: bool = True)
             "resultados_para_validar_json": str(results_dir / "resultados_para_validar.json"),
             "resultados_para_validar_md": str(results_dir / "resultados_para_validar.md"),
             "plots_dir": str(plots_dir),
-            "plot_manifest_json": str(plots_dir / PLOT_MANIFEST_FILENAME),
+            "plot_manifest_json": str(plots_dir / FICHERO_MANIFIESTO_GRAFICAS),
             "report_dir": str(report_dir),
         },
     }
 
     if generate_plots:
-        generate_phase6_plots(raw_chunks, summaries, aggregates, plots_dir)
+        generar_graficas_phase6(raw_chunks, summaries, aggregates, plots_dir)
 
     (results_dir / "aggregates_by_controller.json").write_text(
         json.dumps(aggregates, indent=2, sort_keys=True),
@@ -83,36 +83,36 @@ def analyze_phase6_run(package_root: str | Path, *, generate_plots: bool = True)
         json.dumps(package, indent=2, sort_keys=True),
         encoding="utf-8",
     )
-    (results_dir / "resultados_para_validar.md").write_text(render_validation_markdown(package), encoding="utf-8")
-    (report_dir / "informe_comparativo.md").write_text(render_comparative_report(package), encoding="utf-8")
-    (report_dir / "conclusiones_tecnicas.md").write_text(render_technical_conclusions(package), encoding="utf-8")
+    (results_dir / "resultados_para_validar.md").write_text(render_markdown_validacion(package), encoding="utf-8")
+    (report_dir / "informe_comparativo.md").write_text(render_informe_comparativo(package), encoding="utf-8")
+    (report_dir / "conclusiones_tecnicas.md").write_text(render_conclusiones_tecnicas(package), encoding="utf-8")
     (report_dir / "manifest_paquete_evidencia.json").write_text(
-        json.dumps(_evidence_manifest(root, package), indent=2, sort_keys=True),
+        json.dumps(_manifiesto_evidencia(root, package), indent=2, sort_keys=True),
         encoding="utf-8",
     )
     return package
 
 
-def summarize_session(
+def resumir_sesion(
     session: Mapping[str, Any],
     *,
     package_root: Optional[str | Path] = None,
 ) -> tuple[Dict[str, Any], List[Dict[str, Any]]]:
     session_id = str(session.get("session_id", ""))
-    run_root = _resolve_run_root(session, package_root)
-    run_dir = _latest_run_dir(run_root)
-    manifest = _read_json(run_dir / RUN_MANIFEST_FILENAME) if run_dir else {}
+    run_root = _resolver_raiz_run(session, package_root)
+    run_dir = _ultimo_dir_run(run_root)
+    manifest = _leer_json(run_dir / RUN_MANIFEST_FILENAME) if run_dir else {}
     telemetry_path = run_dir / SEGMENT_TELEMETRY_FILENAME if run_dir else None
-    rows = _read_csv_dicts(telemetry_path) if telemetry_path else []
-    evaluable_rows = [row for row in rows if _is_evaluable_media_row(row)]
+    rows = _leer_csv_dicts(telemetry_path) if telemetry_path else []
+    evaluable_rows = [row for row in rows if _es_fila_media_evaluable(row)]
 
-    summary = _base_summary(session, run_dir, manifest)
+    summary = _resumen_base(session, run_dir, manifest)
     legacy_present = any((run_dir / name).exists() for name in LEGACY_OUTPUT_FILENAMES) if run_dir else False
     summary["legacy_artifacts_present"] = int(legacy_present)
     summary["run_status"] = str(manifest.get("status", "missing")) if manifest else "missing"
-    summary["required_artifacts_present"] = int(_required_artifacts_present(run_dir) if run_dir else False)
+    summary["required_artifacts_present"] = int(_artefactos_requeridos_presentes(run_dir) if run_dir else False)
     if summary["run_status"] != "completed":
-        summary["failure_reason"] = _extract_failure_reason(_resolve_command_log_path(session, package_root))
+        summary["failure_reason"] = _extraer_motivo_fallo(_resolver_ruta_log_comando(session, package_root))
         summary.update(
             {
                 "evaluable": 0,
@@ -153,14 +153,14 @@ def summarize_session(
     rebuffer_ratio = total_rebuffer_s / (fragment_duration_sum + total_rebuffer_s) if fragment_duration_sum + total_rebuffer_s > 0 else 0.0
     decision_latencies = [_float(row.get("policy_decision_ms")) for row in evaluable_rows if _float(row.get("policy_decision_ms")) > 0]
     buffers = [_float(row.get("feedback_queued_time")) for row in evaluable_rows]
-    download_times = [_download_time_s(row) for row in evaluable_rows if _download_time_s(row) > 0.0]
-    chunk_sizes = [_chunk_size_bytes(row) for row in evaluable_rows if _chunk_size_bytes(row) > 0]
+    download_times = [_tiempo_descarga_s(row) for row in evaluable_rows if _tiempo_descarga_s(row) > 0.0]
+    chunk_sizes = [_bytes_chunk(row) for row in evaluable_rows if _bytes_chunk(row) > 0]
     measured_throughputs = [
-        _measured_throughput_kbps(row)
+        _throughput_medido_kbps(row)
         for row in evaluable_rows
-        if _measured_throughput_kbps(row) > 0.0
+        if _throughput_medido_kbps(row) > 0.0
     ]
-    positive_smoothness, negative_smoothness = _signed_smoothness(linear.segment_quality_utilities)
+    positive_smoothness, negative_smoothness = _suavidad_con_signo(linear.segment_quality_utilities)
     neural_inference_times = [
         _float(row.get("feedback_neural_inference_ms"))
         for row in evaluable_rows
@@ -168,7 +168,7 @@ def summarize_session(
     ]
     fallback_rows = sum(1 for row in evaluable_rows if _int(row.get("feedback_neural_fallback_used")) > 0)
     diagnostic_rows = sum(1 for row in evaluable_rows if _int(row.get("feedback_neural_diagnostic_only")) > 0)
-    neural_audit = _neural_audit_counts(evaluable_rows)
+    neural_audit = _conteos_auditoria_neural(evaluable_rows)
     transitions = max(1, int(linear.segment_count) - 1)
 
     summary.update(
@@ -192,18 +192,18 @@ def summarize_session(
             "down_switch_count": int(linear.down_switch_count),
             "switching_rate": float(linear.quality_switch_count) / float(transitions),
             "avg_switch_magnitude_kbps": float(linear.avg_switch_magnitude_kbps),
-            "avg_buffer_s": _mean(buffers),
-            "low_buffer_ratio": _ratio_less_than(buffers, threshold=5.0),
-            "avg_download_time_s": _mean(download_times),
-            "avg_measured_throughput_kbps": _mean(measured_throughputs),
-            "avg_chunk_size_bytes": _mean(chunk_sizes),
-            "decision_latency_ms_mean": _mean(decision_latencies),
-            "decision_latency_ms_p95": _percentile(decision_latencies, 95.0),
+            "avg_buffer_s": _media(buffers),
+            "low_buffer_ratio": _ratio_menor_que(buffers, threshold=5.0),
+            "avg_download_time_s": _media(download_times),
+            "avg_measured_throughput_kbps": _media(measured_throughputs),
+            "avg_chunk_size_bytes": _media(chunk_sizes),
+            "decision_latency_ms_mean": _media(decision_latencies),
+            "decision_latency_ms_p95": _percentil(decision_latencies, 95.0),
             "fallback_row_count": int(fallback_rows),
             "fallback_row_ratio": float(fallback_rows) / float(linear.segment_count),
             "diagnostic_only_row_count": int(diagnostic_rows),
-            "neural_model_label": _first_nonempty(row.get("feedback_neural_model_label") for row in evaluable_rows),
-            "neural_bundle_path": _first_nonempty(row.get("feedback_neural_bundle_path") for row in evaluable_rows),
+            "neural_model_label": _primero_no_vacio(row.get("feedback_neural_model_label") for row in evaluable_rows),
+            "neural_bundle_path": _primero_no_vacio(row.get("feedback_neural_bundle_path") for row in evaluable_rows),
             "neural_enabled_row_count": int(neural_audit["enabled"]),
             "neural_bundle_loaded_row_count": int(neural_audit["bundle_loaded"]),
             "neural_bundle_hash_ok_row_count": int(neural_audit["bundle_hash_ok"]),
@@ -213,8 +213,8 @@ def summarize_session(
             "neural_inference_row_count": int(len(neural_inference_times)),
             "neural_audit_ok_row_count": int(neural_audit["audit_ok"]),
             "neural_audit_missing_row_count": int(max(0, int(linear.segment_count) - int(neural_audit["audit_ok"]))),
-            "neural_inference_ms_mean": _mean(neural_inference_times),
-            "neural_inference_ms_p95": _percentile(neural_inference_times, 95.0),
+            "neural_inference_ms_mean": _media(neural_inference_times),
+            "neural_inference_ms_p95": _percentil(neural_inference_times, 95.0),
         }
     )
 
@@ -240,9 +240,9 @@ def summarize_session(
                 "segment_index": _int(row.get("segment_index")),
                 "bitrate_kbps": _bitrate_kbps(row),
                 "quality_mbps": float(quality),
-                "chunk_size_bytes": _chunk_size_bytes(row),
-                "download_time_s": _download_time_s(row),
-                "measured_throughput_kbps": _measured_throughput_kbps(row),
+                "chunk_size_bytes": _bytes_chunk(row),
+                "download_time_s": _tiempo_descarga_s(row),
+                "measured_throughput_kbps": _throughput_medido_kbps(row),
                 "rebuffer_s": _float(row.get("stall_duration")),
                 "smoothness_mbps": float(smoothness),
                 "qoe_linear_reward": float(reward),
@@ -266,7 +266,7 @@ def summarize_session(
     return summary, chunks
 
 
-def _std(values: Sequence[float]) -> float:
+def _desviacion_tipica(values: Sequence[float]) -> float:
     clean = [float(value) for value in values]
     if len(clean) < 2:
         return 0.0
@@ -274,17 +274,17 @@ def _std(values: Sequence[float]) -> float:
     return math.sqrt(sum((value - mean) ** 2 for value in clean) / (len(clean) - 1))
 
 
-def _min(values: Sequence[float]) -> float:
+def _minimo(values: Sequence[float]) -> float:
     clean = [float(value) for value in values]
     return min(clean) if clean else 0.0
 
 
-def _max(values: Sequence[float]) -> float:
+def _maximo(values: Sequence[float]) -> float:
     clean = [float(value) for value in values]
     return max(clean) if clean else 0.0
 
 
-def _worst_frac_mean(values: Sequence[float], frac: float) -> float:
+def _media_peor_fraccion(values: Sequence[float], frac: float) -> float:
     # Media de la peor fracción (mayor rebuffer) — SafeSABR worst-5%.
     clean = sorted((float(value) for value in values), reverse=True)
     if not clean:
@@ -293,13 +293,13 @@ def _worst_frac_mean(values: Sequence[float], frac: float) -> float:
     return sum(clean[:count]) / count
 
 
-def _rate(rows: Sequence[Mapping[str, Any]], key: str, threshold: float) -> float:
+def _tasa_mayor_que(rows: Sequence[Mapping[str, Any]], key: str, threshold: float) -> float:
     if not rows:
         return 0.0
     return sum(1 for row in rows if _float(row.get(key)) > threshold) / len(rows)
 
 
-def aggregate_summaries(summaries: Sequence[Mapping[str, Any]]) -> List[Dict[str, Any]]:
+def agregar_resumenes(summaries: Sequence[Mapping[str, Any]]) -> List[Dict[str, Any]]:
     real = [row for row in summaries if _int(row.get("evaluable")) and not _bool(row.get("synthetic"))]
     by_controller: Dict[str, List[Mapping[str, Any]]] = defaultdict(list)
     for row in real:
@@ -313,51 +313,51 @@ def aggregate_summaries(summaries: Sequence[Mapping[str, Any]]) -> List[Dict[str
                 "controller_alias": alias,
                 "controller_display_name": str(rows[0].get("controller_display_name", alias)),
                 "session_count": len(rows),
-                "qoe_linear_mean": _mean(_values(rows, "qoe_linear_mean")),
-                "qoe_linear_ci95_low": bootstrap_ci(_values(rows, "qoe_linear_mean"))[0],
-                "qoe_linear_ci95_high": bootstrap_ci(_values(rows, "qoe_linear_mean"))[1],
+                "qoe_linear_mean": _media(_valores(rows, "qoe_linear_mean")),
+                "qoe_linear_ci95_low": intervalo_confianza_bootstrap(_valores(rows, "qoe_linear_mean"))[0],
+                "qoe_linear_ci95_high": intervalo_confianza_bootstrap(_valores(rows, "qoe_linear_mean"))[1],
                 # Robustez / cola (peor caso) — BayesMPC: worst-case QoE; MERINA/SODA: estabilidad.
-                "qoe_linear_std": _std(_values(rows, "qoe_linear_mean")),
-                "qoe_linear_min": _min(_values(rows, "qoe_linear_mean")),
-                "qoe_linear_p05": _percentile(_values(rows, "qoe_linear_mean"), 5.0),
-                "qoe_linear_p10": _percentile(_values(rows, "qoe_linear_mean"), 10.0),
-                "qoe_linear_p25": _percentile(_values(rows, "qoe_linear_mean"), 25.0),
-                "qoe_linear_median": _percentile(_values(rows, "qoe_linear_mean"), 50.0),
-                "qoe_log_mean": _mean(_values(rows, "qoe_log_mean")),
-                "avg_bitrate_kbps": _mean(_values(rows, "avg_bitrate_kbps")),
-                "avg_quality_mbps": _mean(_values(rows, "avg_quality_mbps")),
-                "total_rebuffer_s_mean": _mean(_values(rows, "total_rebuffer_s")),
-                "rebuffer_ratio_mean": _mean(_values(rows, "rebuffer_ratio")),
-                "rebuffer_ratio_p95": _percentile(_values(rows, "rebuffer_ratio"), 95.0),
+                "qoe_linear_std": _desviacion_tipica(_valores(rows, "qoe_linear_mean")),
+                "qoe_linear_min": _minimo(_valores(rows, "qoe_linear_mean")),
+                "qoe_linear_p05": _percentil(_valores(rows, "qoe_linear_mean"), 5.0),
+                "qoe_linear_p10": _percentil(_valores(rows, "qoe_linear_mean"), 10.0),
+                "qoe_linear_p25": _percentil(_valores(rows, "qoe_linear_mean"), 25.0),
+                "qoe_linear_median": _percentil(_valores(rows, "qoe_linear_mean"), 50.0),
+                "qoe_log_mean": _media(_valores(rows, "qoe_log_mean")),
+                "avg_bitrate_kbps": _media(_valores(rows, "avg_bitrate_kbps")),
+                "avg_quality_mbps": _media(_valores(rows, "avg_quality_mbps")),
+                "total_rebuffer_s_mean": _media(_valores(rows, "total_rebuffer_s")),
+                "rebuffer_ratio_mean": _media(_valores(rows, "rebuffer_ratio")),
+                "rebuffer_ratio_p95": _percentil(_valores(rows, "rebuffer_ratio"), 95.0),
                 # Sesiones catastróficas (SafeSABR/Fugu): cola de rebuffer.
-                "total_rebuffer_s_p95": _percentile(_values(rows, "total_rebuffer_s"), 95.0),
-                "total_rebuffer_s_max": _max(_values(rows, "total_rebuffer_s")),
-                "worst_5pct_rebuffer_mean_s": _worst_frac_mean(_values(rows, "total_rebuffer_s"), 0.05),
-                "session_gt_5s_rebuffer_rate": _rate(rows, "total_rebuffer_s", 5.0),
-                "session_gt_10s_rebuffer_rate": _rate(rows, "total_rebuffer_s", 10.0),
-                "stall_event_count_mean": _mean(_values(rows, "stall_event_count")),
-                "stall_session_rate": _rate(rows, "stall_event_count", 0.0),
-                "smoothness_penalty_mean": _mean(_values(rows, "smoothness_penalty")),
-                "positive_smoothness_mbps_mean": _mean(_values(rows, "positive_smoothness_mbps")),
-                "negative_smoothness_mbps_mean": _mean(_values(rows, "negative_smoothness_mbps")),
-                "switching_rate_mean": _mean(_values(rows, "switching_rate")),
-                "avg_buffer_s": _mean(_values(rows, "avg_buffer_s")),
-                "low_buffer_ratio_mean": _mean(_values(rows, "low_buffer_ratio")),
-                "avg_download_time_s": _mean(_values(rows, "avg_download_time_s")),
-                "avg_measured_throughput_kbps": _mean(_values(rows, "avg_measured_throughput_kbps")),
-                "avg_chunk_size_bytes": _mean(_values(rows, "avg_chunk_size_bytes")),
-                "decision_latency_ms_mean": _mean(_values(rows, "decision_latency_ms_mean")),
-                "decision_latency_ms_p95": _percentile(_values(rows, "decision_latency_ms_p95"), 95.0),
+                "total_rebuffer_s_p95": _percentil(_valores(rows, "total_rebuffer_s"), 95.0),
+                "total_rebuffer_s_max": _maximo(_valores(rows, "total_rebuffer_s")),
+                "worst_5pct_rebuffer_mean_s": _media_peor_fraccion(_valores(rows, "total_rebuffer_s"), 0.05),
+                "session_gt_5s_rebuffer_rate": _tasa_mayor_que(rows, "total_rebuffer_s", 5.0),
+                "session_gt_10s_rebuffer_rate": _tasa_mayor_que(rows, "total_rebuffer_s", 10.0),
+                "stall_event_count_mean": _media(_valores(rows, "stall_event_count")),
+                "stall_session_rate": _tasa_mayor_que(rows, "stall_event_count", 0.0),
+                "smoothness_penalty_mean": _media(_valores(rows, "smoothness_penalty")),
+                "positive_smoothness_mbps_mean": _media(_valores(rows, "positive_smoothness_mbps")),
+                "negative_smoothness_mbps_mean": _media(_valores(rows, "negative_smoothness_mbps")),
+                "switching_rate_mean": _media(_valores(rows, "switching_rate")),
+                "avg_buffer_s": _media(_valores(rows, "avg_buffer_s")),
+                "low_buffer_ratio_mean": _media(_valores(rows, "low_buffer_ratio")),
+                "avg_download_time_s": _media(_valores(rows, "avg_download_time_s")),
+                "avg_measured_throughput_kbps": _media(_valores(rows, "avg_measured_throughput_kbps")),
+                "avg_chunk_size_bytes": _media(_valores(rows, "avg_chunk_size_bytes")),
+                "decision_latency_ms_mean": _media(_valores(rows, "decision_latency_ms_mean")),
+                "decision_latency_ms_p95": _percentil(_valores(rows, "decision_latency_ms_p95"), 95.0),
                 "fallback_row_count": int(sum(_int(row.get("fallback_row_count")) for row in rows)),
                 "neural_audit_missing_row_count": int(sum(_int(row.get("neural_audit_missing_row_count")) for row in rows)),
-                "neural_inference_ms_mean": _mean(_values(rows, "neural_inference_ms_mean")),
-                "neural_inference_ms_p95": _percentile(_values(rows, "neural_inference_ms_p95"), 95.0),
+                "neural_inference_ms_mean": _media(_valores(rows, "neural_inference_ms_mean")),
+                "neural_inference_ms_p95": _percentil(_valores(rows, "neural_inference_ms_p95"), 95.0),
             }
         )
     return sorted(aggregates, key=lambda row: row["qoe_linear_mean"], reverse=True)
 
 
-def paired_statistics(summaries: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
+def estadistica_pareada(summaries: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
     real = [row for row in summaries if _int(row.get("evaluable")) and not _bool(row.get("synthetic"))]
     by_scenario: Dict[tuple[Any, ...], Dict[str, Mapping[str, Any]]] = defaultdict(dict)
     for row in real:
@@ -368,7 +368,7 @@ def paired_statistics(summaries: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
         )
         by_scenario[scenario_key][str(row.get("controller_alias"))] = row
 
-    baseline_alias = REFERENCE_CONTROLLER_ALIAS
+    baseline_alias = ALIAS_CONTROLLER_REFERENCIA
     deltas = []
     for scenario, rows_by_controller in by_scenario.items():
         baseline = rows_by_controller.get(baseline_alias)
@@ -401,21 +401,21 @@ def paired_statistics(summaries: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
     comparisons = []
     for alias in sorted(by_controller):
         values = by_controller[alias]
-        ci_low, ci_high = bootstrap_ci(values)
+        ci_low, ci_high = intervalo_confianza_bootstrap(values)
         comparisons.append(
             {
                 "controller_alias": alias,
                 "baseline_alias": baseline_alias,
                 "paired_count": len(values),
-                "delta_qoe_linear_mean": _mean(values),
+                "delta_qoe_linear_mean": _media(values),
                 "delta_qoe_linear_ci95_low": ci_low,
                 "delta_qoe_linear_ci95_high": ci_high,
                 # Peor caso relativo al baseline (cola de las diferencias emparejadas).
-                "delta_qoe_linear_p05": _percentile(values, 5.0),
-                "delta_qoe_linear_p25": _percentile(values, 25.0),
-                "delta_qoe_linear_worst": _min(values),
+                "delta_qoe_linear_p05": _percentil(values, 5.0),
+                "delta_qoe_linear_p25": _percentil(values, 25.0),
+                "delta_qoe_linear_worst": _minimo(values),
                 "worst_scenario_key": str(worst_by_controller.get(alias, {}).get("scenario_key", "")),
-                "sign_test_p_value": sign_test_exact(values),
+                "sign_test_p_value": test_de_signos_exacto(values),
             }
         )
     pairwise = []
@@ -433,16 +433,16 @@ def paired_statistics(summaries: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
                     )
             if not values:
                 continue
-            ci_low, ci_high = bootstrap_ci(values)
+            ci_low, ci_high = intervalo_confianza_bootstrap(values)
             pairwise.append(
                 {
                     "left_alias": left,
                     "right_alias": right,
                     "paired_count": len(values),
-                    "delta_left_minus_right_mean": _mean(values),
+                    "delta_left_minus_right_mean": _media(values),
                     "delta_left_minus_right_ci95_low": ci_low,
                     "delta_left_minus_right_ci95_high": ci_high,
-                    "sign_test_p_value": sign_test_exact(values),
+                    "sign_test_p_value": test_de_signos_exacto(values),
                 }
             )
 
@@ -454,7 +454,7 @@ def paired_statistics(summaries: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
     }
 
 
-def evaluate_gates(
+def evaluar_gates(
     protocol: Mapping[str, Any],
     sessions: Sequence[Mapping[str, Any]],
     summaries: Sequence[Mapping[str, Any]],
@@ -477,13 +477,13 @@ def evaluate_gates(
     fallback_violations = [
         str(row.get("session_id"))
         for row in real_required
-        if str(row.get("controller_alias", "")).startswith(PROPIOS_PREFIXES)
+        if str(row.get("controller_alias", "")).startswith(PREFIJOS_PROPIOS)
         and (_int(row.get("fallback_row_count")) > 0 or _int(row.get("diagnostic_only_row_count")) > 0)
     ]
     neural_audit_violations = [
         str(row.get("session_id"))
         for row in real_required
-        if str(row.get("controller_alias", "")).startswith(PROPIOS_PREFIXES)
+        if str(row.get("controller_alias", "")).startswith(PREFIJOS_PROPIOS)
         and (
             _int(row.get("segment_count")) <= 0
             or _int(row.get("neural_audit_missing_row_count")) > 0
@@ -520,7 +520,7 @@ def evaluate_gates(
     }
 
 
-def build_ranking(
+def construir_ranking(
     aggregates: Sequence[Mapping[str, Any]],
     statistics: Mapping[str, Any],
     gates: Mapping[str, Any],
@@ -539,7 +539,7 @@ def build_ranking(
     if _bool(gates.get("ranking_authorized")) and len(ranking) >= 2:
         top = ranking[0]["controller_alias"]
         second = ranking[1]["controller_alias"]
-        top_vs_second = _paired_delta_between(statistics, top, second)
+        top_vs_second = _delta_pareado_entre(statistics, top, second)
         if top_vs_second and top_vs_second["ci95_low"] > 0 and top_vs_second["sign_test_p_value"] < 0.05:
             winner = ranking[0]
             conclusion = "ganador estadisticamente concluyente"
@@ -553,7 +553,7 @@ def build_ranking(
     }
 
 
-def generate_phase6_plots(
+def generar_graficas_phase6(
     raw_chunks: Sequence[Mapping[str, Any]],
     summaries: Sequence[Mapping[str, Any]],
     aggregates: Sequence[Mapping[str, Any]],
@@ -568,7 +568,7 @@ def generate_phase6_plots(
         import matplotlib.pyplot as plt
     except Exception as exc:
         (plots_dir / "graficas_no_generadas.txt").write_text(str(exc), encoding="utf-8")
-        (plots_dir / PLOT_MANIFEST_FILENAME).write_text(
+        (plots_dir / FICHERO_MANIFIESTO_GRAFICAS).write_text(
             json.dumps(
                 {
                     "schema_version": "phase6_plot_manifest_v1",
@@ -590,12 +590,12 @@ def generate_phase6_plots(
 
     real_summaries = [row for row in summaries if _int(row.get("evaluable")) and not _bool(row.get("synthetic"))]
     synthetic_summaries = [row for row in summaries if _int(row.get("evaluable")) and _bool(row.get("synthetic"))]
-    _run_plot(
+    _generar_grafica(
         manifest,
         plot_id="cdf_qoe_linear",
         output_path=plots_dir / "cdf_qoe_linear.png",
         source_count=len(real_summaries),
-        plotter=lambda path: _plot_cdf_by_controller(
+        plotter=lambda path: _grafica_cdf_por_controller(
             real_summaries,
             metric="qoe_linear_mean",
             title="CDF QoE linear por sesion",
@@ -603,12 +603,12 @@ def generate_phase6_plots(
             plt=plt,
         ),
     )
-    _run_plot(
+    _generar_grafica(
         manifest,
         plot_id="cdf_qoe_log",
         output_path=plots_dir / "cdf_qoe_log.png",
         source_count=len(real_summaries),
-        plotter=lambda path: _plot_cdf_by_controller(
+        plotter=lambda path: _grafica_cdf_por_controller(
             real_summaries,
             metric="qoe_log_mean",
             title="CDF QoE log por sesion",
@@ -616,26 +616,26 @@ def generate_phase6_plots(
             plt=plt,
         ),
     )
-    _run_plot(
+    _generar_grafica(
         manifest,
         plot_id="componentes_qoe",
         output_path=plots_dir / "componentes_qoe.png",
         source_count=len(aggregates),
-        plotter=lambda path: _plot_components(aggregates, path, plt),
+        plotter=lambda path: _grafica_componentes(aggregates, path, plt),
     )
-    _run_plot(
+    _generar_grafica(
         manifest,
         plot_id="calidad_vs_rebuffering",
         output_path=plots_dir / "calidad_vs_rebuffering.png",
         source_count=len(aggregates),
-        plotter=lambda path: _plot_quality_rebuffer(aggregates, path, plt),
+        plotter=lambda path: _grafica_calidad_rebuffer(aggregates, path, plt),
     )
-    _run_plot(
+    _generar_grafica(
         manifest,
         plot_id="cdf_rebuffering",
         output_path=plots_dir / "cdf_rebuffering.png",
         source_count=len(real_summaries),
-        plotter=lambda path: _plot_cdf_by_controller(
+        plotter=lambda path: _grafica_cdf_por_controller(
             real_summaries,
             metric="total_rebuffer_s",
             title="CDF rebuffering por sesion",
@@ -643,12 +643,12 @@ def generate_phase6_plots(
             plt=plt,
         ),
     )
-    _run_plot(
+    _generar_grafica(
         manifest,
         plot_id="cdf_smoothness",
         output_path=plots_dir / "cdf_smoothness.png",
         source_count=len(real_summaries),
-        plotter=lambda path: _plot_cdf_by_controller(
+        plotter=lambda path: _grafica_cdf_por_controller(
             real_summaries,
             metric="smoothness_penalty",
             title="CDF smoothness por sesion",
@@ -656,12 +656,12 @@ def generate_phase6_plots(
             plt=plt,
         ),
     )
-    _run_plot(
+    _generar_grafica(
         manifest,
         plot_id="cdf_bitrate",
         output_path=plots_dir / "cdf_bitrate.png",
         source_count=len(real_summaries),
-        plotter=lambda path: _plot_cdf_by_controller(
+        plotter=lambda path: _grafica_cdf_por_controller(
             real_summaries,
             metric="avg_bitrate_kbps",
             title="CDF bitrate medio por sesion",
@@ -669,12 +669,12 @@ def generate_phase6_plots(
             plt=plt,
         ),
     )
-    _run_plot(
+    _generar_grafica(
         manifest,
         plot_id="cdf_buffer",
         output_path=plots_dir / "cdf_buffer.png",
         source_count=len(real_summaries),
-        plotter=lambda path: _plot_cdf_by_controller(
+        plotter=lambda path: _grafica_cdf_por_controller(
             real_summaries,
             metric="avg_buffer_s",
             title="CDF buffer medio por sesion",
@@ -682,47 +682,47 @@ def generate_phase6_plots(
             plt=plt,
         ),
     )
-    _run_plot(
+    _generar_grafica(
         manifest,
         plot_id="qoe_por_dificultad_red",
         output_path=plots_dir / "qoe_por_dificultad_red.png",
         source_count=len(real_summaries),
-        plotter=lambda path: _plot_qoe_by_group(real_summaries, "difficulty_bucket", path, plt, title="QoE por dificultad de red"),
+        plotter=lambda path: _grafica_qoe_por_grupo(real_summaries, "difficulty_bucket", path, plt, title="QoE por dificultad de red"),
     )
-    _run_plot(
+    _generar_grafica(
         manifest,
         plot_id="qoe_por_dataset",
         output_path=plots_dir / "qoe_por_dataset.png",
         source_count=len(real_summaries),
-        plotter=lambda path: _plot_qoe_by_group(real_summaries, "dataset_id", path, plt, title="QoE por dataset"),
+        plotter=lambda path: _grafica_qoe_por_grupo(real_summaries, "dataset_id", path, plt, title="QoE por dataset"),
     )
-    _run_plot(
+    _generar_grafica(
         manifest,
         plot_id="qoe_por_condicion_red",
         output_path=plots_dir / "qoe_por_condicion_red.png",
         source_count=len(real_summaries),
-        plotter=lambda path: _plot_qoe_by_group(real_summaries, "network_condition", path, plt, title="QoE por condicion de red"),
+        plotter=lambda path: _grafica_qoe_por_grupo(real_summaries, "network_condition", path, plt, title="QoE por condicion de red"),
     )
-    _run_plot(
+    _generar_grafica(
         manifest,
         plot_id="caso_temporal_bitrate_qoe",
         output_path=plots_dir / "caso_temporal_bitrate_qoe.png",
         source_count=len(raw_chunks),
-        plotter=lambda path: _plot_temporal_case(raw_chunks, path, plt),
+        plotter=lambda path: _grafica_caso_temporal(raw_chunks, path, plt),
     )
-    _run_plot(
+    _generar_grafica(
         manifest,
         plot_id="overhead_decision",
         output_path=plots_dir / "overhead_decision.png",
         source_count=len(aggregates),
-        plotter=lambda path: _plot_overhead(aggregates, path, plt),
+        plotter=lambda path: _grafica_overhead(aggregates, path, plt),
     )
-    _run_plot(
+    _generar_grafica(
         manifest,
         plot_id="sinteticas_diagnostico",
         output_path=plots_dir / "sinteticas_diagnostico.png",
         source_count=len(synthetic_summaries),
-        plotter=lambda path: _plot_cdf_by_controller(
+        plotter=lambda path: _grafica_cdf_por_controller(
             synthetic_summaries,
             metric="qoe_linear_mean",
             title="CDF QoE sinteticas diagnosticas",
@@ -730,19 +730,19 @@ def generate_phase6_plots(
             plt=plt,
         ),
     )
-    _run_plot(
+    _generar_grafica(
         manifest,
         plot_id="qoe_robustez_peor_caso",
         output_path=plots_dir / "qoe_robustez_peor_caso.png",
         source_count=len(aggregates),
-        plotter=lambda path: _plot_qoe_tail(aggregates, path, plt),
+        plotter=lambda path: _grafica_cola_qoe(aggregates, path, plt),
     )
-    _run_plot(
+    _generar_grafica(
         manifest,
         plot_id="stalls_por_controller",
         output_path=plots_dir / "stalls_por_controller.png",
         source_count=len(aggregates),
-        plotter=lambda path: _plot_stalls(aggregates, path, plt),
+        plotter=lambda path: _grafica_stalls(aggregates, path, plt),
     )
     manifest.append(
         {
@@ -754,16 +754,16 @@ def generate_phase6_plots(
             "bytes": 0,
         }
     )
-    (plots_dir / PLOT_MANIFEST_FILENAME).write_text(
+    (plots_dir / FICHERO_MANIFIESTO_GRAFICAS).write_text(
         json.dumps({"schema_version": "phase6_plot_manifest_v1", "plots": manifest}, indent=2, sort_keys=True),
         encoding="utf-8",
     )
 
 
-def _plot_qoe_tail(aggregates: Sequence[Mapping[str, Any]], output_path: Path, plt) -> None:
+def _grafica_cola_qoe(aggregates: Sequence[Mapping[str, Any]], output_path: Path, plt) -> None:
     rows = list(aggregates)
     if not rows:
-        raise ValueError("no aggregates for tail plot")
+        raise ValueError("sin agregados para la grafica de cola")
     labels = [str(row.get("controller_display_name", row.get("controller_alias", ""))) for row in rows]
     mean = [_float(row.get("qoe_linear_mean")) for row in rows]
     median = [_float(row.get("qoe_linear_median")) for row in rows]
@@ -784,10 +784,10 @@ def _plot_qoe_tail(aggregates: Sequence[Mapping[str, Any]], output_path: Path, p
     plt.close(fig)
 
 
-def _plot_stalls(aggregates: Sequence[Mapping[str, Any]], output_path: Path, plt) -> None:
+def _grafica_stalls(aggregates: Sequence[Mapping[str, Any]], output_path: Path, plt) -> None:
     rows = list(aggregates)
     if not rows:
-        raise ValueError("no aggregates for stalls plot")
+        raise ValueError("sin agregados para la grafica de stalls")
     labels = [str(row.get("controller_display_name", row.get("controller_alias", ""))) for row in rows]
     stalls = [_float(row.get("stall_event_count_mean")) for row in rows]
     gt5 = [100.0 * _float(row.get("session_gt_5s_rebuffer_rate")) for row in rows]
@@ -812,7 +812,7 @@ def _plot_stalls(aggregates: Sequence[Mapping[str, Any]], output_path: Path, plt
     plt.close(fig)
 
 
-def render_validation_markdown(package: Mapping[str, Any]) -> str:
+def render_markdown_validacion(package: Mapping[str, Any]) -> str:
     gates = package["gates"]
     protocol = _mapping(package.get("protocol"))
     lines = [
@@ -822,9 +822,9 @@ def render_validation_markdown(package: Mapping[str, Any]) -> str:
         "",
         "## Estado",
         "",
-        "- Benchmark autorizado: {0}".format(_yes_no(gates.get("benchmark_authorized"))),
-        "- Ranking autorizado: {0}".format(_yes_no(gates.get("ranking_authorized"))),
-        "- Gates superados: {0}".format(_yes_no(gates.get("all_gates_passed"))),
+        "- Benchmark autorizado: {0}".format(_si_no(gates.get("benchmark_authorized"))),
+        "- Ranking autorizado: {0}".format(_si_no(gates.get("ranking_authorized"))),
+        "- Gates superados: {0}".format(_si_no(gates.get("all_gates_passed"))),
         "- Conclusion de ranking: {0}".format(package["ranking"]["conclusion"]),
         "",
         "## Veredicto tecnico del paquete",
@@ -916,7 +916,7 @@ def render_validation_markdown(package: Mapping[str, Any]) -> str:
                     row.get("worst_scenario_key", ""),
                 )
             )
-    plot_rows = _plot_manifest_rows(package)
+    plot_rows = _filas_manifiesto_graficas(package)
     if plot_rows:
         lines.extend(["", "## Graficas", ""])
         for row in plot_rows:
@@ -927,7 +927,7 @@ def render_validation_markdown(package: Mapping[str, Any]) -> str:
                     row.get("bytes", 0),
                 )
             )
-    neural_rows = _own_controller_audit_rows(package)
+    neural_rows = _filas_auditoria_propios(package)
     if neural_rows:
         lines.extend(["", "## Auditoria de inferencia propia", ""])
         for row in neural_rows:
@@ -944,14 +944,14 @@ def render_validation_markdown(package: Mapping[str, Any]) -> str:
             )
     lines.extend(["", "## Gates", ""])
     for name, ok in gates.get("gate_items", {}).items():
-        lines.append("- {0}: {1}".format(name, _yes_no(ok)))
+        lines.append("- {0}: {1}".format(name, _si_no(ok)))
     violations = gates.get("violations", {})
     if any(violations.values()):
         lines.extend(["", "## Incidencias", ""])
         for name, values in violations.items():
             if values:
                 lines.append("- {0}: {1}".format(name, ", ".join(values[:20])))
-    failure_reasons = _top_failure_reasons(package)
+    failure_reasons = _motivos_fallo_frecuentes(package)
     if failure_reasons:
         lines.extend(["", "## Motivos de fallo detectados", ""])
         for reason, count in failure_reasons:
@@ -959,7 +959,7 @@ def render_validation_markdown(package: Mapping[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def render_comparative_report(package: Mapping[str, Any]) -> str:
+def render_informe_comparativo(package: Mapping[str, Any]) -> str:
     return "\n".join(
         [
             "# Informe comparativo Phase 6",
@@ -968,12 +968,12 @@ def render_comparative_report(package: Mapping[str, Any]) -> str:
             "",
             "## Resultado",
             "",
-            render_validation_markdown(package),
+            render_markdown_validacion(package),
         ]
     )
 
 
-def render_technical_conclusions(package: Mapping[str, Any]) -> str:
+def render_conclusiones_tecnicas(package: Mapping[str, Any]) -> str:
     ranking = package["ranking"]
     lines = [
         "# Conclusiones tecnicas",
@@ -989,7 +989,7 @@ def render_technical_conclusions(package: Mapping[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def bootstrap_ci(values: Sequence[float], *, confidence: float = 0.95, iterations: int = 1000, seed: int = 606) -> tuple[float, float]:
+def intervalo_confianza_bootstrap(values: Sequence[float], *, confidence: float = 0.95, iterations: int = 1000, seed: int = 606) -> tuple[float, float]:
     clean = [float(value) for value in values if math.isfinite(float(value))]
     if not clean:
         return 0.0, 0.0
@@ -1006,7 +1006,7 @@ def bootstrap_ci(values: Sequence[float], *, confidence: float = 0.95, iteration
     return float(means[lower_idx]), float(means[upper_idx])
 
 
-def sign_test_exact(values: Sequence[float]) -> float:
+def test_de_signos_exacto(values: Sequence[float]) -> float:
     wins = sum(1 for value in values if float(value) > 0)
     losses = sum(1 for value in values if float(value) < 0)
     n = wins + losses
@@ -1017,7 +1017,7 @@ def sign_test_exact(values: Sequence[float]) -> float:
     return float(min(1.0, 2.0 * probability))
 
 
-def _base_summary(session: Mapping[str, Any], run_dir: Optional[Path], manifest: Mapping[str, Any]) -> Dict[str, Any]:
+def _resumen_base(session: Mapping[str, Any], run_dir: Optional[Path], manifest: Mapping[str, Any]) -> Dict[str, Any]:
     return {
         "session_id": str(session.get("session_id", "")),
         "controller_alias": str(session.get("controller_alias", "")),
@@ -1039,9 +1039,9 @@ def _base_summary(session: Mapping[str, Any], run_dir: Optional[Path], manifest:
     }
 
 
-def _top_failure_reasons(package: Mapping[str, Any]) -> List[tuple[str, int]]:
+def _motivos_fallo_frecuentes(package: Mapping[str, Any]) -> List[tuple[str, int]]:
     summary_path = Path(str(_mapping(package.get("artifacts")).get("session_summary_csv", "")))
-    rows = _read_csv_dicts(summary_path)
+    rows = _leer_csv_dicts(summary_path)
     counter = Counter(
         str(row.get("failure_reason", "")).strip()
         for row in rows
@@ -1050,19 +1050,19 @@ def _top_failure_reasons(package: Mapping[str, Any]) -> List[tuple[str, int]]:
     return [(reason, count) for reason, count in counter.most_common(8)]
 
 
-def _plot_manifest_rows(package: Mapping[str, Any]) -> List[Dict[str, Any]]:
+def _filas_manifiesto_graficas(package: Mapping[str, Any]) -> List[Dict[str, Any]]:
     path = Path(str(_mapping(package.get("artifacts")).get("plot_manifest_json", "")))
-    data = _read_json(path)
+    data = _leer_json(path)
     rows = data.get("plots", []) if isinstance(data, Mapping) else []
     return [dict(row) for row in rows if isinstance(row, Mapping)]
 
 
-def _own_controller_audit_rows(package: Mapping[str, Any]) -> List[Dict[str, Any]]:
+def _filas_auditoria_propios(package: Mapping[str, Any]) -> List[Dict[str, Any]]:
     summary_path = Path(str(_mapping(package.get("artifacts")).get("session_summary_csv", "")))
     rows = [
         row
-        for row in _read_csv_dicts(summary_path)
-        if str(row.get("controller_alias", "")).startswith(PROPIOS_PREFIXES) and _int(row.get("evaluable"))
+        for row in _leer_csv_dicts(summary_path)
+        if str(row.get("controller_alias", "")).startswith(PREFIJOS_PROPIOS) and _int(row.get("evaluable"))
     ]
     if not rows:
         return []
@@ -1080,13 +1080,13 @@ def _own_controller_audit_rows(package: Mapping[str, Any]) -> List[Dict[str, Any
                 "inference_rows": int(sum(_int(row.get("neural_inference_row_count")) for row in items)),
                 "fallback_rows": int(sum(_int(row.get("fallback_row_count")) for row in items)),
                 "diagnostic_rows": int(sum(_int(row.get("diagnostic_only_row_count")) for row in items)),
-                "inference_ms_mean": _mean(_values(items, "neural_inference_ms_mean")),
+                "inference_ms_mean": _media(_valores(items, "neural_inference_ms_mean")),
             }
         )
     return result
 
 
-def _extract_failure_reason(command_log_path: Path) -> str:
+def _extraer_motivo_fallo(command_log_path: Path) -> str:
     if not command_log_path.is_file():
         return ""
     try:
@@ -1112,11 +1112,11 @@ def _extract_failure_reason(command_log_path: Path) -> str:
     return ""
 
 
-def _required_artifacts_present(run_dir: Path) -> bool:
+def _artefactos_requeridos_presentes(run_dir: Path) -> bool:
     return all((run_dir / name).is_file() for name in (RUN_MANIFEST_FILENAME, SEGMENT_TELEMETRY_FILENAME, EVALUATION_SEGMENTS_FILENAME))
 
 
-def _resolve_run_root(session: Mapping[str, Any], package_root: Optional[str | Path]) -> Path:
+def _resolver_raiz_run(session: Mapping[str, Any], package_root: Optional[str | Path]) -> Path:
     configured = Path(str(session.get("run_output_root", "")))
     if configured.is_dir():
         return configured
@@ -1127,7 +1127,7 @@ def _resolve_run_root(session: Mapping[str, Any], package_root: Optional[str | P
     return configured
 
 
-def _resolve_command_log_path(session: Mapping[str, Any], package_root: Optional[str | Path]) -> Path:
+def _resolver_ruta_log_comando(session: Mapping[str, Any], package_root: Optional[str | Path]) -> Path:
     configured = Path(str(session.get("command_log_path", "")))
     if configured.is_file():
         return configured
@@ -1138,7 +1138,7 @@ def _resolve_command_log_path(session: Mapping[str, Any], package_root: Optional
     return configured
 
 
-def _is_evaluable_media_row(row: Mapping[str, Any]) -> bool:
+def _es_fila_media_evaluable(row: Mapping[str, Any]) -> bool:
     return _int(row.get("is_init")) == 0 and _int(row.get("use_for_eval")) == 1
 
 
@@ -1146,23 +1146,23 @@ def _bitrate_kbps(row: Mapping[str, Any]) -> float:
     return max(0.0, _float(row.get("feedback_cur_bitrate"), _float(row.get("feedback_cur_rate"))) * 8.0 / 1000.0)
 
 
-def _chunk_size_bytes(row: Mapping[str, Any]) -> int:
+def _bytes_chunk(row: Mapping[str, Any]) -> int:
     return max(0, _int(row.get("feedback_last_fragment_size"), _int(row.get("last_fragment_size"))))
 
 
-def _download_time_s(row: Mapping[str, Any]) -> float:
+def _tiempo_descarga_s(row: Mapping[str, Any]) -> float:
     return max(0.0, _float(row.get("feedback_last_download_time"), _float(row.get("last_download_time"))))
 
 
-def _measured_throughput_kbps(row: Mapping[str, Any]) -> float:
-    size = _chunk_size_bytes(row)
-    elapsed = _download_time_s(row)
+def _throughput_medido_kbps(row: Mapping[str, Any]) -> float:
+    size = _bytes_chunk(row)
+    elapsed = _tiempo_descarga_s(row)
     if size <= 0 or elapsed <= 0.0:
         return 0.0
     return float(size) * 8.0 / elapsed / 1000.0
 
 
-def _signed_smoothness(quality_utilities: Sequence[float]) -> tuple[float, float]:
+def _suavidad_con_signo(quality_utilities: Sequence[float]) -> tuple[float, float]:
     positive = 0.0
     negative = 0.0
     for previous, current in zip(quality_utilities, quality_utilities[1:]):
@@ -1174,7 +1174,7 @@ def _signed_smoothness(quality_utilities: Sequence[float]) -> tuple[float, float
     return positive, negative
 
 
-def _neural_audit_counts(rows: Sequence[Mapping[str, Any]]) -> Dict[str, int]:
+def _conteos_auditoria_neural(rows: Sequence[Mapping[str, Any]]) -> Dict[str, int]:
     counts = {
         "enabled": 0,
         "bundle_loaded": 0,
@@ -1214,7 +1214,7 @@ def _neural_audit_counts(rows: Sequence[Mapping[str, Any]]) -> Dict[str, int]:
     return counts
 
 
-def _first_nonempty(values: Iterable[Any]) -> str:
+def _primero_no_vacio(values: Iterable[Any]) -> str:
     for value in values:
         text = str(value or "").strip()
         if text:
@@ -1222,7 +1222,7 @@ def _first_nonempty(values: Iterable[Any]) -> str:
     return ""
 
 
-def _session_counts(summaries: Sequence[Mapping[str, Any]]) -> Dict[str, int]:
+def _conteos_sesiones(summaries: Sequence[Mapping[str, Any]]) -> Dict[str, int]:
     return {
         "total": len(summaries),
         "real": sum(1 for row in summaries if not _bool(row.get("synthetic"))),
@@ -1232,7 +1232,7 @@ def _session_counts(summaries: Sequence[Mapping[str, Any]]) -> Dict[str, int]:
     }
 
 
-def _public_protocol(protocol: Mapping[str, Any]) -> Dict[str, Any]:
+def _protocolo_publico(protocol: Mapping[str, Any]) -> Dict[str, Any]:
     return {
         "preset": protocol.get("preset"),
         "schema_version": protocol.get("schema_version"),
@@ -1246,7 +1246,7 @@ def _public_protocol(protocol: Mapping[str, Any]) -> Dict[str, Any]:
     }
 
 
-def _evidence_manifest(root: Path, package: Mapping[str, Any]) -> Dict[str, Any]:
+def _manifiesto_evidencia(root: Path, package: Mapping[str, Any]) -> Dict[str, Any]:
     return {
         "schema_version": "phase6_evidence_manifest_v1",
         "package_root": str(root),
@@ -1256,7 +1256,7 @@ def _evidence_manifest(root: Path, package: Mapping[str, Any]) -> Dict[str, Any]
     }
 
 
-def _run_plot(
+def _generar_grafica(
     manifest: List[Dict[str, Any]],
     *,
     plot_id: str,
@@ -1302,7 +1302,7 @@ def _run_plot(
         )
 
 
-def _plot_cdf_by_controller(rows, metric, title, output_path, plt) -> None:
+def _grafica_cdf_por_controller(rows, metric, title, output_path, plt) -> None:
     plt.figure(figsize=(8, 5))
     by_controller: Dict[str, List[float]] = defaultdict(list)
     for row in rows:
@@ -1323,7 +1323,7 @@ def _plot_cdf_by_controller(rows, metric, title, output_path, plt) -> None:
     plt.close()
 
 
-def _plot_components(aggregates, output_path, plt) -> None:
+def _grafica_componentes(aggregates, output_path, plt) -> None:
     labels = [str(row.get("controller_display_name")) for row in aggregates]
     x = range(len(labels))
     plt.figure(figsize=(10, 5))
@@ -1338,7 +1338,7 @@ def _plot_components(aggregates, output_path, plt) -> None:
     plt.close()
 
 
-def _plot_quality_rebuffer(aggregates, output_path, plt) -> None:
+def _grafica_calidad_rebuffer(aggregates, output_path, plt) -> None:
     plt.figure(figsize=(7, 5))
     for row in aggregates:
         plt.scatter(_float(row.get("rebuffer_ratio_mean")), _float(row.get("avg_quality_mbps")), label=str(row.get("controller_display_name")))
@@ -1352,7 +1352,7 @@ def _plot_quality_rebuffer(aggregates, output_path, plt) -> None:
     plt.close()
 
 
-def _plot_qoe_by_group(rows, group_key, output_path, plt, title="QoE por grupo") -> None:
+def _grafica_qoe_por_grupo(rows, group_key, output_path, plt, title="QoE por grupo") -> None:
     grouped: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(list))
     for row in rows:
         grouped[str(row.get(group_key, ""))][str(row.get("controller_display_name"))].append(_float(row.get("qoe_linear_mean")))
@@ -1362,7 +1362,7 @@ def _plot_qoe_by_group(rows, group_key, output_path, plt, title="QoE por grupo")
     width = 0.8 / max(1, len(controllers))
     base_x = list(range(len(labels)))
     for idx, controller in enumerate(controllers):
-        values = [_mean(grouped[label].get(controller, [])) for label in labels]
+        values = [_media(grouped[label].get(controller, [])) for label in labels]
         offsets = [x + idx * width for x in base_x]
         plt.bar(offsets, values, width=width, label=controller)
     plt.xticks([x + width * (len(controllers) - 1) / 2.0 for x in base_x], labels, rotation=25, ha="right")
@@ -1374,7 +1374,7 @@ def _plot_qoe_by_group(rows, group_key, output_path, plt, title="QoE por grupo")
     plt.close()
 
 
-def _plot_temporal_case(raw_chunks, output_path, plt) -> None:
+def _grafica_caso_temporal(raw_chunks, output_path, plt) -> None:
     if not raw_chunks:
         return
     first = raw_chunks[0]
@@ -1405,7 +1405,7 @@ def _plot_temporal_case(raw_chunks, output_path, plt) -> None:
     plt.close()
 
 
-def _plot_overhead(aggregates, output_path, plt) -> None:
+def _grafica_overhead(aggregates, output_path, plt) -> None:
     labels = [str(row.get("controller_display_name")) for row in aggregates]
     values = [_float(row.get("decision_latency_ms_mean")) for row in aggregates]
     plt.figure(figsize=(9, 5))
@@ -1418,7 +1418,7 @@ def _plot_overhead(aggregates, output_path, plt) -> None:
     plt.close()
 
 
-def _paired_delta_between(statistics: Mapping[str, Any], top_alias: str, second_alias: str) -> Optional[Dict[str, float]]:
+def _delta_pareado_entre(statistics: Mapping[str, Any], top_alias: str, second_alias: str) -> Optional[Dict[str, float]]:
     for row in statistics.get("pairwise_controller_deltas", []):
         left = str(row.get("left_alias"))
         right = str(row.get("right_alias"))
@@ -1439,16 +1439,16 @@ def _paired_delta_between(statistics: Mapping[str, Any], top_alias: str, second_
     return None
 
 
-def _values(rows: Sequence[Mapping[str, Any]], key: str) -> List[float]:
+def _valores(rows: Sequence[Mapping[str, Any]], key: str) -> List[float]:
     return [_float(row.get(key)) for row in rows]
 
 
-def _mean(values: Iterable[float]) -> float:
+def _media(values: Iterable[float]) -> float:
     clean = [float(value) for value in values if math.isfinite(float(value))]
     return sum(clean) / len(clean) if clean else 0.0
 
 
-def _percentile(values: Sequence[float], percentile: float) -> float:
+def _percentil(values: Sequence[float], percentile: float) -> float:
     clean = sorted(float(value) for value in values if math.isfinite(float(value)))
     if not clean:
         return 0.0
@@ -1463,12 +1463,12 @@ def _percentile(values: Sequence[float], percentile: float) -> float:
     return clean[lower] * (1.0 - fraction) + clean[upper] * fraction
 
 
-def _ratio_less_than(values: Sequence[float], threshold: float) -> float:
+def _ratio_menor_que(values: Sequence[float], threshold: float) -> float:
     clean = [float(value) for value in values if math.isfinite(float(value))]
     return sum(1 for value in clean if value < threshold) / float(len(clean)) if clean else 0.0
 
 
-def _read_json(path: Path) -> Dict[str, Any]:
+def _leer_json(path: Path) -> Dict[str, Any]:
     if not path.is_file():
         return {}
     try:
@@ -1478,14 +1478,14 @@ def _read_json(path: Path) -> Dict[str, Any]:
         return {}
 
 
-def _read_csv_dicts(path: Optional[Path]) -> List[Dict[str, str]]:
+def _leer_csv_dicts(path: Optional[Path]) -> List[Dict[str, str]]:
     if path is None or not path.is_file():
         return []
     with path.open("r", newline="", encoding="utf-8") as handle:
         return list(csv.DictReader(handle))
 
 
-def _write_csv(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
+def _escribir_csv(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     fieldnames = sorted({key for row in rows for key in row.keys()})
     with path.open("w", newline="", encoding="utf-8") as handle:
@@ -1495,7 +1495,7 @@ def _write_csv(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
             writer.writerow({key: row.get(key, "") for key in fieldnames})
 
 
-def _latest_run_dir(root: Path) -> Optional[Path]:
+def _ultimo_dir_run(root: Path) -> Optional[Path]:
     if not root.is_dir():
         return None
     run_dirs = sorted(path for path in root.iterdir() if path.is_dir() and path.name.startswith("run_"))
@@ -1529,5 +1529,5 @@ def _mapping(value: Any) -> Mapping[str, Any]:
     return value if isinstance(value, Mapping) else {}
 
 
-def _yes_no(value: Any) -> str:
+def _si_no(value: Any) -> str:
     return "si" if _bool(value) else "no"

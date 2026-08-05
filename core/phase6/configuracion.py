@@ -6,11 +6,11 @@ from pathlib import Path
 from typing import Any, Dict, Mapping, Optional
 
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_PHASE6_EXAMPLE_CONFIG = REPO_ROOT / "config" / "phase6.example.yaml"
-DEFAULT_PHASE6_LOCAL_CONFIG = REPO_ROOT / "config" / "phase6.local.yaml"
+RAIZ_REPO = Path(__file__).resolve().parents[2]
+RUTA_CONFIG_EJEMPLO_PHASE6 = RAIZ_REPO / "config" / "phase6.example.yaml"
+RUTA_CONFIG_LOCAL_PHASE6 = RAIZ_REPO / "config" / "phase6.local.yaml"
 
-DEFAULT_PHASE6_CONFIG: Dict[str, Any] = {
+CONFIG_PHASE6_POR_DEFECTO: Dict[str, Any] = {
     "schema_version": "phase6_config_v1",
     "paths": {
         "manifest_path": "/home/daniel/TFG/manifests_trazas/phase3/final/phase3_trace_manifest_curated.json",
@@ -93,34 +93,34 @@ DEFAULT_PHASE6_CONFIG: Dict[str, Any] = {
 }
 
 
-def load_phase6_config(path: Optional[str | Path] = None) -> Dict[str, Any]:
-    selected = _select_path(path)
-    config = deepcopy(DEFAULT_PHASE6_CONFIG)
-    if DEFAULT_PHASE6_EXAMPLE_CONFIG.exists():
-        config = _deep_merge(config, _load_mapping_file(DEFAULT_PHASE6_EXAMPLE_CONFIG))
+def cargar_config_phase6(path: Optional[str | Path] = None) -> Dict[str, Any]:
+    selected = _elegir_ruta(path)
+    config = deepcopy(CONFIG_PHASE6_POR_DEFECTO)
+    if RUTA_CONFIG_EJEMPLO_PHASE6.exists():
+        config = _fusion_profunda(config, _cargar_fichero_mapping(RUTA_CONFIG_EJEMPLO_PHASE6))
     if selected is not None:
         if not selected.exists():
-            raise FileNotFoundError("Phase 6 config not found: {0}".format(selected))
-        config = _deep_merge(config, _load_mapping_file(selected))
+            raise FileNotFoundError("Config de Phase 6 no encontrada: {0}".format(selected))
+        config = _fusion_profunda(config, _cargar_fichero_mapping(selected))
     return config
 
 
-def write_phase6_example_config(path: Optional[str | Path] = None) -> Path:
-    target = Path(path) if path is not None else DEFAULT_PHASE6_EXAMPLE_CONFIG
+def escribir_config_ejemplo_phase6(path: Optional[str | Path] = None) -> Path:
+    target = Path(path) if path is not None else RUTA_CONFIG_EJEMPLO_PHASE6
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(json.dumps(DEFAULT_PHASE6_CONFIG, indent=2, sort_keys=True), encoding="utf-8")
+    target.write_text(json.dumps(CONFIG_PHASE6_POR_DEFECTO, indent=2, sort_keys=True), encoding="utf-8")
     return target
 
 
-def _select_path(path: Optional[str | Path]) -> Optional[Path]:
+def _elegir_ruta(path: Optional[str | Path]) -> Optional[Path]:
     if path is not None:
         return Path(path)
-    if DEFAULT_PHASE6_LOCAL_CONFIG.exists():
-        return DEFAULT_PHASE6_LOCAL_CONFIG
+    if RUTA_CONFIG_LOCAL_PHASE6.exists():
+        return RUTA_CONFIG_LOCAL_PHASE6
     return None
 
 
-def _load_mapping_file(path: Path) -> Dict[str, Any]:
+def _cargar_fichero_mapping(path: Path) -> Dict[str, Any]:
     text = path.read_text(encoding="utf-8-sig")
     stripped = text.lstrip()
     if not stripped:
@@ -132,19 +132,19 @@ def _load_mapping_file(path: Path) -> Dict[str, Any]:
             import yaml  # type: ignore
         except ModuleNotFoundError as exc:
             raise RuntimeError(
-                "Phase 6 YAML config requires PyYAML unless the file is JSON-formatted."
+                "La config YAML de Phase 6 requiere PyYAML salvo que el fichero sea JSON."
             ) from exc
         loaded = yaml.safe_load(text) or {}
     if not isinstance(loaded, dict):
-        raise ValueError("Phase 6 config root must be a mapping: {0}".format(path))
+        raise ValueError("La raiz de la config de Phase 6 debe ser un mapping: {0}".format(path))
     return loaded
 
 
-def _deep_merge(base: Mapping[str, Any], override: Mapping[str, Any]) -> Dict[str, Any]:
+def _fusion_profunda(base: Mapping[str, Any], override: Mapping[str, Any]) -> Dict[str, Any]:
     merged = dict(base)
     for key, value in override.items():
         if isinstance(value, Mapping) and isinstance(merged.get(key), Mapping):
-            merged[key] = _deep_merge(merged[key], value)
+            merged[key] = _fusion_profunda(merged[key], value)
         else:
             merged[key] = value
     return merged

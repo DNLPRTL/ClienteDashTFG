@@ -13,29 +13,29 @@ from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+RAIZ_REPO = Path(__file__).resolve().parents[1]
+if str(RAIZ_REPO) not in sys.path:
+    sys.path.insert(0, str(RAIZ_REPO))
 
 from core.evaluation.qoe import LINEAR_QOE_VERSION
-from core.phase6 import PHASE6_SCHEMA_VERSION
-from core.phase6.analysis import analyze_phase6_run
-from core.phase6.catalog import (
-    PRESET_NAMES,
-    controller_params,
-    discover_comparable_controllers,
-    media_profiles_for_preset,
-    preset_spec,
+from core.phase6 import VERSION_SCHEMA_PHASE6
+from core.phase6.analisis import analizar_paquete_phase6
+from core.phase6.catalogo import (
+    NOMBRES_PRESET,
+    parametros_controller,
+    descubrir_controllers_comparables,
+    perfiles_medio_para_preset,
+    especificacion_preset,
 )
-from core.phase6.config import load_phase6_config, write_phase6_example_config
-from core.phase6.selection import load_trace_manifest, select_trace_windows
-from core.phase6.verification import verify_phase6_package
+from core.phase6.configuracion import cargar_config_phase6, escribir_config_ejemplo_phase6
+from core.phase6.seleccion import cargar_manifest_trazas, seleccionar_ventanas_trazas
+from core.phase6.verificacion import verificar_paquete_phase6
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Ejecuta Phase 6 validacion comparativa formal.")
     parser.add_argument("--config", default=None, help="Config local Phase 6. Por defecto usa config/phase6.local.yaml si existe.")
-    parser.add_argument("--preset", choices=PRESET_NAMES, default=None)
+    parser.add_argument("--preset", choices=NOMBRES_PRESET, default=None)
     parser.add_argument("--output-root", default=None, help="Directorio externo de paquetes Phase 6.")
     parser.add_argument("--package-root", default=None, help="Carpeta Phase 6 existente para reanudar o analizar.")
     parser.add_argument("--dry-run", action="store_true", help="Genera protocolo y configs sin ejecutar sesiones.")
@@ -48,11 +48,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     args = parser.parse_args(argv)
 
     if args.write_example_config:
-        path = write_phase6_example_config()
+        path = escribir_config_ejemplo_phase6()
         print("Config ejemplo escrita: {0}".format(path))
         return 0
 
-    config = load_phase6_config(args.config)
+    config = cargar_config_phase6(args.config)
     if args.preset:
         config.setdefault("experiment", {})["preset"] = args.preset
     if args.output_root:
@@ -64,7 +64,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if args.max_sessions is not None:
         config.setdefault("execution", {})["max_sessions"] = int(args.max_sessions)
 
-    package = run_phase6(
+    package = ejecutar_phase6(
         config,
         dry_run=bool(args.dry_run),
         only_plan=bool(args.only_plan),
@@ -80,7 +80,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     return 0 if package["failed_count"] == 0 and package.get("verification_passed", True) else 1
 
 
-def run_phase6(
+def ejecutar_phase6(
     config: Mapping[str, Any],
     *,
     dry_run: bool = False,
@@ -88,12 +88,12 @@ def run_phase6(
     skip_analysis: bool = False,
 ) -> Dict[str, Any]:
     preset = str(_mapping(config.get("experiment")).get("preset", "rapido"))
-    config = apply_preset_overrides(config, preset)
-    package_root = resolve_package_root(config, preset)
-    existing = load_existing_protocol_package(package_root)
+    config = aplicar_overrides_preset(config, preset)
+    package_root = resolver_raiz_paquete(config, preset)
+    existing = cargar_paquete_protocolo_existente(package_root)
     if existing is None:
-        protocol, sessions = build_phase6_protocol_and_plan(config, preset, package_root)
-        write_protocol_package(package_root, protocol, sessions)
+        protocol, sessions = construir_protocolo_y_plan_phase6(config, preset, package_root)
+        escribir_paquete_protocolo(package_root, protocol, sessions)
     else:
         protocol, sessions = existing
 
@@ -105,7 +105,7 @@ def run_phase6(
         run_started_s = time.perf_counter()
         for processed_count, session in enumerate(sessions, start=1):
             session_started_s = time.perf_counter()
-            result = run_session(config, session)
+            result = ejecutar_sesion(config, session)
             session_elapsed_s = time.perf_counter() - session_started_s
             executed_count += int(result["executed"])
             failed_count += int(result["failed"])
@@ -113,7 +113,7 @@ def run_phase6(
             elapsed_s = time.perf_counter() - run_started_s
             avg_session_s = elapsed_s / float(processed_count) if processed_count else 0.0
             eta_s = avg_session_s * float(max(0, total_sessions - processed_count))
-            _print_progress(
+            _imprimir_progreso(
                 processed_count=processed_count,
                 total_sessions=total_sessions,
                 executed_count=executed_count,
@@ -130,9 +130,9 @@ def run_phase6(
     verification_path = ""
     verification_passed = True
     if not dry_run and not only_plan and not skip_analysis and _bool(_mapping(config.get("execution")).get("run_analysis", True)):
-        result_package = analyze_phase6_run(package_root)
+        result_package = analizar_paquete_phase6(package_root)
         analysis_path = result_package["artifacts"]["resultados_para_validar_md"]
-        verification = verify_phase6_package(package_root, require_plots=True, write_artifacts=True)
+        verification = verificar_paquete_phase6(package_root, require_plots=True, write_artifacts=True)
         verification_path = verification["artifacts"]["verification_md"]
         verification_passed = bool(verification["all_checks_passed"])
 
@@ -147,28 +147,28 @@ def run_phase6(
     }
 
 
-def build_phase6_protocol_and_plan(
+def construir_protocolo_y_plan_phase6(
     config: Mapping[str, Any],
     preset: str,
     package_root: Path,
 ) -> tuple[Dict[str, Any], List[Dict[str, Any]]]:
-    config = apply_preset_overrides(config, preset)
+    config = aplicar_overrides_preset(config, preset)
     paths = _mapping(config.get("paths"))
     experiment = _mapping(config.get("experiment"))
     execution = _mapping(config.get("execution"))
-    manifest = load_trace_manifest(str(paths.get("manifest_path")))
-    spec = preset_spec(preset)
+    manifest = cargar_manifest_trazas(str(paths.get("manifest_path")))
+    spec = especificacion_preset(preset)
     engine = str(experiment.get("engine", "fake")).lower()
-    media_profiles = media_profiles_for_preset(preset, config)
-    controllers = discover_comparable_controllers(config)
-    trace_windows = select_trace_windows(manifest, preset, config)
+    perfiles_medio = perfiles_medio_para_preset(preset, config)
+    controllers = descubrir_controllers_comparables(config)
+    trace_windows = seleccionar_ventanas_trazas(manifest, preset, config)
     repetitions = int(experiment.get("repetitions", 1) or 1)
     max_sessions = execution.get("max_sessions")
 
     benchmark_capable = bool(spec["benchmark_capable"] and engine == "fake")
     ranking_capable = bool(spec["ranking_capable"] and engine == "fake")
     protocol = {
-        "schema_version": PHASE6_SCHEMA_VERSION,
+        "schema_version": VERSION_SCHEMA_PHASE6,
         "created_at_local": datetime.now().astimezone().isoformat(),
         "preset": preset,
         "engine": engine,
@@ -181,8 +181,8 @@ def build_phase6_protocol_and_plan(
             "controllers receive only runtime feedback, ladder, buffer and measured download time"
         ),
         "synthetic_policy": "synthetic windows are diagnostic and reported separately",
-        "preset_runtime": preset_runtime_metadata(config, preset),
-        "media_profiles": media_profiles,
+        "preset_runtime": metadatos_runtime_preset(config, preset),
+        "media_profiles": perfiles_medio,
         "controllers": controllers,
         "trace_windows": trace_windows,
     }
@@ -191,54 +191,54 @@ def build_phase6_protocol_and_plan(
     index = 0
     for repetition in range(1, repetitions + 1):
         for trace_window in trace_windows:
-            for media_profile in media_profiles:
+            for perfil_medio in perfiles_medio:
                 for controller in controllers:
                     index += 1
-                    session = build_session(
+                    session = construir_sesion(
                         index=index,
                         package_root=package_root,
                         preset=preset,
                         engine=engine,
                         controller=controller,
-                        media_profile=media_profile,
+                        perfil_medio=perfil_medio,
                         trace_window=trace_window,
                         repetition=repetition,
                     )
                     sessions.append(session)
                     if max_sessions is not None and len(sessions) >= int(max_sessions):
                         protocol["session_count"] = len(sessions)
-                        protocol["preset_runtime"]["estimated_total_duration_s"] = _estimated_total_duration_s(
+                        protocol["preset_runtime"]["estimated_total_duration_s"] = _duracion_total_estimada_s(
                             protocol["preset_runtime"],
                             len(sessions),
                         )
                         return protocol, sessions
     protocol["session_count"] = len(sessions)
-    protocol["preset_runtime"]["estimated_total_duration_s"] = _estimated_total_duration_s(
+    protocol["preset_runtime"]["estimated_total_duration_s"] = _duracion_total_estimada_s(
         protocol["preset_runtime"],
         len(sessions),
     )
     return protocol, sessions
 
 
-def build_session(
+def construir_sesion(
     *,
     index: int,
     package_root: Path,
     preset: str,
     engine: str,
     controller: Mapping[str, Any],
-    media_profile: Mapping[str, Any],
+    perfil_medio: Mapping[str, Any],
     trace_window: Mapping[str, Any],
     repetition: int,
 ) -> Dict[str, Any]:
     session_id = "s{0:05d}_{1}_{2}_{3}_r{4}".format(
         index,
         controller["alias"],
-        media_profile["media_profile_id"],
+        perfil_medio["media_profile_id"],
         trace_window["trace_window_id"],
         repetition,
     )
-    session_id = _safe_path_token(session_id)
+    session_id = _token_ruta_seguro(session_id)
     run_output_root = package_root / "01_ejecucion" / "runs" / session_id
     config_path = package_root / "00_protocolo" / "client_configs" / "{0}.yaml".format(session_id)
     command_log_path = package_root / "01_ejecucion" / "command_logs" / "{0}.log".format(session_id)
@@ -249,11 +249,11 @@ def build_session(
         "controller_key": controller["controller_key"],
         "controller_alias": controller["alias"],
         "controller_display_name": controller["display_name"],
-        "media_profile_id": media_profile["media_profile_id"],
-        "media_display_name": media_profile.get("display_name", media_profile["media_profile_id"]),
-        "mpd_url": media_profile["mpd_url"],
-        "segment_duration_s": float(media_profile.get("segment_duration_s", 0.0) or 0.0),
-        "media_diagnostic_only": bool(media_profile.get("diagnostic_only", False)),
+        "media_profile_id": perfil_medio["media_profile_id"],
+        "media_display_name": perfil_medio.get("display_name", perfil_medio["media_profile_id"]),
+        "mpd_url": perfil_medio["mpd_url"],
+        "segment_duration_s": float(perfil_medio.get("segment_duration_s", 0.0) or 0.0),
+        "media_diagnostic_only": bool(perfil_medio.get("diagnostic_only", False)),
         "trace_window_id": trace_window["trace_window_id"],
         "trace_id": trace_window["trace_id"],
         "dataset_id": trace_window["dataset_id"],
@@ -272,7 +272,7 @@ def build_session(
     }
 
 
-def write_protocol_package(package_root: Path, protocol: Mapping[str, Any], sessions: Sequence[Mapping[str, Any]]) -> None:
+def escribir_paquete_protocolo(package_root: Path, protocol: Mapping[str, Any], sessions: Sequence[Mapping[str, Any]]) -> None:
     protocol_dir = package_root / "00_protocolo"
     protocol_dir.mkdir(parents=True, exist_ok=True)
     (package_root / "01_ejecucion" / "command_logs").mkdir(parents=True, exist_ok=True)
@@ -289,22 +289,22 @@ def write_protocol_package(package_root: Path, protocol: Mapping[str, Any], sess
         json.dumps({"schema_version": "phase6_session_plan_v1", "sessions": list(sessions)}, indent=2, sort_keys=True),
         encoding="utf-8",
     )
-    _write_csv(protocol_dir / "session_plan.csv", sessions)
-    _write_csv(protocol_dir / "trace_windows.csv", protocol.get("trace_windows", []))
-    _write_csv(protocol_dir / "controllers.csv", protocol.get("controllers", []))
-    _write_csv(protocol_dir / "media_profiles.csv", protocol.get("media_profiles", []))
+    _escribir_csv(protocol_dir / "session_plan.csv", sessions)
+    _escribir_csv(protocol_dir / "trace_windows.csv", protocol.get("trace_windows", []))
+    _escribir_csv(protocol_dir / "controllers.csv", protocol.get("controllers", []))
+    _escribir_csv(protocol_dir / "media_profiles.csv", protocol.get("media_profiles", []))
 
 
-def run_session(config: Mapping[str, Any], session: Mapping[str, Any]) -> Dict[str, int]:
+def ejecutar_sesion(config: Mapping[str, Any], session: Mapping[str, Any]) -> Dict[str, int]:
     execution = _mapping(config.get("execution"))
     paths = _mapping(config.get("paths"))
-    if _bool(execution.get("resume", True)) and _session_completed(session):
+    if _bool(execution.get("resume", True)) and _sesion_completada(session):
         return {"executed": 0, "failed": 0, "skipped": 1}
 
     client_config_path = Path(str(session["client_config_path"]))
     client_config_path.parent.mkdir(parents=True, exist_ok=True)
     client_config_path.write_text(
-        json.dumps(build_client_config(config, session), indent=2, sort_keys=True),
+        json.dumps(construir_config_cliente(config, session), indent=2, sort_keys=True),
         encoding="utf-8",
     )
     command_log_path = Path(str(session["command_log_path"]))
@@ -312,7 +312,7 @@ def run_session(config: Mapping[str, Any], session: Mapping[str, Any]) -> Dict[s
     Path(str(session["run_output_root"])).mkdir(parents=True, exist_ok=True)
 
     python_exe = str(paths.get("python", "python"))
-    repo_root = Path(str(paths.get("repo_root", REPO_ROOT)))
+    repo_root = Path(str(paths.get("repo_root", RAIZ_REPO)))
     command = [python_exe, str(repo_root / "main.py"), "--config", str(client_config_path)]
     started = time.strftime("%Y-%m-%dT%H:%M:%S%z")
     timeout_seconds = float(execution.get("timeout_seconds", 900.0) or 900.0)
@@ -325,7 +325,7 @@ def run_session(config: Mapping[str, Any], session: Mapping[str, Any]) -> Dict[s
             timeout=timeout_seconds,
             check=False,
         )
-        output = _decode_subprocess_output(completed.stdout)
+        output = _decodificar_salida(completed.stdout)
         command_log_path.write_text(
             "started_at={0}\ncommand={1}\nreturncode={2}\noutput_decoding=utf-8 errors=replace\n\n{3}".format(
                 started,
@@ -337,7 +337,7 @@ def run_session(config: Mapping[str, Any], session: Mapping[str, Any]) -> Dict[s
         )
         return {"executed": 1, "failed": 1 if completed.returncode != 0 else 0, "skipped": 0}
     except subprocess.TimeoutExpired as exc:
-        output = _decode_subprocess_output(exc.stdout)
+        output = _decodificar_salida(exc.stdout)
         command_log_path.write_text(
             "started_at={0}\ncommand={1}\ntimeout_seconds={2}\noutput_decoding=utf-8 errors=replace\n\n{3}".format(
                 started,
@@ -350,7 +350,7 @@ def run_session(config: Mapping[str, Any], session: Mapping[str, Any]) -> Dict[s
         return {"executed": 1, "failed": 1, "skipped": 0}
 
 
-def _decode_subprocess_output(output: Any) -> str:
+def _decodificar_salida(output: Any) -> str:
     if output is None:
         return ""
     if isinstance(output, bytes):
@@ -358,17 +358,17 @@ def _decode_subprocess_output(output: Any) -> str:
     return str(output)
 
 
-def _controller_params_for_session(config: Mapping[str, Any], session: Mapping[str, Any]) -> Dict[str, Any]:
+def _parametros_controller_para_sesion(config: Mapping[str, Any], session: Mapping[str, Any]) -> Dict[str, Any]:
     # Multi-vídeo: el controller propio recibe el media del vídeo que reproduce esta
     # sesión, para planificar con sus tamaños reales (VBR). Los clásicos lo ignoran.
-    params = dict(controller_params(config, str(session["controller_key"])))
+    params = dict(parametros_controller(config, str(session["controller_key"])))
     if str(session.get("controller_key", "")).startswith("mpc_prudente"):
         params["media_profile_id"] = str(session.get("media_profile_id", params.get("media_profile_id", "")))
     return params
 
 
-def build_client_config(config: Mapping[str, Any], session: Mapping[str, Any]) -> Dict[str, Any]:
-    config = apply_preset_overrides(config, str(session.get("preset", _mapping(config.get("experiment")).get("preset", "rapido"))))
+def construir_config_cliente(config: Mapping[str, Any], session: Mapping[str, Any]) -> Dict[str, Any]:
+    config = aplicar_overrides_preset(config, str(session.get("preset", _mapping(config.get("experiment")).get("preset", "rapido"))))
     playback = _mapping(config.get("playback"))
     network = _mapping(config.get("network_replay"))
     downloader = _mapping(config.get("downloader"))
@@ -382,7 +382,7 @@ def build_client_config(config: Mapping[str, Any], session: Mapping[str, Any]) -
         },
         "controller": {
             "name": session["controller_key"],
-            "params": _controller_params_for_session(config, session),
+            "params": _parametros_controller_para_sesion(config, session),
         },
         "playback": {
             "initial_quality": int(playback.get("initial_quality", 0) or 0),
@@ -422,7 +422,7 @@ def build_client_config(config: Mapping[str, Any], session: Mapping[str, Any]) -
     }
 
 
-def create_package_root(config: Mapping[str, Any], preset: str) -> Path:
+def crear_raiz_paquete(config: Mapping[str, Any], preset: str) -> Path:
     output_root = Path(str(_mapping(config.get("paths")).get("output_root")))
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     base_name = "{0}_{1}".format(timestamp, preset)
@@ -433,20 +433,20 @@ def create_package_root(config: Mapping[str, Any], preset: str) -> Path:
             return package_root
         except FileExistsError:
             continue
-    raise RuntimeError("Could not create Phase 6 package root under {0}".format(output_root))
+    raise RuntimeError("No se pudo crear la raiz del paquete Phase 6 bajo {0}".format(output_root))
 
 
-def resolve_package_root(config: Mapping[str, Any], preset: str) -> Path:
+def resolver_raiz_paquete(config: Mapping[str, Any], preset: str) -> Path:
     execution = _mapping(config.get("execution"))
     explicit = str(execution.get("package_root", "") or "").strip()
     if explicit:
         package_root = Path(explicit)
         package_root.mkdir(parents=True, exist_ok=True)
         return package_root
-    return create_package_root(config, preset)
+    return crear_raiz_paquete(config, preset)
 
 
-def load_existing_protocol_package(package_root: Path) -> Optional[tuple[Dict[str, Any], List[Dict[str, Any]]]]:
+def cargar_paquete_protocolo_existente(package_root: Path) -> Optional[tuple[Dict[str, Any], List[Dict[str, Any]]]]:
     protocol_path = package_root / "00_protocolo" / "protocolo_validacion.json"
     plan_path = package_root / "00_protocolo" / "session_plan.json"
     if not protocol_path.is_file() or not plan_path.is_file():
@@ -455,13 +455,13 @@ def load_existing_protocol_package(package_root: Path) -> Optional[tuple[Dict[st
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
     sessions = plan.get("sessions", [])
     if not isinstance(protocol, dict) or not isinstance(sessions, list):
-        raise RuntimeError("Invalid existing Phase 6 protocol package: {0}".format(package_root))
+        raise RuntimeError("Paquete de protocolo Phase 6 existente invalido: {0}".format(package_root))
     return protocol, [dict(session) for session in sessions]
 
 
-def apply_preset_overrides(config: Mapping[str, Any], preset: str) -> Dict[str, Any]:
+def aplicar_overrides_preset(config: Mapping[str, Any], preset: str) -> Dict[str, Any]:
     effective = deepcopy(dict(config))
-    spec = preset_spec(preset)
+    spec = especificacion_preset(preset)
     playback = dict(_mapping(effective.get("playback")))
     network = dict(_mapping(effective.get("network_replay")))
     execution = dict(_mapping(effective.get("execution")))
@@ -480,8 +480,8 @@ def apply_preset_overrides(config: Mapping[str, Any], preset: str) -> Dict[str, 
     return effective
 
 
-def preset_runtime_metadata(config: Mapping[str, Any], preset: str) -> Dict[str, Any]:
-    spec = preset_spec(preset)
+def metadatos_runtime_preset(config: Mapping[str, Any], preset: str) -> Dict[str, Any]:
+    spec = especificacion_preset(preset)
     playback = _mapping(config.get("playback"))
     network = _mapping(config.get("network_replay"))
     execution = _mapping(config.get("execution"))
@@ -496,11 +496,11 @@ def preset_runtime_metadata(config: Mapping[str, Any], preset: str) -> Dict[str,
     }
 
 
-def _estimated_total_duration_s(runtime: Mapping[str, Any], session_count: int) -> float:
+def _duracion_total_estimada_s(runtime: Mapping[str, Any], session_count: int) -> float:
     return float(runtime.get("estimated_session_duration_s", 0.0) or 0.0) * float(session_count)
 
 
-def _session_completed(session: Mapping[str, Any]) -> bool:
+def _sesion_completada(session: Mapping[str, Any]) -> bool:
     run_root = Path(str(session.get("run_output_root", "")))
     if not run_root.is_dir():
         return False
@@ -517,7 +517,7 @@ def _session_completed(session: Mapping[str, Any]) -> bool:
     return manifest.get("status") == "completed"
 
 
-def _write_csv(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
+def _escribir_csv(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     fieldnames = sorted({key for row in rows for key in row.keys()})
     with path.open("w", newline="", encoding="utf-8") as handle:
@@ -527,7 +527,7 @@ def _write_csv(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
             writer.writerow({key: row.get(key, "") for key in fieldnames})
 
 
-def _print_progress(
+def _imprimir_progreso(
     *,
     processed_count: int,
     total_sessions: int,
@@ -562,7 +562,7 @@ def _print_progress(
     )
 
 
-def _safe_path_token(value: str) -> str:
+def _token_ruta_seguro(value: str) -> str:
     chars = []
     for char in value:
         chars.append(char if char.isalnum() or char in {"_", "-"} else "_")

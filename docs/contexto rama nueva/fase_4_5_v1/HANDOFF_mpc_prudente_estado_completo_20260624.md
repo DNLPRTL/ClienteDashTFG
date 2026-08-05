@@ -80,20 +80,20 @@ ensemble temporal mejora al MLP."* (NO afirmar "gano a todos" — es empate hone
 
 ## 4. Mapa de código (línea mpc_prudente)
 
-- `core/mpc_prudente/media_profile.py` — tablas VBR reales + `MediaFaithfulLadder` +
-  `resolve_media_descriptor_id` (Phase6 id → descriptor).
-- `core/mpc_prudente/dataset.py` — dataset fiel (single + `build_mpc_prudente_multimedia_dataset`).
-- `core/mpc_prudente/training.py` (MLP) + `temporal_model.py` (GRU+ensemble) +
-  `temporal_training.py` (entrena ensemble) — predictores.
-- `core/mpc_prudente/planner.py` — planner CVaR (riesgo) con tamaños reales.
-- `core/mpc_prudente/bundle.py` (MLP) + `temporal_bundle.py` (ensemble + dispatcher
-  `load_prudent_runtime_bundle`) — bundles runtime.
-- `core/mpc_prudente/evaluation.py` — diagnóstico closed-loop offline interno.
+- `core/mpc_prudente/perfil_medio.py` — tablas VBR reales + `EscaleraFiel` +
+  `resolver_id_descriptor_medio` (Phase6 id → descriptor).
+- `core/mpc_prudente/dataset_fiel.py` — dataset fiel (single + `construir_dataset_multimedia_mpc_prudente`).
+- `core/mpc_prudente/entrenamiento.py` (MLP) + `modelo_temporal.py` (GRU+ensemble) +
+  `entrenamiento_temporal.py` (entrena ensemble) — predictores.
+- `core/mpc_prudente/planificador.py` — planner CVaR (riesgo) con tamaños reales.
+- `core/mpc_prudente/bundle.py` (MLP) + `bundle_temporal.py` (ensemble + dispatcher
+  `cargar_bundle_runtime_prudente`) — bundles runtime.
+- `core/mpc_prudente/diagnostico.py` — diagnóstico closed-loop offline interno.
 - `core/controller/mpc_prudente_runtime.py` — controllers runtime v1 + v2
-  (`MpcPrudenteRuntimeController`, `MpcPrudenteTemporalRuntimeController`).
+  (`ControllerRuntimeMpcPrudente`, `ControllerRuntimeMpcPrudenteTemporal`).
 - Registry: `mpc_prudente_v1`, `mpc_prudente_v2`.
-- Phase 6: `core/phase6/analysis.py` (métricas cola/catastróficas/stalls + plots
-  `qoe_robustez_peor_caso`, `stalls_por_controller`), `catalog.py` (preset
+- Phase 6: `core/phase6/analisis.py` (métricas cola/catastróficas/stalls + plots
+  `qoe_robustez_peor_caso`, `stalls_por_controller`), `catalogo.py` (preset
   `comparativa` y `tfg_final`), runner inyecta media por sesión.
 - Tablas VBR commiteadas: `media_profiles/segment_sizes/*.json` (8 perfiles).
 - Tests: `tests/test_mpc_prudente_*`, `test_phase6_*`. (489 OK al cerrar.)

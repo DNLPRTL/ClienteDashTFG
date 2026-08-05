@@ -8,11 +8,11 @@ from pathlib import Path
 from typing import Optional, Sequence
 
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+RAIZ_REPO = Path(__file__).resolve().parents[1]
+if str(RAIZ_REPO) not in sys.path:
+    sys.path.insert(0, str(RAIZ_REPO))
 
-from core.phase6.verification import verify_phase6_package
+from core.phase6.verificacion import verificar_paquete_phase6
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
@@ -21,7 +21,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--no-plots-required", action="store_true", help="No falla si no hay graficas generadas.")
     args = parser.parse_args(argv)
 
-    package = verify_phase6_package(
+    package = verificar_paquete_phase6(
         args.package_root,
         require_plots=not args.no_plots_required,
         write_artifacts=True,

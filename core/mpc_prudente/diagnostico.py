@@ -17,8 +17,8 @@ from typing import Mapping, Sequence
 from core.controller.bola import BolaController
 from core.controller.rate_based import RateBasedController
 from core.controller.robust_mpc import RobustMpcController
-from core.mpc_prudente.media_profile import DEFAULT_MAX_BUFFER_S, MediaProfileSegmentSizes
-from core.mpc_prudente.planner import MPC_PRUDENTE_CONTROLLER_KEY, PrudentMpcController, buffer_risk_alpha
+from core.mpc_prudente.perfil_medio import MAX_BUFFER_S_POR_DEFECTO, PerfilTamanosSegmentos
+from core.mpc_prudente.planificador import CLAVE_CONTROLLER_MPC_PRUDENTE, ControllerMpcPrudente, alpha_riesgo_por_buffer
 from core.neural_abr.artifacts import prepare_output_dir, write_json
 from core.phase45_v1.dataset import load_trace_window
 from core.phase45_v1.paths import PathRewriteRule
@@ -32,51 +32,51 @@ from core.phase45_v3.neural_mpc_controller import (
 from core.phase45_v3.profiles import Phase45V3DatasetProfile
 from core.trace_replay.network_model import END_POLICY_LOOP, TraceDrivenNetworkModel
 
-MPC_PRUDENTE_CLOSED_LOOP_REPORT_SCHEMA_ID = "mpc_prudente_closed_loop_diagnostic_v2"
-MPC_PRUDENTE_CLOSED_LOOP_REPORT_FILENAME = "reporte_mpc_prudente_closedloop.json"
+SCHEMA_ID_REPORTE_CLOSED_LOOP = "mpc_prudente_closed_loop_diagnostic_v2"
+FICHERO_REPORTE_CLOSED_LOOP = "reporte_mpc_prudente_closedloop.json"
 
-REFERENCE_CONTROLLER = "robust_mpc"
-HIGH_CAPACITY_THROUGHPUT_KBPS = 2.0 * 4300.0
+CONTROLLER_REFERENCIA = "robust_mpc"
+THROUGHPUT_ALTA_CAPACIDAD_KBPS = 2.0 * 4300.0
 # Suelo de servibilidad: bajo esta media de throughput, ni el bitrate más bajo
 # (300 kbps) es servible, así que la comparación no es informativa.
-DEFAULT_SERVABLE_MEAN_KBPS = 600.0
+MEDIA_SERVIBLE_KBPS_POR_DEFECTO = 600.0
 
 
-class MpcPrudenteEvaluationError(ValueError):
-    """Raised when the prudent closed-loop diagnostic cannot run."""
+class ErrorDiagnosticoMpcPrudente(ValueError):
+    """Error al ejecutar el diagnostico closed-loop."""
 
 
-def evaluate_mpc_prudente_closed_loop(
+def diagnostico_closed_loop_mpc_prudente(
     phase3_manifest: Mapping[str, object],
     output_dir: object,
     profile: Phase45V3DatasetProfile,
     *,
     predictor_checkpoint: object,
     media_profile_id: str,
-    media_profile_base_dir: str | None = None,
-    controllers: Sequence[str] = (MPC_PRUDENTE_CONTROLLER_KEY, "robust_mpc", "bola", "neural_mpc"),
+    dir_base_perfiles: str | None = None,
+    controllers: Sequence[str] = (CLAVE_CONTROLLER_MPC_PRUDENTE, "robust_mpc", "bola", "neural_mpc"),
     source_manifest_path: object | None = None,
     overwrite: bool = False,
     max_validation_windows: int | None = None,
-    max_buffer_s: float = DEFAULT_MAX_BUFFER_S,
-    servable_mean_kbps: float = DEFAULT_SERVABLE_MEAN_KBPS,
+    max_buffer_s: float = MAX_BUFFER_S_POR_DEFECTO,
+    servable_mean_kbps: float = MEDIA_SERVIBLE_KBPS_POR_DEFECTO,
     prudent_risk_alpha: float | None = None,
     trace_path_rewrites: Sequence[PathRewriteRule] = (),
     device: str | None = "cpu",
 ) -> Mapping[str, object]:
-    output_path = prepare_output_dir(output_dir, overwrite=overwrite, purpose="mpc_prudente closed-loop diagnostic")
+    output_path = prepare_output_dir(output_dir, overwrite=overwrite, purpose="diagnostico closed-loop mpc_prudente")
     controller_keys = tuple(str(name).strip() for name in controllers)
-    if MPC_PRUDENTE_CONTROLLER_KEY not in controller_keys:
-        raise MpcPrudenteEvaluationError("controllers must include {0}".format(MPC_PRUDENTE_CONTROLLER_KEY))
-    if REFERENCE_CONTROLLER not in controller_keys:
-        raise MpcPrudenteEvaluationError("controllers must include robust_mpc reference")
+    if CLAVE_CONTROLLER_MPC_PRUDENTE not in controller_keys:
+        raise ErrorDiagnosticoMpcPrudente("controllers debe incluir {0}".format(CLAVE_CONTROLLER_MPC_PRUDENTE))
+    if CONTROLLER_REFERENCIA not in controller_keys:
+        raise ErrorDiagnosticoMpcPrudente("controllers debe incluir la referencia robust_mpc")
 
     sampling = build_sampling_artifacts(phase3_manifest, profile, source_manifest_path=source_manifest_path)
     plan = dict(sampling["plan"])  # type: ignore[arg-type]
-    windows = _limited(plan["validation_windows"], max_validation_windows)  # type: ignore[index]
+    windows = _limitar_ventanas(plan["validation_windows"], max_validation_windows)  # type: ignore[index]
     segment_count = int(plan["segment_count_per_window"])
-    media_profile = MediaProfileSegmentSizes.load_by_id(media_profile_id, base_dir=media_profile_base_dir)
-    ladder = media_profile.to_faithful_ladder(segment_count=segment_count, max_buffer_s=max_buffer_s)
+    perfil_medio = PerfilTamanosSegmentos.cargar_por_id(media_profile_id, base_dir=dir_base_perfiles)
+    ladder = perfil_medio.a_escalera_fiel(segment_count=segment_count, max_buffer_s=max_buffer_s)
     predictor = TorchThroughputQuantilePredictor(predictor_checkpoint, device=device)
 
     session_rows: list[Mapping[str, object]] = []
@@ -87,7 +87,7 @@ def evaluate_mpc_prudente_closed_loop(
             servable = float(loaded_trace.throughput_mean_kbps) >= float(servable_mean_kbps)
             for controller_key in controller_keys:
                 session_rows.append(
-                    _run_session(window, loaded_trace, ladder, controller_key, predictor, servable, prudent_risk_alpha)
+                    _ejecutar_sesion_diagnostico(window, loaded_trace, ladder, controller_key, predictor, servable, prudent_risk_alpha)
                 )
         except Exception as exc:  # noqa: BLE001 - skips auditados.
             skipped.append(
@@ -95,14 +95,14 @@ def evaluate_mpc_prudente_closed_loop(
             )
 
     if not session_rows:
-        raise MpcPrudenteEvaluationError("closed-loop diagnostic produced no sessions")
+        raise ErrorDiagnosticoMpcPrudente("el diagnostico closed-loop no produjo sesiones")
 
-    controller_metrics = _controller_metrics(session_rows)
-    paired = _paired_vs_reference(session_rows)
+    controller_metrics = _metricas_por_controller(session_rows)
+    paired = _pareado_vs_referencia(session_rows)
     gates = _gates(controller_metrics, paired)
     servable_window_count = len({str(s["window_id"]) for s in session_rows if s["servable"]})
     report = {
-        "schema_id": MPC_PRUDENTE_CLOSED_LOOP_REPORT_SCHEMA_ID,
+        "schema_id": SCHEMA_ID_REPORTE_CLOSED_LOOP,
         "status": "PASS" if not gates["failed"] else "REVIEW",
         "generated_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
         "output_dir": str(output_path),
@@ -127,27 +127,27 @@ def evaluate_mpc_prudente_closed_loop(
         "qoe_claims_authorized": False,
         **no_benchmark_policy(),
     }
-    write_json(output_path / MPC_PRUDENTE_CLOSED_LOOP_REPORT_FILENAME, report)
+    write_json(output_path / FICHERO_REPORTE_CLOSED_LOOP, report)
     return report
 
 
-def _run_session(window, loaded_trace, ladder, controller_key, predictor, servable, prudent_risk_alpha=None):
+def _ejecutar_sesion_diagnostico(window, loaded_trace, ladder, controller_key, predictor, servable, prudent_risk_alpha=None):
     network_model = TraceDrivenNetworkModel(loaded_trace, end_policy=END_POLICY_LOOP, max_loops=5)
     env = AbrClosedLoopEnv(ladder=ladder, network_model=network_model)
-    controller = _make_controller(controller_key, predictor, prudent_risk_alpha)
+    controller = _crear_controller(controller_key, predictor, prudent_risk_alpha)
     rows = []
     invalid_actions = 0
     fallback_count = 0
     while not env.done:
         state = env.state
         action_mask = env.action_mask()
-        if controller_key in (MPC_PRUDENTE_CONTROLLER_KEY, "neural_mpc"):
+        if controller_key in (CLAVE_CONTROLLER_MPC_PRUDENTE, "neural_mpc"):
             decision = controller.select_action(state, ladder, action_mask)
             action = int(decision.action)
             if bool(getattr(decision, "fallback_used", False)):
                 fallback_count += 1
         else:
-            feedback = _feedback_for_classic(state, ladder)
+            feedback = _feedback_para_clasico(state, ladder)
             controller.setPlayerFeedback(feedback)
             action = int(controller.quantizeRate(float(controller.calcControlAction())))
         if action < 0 or action >= ladder.representation_count or not action_mask[action]:
@@ -165,7 +165,7 @@ def _run_session(window, loaded_trace, ladder, controller_key, predictor, servab
             }
         )
     rewards = [float(r["qoe_linear_reward"]) for r in rows]
-    high = [r for r in rows if _is_high_capacity(r)]
+    high = [r for r in rows if _es_alta_capacidad(r)]
     return {
         "controller_key": controller_key,
         "window_id": str(window["window_id"]),
@@ -174,10 +174,10 @@ def _run_session(window, loaded_trace, ladder, controller_key, predictor, servab
         "trace_mean_kbps": float(loaded_trace.throughput_mean_kbps),
         "trace_min_kbps": float(loaded_trace.throughput_min_kbps),
         "servable": bool(servable),
-        "qoe_linear_mean": _mean(rewards),
+        "qoe_linear_mean": _media(rewards),
         "total_rebuffer_s": sum(float(r["rebuffer_s"]) for r in rows),
         "stall_count": sum(1 for r in rows if float(r["rebuffer_s"]) > 1.0e-9),
-        "mean_bitrate_kbps": _mean([float(r["bitrate_kbps"]) for r in rows]),
+        "mean_bitrate_kbps": _media([float(r["bitrate_kbps"]) for r in rows]),
         "action0_rate": _ratio(sum(1 for r in rows if int(r["action"]) == 0), len(rows)),
         "high_capacity_row_count": len(high),
         "high_capacity_action0_count": sum(1 for r in high if int(r["action"]) == 0),
@@ -187,16 +187,16 @@ def _run_session(window, loaded_trace, ladder, controller_key, predictor, servab
     }
 
 
-def _make_controller(controller_key, predictor, prudent_risk_alpha=None):
-    if controller_key == MPC_PRUDENTE_CONTROLLER_KEY:
-        risk_alpha_fn = (
-            (lambda buffer_s: float(prudent_risk_alpha)) if prudent_risk_alpha is not None else buffer_risk_alpha
+def _crear_controller(controller_key, predictor, prudent_risk_alpha=None):
+    if controller_key == CLAVE_CONTROLLER_MPC_PRUDENTE:
+        funcion_alpha_riesgo = (
+            (lambda buffer_s: float(prudent_risk_alpha)) if prudent_risk_alpha is not None else alpha_riesgo_por_buffer
         )
-        return PrudentMpcController(
+        return ControllerMpcPrudente(
             predictor,
             quantiles=predictor.quantiles,
             horizon_segments=predictor.horizon_segments,
-            risk_alpha_fn=risk_alpha_fn,
+            funcion_alpha_riesgo=funcion_alpha_riesgo,
         )
     if controller_key == "neural_mpc":
         return NeuralThroughputCalibratedMpcController(
@@ -208,10 +208,10 @@ def _make_controller(controller_key, predictor, prudent_risk_alpha=None):
         return BolaController()
     if controller_key in ("rate_based", "throughput_rule"):
         return RateBasedController()
-    raise MpcPrudenteEvaluationError("unsupported controller: {0}".format(controller_key))
+    raise ErrorDiagnosticoMpcPrudente("controller no soportado: {0}".format(controller_key))
 
 
-def _feedback_for_classic(state, ladder) -> Mapping[str, object]:
+def _feedback_para_clasico(state, ladder) -> Mapping[str, object]:
     feedback = dict(runtime_feedback_from_state(state, ladder))
     feedback["throughput_history_bps"] = [float(v) for v in state.throughput_history_bps]
     feedback["throughput_history_Bps"] = [float(v) / 8.0 for v in state.throughput_history_bps]
@@ -223,7 +223,7 @@ def _feedback_for_classic(state, ladder) -> Mapping[str, object]:
     return feedback
 
 
-def _controller_metrics(session_rows) -> Mapping[str, object]:
+def _metricas_por_controller(session_rows) -> Mapping[str, object]:
     by_controller = defaultdict(list)
     for row in session_rows:
         by_controller[str(row["controller_key"])].append(row)
@@ -236,27 +236,27 @@ def _controller_metrics(session_rows) -> Mapping[str, object]:
         out[controller] = {
             "session_count": len(rows),
             "servable_session_count": len(servable_rows),
-            "qoe_linear_mean_all": _mean([float(r["qoe_linear_mean"]) for r in rows]),
-            "qoe_linear_mean_servable": _mean(servable_qoe),
+            "qoe_linear_mean_all": _media([float(r["qoe_linear_mean"]) for r in rows]),
+            "qoe_linear_mean_servable": _media(servable_qoe),
             # Cola (peor caso): donde el control consciente del riesgo debe ganar.
-            "qoe_servable_p05": _percentile(servable_qoe, 0.05),
-            "qoe_servable_p10": _percentile(servable_qoe, 0.10),
-            "qoe_servable_p25": _percentile(servable_qoe, 0.25),
+            "qoe_servable_p05": _percentil(servable_qoe, 0.05),
+            "qoe_servable_p10": _percentil(servable_qoe, 0.10),
+            "qoe_servable_p25": _percentil(servable_qoe, 0.25),
             "qoe_servable_min": min(servable_qoe) if servable_qoe else 0.0,
             "total_rebuffer_s_all": sum(float(r["total_rebuffer_s"]) for r in rows),
             "total_rebuffer_s_servable": sum(float(r["total_rebuffer_s"]) for r in servable_rows),
             "stall_session_count_servable": sum(1 for r in servable_rows if int(r["stall_count"]) > 0),
-            "mean_bitrate_kbps_servable": _mean([float(r["mean_bitrate_kbps"]) for r in servable_rows]),
+            "mean_bitrate_kbps_servable": _media([float(r["mean_bitrate_kbps"]) for r in servable_rows]),
             "high_capacity_row_count": high_rows,
             "high_capacity_action0_rate": _ratio(high_action0, high_rows),
             "invalid_action_count": sum(int(r["invalid_action_count"]) for r in rows),
             "fallback_count": sum(int(r["fallback_count"]) for r in rows),
-            "by_throughput_bucket": _bucket_breakdown(rows, "throughput_bucket"),
+            "by_throughput_bucket": _desglose_por_bucket(rows, "throughput_bucket"),
         }
     return out
 
 
-def _percentile(values, q) -> float:
+def _percentil(values, q) -> float:
     clean = sorted(float(v) for v in values if math.isfinite(float(v)))
     if not clean:
         return 0.0
@@ -264,31 +264,31 @@ def _percentile(values, q) -> float:
     return clean[index]
 
 
-def _bucket_breakdown(rows, key) -> Mapping[str, object]:
+def _desglose_por_bucket(rows, key) -> Mapping[str, object]:
     by_bucket = defaultdict(list)
     for row in rows:
         by_bucket[str(row.get(key, ""))].append(row)
     return {
         bucket: {
             "session_count": len(items),
-            "qoe_linear_mean": _mean([float(r["qoe_linear_mean"]) for r in items]),
+            "qoe_linear_mean": _media([float(r["qoe_linear_mean"]) for r in items]),
             "total_rebuffer_s": sum(float(r["total_rebuffer_s"]) for r in items),
-            "mean_bitrate_kbps": _mean([float(r["mean_bitrate_kbps"]) for r in items]),
+            "mean_bitrate_kbps": _media([float(r["mean_bitrate_kbps"]) for r in items]),
         }
         for bucket, items in sorted(by_bucket.items())
     }
 
 
-def _paired_vs_reference(session_rows) -> Mapping[str, object]:
+def _pareado_vs_referencia(session_rows) -> Mapping[str, object]:
     by_key = {(str(r["window_id"]), str(r["controller_key"])): r for r in session_rows}
-    controllers = sorted({str(r["controller_key"]) for r in session_rows} - {REFERENCE_CONTROLLER})
+    controllers = sorted({str(r["controller_key"]) for r in session_rows} - {CONTROLLER_REFERENCIA})
     out = {}
     for controller in controllers:
         all_deltas = []
         for (window_id, key), row in by_key.items():
             if key != controller:
                 continue
-            baseline = by_key.get((window_id, REFERENCE_CONTROLLER))
+            baseline = by_key.get((window_id, CONTROLLER_REFERENCIA))
             if baseline is None:
                 continue
             all_deltas.append(
@@ -305,34 +305,34 @@ def _paired_vs_reference(session_rows) -> Mapping[str, object]:
         out[controller] = {
             "paired_session_count": len(all_deltas),
             "servable_paired_session_count": len(servable_deltas),
-            "servable_qoe_delta_mean": _mean([d["qoe_delta"] for d in servable_deltas]),
-            "servable_rebuffer_delta_s_mean": _mean([d["rebuffer_delta_s"] for d in servable_deltas]),
-            "servable_bitrate_delta_kbps_mean": _mean([d["bitrate_delta_kbps"] for d in servable_deltas]),
-            "all_qoe_delta_mean": _mean([d["qoe_delta"] for d in all_deltas]),
-            "all_rebuffer_delta_s_mean": _mean([d["rebuffer_delta_s"] for d in all_deltas]),
-            "servable_by_throughput_bucket": _delta_bucket(servable_deltas, "throughput_bucket"),
-            "servable_by_variability": _delta_bucket(servable_deltas, "variability_bucket"),
+            "servable_qoe_delta_mean": _media([d["qoe_delta"] for d in servable_deltas]),
+            "servable_rebuffer_delta_s_mean": _media([d["rebuffer_delta_s"] for d in servable_deltas]),
+            "servable_bitrate_delta_kbps_mean": _media([d["bitrate_delta_kbps"] for d in servable_deltas]),
+            "all_qoe_delta_mean": _media([d["qoe_delta"] for d in all_deltas]),
+            "all_rebuffer_delta_s_mean": _media([d["rebuffer_delta_s"] for d in all_deltas]),
+            "servable_by_throughput_bucket": _delta_por_bucket(servable_deltas, "throughput_bucket"),
+            "servable_by_variability": _delta_por_bucket(servable_deltas, "variability_bucket"),
         }
     return out
 
 
-def _delta_bucket(deltas, key) -> Mapping[str, object]:
+def _delta_por_bucket(deltas, key) -> Mapping[str, object]:
     by_bucket = defaultdict(list)
     for d in deltas:
         by_bucket[str(d.get(key, ""))].append(d)
     return {
         bucket: {
             "count": len(items),
-            "qoe_delta_mean": _mean([d["qoe_delta"] for d in items]),
-            "rebuffer_delta_s_mean": _mean([d["rebuffer_delta_s"] for d in items]),
+            "qoe_delta_mean": _media([d["qoe_delta"] for d in items]),
+            "rebuffer_delta_s_mean": _media([d["rebuffer_delta_s"] for d in items]),
         }
         for bucket, items in sorted(by_bucket.items())
     }
 
 
 def _gates(controller_metrics, paired) -> Mapping[str, object]:
-    prudent = controller_metrics.get(MPC_PRUDENTE_CONTROLLER_KEY, {})
-    prudent_paired = paired.get(MPC_PRUDENTE_CONTROLLER_KEY, {})
+    prudent = controller_metrics.get(CLAVE_CONTROLLER_MPC_PRUDENTE, {})
+    prudent_paired = paired.get(CLAVE_CONTROLLER_MPC_PRUDENTE, {})
     gates: dict[str, Mapping[str, object]] = {}
 
     def add(name, passed, observed, threshold):
@@ -363,22 +363,22 @@ def _gates(controller_metrics, paired) -> Mapping[str, object]:
     return {"failed": failed, "gates": gates}
 
 
-def _is_high_capacity(row) -> bool:
+def _es_alta_capacidad(row) -> bool:
     return (
-        float(row.get("measured_throughput_kbps", 0.0)) >= HIGH_CAPACITY_THROUGHPUT_KBPS
+        float(row.get("measured_throughput_kbps", 0.0)) >= THROUGHPUT_ALTA_CAPACIDAD_KBPS
         and float(row.get("buffer_s", 0.0)) >= 8.0
         and float(row.get("rebuffer_s", 0.0)) <= 1.0e-9
     )
 
 
-def _limited(raw_windows, limit):
+def _limitar_ventanas(raw_windows, limit):
     if not isinstance(raw_windows, list):
-        raise MpcPrudenteEvaluationError("validation_windows must be a list")
+        raise ErrorDiagnosticoMpcPrudente("validation_windows debe ser una lista")
     windows = [w for w in raw_windows if isinstance(w, Mapping)]
     return windows[: int(limit)] if limit is not None else windows
 
 
-def _mean(values) -> float:
+def _media(values) -> float:
     clean = [float(v) for v in values if math.isfinite(float(v))]
     return sum(clean) / float(len(clean)) if clean else 0.0
 

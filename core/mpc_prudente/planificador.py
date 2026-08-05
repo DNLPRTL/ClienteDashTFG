@@ -3,7 +3,7 @@ cuantiles de throughput predichos y agrega con CVaR_alpha (media de los peores
 escenarios), usando los tamaños reales (VBR) de los segmentos.
 
 El nivel de riesgo `alpha` es configurable: existe una regla adaptativa por buffer
-(`buffer_risk_alpha`, usada en los diagnósticos offline), pero en la evaluación
+(`alpha_riesgo_por_buffer`, usada en los diagnósticos offline), pero en la evaluación
 final de Phase 6 se fijó `alpha=0.75` (media de los 3 peores escenarios de 4).
 """
 
@@ -17,28 +17,28 @@ from typing import Callable, Sequence
 from core.controller.robust_mpc import RobustMpcController
 from core.phase45_v3.abr_closed_loop_env import AbrClosedLoopState, runtime_feedback_from_state
 
-MPC_PRUDENTE_CONTROLLER_KEY = "mpc_prudente_v1"
-DEFAULT_QUANTILES = (0.10, 0.25, 0.50, 0.75)
-DEFAULT_HORIZON = 5
-DEFAULT_REBUFFER_WEIGHT = 4.3
-DEFAULT_SWITCH_WEIGHT = 1.0
+CLAVE_CONTROLLER_MPC_PRUDENTE = "mpc_prudente_v1"
+CUANTILES_POR_DEFECTO = (0.10, 0.25, 0.50, 0.75)
+HORIZONTE_POR_DEFECTO = 5
+PESO_REBUFFER_POR_DEFECTO = 4.3
+PESO_SUAVIDAD_POR_DEFECTO = 1.0
 
 # Niveles de riesgo CVaR por buffer (fracción de peores escenarios a promediar).
-RISK_ALPHA_LOW_BUFFER = 0.25
-RISK_ALPHA_MID_BUFFER = 0.50
-RISK_ALPHA_HIGH_BUFFER = 0.75
-RISK_ALPHA_SAFE_BUFFER = 1.00
-RISK_BUFFER_LOW_S = 4.0
-RISK_BUFFER_MID_S = 12.0
-RISK_BUFFER_HIGH_S = 20.0
+ALPHA_BUFFER_BAJO = 0.25
+ALPHA_BUFFER_MEDIO = 0.50
+ALPHA_BUFFER_ALTO = 0.75
+ALPHA_BUFFER_SEGURO = 1.00
+UMBRAL_BUFFER_BAJO_S = 4.0
+UMBRAL_BUFFER_MEDIO_S = 12.0
+UMBRAL_BUFFER_ALTO_S = 20.0
 
 
-class MpcPrudentePlannerError(ValueError):
-    """Raised when the prudent planner cannot make a safe decision."""
+class ErrorPlanificadorPrudente(ValueError):
+    """Error cuando el planificador no puede tomar una decision segura."""
 
 
 @dataclass(frozen=True)
-class PrudentDecision:
+class DecisionPrudente:
     action: int
     bitrate_bps: float
     risk_alpha: float
@@ -50,7 +50,7 @@ class PrudentDecision:
 
     def to_json(self) -> dict[str, object]:
         return {
-            "controller_key": MPC_PRUDENTE_CONTROLLER_KEY,
+            "controller_key": CLAVE_CONTROLLER_MPC_PRUDENTE,
             "action": int(self.action),
             "bitrate_bps": float(self.bitrate_bps),
             "risk_alpha": float(self.risk_alpha),
@@ -62,35 +62,35 @@ class PrudentDecision:
         }
 
 
-def buffer_risk_alpha(buffer_s: float) -> float:
+def alpha_riesgo_por_buffer(buffer_s: float) -> float:
     """Nivel CVaR según el buffer: menos buffer → más pesimista (alpha menor)."""
     buffer = float(buffer_s)
-    if buffer < RISK_BUFFER_LOW_S:
-        return RISK_ALPHA_LOW_BUFFER
-    if buffer < RISK_BUFFER_MID_S:
-        return RISK_ALPHA_MID_BUFFER
-    if buffer < RISK_BUFFER_HIGH_S:
-        return RISK_ALPHA_HIGH_BUFFER
-    return RISK_ALPHA_SAFE_BUFFER
+    if buffer < UMBRAL_BUFFER_BAJO_S:
+        return ALPHA_BUFFER_BAJO
+    if buffer < UMBRAL_BUFFER_MEDIO_S:
+        return ALPHA_BUFFER_MEDIO
+    if buffer < UMBRAL_BUFFER_ALTO_S:
+        return ALPHA_BUFFER_ALTO
+    return ALPHA_BUFFER_SEGURO
 
 
-def plan_prudent_action(
+def planificar_accion_prudente(
     *,
     state: AbrClosedLoopState,
     ladder,
-    predicted_bps_by_horizon_quantile: Sequence[Sequence[float]],
-    quantiles: Sequence[float] = DEFAULT_QUANTILES,
-    horizon_segments: int = DEFAULT_HORIZON,
+    prediccion_bps_por_horizonte_y_cuantil: Sequence[Sequence[float]],
+    quantiles: Sequence[float] = CUANTILES_POR_DEFECTO,
+    horizon_segments: int = HORIZONTE_POR_DEFECTO,
     action_mask: Sequence[bool] | None = None,
     risk_alpha: float | None = None,
-    rebuffer_weight: float = DEFAULT_REBUFFER_WEIGHT,
-    switch_weight: float = DEFAULT_SWITCH_WEIGHT,
-) -> PrudentDecision:
-    prediction = _validated_prediction(predicted_bps_by_horizon_quantile, horizon_segments, len(tuple(quantiles)))
-    alpha = float(risk_alpha) if risk_alpha is not None else buffer_risk_alpha(state.buffer_s)
-    valid_actions = _valid_actions(action_mask, ladder.representation_count)
+    rebuffer_weight: float = PESO_REBUFFER_POR_DEFECTO,
+    switch_weight: float = PESO_SUAVIDAD_POR_DEFECTO,
+) -> DecisionPrudente:
+    prediction = _validar_prediccion(prediccion_bps_por_horizonte_y_cuantil, horizon_segments, len(tuple(quantiles)))
+    alpha = float(risk_alpha) if risk_alpha is not None else alpha_riesgo_por_buffer(state.buffer_s)
+    valid_actions = _acciones_validas(action_mask, ladder.representation_count)
     if not valid_actions:
-        raise MpcPrudentePlannerError("no valid actions for prudent MPC")
+        raise ErrorPlanificadorPrudente("no hay acciones validas para el MPC prudente")
 
     remaining = max(int(ladder.segment_count) - int(state.segment_index), 1)
     effective_horizon = min(int(horizon_segments), len(prediction), remaining)
@@ -99,7 +99,7 @@ def plan_prudent_action(
     best_sequence: tuple[int, ...] | None = None
     best_rebuffer: tuple[float, ...] = ()
     for sequence in itertools.product(valid_actions, repeat=effective_horizon):
-        cvar, per_quantile_rebuffer = _score_sequence_cvar(
+        cvar, per_quantile_rebuffer = _puntuar_secuencia_cvar(
             sequence=sequence,
             state=state,
             ladder=ladder,
@@ -114,9 +114,9 @@ def plan_prudent_action(
             best_rebuffer = per_quantile_rebuffer
 
     if best_sequence is None:
-        raise MpcPrudentePlannerError("prudent MPC enumeration produced no sequence")
+        raise ErrorPlanificadorPrudente("la enumeracion del MPC prudente no produjo secuencia")
     action = int(best_sequence[0])
-    return PrudentDecision(
+    return DecisionPrudente(
         action=action,
         bitrate_bps=float(ladder.bitrate_bps(action)),
         risk_alpha=float(alpha),
@@ -126,7 +126,7 @@ def plan_prudent_action(
     )
 
 
-def _score_sequence_cvar(
+def _puntuar_secuencia_cvar(
     *,
     sequence: Sequence[int],
     state: AbrClosedLoopState,
@@ -177,73 +177,73 @@ def _cvar(scores: Sequence[float], alpha: float) -> float:
     return sum(ordered[:worst_m]) / float(worst_m)
 
 
-def _validated_prediction(
+def _validar_prediccion(
     prediction: Sequence[Sequence[float]], horizon_segments: int, quantile_count: int
 ) -> tuple[tuple[float, ...], ...]:
     rows = []
     for row in prediction:
         values = tuple(float(value) for value in row)
         if len(values) != int(quantile_count):
-            raise MpcPrudentePlannerError("prediction quantile dimension mismatch")
+            raise ErrorPlanificadorPrudente("dimension de cuantiles de la prediccion incorrecta")
         if any(not math.isfinite(value) or value <= 0.0 for value in values):
-            raise MpcPrudentePlannerError("prediction contains invalid throughput")
+            raise ErrorPlanificadorPrudente("la prediccion contiene throughput invalido")
         # Forzar monotonía (q ascendente) por robustez ante crossing residual.
         rows.append(tuple(sorted(values)))
     if len(rows) < int(horizon_segments):
-        raise MpcPrudentePlannerError("prediction has fewer horizons than requested")
+        raise ErrorPlanificadorPrudente("la prediccion tiene menos horizontes de los pedidos")
     return tuple(rows)
 
 
-def _valid_actions(action_mask: Sequence[bool] | None, representation_count: int) -> tuple[int, ...]:
+def _acciones_validas(action_mask: Sequence[bool] | None, representation_count: int) -> tuple[int, ...]:
     if action_mask is None:
         return tuple(range(int(representation_count)))
     return tuple(index for index, allowed in enumerate(action_mask[: int(representation_count)]) if bool(allowed))
 
 
-class PrudentMpcController:
+class ControllerMpcPrudente:
     """Controller candidato: cuantiles neuronales + planner MPC prudente (CVaR)."""
 
     def __init__(
         self,
         predictor: Callable[[AbrClosedLoopState, object], Sequence[Sequence[float]]],
         *,
-        quantiles: Sequence[float] = DEFAULT_QUANTILES,
-        horizon_segments: int = DEFAULT_HORIZON,
-        risk_alpha_fn: Callable[[float], float] = buffer_risk_alpha,
+        quantiles: Sequence[float] = CUANTILES_POR_DEFECTO,
+        horizon_segments: int = HORIZONTE_POR_DEFECTO,
+        funcion_alpha_riesgo: Callable[[float], float] = alpha_riesgo_por_buffer,
     ) -> None:
         self.predictor = predictor
         self.quantiles = tuple(float(value) for value in quantiles)
         self.horizon_segments = int(horizon_segments)
-        self.risk_alpha_fn = risk_alpha_fn
-        self.last_decision: PrudentDecision | None = None
+        self.funcion_alpha_riesgo = funcion_alpha_riesgo
+        self.last_decision: DecisionPrudente | None = None
         self._fallback = RobustMpcController(horizon=self.horizon_segments)
 
     def select_action(
         self, state: AbrClosedLoopState, ladder, action_mask: Sequence[bool] | None = None
-    ) -> PrudentDecision:
+    ) -> DecisionPrudente:
         try:
             prediction = tuple(tuple(float(value) for value in row) for row in self.predictor(state, ladder))
-            decision = plan_prudent_action(
+            decision = planificar_accion_prudente(
                 state=state,
                 ladder=ladder,
-                predicted_bps_by_horizon_quantile=prediction,
+                prediccion_bps_por_horizonte_y_cuantil=prediction,
                 quantiles=self.quantiles,
                 horizon_segments=self.horizon_segments,
                 action_mask=action_mask,
-                risk_alpha=self.risk_alpha_fn(float(state.buffer_s)),
+                risk_alpha=self.funcion_alpha_riesgo(float(state.buffer_s)),
             )
         except Exception as exc:  # noqa: BLE001 - fallback explícito y auditado.
-            decision = self._fallback_decision(state, ladder, str(type(exc).__name__))
+            decision = self._decidir_por_fallback(state, ladder, str(type(exc).__name__))
         self.last_decision = decision
         return decision
 
-    def _fallback_decision(self, state: AbrClosedLoopState, ladder, reason: str) -> PrudentDecision:
+    def _decidir_por_fallback(self, state: AbrClosedLoopState, ladder, reason: str) -> DecisionPrudente:
         feedback = dict(runtime_feedback_from_state(state, ladder))
         feedback["throughput_history_bps"] = [float(value) for value in state.throughput_history_bps]
         self._fallback.setPlayerFeedback(feedback)
         target_rate_Bps = float(self._fallback.calcControlAction())
         action = int(self._fallback.quantizeRate(target_rate_Bps))
-        return PrudentDecision(
+        return DecisionPrudente(
             action=action,
             bitrate_bps=float(ladder.bitrate_bps(action)),
             risk_alpha=0.0,

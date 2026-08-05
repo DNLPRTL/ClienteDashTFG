@@ -10,18 +10,18 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence
 
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+RAIZ_REPO = Path(__file__).resolve().parents[1]
+if str(RAIZ_REPO) not in sys.path:
+    sys.path.insert(0, str(RAIZ_REPO))
 
-from core.phase6.catalog import discover_comparable_controllers
-from core.phase6.catalog import PRESET_NAMES
-from core.phase6.config import DEFAULT_PHASE6_LOCAL_CONFIG, load_phase6_config
+from core.phase6.catalogo import descubrir_controllers_comparables
+from core.phase6.catalogo import NOMBRES_PRESET
+from core.phase6.configuracion import RUTA_CONFIG_LOCAL_PHASE6, cargar_config_phase6
 
 
-RUNNER_SCRIPT = REPO_ROOT / "scripts" / "run_phase6_validacion_comparativa.py"
-ANALYSIS_SCRIPT = REPO_ROOT / "scripts" / "analyze_phase6_results.py"
-CLASSIC_SCRIPT = REPO_ROOT / "scripts" / "run_phase6_verificacion_clasica_controlada.py"
+RUNNER_SCRIPT = RAIZ_REPO / "scripts" / "run_phase6_validacion_comparativa.py"
+ANALYSIS_SCRIPT = RAIZ_REPO / "scripts" / "analyze_phase6_results.py"
+CLASSIC_SCRIPT = RAIZ_REPO / "scripts" / "run_phase6_verificacion_clasica_controlada.py"
 
 
 def build_phase6_command(
@@ -85,7 +85,7 @@ def write_gui_override_config(
     output_root: str,
     controllers: Sequence[str],
 ) -> Path:
-    config = load_phase6_config(base_config_path)
+    config = cargar_config_phase6(base_config_path)
     config.setdefault("experiment", {})["preset"] = preset
     config.setdefault("experiment", {})["engine"] = engine
     config.setdefault("experiment", {})["controllers"] = list(controllers)
@@ -112,7 +112,7 @@ class Phase6Gui:
         self.root.geometry("980x700")
         self.process: Optional[subprocess.Popen[str]] = None
 
-        self.config_path = tk.StringVar(value=str(DEFAULT_PHASE6_LOCAL_CONFIG) if DEFAULT_PHASE6_LOCAL_CONFIG.exists() else "")
+        self.config_path = tk.StringVar(value=str(RUTA_CONFIG_LOCAL_PHASE6) if RUTA_CONFIG_LOCAL_PHASE6.exists() else "")
         config = self._safe_load_config()
         self.output_root = tk.StringVar(value=str(_mapping(config.get("paths")).get("output_root", "")))
         self.preset = tk.StringVar(value=str(_mapping(config.get("experiment")).get("preset", "rapido")))
@@ -153,7 +153,7 @@ class Phase6Gui:
         options = ttk.Frame(main)
         options.pack(fill="x", pady=10)
         ttk.Label(options, text="Preset").grid(row=0, column=0, sticky="w")
-        preset_box = ttk.Combobox(options, textvariable=self.preset, values=list(PRESET_NAMES), state="readonly", width=16)
+        preset_box = ttk.Combobox(options, textvariable=self.preset, values=list(NOMBRES_PRESET), state="readonly", width=16)
         preset_box.grid(row=0, column=1, padx=6)
         ttk.Label(options, text="Motor").grid(row=0, column=2, sticky="w")
         engine_box = ttk.Combobox(options, textvariable=self.engine, values=["fake", "gst"], state="readonly", width=12)
@@ -212,7 +212,7 @@ class Phase6Gui:
             child.destroy()
         config = self._safe_load_config()
         configured = set(_mapping(config.get("experiment")).get("controllers") or [])
-        controllers = discover_comparable_controllers(config)
+        controllers = descubrir_controllers_comparables(config)
         for index, controller in enumerate(controllers):
             key = str(controller["controller_key"])
             selected = True if not configured else key in configured
@@ -228,9 +228,9 @@ class Phase6Gui:
     def _safe_load_config(self) -> Dict[str, Any]:
         path = self.config_path.get().strip() if hasattr(self, "config_path") else ""
         try:
-            return load_phase6_config(path or None)
+            return cargar_config_phase6(path or None)
         except Exception:
-            return load_phase6_config(None)
+            return cargar_config_phase6(None)
 
     def _selected_controllers(self) -> List[str]:
         return [key for key, var in self.controller_vars.items() if bool(var.get())]
@@ -316,7 +316,7 @@ class Phase6Gui:
     def _worker(self, command: List[str]) -> None:
         self.process = subprocess.Popen(
             command,
-            cwd=str(REPO_ROOT),
+            cwd=str(RAIZ_REPO),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,

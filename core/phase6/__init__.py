@@ -1,3 +1,3 @@
-"""Phase 6 formal validation helpers."""
+"""Utilidades de la validacion formal Phase 6."""
 
-PHASE6_SCHEMA_VERSION = "phase6_validacion_comparativa_v1"
+VERSION_SCHEMA_PHASE6 = "phase6_validacion_comparativa_v1"

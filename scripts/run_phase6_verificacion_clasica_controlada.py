@@ -10,14 +10,14 @@ from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+RAIZ_REPO = Path(__file__).resolve().parents[1]
+if str(RAIZ_REPO) not in sys.path:
+    sys.path.insert(0, str(RAIZ_REPO))
 
-from core.phase6.catalog import PRESET_NAMES
-from core.phase6.config import load_phase6_config
-from core.phase6.selection import load_trace_manifest, select_trace_windows
-from scripts.run_phase6_validacion_comparativa import apply_preset_overrides
+from core.phase6.catalogo import NOMBRES_PRESET
+from core.phase6.configuracion import cargar_config_phase6
+from core.phase6.seleccion import cargar_manifest_trazas, seleccionar_ventanas_trazas
+from scripts.run_phase6_validacion_comparativa import aplicar_overrides_preset
 from scripts.verificar_cliente_y_controllers_clasicos import (
     CLASSIC_CONTROLLERS,
     DEFAULT_MPD_URL,
@@ -33,7 +33,7 @@ OUTPUT_FOLDER_NAME = "verificacion_clasica_controlada"
 def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Verificacion clasica bajo trazas controladas.")
     parser.add_argument("--config", default=None)
-    parser.add_argument("--preset", choices=PRESET_NAMES, default="rapido")
+    parser.add_argument("--preset", choices=NOMBRES_PRESET, default="rapido")
     parser.add_argument("--output-root", default=None)
     parser.add_argument("--mpd-url", default=DEFAULT_MPD_URL)
     parser.add_argument("--controllers", nargs="*", default=list(CLASSIC_CONTROLLERS))
@@ -41,15 +41,15 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--timeout-seconds", type=float, default=240.0)
     args = parser.parse_args(argv)
 
-    config = apply_preset_overrides(load_phase6_config(args.config), args.preset)
+    config = aplicar_overrides_preset(cargar_config_phase6(args.config), args.preset)
     if args.output_root:
         config.setdefault("paths", {})["output_root"] = args.output_root
     output_root = Path(str(config["paths"]["output_root"])) / OUTPUT_FOLDER_NAME / time.strftime("%Y%m%d_%H%M%S")
     output_root.mkdir(parents=True, exist_ok=True)
 
     controllers = normalize_controller_list(args.controllers)
-    manifest = load_trace_manifest(config["paths"]["manifest_path"])
-    windows = [window for window in select_trace_windows(manifest, args.preset, config) if not window["synthetic"]]
+    manifest = cargar_manifest_trazas(config["paths"]["manifest_path"])
+    windows = [window for window in seleccionar_ventanas_trazas(manifest, args.preset, config) if not window["synthetic"]]
     windows = windows[: max(1, int(args.max_windows))]
     results = []
     for window in windows:
@@ -106,14 +106,14 @@ def run_controlled_smoke(
     log_dir.mkdir(parents=True, exist_ok=True)
     config_path = config_dir / "{0}.yaml".format(session_id)
     command_log_path = log_dir / "{0}.log".format(session_id)
-    client_config = build_client_config(config, controller, window, mpd_url, session_root)
+    client_config = construir_config_cliente(config, controller, window, mpd_url, session_root)
     config_path.write_text(json.dumps(client_config, indent=2, sort_keys=True), encoding="utf-8")
 
-    command = [sys.executable, str(REPO_ROOT / "main.py"), "--config", str(config_path)]
+    command = [sys.executable, str(RAIZ_REPO / "main.py"), "--config", str(config_path)]
     try:
         completed = subprocess.run(
             command,
-            cwd=str(REPO_ROOT),
+            cwd=str(RAIZ_REPO),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
@@ -154,7 +154,7 @@ def run_controlled_smoke(
     }
 
 
-def build_client_config(
+def construir_config_cliente(
     config: Mapping[str, Any],
     controller: str,
     window: Mapping[str, Any],

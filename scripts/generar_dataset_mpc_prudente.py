@@ -13,15 +13,15 @@ import sys
 from pathlib import Path
 from typing import Sequence
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+RAIZ_REPO = Path(__file__).resolve().parents[1]
+if str(RAIZ_REPO) not in sys.path:
+    sys.path.insert(0, str(RAIZ_REPO))
 
-from core.mpc_prudente.dataset import (
-    DEFAULT_MULTIMEDIA_PROFILE_IDS,
-    DEFAULT_PILOT_MEDIA_PROFILE_ID,
-    build_mpc_prudente_dataset,
-    build_mpc_prudente_multimedia_dataset,
+from core.mpc_prudente.dataset_fiel import (
+    IDS_PERFILES_MULTIMEDIA,
+    ID_PERFIL_MEDIO_PILOTO,
+    construir_dataset_mpc_prudente,
+    construir_dataset_multimedia_mpc_prudente,
 )
 from core.phase45_v1.paths import parse_rewrite_rules
 from core.phase45_v3.dataset import build_default_phase45_v3_trace_path_rewrites, load_phase3_manifest
@@ -31,7 +31,7 @@ from core.phase45_v3.throughput_quantile_dataset import (
     validate_phase45_v3_throughput_quantile_dataset_dir,
 )
 
-TFG_ROOT = REPO_ROOT.parent
+TFG_ROOT = RAIZ_REPO.parent
 DEFAULT_MANIFEST = TFG_ROOT / "manifests_trazas" / "phase3" / "final" / "phase3_trace_manifest_curated.json"
 DEFAULT_OUTPUT_ROOT = TFG_ROOT / "datasets_normalizados" / "mpc_prudente"
 
@@ -39,7 +39,7 @@ DEFAULT_OUTPUT_ROOT = TFG_ROOT / "datasets_normalizados" / "mpc_prudente"
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Dataset fiel (medio VBR real) para MPC Prudente.")
     parser.add_argument("--profile", choices=sorted(PROFILES), default="pilot")
-    parser.add_argument("--media-profile-id", default=DEFAULT_PILOT_MEDIA_PROFILE_ID)
+    parser.add_argument("--media-profile-id", default=ID_PERFIL_MEDIO_PILOTO)
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
     parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--tfg-root", type=Path, default=TFG_ROOT)
@@ -69,11 +69,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     rewrites.extend(parse_rewrite_rules(args.trace_path_rewrite))
 
     if args.multimedia:
-        result = build_mpc_prudente_multimedia_dataset(
+        result = construir_dataset_multimedia_mpc_prudente(
             load_phase3_manifest(args.manifest),
             output_dir=output_dir,
             profile=profile_by_name(args.profile),
-            media_profile_ids=DEFAULT_MULTIMEDIA_PROFILE_IDS,
+            media_profile_ids=IDS_PERFILES_MULTIMEDIA,
             source_manifest_path=args.manifest,
             overwrite=args.overwrite,
             max_training_windows=args.max_training_windows,
@@ -82,7 +82,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             horizon_segments=int(args.horizon),
         )
     else:
-        result = build_mpc_prudente_dataset(
+        result = construir_dataset_mpc_prudente(
             load_phase3_manifest(args.manifest),
             output_dir=output_dir,
             profile=profile_by_name(args.profile),

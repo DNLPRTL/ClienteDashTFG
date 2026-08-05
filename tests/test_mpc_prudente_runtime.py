@@ -12,7 +12,7 @@ try:
 except ImportError:  # pragma: no cover
     HAS_TORCH = False
 
-from core.mpc_prudente.media_profile import MEDIA_PROFILE_SEGMENT_SIZES_SCHEMA_ID, MediaProfileSegmentSizes
+from core.mpc_prudente.perfil_medio import SCHEMA_ID_TAMANOS_SEGMENTOS, PerfilTamanosSegmentos
 from core.phase45_v3.abr_closed_loop_env import AbrClosedLoopState
 
 
@@ -21,7 +21,7 @@ def _media_profile(base_dir: Path, profile_id: str):
     bitrates = (300000, 750000, 1200000, 1850000, 2850000, 4300000)
     reps = [{"bandwidth_bps": b, "segment_bytes": [int(b * 4.0 / 8.0)] * 8} for b in bitrates]
     descriptor = {
-        "schema_id": MEDIA_PROFILE_SEGMENT_SIZES_SCHEMA_ID,
+        "schema_id": SCHEMA_ID_TAMANOS_SEGMENTOS,
         "media_profile_id": profile_id,
         "segment_duration_s": 4.0,
         "segment_count": 8,
@@ -77,9 +77,9 @@ class MpcPrudenteBundleTest(unittest.TestCase):
 
     def test_export_validate_load_predict(self):
         from core.mpc_prudente.bundle import (
-            MpcPrudenteRuntimeBundle,
-            export_mpc_prudente_bundle,
-            validate_mpc_prudente_bundle_dir,
+            BundleRuntimeMpcPrudente,
+            exportar_bundle_mpc_prudente,
+            validar_dir_bundle_mpc_prudente,
         )
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -90,18 +90,18 @@ class MpcPrudenteBundleTest(unittest.TestCase):
             _media_profile(media_dir, "synthetic_test")
             bundle_dir = root / "bundle"
 
-            result = export_mpc_prudente_bundle(
+            result = exportar_bundle_mpc_prudente(
                 train_dir, bundle_dir, media_profile_id="synthetic_test", risk_alpha=0.75, overwrite=True
             )
             self.assertEqual("PASS", result["status"])
-            self.assertEqual("PASS", validate_mpc_prudente_bundle_dir(bundle_dir)["status"])
+            self.assertEqual("PASS", validar_dir_bundle_mpc_prudente(bundle_dir)["status"])
 
-            bundle = MpcPrudenteRuntimeBundle(bundle_dir)
+            bundle = BundleRuntimeMpcPrudente(bundle_dir)
             self.assertEqual(bundle.risk_alpha, 0.75)
             self.assertEqual(bundle.media_profile_id, "synthetic_test")
 
-            ladder = MediaProfileSegmentSizes.load_by_id("synthetic_test", base_dir=str(media_dir)).to_faithful_ladder()
-            prediction = bundle.predict(_state(), ladder)
+            ladder = PerfilTamanosSegmentos.cargar_por_id("synthetic_test", base_dir=str(media_dir)).a_escalera_fiel()
+            prediction = bundle.predecir(_state(), ladder)
             self.assertEqual(len(prediction), 3)  # horizon
             for row in prediction:
                 self.assertEqual(len(row), 4)  # quantiles
@@ -109,10 +109,10 @@ class MpcPrudenteBundleTest(unittest.TestCase):
 
     def test_bundle_validation_detects_tampering(self):
         from core.mpc_prudente.bundle import (
-            MpcPrudenteBundleError,
-            export_mpc_prudente_bundle,
-            validate_mpc_prudente_bundle_dir,
-            BUNDLE_PLANNER_CONFIG_FILENAME,
+            ErrorBundleMpcPrudente,
+            exportar_bundle_mpc_prudente,
+            validar_dir_bundle_mpc_prudente,
+            FICHERO_CONFIG_PLANNER_BUNDLE,
         )
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -120,11 +120,11 @@ class MpcPrudenteBundleTest(unittest.TestCase):
             train_dir = root / "train"
             self._write_training_output(train_dir)
             bundle_dir = root / "bundle"
-            export_mpc_prudente_bundle(train_dir, bundle_dir, media_profile_id="x", overwrite=True)
+            exportar_bundle_mpc_prudente(train_dir, bundle_dir, media_profile_id="x", overwrite=True)
             # alterar un archivo -> hash mismatch
-            (bundle_dir / BUNDLE_PLANNER_CONFIG_FILENAME).write_text("{}", encoding="utf-8")
-            with self.assertRaises(MpcPrudenteBundleError):
-                validate_mpc_prudente_bundle_dir(bundle_dir)
+            (bundle_dir / FICHERO_CONFIG_PLANNER_BUNDLE).write_text("{}", encoding="utf-8")
+            with self.assertRaises(ErrorBundleMpcPrudente):
+                validar_dir_bundle_mpc_prudente(bundle_dir)
 
 
 class MpcPrudenteControllerRegistryTest(unittest.TestCase):

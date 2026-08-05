@@ -15,23 +15,23 @@ except ImportError:  # pragma: no cover - torch optional on some envs
 @unittest.skipUnless(HAS_TORCH, "torch required for predictor training")
 class MpcPrudenteTrainingTest(unittest.TestCase):
     def test_trains_and_audits_calibration(self):
-        from core.mpc_prudente.dataset import build_mpc_prudente_dataset
-        from core.mpc_prudente.training import (
-            MPC_PRUDENTE_CALIBRATION_REPORT_FILENAME,
-            train_mpc_prudente_predictor,
+        from core.mpc_prudente.dataset_fiel import construir_dataset_mpc_prudente
+        from core.mpc_prudente.entrenamiento import (
+            FICHERO_REPORTE_CALIBRACION,
+            entrenar_predictor_mpc_prudente,
         )
         from core.neural_abr.artifacts import read_json
         from core.phase45_v1.paths import PathRewriteRule
         from core.phase45_v3.neural_mpc_training import ThroughputQuantileTrainingProfile
         from core.phase45_v3.profiles import Phase45V3DatasetProfile
-        from tests.test_mpc_prudente_dataset import _write_synthetic_media_profile
+        from tests.test_mpc_prudente_dataset import _escribir_perfil_medio_sintetico
         from tests.test_phase45_v1_dataset import build_manifest_with_trace_files
 
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             manifest = build_manifest_with_trace_files(root)
             media_dir = root / "media_profiles" / "segment_sizes"
-            _write_synthetic_media_profile(media_dir, "synthetic_test")
+            _escribir_perfil_medio_sintetico(media_dir, "synthetic_test")
             dataset_dir = root / "datasets" / "mpc_prudente_unit"
             dataset_profile = Phase45V3DatasetProfile(
                 name="unit",
@@ -46,12 +46,12 @@ class MpcPrudenteTrainingTest(unittest.TestCase):
                 seed="unit-mpc-prudente-train",
                 rollouts_per_window=2,
             )
-            build_mpc_prudente_dataset(
+            construir_dataset_mpc_prudente(
                 manifest,
                 output_dir=dataset_dir,
                 profile=dataset_profile,
                 media_profile_id="synthetic_test",
-                media_profile_base_dir=str(media_dir),
+                dir_base_perfiles=str(media_dir),
                 overwrite=True,
                 horizon_segments=3,
                 trace_path_rewrites=(PathRewriteRule("/home/daniel/TFG", str(root)),),
@@ -68,7 +68,7 @@ class MpcPrudenteTrainingTest(unittest.TestCase):
                 seed=7,
             )
             output_dir = root / "modelos" / "mpc_prudente_unit"
-            report = train_mpc_prudente_predictor(
+            report = entrenar_predictor_mpc_prudente(
                 dataset_dir, output_dir, training_profile, overwrite=True, device="cpu"
             )
 
@@ -77,8 +77,8 @@ class MpcPrudenteTrainingTest(unittest.TestCase):
             self.assertEqual(4, len(calibration["empirical_coverage_by_quantile"]))
             self.assertIn("coverage_calibrated", calibration["gates"]["gates"])
             self.assertIn("quantiles_monotone", calibration["gates"]["gates"])
-            self.assertTrue((output_dir / MPC_PRUDENTE_CALIBRATION_REPORT_FILENAME).is_file())
-            saved = read_json(output_dir / MPC_PRUDENTE_CALIBRATION_REPORT_FILENAME)
+            self.assertTrue((output_dir / FICHERO_REPORTE_CALIBRACION).is_file())
+            saved = read_json(output_dir / FICHERO_REPORTE_CALIBRACION)
             self.assertEqual(4, len(saved["empirical_coverage_by_quantile"]))
 
 

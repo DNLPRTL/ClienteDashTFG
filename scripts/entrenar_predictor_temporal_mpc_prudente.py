@@ -10,39 +10,39 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Sequence
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+RAIZ_REPO = Path(__file__).resolve().parents[1]
+if str(RAIZ_REPO) not in sys.path:
+    sys.path.insert(0, str(RAIZ_REPO))
 
-from core.mpc_prudente.dataset import DEFAULT_PILOT_MEDIA_PROFILE_ID
-from core.mpc_prudente.temporal_training import (
-    DEFAULT_DOWNSIDE_WIDEN,
-    TEMPORAL_TRAINING_PROFILES,
-    temporal_training_profile_by_name,
-    train_mpc_prudente_temporal_ensemble,
+from core.mpc_prudente.dataset_fiel import ID_PERFIL_MEDIO_PILOTO
+from core.mpc_prudente.entrenamiento_temporal import (
+    DOWNSIDE_WIDEN_POR_DEFECTO,
+    PERFILES_ENTRENAMIENTO_TEMPORAL,
+    perfil_entrenamiento_temporal_por_nombre,
+    entrenar_ensemble_temporal_mpc_prudente,
 )
 
-TFG_ROOT = REPO_ROOT.parent
+TFG_ROOT = RAIZ_REPO.parent
 DEFAULT_DATASET_ROOT = TFG_ROOT / "datasets_normalizados" / "mpc_prudente"
 DEFAULT_MODEL_ROOT = TFG_ROOT / "modelos" / "mpc_prudente" / "temporal_predictor"
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Entrena el predictor temporal (GRU) ensemble de MPC Prudente.")
-    parser.add_argument("--profile", choices=sorted(TEMPORAL_TRAINING_PROFILES), default="full")
+    parser.add_argument("--profile", choices=sorted(PERFILES_ENTRENAMIENTO_TEMPORAL), default="full")
     parser.add_argument("--dataset-profile", default="full_v1")
-    parser.add_argument("--media-profile-id", default=DEFAULT_PILOT_MEDIA_PROFILE_ID)
+    parser.add_argument("--media-profile-id", default=ID_PERFIL_MEDIO_PILOTO)
     parser.add_argument("--dataset-dir", type=Path, default=None)
     parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--device", default=None)
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--ensemble-size", type=int, default=None)
     parser.add_argument("--epochs", type=int, default=None)
-    parser.add_argument("--downside-widen", type=float, default=DEFAULT_DOWNSIDE_WIDEN)
+    parser.add_argument("--downside-widen", type=float, default=DOWNSIDE_WIDEN_POR_DEFECTO)
     parser.add_argument("--coverage-tolerance", type=float, default=0.08)
     args = parser.parse_args(argv)
 
-    profile = temporal_training_profile_by_name(args.profile)
+    profile = perfil_entrenamiento_temporal_por_nombre(args.profile)
     overrides = {}
     if args.ensemble_size is not None:
         overrides["ensemble_size"] = int(args.ensemble_size)
@@ -56,7 +56,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     output_dir = args.output_dir or DEFAULT_MODEL_ROOT / "{0}_{1}".format(args.profile, args.media_profile_id)
 
-    report = train_mpc_prudente_temporal_ensemble(
+    report = entrenar_ensemble_temporal_mpc_prudente(
         dataset_dir, output_dir, profile,
         overwrite=args.overwrite, device=args.device,
         coverage_tolerance=float(args.coverage_tolerance), downside_widen=float(args.downside_widen),

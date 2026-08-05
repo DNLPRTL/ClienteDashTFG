@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from core.phase6.analysis import aggregate_summaries, paired_statistics
+from core.phase6.analisis import agregar_resumenes, estadistica_pareada
 
 _NUMERIC_DEFAULTS = {
     "qoe_log_mean": 0.0,
@@ -64,7 +64,7 @@ def _summaries():
 
 class Phase6TailMetricsTest(unittest.TestCase):
     def test_aggregate_has_tail_and_stability_fields(self):
-        aggregates = {row["controller_alias"]: row for row in aggregate_summaries(_summaries())}
+        aggregates = {row["controller_alias"]: row for row in agregar_resumenes(_summaries())}
         robust = aggregates["base_robust_mpc"]
         self.assertAlmostEqual(robust["qoe_linear_min"], 1.0)
         self.assertAlmostEqual(robust["qoe_linear_median"], 3.0)
@@ -84,7 +84,7 @@ class Phase6TailMetricsTest(unittest.TestCase):
         self.assertAlmostEqual(robust["worst_5pct_rebuffer_mean_s"], 20.0)
 
     def test_paired_has_worst_case_delta(self):
-        stats = paired_statistics(_summaries())
+        stats = estadistica_pareada(_summaries())
         deltas = {row["controller_alias"]: row for row in stats["deltas_vs_baseline"]}
         prudent = deltas["propio_mpc_prudente"]
         self.assertIn("delta_qoe_linear_p05", prudent)

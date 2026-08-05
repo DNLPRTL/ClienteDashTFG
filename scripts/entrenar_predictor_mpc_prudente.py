@@ -14,22 +14,22 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Sequence
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+RAIZ_REPO = Path(__file__).resolve().parents[1]
+if str(RAIZ_REPO) not in sys.path:
+    sys.path.insert(0, str(RAIZ_REPO))
 
-from core.mpc_prudente.dataset import DEFAULT_PILOT_MEDIA_PROFILE_ID
-from core.mpc_prudente.training import (
-    DEFAULT_COVERAGE_TOLERANCE,
-    DEFAULT_MAX_CROSSING_RATE,
-    train_mpc_prudente_predictor,
+from core.mpc_prudente.dataset_fiel import ID_PERFIL_MEDIO_PILOTO
+from core.mpc_prudente.entrenamiento import (
+    TOLERANCIA_COBERTURA_POR_DEFECTO,
+    MAX_TASA_CROSSING_POR_DEFECTO,
+    entrenar_predictor_mpc_prudente,
 )
 from core.phase45_v3.neural_mpc_training import (
     THROUGHPUT_QUANTILE_TRAINING_PROFILES,
     throughput_quantile_training_profile_by_name,
 )
 
-TFG_ROOT = REPO_ROOT.parent
+TFG_ROOT = RAIZ_REPO.parent
 DEFAULT_DATASET_ROOT = TFG_ROOT / "datasets_normalizados" / "mpc_prudente"
 DEFAULT_MODEL_ROOT = TFG_ROOT / "modelos" / "mpc_prudente" / "throughput_quantile_predictor"
 
@@ -38,7 +38,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Entrena el predictor de cuantiles de MPC Prudente.")
     parser.add_argument("--profile", choices=sorted(THROUGHPUT_QUANTILE_TRAINING_PROFILES), default="pilot")
     parser.add_argument("--dataset-profile", default=None)
-    parser.add_argument("--media-profile-id", default=DEFAULT_PILOT_MEDIA_PROFILE_ID)
+    parser.add_argument("--media-profile-id", default=ID_PERFIL_MEDIO_PILOTO)
     parser.add_argument("--dataset-dir", type=Path, default=None)
     parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--run-name", default=None)
@@ -50,8 +50,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--hidden-sizes", default=None)
     parser.add_argument("--horizon", type=int, default=None)
     parser.add_argument("--seed", type=int, default=None)
-    parser.add_argument("--coverage-tolerance", type=float, default=DEFAULT_COVERAGE_TOLERANCE)
-    parser.add_argument("--max-crossing-rate", type=float, default=DEFAULT_MAX_CROSSING_RATE)
+    parser.add_argument("--coverage-tolerance", type=float, default=TOLERANCIA_COBERTURA_POR_DEFECTO)
+    parser.add_argument("--max-crossing-rate", type=float, default=MAX_TASA_CROSSING_POR_DEFECTO)
     args = parser.parse_args(argv)
 
     training_profile = _profile_with_overrides(args)
@@ -64,7 +64,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     output_dir = args.output_dir or DEFAULT_MODEL_ROOT / run_name
 
-    report = train_mpc_prudente_predictor(
+    report = entrenar_predictor_mpc_prudente(
         dataset_dir,
         output_dir,
         training_profile,

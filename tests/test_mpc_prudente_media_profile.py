@@ -2,12 +2,12 @@ import json
 import os
 import unittest
 
-from core.mpc_prudente.media_profile import (
-    MEDIA_PROFILE_SEGMENT_SIZES_SCHEMA_ID,
-    SEGMENT_SIZES_DIR,
-    MediaProfileError,
-    MediaProfileSegmentSizes,
-    available_media_profiles,
+from core.mpc_prudente.perfil_medio import (
+    SCHEMA_ID_TAMANOS_SEGMENTOS,
+    DIR_TAMANOS_SEGMENTOS,
+    ErrorPerfilMedio,
+    PerfilTamanosSegmentos,
+    perfiles_medio_disponibles,
 )
 from core.neural_abr.action_mask import build_action_mask
 from core.neural_abr.content_ladder import ContentLadderError
@@ -19,7 +19,7 @@ from core.phase45_v3.abr_closed_loop_env import (
 
 def _synthetic_descriptor() -> dict:
     return {
-        "schema_id": MEDIA_PROFILE_SEGMENT_SIZES_SCHEMA_ID,
+        "schema_id": SCHEMA_ID_TAMANOS_SEGMENTOS,
         "media_profile_id": "synthetic_test",
         "mpd_url": "http://example/test.mpd",
         "segment_duration_s": 4.0,
@@ -35,7 +35,7 @@ def _synthetic_descriptor() -> dict:
 
 class MediaProfileLoaderTests(unittest.TestCase):
     def test_loads_and_sorts_representations_ascending(self):
-        profile = MediaProfileSegmentSizes.from_mapping(_synthetic_descriptor())
+        profile = PerfilTamanosSegmentos.desde_dict(_synthetic_descriptor())
         self.assertEqual(profile.representation_count, 2)
         self.assertEqual(profile.segment_count, 3)
         self.assertEqual(profile.bitrates_bps, (300000, 1200000))
@@ -46,18 +46,18 @@ class MediaProfileLoaderTests(unittest.TestCase):
     def test_rejects_wrong_schema(self):
         data = _synthetic_descriptor()
         data["schema_id"] = "otro"
-        with self.assertRaises(MediaProfileError):
-            MediaProfileSegmentSizes.from_mapping(data)
+        with self.assertRaises(ErrorPerfilMedio):
+            PerfilTamanosSegmentos.desde_dict(data)
 
     def test_rejects_inconsistent_segment_counts(self):
         data = _synthetic_descriptor()
         data["representations"][0]["segment_bytes"] = [1, 2]  # 2 vs 3
-        with self.assertRaises(MediaProfileError):
-            MediaProfileSegmentSizes.from_mapping(data)
+        with self.assertRaises(ErrorPerfilMedio):
+            PerfilTamanosSegmentos.desde_dict(data)
 
     def test_faithful_ladder_returns_real_sizes(self):
-        profile = MediaProfileSegmentSizes.from_mapping(_synthetic_descriptor())
-        ladder = profile.to_faithful_ladder(max_buffer_s=60.0)
+        profile = PerfilTamanosSegmentos.desde_dict(_synthetic_descriptor())
+        ladder = profile.a_escalera_fiel(max_buffer_s=60.0)
         self.assertEqual(ladder.representation_count, 2)
         self.assertEqual(ladder.segment_count, 3)
         self.assertEqual(ladder.max_buffer_s, 60.0)
@@ -73,29 +73,29 @@ class MediaProfileLoaderTests(unittest.TestCase):
             ladder.segment_size_bytes(0, 3)  # fuera de rango
 
     def test_faithful_ladder_window_length_limits_segments(self):
-        profile = MediaProfileSegmentSizes.from_mapping(_synthetic_descriptor())
-        ladder = profile.to_faithful_ladder(segment_count=2)
+        profile = PerfilTamanosSegmentos.desde_dict(_synthetic_descriptor())
+        ladder = profile.a_escalera_fiel(segment_count=2)
         self.assertEqual(ladder.segment_count, 2)
         self.assertEqual(ladder.segment_size_bytes(0, 1), 120000)
         with self.assertRaises(ContentLadderError):
             ladder.segment_size_bytes(0, 2)
 
     def test_faithful_ladder_cycles_when_window_longer_than_media(self):
-        profile = MediaProfileSegmentSizes.from_mapping(_synthetic_descriptor())  # 3 segmentos reales
-        ladder = profile.to_faithful_ladder(segment_count=5)
+        profile = PerfilTamanosSegmentos.desde_dict(_synthetic_descriptor())  # 3 segmentos reales
+        ladder = profile.a_escalera_fiel(segment_count=5)
         # seg 3 y 4 ciclan al inicio del medio real
         self.assertEqual(ladder.segment_size_bytes(0, 3), ladder.segment_size_bytes(0, 0))
         self.assertEqual(ladder.segment_size_bytes(0, 4), ladder.segment_size_bytes(0, 1))
 
     def test_faithful_ladder_start_offset(self):
-        profile = MediaProfileSegmentSizes.from_mapping(_synthetic_descriptor())
-        ladder = profile.to_faithful_ladder(start_offset=1)
+        profile = PerfilTamanosSegmentos.desde_dict(_synthetic_descriptor())
+        ladder = profile.a_escalera_fiel(start_offset=1)
         self.assertEqual(ladder.segment_size_bytes(0, 0), 120000)  # real[0][1]
 
     def test_faithful_ladder_drives_closed_loop_engine_with_real_sizes(self):
         # Demuestra que el motor congelado usa los tamaños reales sin tocarlo.
-        profile = MediaProfileSegmentSizes.from_mapping(_synthetic_descriptor())
-        ladder = profile.to_faithful_ladder()
+        profile = PerfilTamanosSegmentos.desde_dict(_synthetic_descriptor())
+        ladder = profile.a_escalera_fiel()
         state = initial_closed_loop_state(ladder, initial_buffer_s=10.0)
         mask = build_action_mask(ladder, state.segment_index)
         self.assertEqual(len(mask), 2)
@@ -110,12 +110,12 @@ class RealDescriptorTests(unittest.TestCase):
     PROFILE_ID = "paseo_almunecar_10min_30fps_4s"
 
     def setUp(self):
-        self.path = os.path.join(SEGMENT_SIZES_DIR, self.PROFILE_ID + ".json")
+        self.path = os.path.join(DIR_TAMANOS_SEGMENTOS, self.PROFILE_ID + ".json")
         if not os.path.isfile(self.path):
             self.skipTest("descriptor real no presente (aún no extraído)")
 
     def test_real_paseo_profile_structure(self):
-        profile = MediaProfileSegmentSizes.load(self.path)
+        profile = PerfilTamanosSegmentos.cargar(self.path)
         self.assertEqual(profile.representation_count, 6)
         self.assertEqual(profile.segment_count, 151)
         self.assertEqual(profile.segment_duration_s, 4.0)
@@ -126,8 +126,8 @@ class RealDescriptorTests(unittest.TestCase):
         with open(self.path, "r", encoding="utf-8") as handle:
             raw = json.load(handle)
         raw_sorted = sorted(raw["representations"], key=lambda r: r["bandwidth_bps"])
-        profile = MediaProfileSegmentSizes.load(self.path)
-        ladder = profile.to_faithful_ladder()
+        profile = PerfilTamanosSegmentos.cargar(self.path)
+        ladder = profile.a_escalera_fiel()
         for rep_index in (0, 5):
             for seg_index in (0, 1, 150):
                 self.assertEqual(
@@ -136,18 +136,18 @@ class RealDescriptorTests(unittest.TestCase):
                 )
 
     def test_available_media_profiles_includes_real(self):
-        ids = available_media_profiles()
+        ids = perfiles_medio_disponibles()
         self.assertIn(self.PROFILE_ID, ids)
 
     def test_phase6_media_id_resolves_to_descriptor(self):
-        from core.mpc_prudente.media_profile import resolve_media_descriptor_id
+        from core.mpc_prudente.perfil_medio import resolver_id_descriptor_medio
 
-        self.assertEqual(resolve_media_descriptor_id("paseo_10min_30fps_4s"), "paseo_almunecar_10min_30fps_4s")
-        self.assertEqual(resolve_media_descriptor_id("blender_10min_60fps_4s"), "blender_sunflower_10min_60fps_4s")
+        self.assertEqual(resolver_id_descriptor_medio("paseo_10min_30fps_4s"), "paseo_almunecar_10min_30fps_4s")
+        self.assertEqual(resolver_id_descriptor_medio("blender_10min_60fps_4s"), "blender_sunflower_10min_60fps_4s")
         # un id que ya es de descriptor se devuelve igual
-        self.assertEqual(resolve_media_descriptor_id(self.PROFILE_ID), self.PROFILE_ID)
+        self.assertEqual(resolver_id_descriptor_medio(self.PROFILE_ID), self.PROFILE_ID)
         # cargar por el id corto de Phase 6 funciona
-        profile = MediaProfileSegmentSizes.load_by_id("paseo_10min_30fps_4s")
+        profile = PerfilTamanosSegmentos.cargar_por_id("paseo_10min_30fps_4s")
         self.assertEqual(profile.representation_count, 6)
 
 

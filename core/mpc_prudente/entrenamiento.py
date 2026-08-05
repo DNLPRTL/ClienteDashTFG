@@ -27,38 +27,38 @@ from core.phase45_v3.neural_mpc_training import (
 from core.phase45_v3.throughput_quantile_dataset import THROUGHPUT_QUANTILE_VALIDATION_DATA_FILENAME
 from core.phase45_v3.throughput_quantile_model import ThroughputQuantilePredictor
 
-MPC_PRUDENTE_TRAINING_REPORT_SCHEMA_ID = "mpc_prudente_throughput_quantile_training_report_v1"
-MPC_PRUDENTE_CALIBRATION_REPORT_FILENAME = "reporte_calibracion_mpc_prudente.json"
-MPC_PRUDENTE_TRAINING_REPORT_FILENAME = "reporte_entrenamiento_mpc_prudente.json"
+SCHEMA_ID_REPORTE_ENTRENAMIENTO = "mpc_prudente_throughput_quantile_training_report_v1"
+FICHERO_REPORTE_CALIBRACION = "reporte_calibracion_mpc_prudente.json"
+FICHERO_REPORTE_ENTRENAMIENTO = "reporte_entrenamiento_mpc_prudente.json"
 
 # Tolerancia de calibración: |cobertura_empírica - cuantil_nominal| <= tol.
-DEFAULT_COVERAGE_TOLERANCE = 0.08
+TOLERANCIA_COBERTURA_POR_DEFECTO = 0.08
 # Fracción máxima de filas con cuantiles cruzados (no monótonos).
-DEFAULT_MAX_CROSSING_RATE = 0.02
+MAX_TASA_CROSSING_POR_DEFECTO = 0.02
 
 
-class MpcPrudenteTrainingError(ValueError):
-    """Raised when the prudent predictor training/calibration cannot proceed."""
+class ErrorEntrenamientoMpcPrudente(ValueError):
+    """Error en el entrenamiento o la calibracion del predictor."""
 
 
-def train_mpc_prudente_predictor(
+def entrenar_predictor_mpc_prudente(
     dataset_dir: object,
     output_dir: object,
     profile: ThroughputQuantileTrainingProfile,
     *,
     overwrite: bool = False,
     device: str | None = None,
-    coverage_tolerance: float = DEFAULT_COVERAGE_TOLERANCE,
-    max_crossing_rate: float = DEFAULT_MAX_CROSSING_RATE,
+    coverage_tolerance: float = TOLERANCIA_COBERTURA_POR_DEFECTO,
+    max_crossing_rate: float = MAX_TASA_CROSSING_POR_DEFECTO,
 ) -> Mapping[str, object]:
     base_report = train_phase45_v3_throughput_quantile_predictor(
         dataset_dir, output_dir, profile, overwrite=overwrite, device=device
     )
 
-    data_dir = ensure_existing_dir(dataset_dir, purpose="mpc_prudente dataset")
-    output_path = ensure_existing_dir(output_dir, purpose="mpc_prudente training output")
+    data_dir = ensure_existing_dir(dataset_dir, purpose="dataset mpc_prudente")
+    output_path = ensure_existing_dir(output_dir, purpose="salida de entrenamiento mpc_prudente")
 
-    model, normalization = _load_trained_model(output_path)
+    model, normalization = _cargar_modelo_entrenado(output_path)
     validation_examples = load_throughput_quantile_examples(
         data_dir / THROUGHPUT_QUANTILE_VALIDATION_DATA_FILENAME, VALIDATION_ROLE, None, profile
     )
@@ -66,8 +66,8 @@ def train_mpc_prudente_predictor(
     with torch.no_grad():
         prediction = model(context_t)  # [N, horizon, quantiles]
 
-    calibration = _calibration_metrics(prediction, target_t, profile.quantiles)
-    gates = _calibration_gates(
+    calibration = _metricas_calibracion(prediction, target_t, profile.quantiles)
+    gates = _gates_calibracion(
         base_report=base_report,
         calibration=calibration,
         coverage_tolerance=float(coverage_tolerance),
@@ -84,11 +84,11 @@ def train_mpc_prudente_predictor(
         **calibration,
         "gates": gates,
     }
-    write_json(output_path / MPC_PRUDENTE_CALIBRATION_REPORT_FILENAME, calibration_report)
+    write_json(output_path / FICHERO_REPORTE_CALIBRACION, calibration_report)
 
     status = "PASS" if base_report["status"] == "PASS" and not gates["failed"] else "REVIEW"
     report = {
-        "schema_id": MPC_PRUDENTE_TRAINING_REPORT_SCHEMA_ID,
+        "schema_id": SCHEMA_ID_REPORTE_ENTRENAMIENTO,
         "status": status,
         "base_training_status": base_report["status"],
         "device": base_report["device"],
@@ -97,7 +97,7 @@ def train_mpc_prudente_predictor(
         "profile": profile.to_json(),
         "train_sample_count": base_report["train_sample_count"],
         "validation_sample_count": base_report["validation_sample_count"],
-        "best_epoch": _best_epoch(base_report),
+        "best_epoch": _mejor_epoca(base_report),
         "final_validation": base_report["final_validation"],
         "calibration": calibration_report,
         "model_path": base_report["model_path"],
@@ -109,11 +109,11 @@ def train_mpc_prudente_predictor(
         "qoe_claims_authorized": False,
         "controller_integrated": False,
     }
-    write_json(output_path / MPC_PRUDENTE_TRAINING_REPORT_FILENAME, report)
+    write_json(output_path / FICHERO_REPORTE_ENTRENAMIENTO, report)
     return report
 
 
-def _load_trained_model(output_path) -> tuple[ThroughputQuantilePredictor, ThroughputQuantileNormalization]:
+def _cargar_modelo_entrenado(output_path) -> tuple[ThroughputQuantilePredictor, ThroughputQuantileNormalization]:
     checkpoint_path = output_path / THROUGHPUT_QUANTILE_MODEL_FILENAME
     # Checkpoint propio recién escrito: weights_only=False para leer config+normalización.
     checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
@@ -135,7 +135,7 @@ def _load_trained_model(output_path) -> tuple[ThroughputQuantilePredictor, Throu
     return model, normalization
 
 
-def _calibration_metrics(
+def _metricas_calibracion(
     prediction: torch.Tensor, target: torch.Tensor, quantiles: Sequence[float]
 ) -> Mapping[str, object]:
     # prediction [N, H, Q]; target [N, H].
@@ -159,7 +159,7 @@ def _calibration_metrics(
     }
 
 
-def _calibration_gates(
+def _gates_calibracion(
     *,
     base_report: Mapping[str, object],
     calibration: Mapping[str, object],
@@ -167,7 +167,7 @@ def _calibration_gates(
     max_crossing_rate: float,
 ) -> Mapping[str, object]:
     final_pinball = float(base_report["final_validation"]["pinball_loss"])  # type: ignore[index]
-    learned = _learned_signal(base_report)
+    learned = _senal_aprendizaje(base_report)
     gates = {
         "coverage_calibrated": {
             "passed": float(calibration["max_coverage_abs_error"]) <= coverage_tolerance,
@@ -194,24 +194,24 @@ def _calibration_gates(
     return {"failed": failed, "gates": gates}
 
 
-def _epoch_validation_pinball(epoch_record: Mapping[str, object]) -> float:
+def _pinball_validacion_epoca(epoch_record: Mapping[str, object]) -> float:
     return float(epoch_record["validation"]["pinball_loss"])  # type: ignore[index]
 
 
-def _best_epoch(base_report: Mapping[str, object]) -> int:
+def _mejor_epoca(base_report: Mapping[str, object]) -> int:
     epochs = list(base_report.get("epochs", []))  # type: ignore[arg-type]
     if not epochs:
         return 0
-    best = min(epochs, key=_epoch_validation_pinball)
+    best = min(epochs, key=_pinball_validacion_epoca)
     return int(best["epoch"])
 
 
-def _learned_signal(base_report: Mapping[str, object]) -> Mapping[str, object]:
+def _senal_aprendizaje(base_report: Mapping[str, object]) -> Mapping[str, object]:
     epochs = list(base_report.get("epochs", []))  # type: ignore[arg-type]
     final_pinball = float(base_report["final_validation"]["pinball_loss"])  # type: ignore[index]
     if not epochs:
         return {"passed": False, "observed": {"final_pinball": final_pinball}}
-    epoch1_pinball = _epoch_validation_pinball(epochs[0])
+    epoch1_pinball = _pinball_validacion_epoca(epochs[0])
     passed = math.isfinite(final_pinball) and final_pinball < epoch1_pinball
     return {
         "passed": bool(passed),

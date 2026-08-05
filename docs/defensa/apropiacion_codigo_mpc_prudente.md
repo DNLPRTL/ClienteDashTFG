@@ -20,25 +20,25 @@ Las dos causas raíz que ataca (aprendidas de los fracasos previos):
    planner optimista justo cuando la red es inestable. Con cuantiles + CVaR, la
    cola inferior de la predicción penaliza las acciones agresivas cuando hay riesgo.
 
-## 1. `core/mpc_prudente/media_profile.py` — el medio de verdad
+## 1. `core/mpc_prudente/perfil_medio.py` — el medio de verdad
 
 - **Qué hace:** carga `media_profiles/segment_sizes/<id>.json` (tabla extraída del
   servidor: bytes reales de cada segmento por representación) y construye
-  `MediaFaithfulLadder`, que implementa la MISMA interfaz que el `ContentLadder`
+  `EscaleraFiel`, que implementa la MISMA interfaz que el `ContentLadder`
   clásico pero `segment_size_bytes(rep, seg)` devuelve el peso real.
 - **Por qué así:** duck-typing. El entorno closed-loop y el planner llaman
   `ladder.segment_size_bytes(...)`; al pasarles este ladder, toda la física de
   descarga pasa a ser real SIN tocar el código congelado de `phase45_v3`.
 - **Detalles defendibles:** valida schema y tamaños positivos; ordena las
   representaciones por bandwidth; si la ventana pide más segmentos que el vídeo,
-  cicla (`% real_segment_count`); `resolve_media_descriptor_id` mapea los ids
+  cicla (`% real_segment_count`); `resolver_id_descriptor_medio` mapea los ids
   cortos de Phase 6 (`paseo_10min_30fps_4s`) a los descriptores del MPD real.
 
-## 2. `core/mpc_prudente/dataset.py` — dataset fiel
+## 2. `core/mpc_prudente/dataset_fiel.py` — dataset fiel
 
 - **Qué hace:** reutiliza el generador de datasets de cuantiles de `phase45_v3`
   (ya probado) inyectándole un `ladder_factory` fiel. Dos variantes: un solo medio
-  y **multi-vídeo** (`build_mpc_prudente_multimedia_dataset`): cada ventana de red
+  y **multi-vídeo** (`construir_dataset_multimedia_mpc_prudente`): cada ventana de red
   rota entre los 8 perfiles de 4 s, elegido determinísticamente por hash del
   `window_id`.
 - **Por qué:** los rollouts que generan los ejemplos avanzan el buffer con la
@@ -49,7 +49,7 @@ Las dos causas raíz que ataca (aprendidas de los fracasos previos):
   del vídeo; el medio solo cambia el estado (buffer, tiempos de descarga). Por eso
   rotar vídeos enriquece sin contaminar.
 
-## 3. `core/mpc_prudente/training.py` — entrenamiento v1 (MLP) + calibración
+## 3. `core/mpc_prudente/entrenamiento.py` — entrenamiento v1 (MLP) + calibración
 
 - **Qué hace:** llama al entrenador base de `phase45_v3` (pinball loss sobre
   log-ratio de throughput) y añade la auditoría que faltaba: **calibración**
@@ -62,14 +62,14 @@ Las dos causas raíz que ataca (aprendidas de los fracasos previos):
 - **Pinball loss (saber explicar):** para cuantil q, error e = y − ŷ:
   pérdida = max(q·e, (q−1)·e). Minimizarla hace que ŷ converja al cuantil q real.
 
-## 4. `core/mpc_prudente/temporal_model.py` — predictor v2 (GRU + ensemble)
+## 4. `core/mpc_prudente/modelo_temporal.py` — predictor v2 (GRU + ensemble)
 
-- **Qué hace:** `TemporalQuantilePredictor`: una GRU lee la secuencia
+- **Qué hace:** `PredictorTemporalCuantiles`: una GRU lee la secuencia
   (throughput, tiempo de descarga) por paso; su estado final se concatena con los
   escalares (buffer, último bitrate, rebuffer reciente...) y un MLP saca
   `[horizon × cuantiles]`. Los cuantiles son **monótonos por construcción**:
   salida = base + acumulado de incrementos softplus (no pueden cruzarse).
-- **`ensemble_quantiles`:** combina M miembros: media por cuantil + **ensancha la
+- **`combinar_cuantiles_ensemble`:** combina M miembros: media por cuantil + **ensancha la
   cola inferior** restando `downside_widen × std_entre_miembros(mediana)`,
   escalado más fuerte cuanto más bajo el cuantil; re-ordena por seguridad.
 - **Por qué:** (a) el MLP aplana la secuencia y pierde la tendencia; la GRU la
@@ -79,7 +79,7 @@ Las dos causas raíz que ataca (aprendidas de los fracasos previos):
   real_012) los miembros discrepan → la cola inferior baja → el planner se vuelve
   prudente exactamente donde el v1 se pasaba de optimista.
 
-## 5. `core/mpc_prudente/temporal_training.py` — entrenamiento v2
+## 5. `core/mpc_prudente/entrenamiento_temporal.py` — entrenamiento v2
 
 - **Qué hace:** entrena M=5 GRUs (semillas base_seed + 101·m), cada una con early
   selection por mejor pinball de validación; normalización ajustada SOLO con
@@ -89,33 +89,33 @@ Las dos causas raíz que ataca (aprendidas de los fracasos previos):
   normalización solo-train → sin fuga de validación; calibrar el combinado (no
   cada miembro) → es lo que verá el planner.
 
-## 6. `core/mpc_prudente/planner.py` — el planner CVaR
+## 6. `core/mpc_prudente/planificador.py` — el planner CVaR
 
-- **Qué hace:** `plan_prudent_action` enumera TODAS las secuencias de acciones de
+- **Qué hace:** `planificar_accion_prudente` enumera TODAS las secuencias de acciones de
   horizonte 5 (6^5 = 7776). Para cada secuencia simula la trayectoria del buffer
   bajo CADA cuantil predicho: tiempo de descarga = bytes reales del segmento /
   throughput del cuantil; recompensa por paso = **la misma fórmula QoE congelada**
   (bitrate_mbps − 4.3·rebuffer − |Δbitrate|). Suma por escenario → K puntuaciones
   → agrega con `CVaR_alpha` = media de los `ceil(α·K)` peores. Elige la secuencia
   con mejor CVaR y ejecuta su primera acción (receding horizon).
-- **`risk_alpha`:** configurable. Existe `buffer_risk_alpha` (menos buffer → α
+- **`risk_alpha`:** configurable. Existe `alpha_riesgo_por_buffer` (menos buffer → α
   menor → más pesimista), usada en los diagnósticos offline; en el experimento
   final Phase 6 se fijó **α = 0.75** → media de los 3 peores escenarios de 4
   (q10, q25, q50), descartando el optimista q75.
 - **Defensas de robustez:** re-monotoniza los cuantiles de entrada (sort), valida
-  finito/positivo, y `PrudentMpcController` cae a RobustMPC ante CUALQUIER
+  finito/positivo, y `ControllerMpcPrudente` cae a RobustMPC ante CUALQUIER
   excepción, marcando `fallback_used` (auditable; en tfg_final: 0 fallbacks).
 - **Por qué CVaR y no "elegir un cuantil":** la regla clásica buffer→cuantil es
   un caso particular y descarta información; CVaR usa toda la distribución y
   tiene interpretación estándar en control con riesgo.
 
-## 7. `core/mpc_prudente/bundle.py` y `temporal_bundle.py` — empaquetado runtime
+## 7. `core/mpc_prudente/bundle.py` y `bundle_temporal.py` — empaquetado runtime
 
 - **Qué hacen:** exportan/validan/cargan los bundles autocontenidos (modelo,
   config, normalización, config del planner, manifiesto con sha256 de todo).
-  `load_prudent_runtime_bundle` despacha por `schema_id` → carga MLP o ensemble.
+  `cargar_bundle_runtime_prudente` despacha por `schema_id` → carga MLP o ensemble.
   Los dos `predict()` convierten la salida (log-ratio sobre la media armónica del
-  throughput reciente) a bps con `log_ratio_rows_to_bps`: recorte del ratio a
+  throughput reciente) a bps con `filas_log_ratio_a_bps`: recorte del ratio a
   [0.15, 4.0] para que una predicción disparatada no arrastre al planner.
 - **Por qué:** el bundle es el contrato entre WSL (entrena) y Ubuntu cliente
   (ejecuta): hashes verificados al cargar (`torch.load(weights_only=True)`, sin
@@ -123,11 +123,11 @@ Las dos causas raíz que ataca (aprendidas de los fracasos previos):
 
 ## 8. `core/controller/mpc_prudente_runtime.py` — integración en el cliente
 
-- **Qué hace:** `MpcPrudenteRuntimeController` (v1) y su subclase temporal (v2).
+- **Qué hace:** `ControllerRuntimeMpcPrudente` (v1) y su subclase temporal (v2).
   En cada decisión: construye las features runtime (mismo builder guarded que
-  Neural-MPC) → carga perezosa del bundle y de la `MediaFaithfulLadder` del
+  Neural-MPC) → carga perezosa del bundle y de la `EscaleraFiel` del
   `media_profile_id` de la sesión (comprueba que la escalera del perfil coincide
-  con la del MPD del cliente) → predice cuantiles → `plan_prudent_action` →
+  con la del MPD del cliente) → predice cuantiles → `planificar_accion_prudente` →
   chequeo de seguridad (acción válida en la máscara) → tasa. Ante cualquier fallo
   (features, bundle, medio, timeout de inferencia, seguridad) cae a robust_mpc
   con el motivo grabado en la telemetría.
@@ -135,7 +135,7 @@ Las dos causas raíz que ataca (aprendidas de los fracasos previos):
   rotos; y toda decisión neural queda auditada fila a fila (en tfg_final:
   1740/1740 auditadas por controller, 0 fallback).
 
-## 9. `core/mpc_prudente/evaluation.py` — diagnóstico closed-loop offline
+## 9. `core/mpc_prudente/diagnostico.py` — diagnóstico closed-loop offline
 
 - **Qué hace:** compara el prudente vs robust_mpc/bola/neural_mpc viejo en el
   entorno closed-loop con ladder fiel sobre ventanas de VALIDACIÓN, con suelo de
@@ -145,20 +145,20 @@ Las dos causas raíz que ataca (aprendidas de los fracasos previos):
 
 ## 10. Phase 6 (`core/phase6/` + runner) — la evaluación formal
 
-- `catalog.py`: presets; `tfg_final` = 12 ventanas reales + 3 sintéticas × 4
+- `catalogo.py`: presets; `tfg_final` = 12 ventanas reales + 3 sintéticas × 4
   vídeos × 6 controllers = 360 sesiones.
-- `selection.py`: selección DETERMINISTA de ventanas del split eval (semilla 606,
+- `seleccion.py`: selección DETERMINISTA de ventanas del split eval (semilla 606,
   balanceo por dataset/semántica/condición/dificultad, suelo de throughput para
   formal); reproducible en cualquier PC.
 - Runner: genera el protocolo y una config de cliente POR SESIÓN (por eso el
   paquete permite auditar exactamente qué corrió cada sesión), ejecuta `main.py`
   360 veces con timeout, reanudable; **inyecta el `media_profile_id` del vídeo de
   la sesión a los controllers mpc_prudente** (multi-vídeo sin sesgo).
-- `analysis.py`: recalcula la QoE desde la telemetría cruda por segmento
+- `analisis.py`: recalcula la QoE desde la telemetría cruda por segmento
   (verificado a mano: coincide), agrega solo sesiones reales, estadística pareada
   por escenario (bootstrap CI + sign test exacto), gates, ranking solo si gates
   OK, 16 plots.
-- `verification.py`: checks automáticos del paquete (sesiones completas,
+- `verificacion.py`: checks automáticos del paquete (sesiones completas,
   artefactos, plots no vacíos, sin legacy).
 
 ## 11. Flujo end-to-end (para contarlo de memoria)

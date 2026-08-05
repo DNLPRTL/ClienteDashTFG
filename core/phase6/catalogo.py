@@ -6,7 +6,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional
 from core.controller.registry import CONTROLLER_REGISTRY
 
 
-DEFAULT_CONTROLLER_EXCLUDE = frozenset(
+CONTROLLERS_EXCLUIDOS_POR_DEFECTO = frozenset(
     {
         "min_rate",
         "fixed_rate",
@@ -17,7 +17,7 @@ DEFAULT_CONTROLLER_EXCLUDE = frozenset(
     }
 )
 
-DEFAULT_CONTROLLER_ALIASES = {
+ALIAS_CONTROLLERS_POR_DEFECTO = {
     "rate_based": "base_rate_based",
     "bba": "base_bba",
     "bola": "base_bola",
@@ -32,7 +32,7 @@ DEFAULT_CONTROLLER_ALIASES = {
     "mpc_prudente_v2": "propio_mpc_prudente_v2",
 }
 
-DEFAULT_CONTROLLER_HUMAN_NAMES = {
+NOMBRES_CONTROLLERS_POR_DEFECTO = {
     "rate_based": "Rate Based",
     "bba": "BBA",
     "bola": "BOLA",
@@ -47,7 +47,7 @@ DEFAULT_CONTROLLER_HUMAN_NAMES = {
     "mpc_prudente_v2": "Propio MPC Prudente v2 (temporal)",
 }
 
-MEDIA_PROFILES = {
+PERFILES_MEDIO = {
     "preflight_paseo_1min_30fps_4s": {
         "media_profile_id": "preflight_paseo_1min_30fps_4s",
         "display_name": "Preflight Paseo 1 min 30 fps",
@@ -105,7 +105,7 @@ MEDIA_PROFILES = {
     },
 }
 
-PRESET_SPECS = {
+ESPECIFICACIONES_PRESET = {
     "diagnostico": {
         "preset": "diagnostico",
         "real_windows": 2,
@@ -190,21 +190,21 @@ PRESET_SPECS = {
     },
 }
 
-PRESET_NAMES = tuple(PRESET_SPECS.keys())
+NOMBRES_PRESET = tuple(ESPECIFICACIONES_PRESET.keys())
 
 
-def preset_spec(preset: str) -> Dict[str, Any]:
+def especificacion_preset(preset: str) -> Dict[str, Any]:
     try:
-        return deepcopy(PRESET_SPECS[str(preset)])
+        return deepcopy(ESPECIFICACIONES_PRESET[str(preset)])
     except KeyError as exc:
-        raise ValueError("Unknown Phase 6 preset: {0}".format(preset)) from exc
+        raise ValueError("Preset de Phase 6 desconocido: {0}".format(preset)) from exc
 
 
-def media_profiles_for_preset(preset: str, config: Optional[Mapping[str, Any]] = None) -> List[Dict[str, Any]]:
+def perfiles_medio_para_preset(preset: str, config: Optional[Mapping[str, Any]] = None) -> List[Dict[str, Any]]:
     config = config or {}
     media_overrides = _mapping(config.get("media_profiles"))
-    spec = preset_spec(preset)
-    configured_ids = _list_or_none((_mapping(config.get("experiment"))).get("media_profile_ids"))
+    spec = especificacion_preset(preset)
+    configured_ids = _lista_o_none((_mapping(config.get("experiment"))).get("media_profile_ids"))
     profile_ids = configured_ids or list(spec["media_profile_ids"])
     profiles = []
     for profile_id in profile_ids:
@@ -212,22 +212,22 @@ def media_profiles_for_preset(preset: str, config: Optional[Mapping[str, Any]] =
             raw_profile = dict(media_overrides[profile_id])
             raw_profile.setdefault("media_profile_id", profile_id)
         else:
-            raw_profile = deepcopy(MEDIA_PROFILES[profile_id])
+            raw_profile = deepcopy(PERFILES_MEDIO[profile_id])
         profiles.append(raw_profile)
     return profiles
 
 
-def discover_comparable_controllers(config: Optional[Mapping[str, Any]] = None) -> List[Dict[str, Any]]:
+def descubrir_controllers_comparables(config: Optional[Mapping[str, Any]] = None) -> List[Dict[str, Any]]:
     config = config or {}
     experiment = _mapping(config.get("experiment"))
-    aliases = dict(DEFAULT_CONTROLLER_ALIASES)
+    aliases = dict(ALIAS_CONTROLLERS_POR_DEFECTO)
     aliases.update(_mapping(config.get("controller_aliases")))
-    human_names = dict(DEFAULT_CONTROLLER_HUMAN_NAMES)
+    human_names = dict(NOMBRES_CONTROLLERS_POR_DEFECTO)
     human_names.update(_mapping(config.get("controller_display_names")))
 
-    excluded = set(DEFAULT_CONTROLLER_EXCLUDE)
-    excluded.update(str(item) for item in _list_or_empty(config.get("excluded_controllers")))
-    configured = _list_or_none(experiment.get("controllers"))
+    excluded = set(CONTROLLERS_EXCLUIDOS_POR_DEFECTO)
+    excluded.update(str(item) for item in _lista_o_vacia(config.get("excluded_controllers")))
+    configured = _lista_o_none(experiment.get("controllers"))
     keys: Iterable[str] = configured or CONTROLLER_REGISTRY.keys()
 
     selected = []
@@ -236,23 +236,23 @@ def discover_comparable_controllers(config: Optional[Mapping[str, Any]] = None) 
         if controller_key in excluded:
             continue
         if controller_key not in CONTROLLER_REGISTRY:
-            raise ValueError("Unknown controller in Phase 6 config: {0}".format(controller_key))
+            raise ValueError("Controller desconocido en la config de Phase 6: {0}".format(controller_key))
         selected.append(
             {
                 "controller_key": controller_key,
-                "alias": str(aliases.get(controller_key, _safe_alias(controller_key))),
+                "alias": str(aliases.get(controller_key, _alias_seguro(controller_key))),
                 "display_name": str(human_names.get(controller_key, controller_key.replace("_", " ").title())),
             }
         )
     return selected
 
 
-def controller_params(config: Mapping[str, Any], controller_key: str) -> Dict[str, Any]:
+def parametros_controller(config: Mapping[str, Any], controller_key: str) -> Dict[str, Any]:
     raw_params = _mapping(config.get("controller_params"))
     return dict(_mapping(raw_params.get(controller_key)))
 
 
-def _safe_alias(key: str) -> str:
+def _alias_seguro(key: str) -> str:
     allowed = []
     for char in str(key).lower():
         allowed.append(char if char.isalnum() else "_")
@@ -264,7 +264,7 @@ def _mapping(value: Any) -> Mapping[str, Any]:
     return value if isinstance(value, Mapping) else {}
 
 
-def _list_or_empty(value: Any) -> List[Any]:
+def _lista_o_vacia(value: Any) -> List[Any]:
     if value is None:
         return []
     if isinstance(value, (str, bytes)):
@@ -275,6 +275,6 @@ def _list_or_empty(value: Any) -> List[Any]:
         return [value]
 
 
-def _list_or_none(value: Any) -> Optional[List[Any]]:
-    items = _list_or_empty(value)
+def _lista_o_none(value: Any) -> Optional[List[Any]]:
+    items = _lista_o_vacia(value)
     return items or None

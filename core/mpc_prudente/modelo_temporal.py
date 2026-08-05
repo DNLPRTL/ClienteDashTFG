@@ -17,11 +17,11 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-MPC_PRUDENTE_TEMPORAL_MODEL_KEY = "mpc_prudente_temporal_quantile_predictor"
-TEMPORAL_MODEL_CONFIG_SCHEMA_ID = "mpc_prudente_temporal_model_config_v1"
+CLAVE_MODELO_TEMPORAL = "mpc_prudente_temporal_quantile_predictor"
+SCHEMA_ID_CONFIG_TEMPORAL = "mpc_prudente_temporal_model_config_v1"
 
 # Campos escalares del contexto (orden fijo y determinista).
-SCALAR_FEATURE_NAMES = (
+NOMBRES_FEATURES_ESCALARES = (
     "buffer_s",
     "last_representation_index",
     "last_bitrate_bps",
@@ -31,14 +31,14 @@ SCALAR_FEATURE_NAMES = (
     "has_chunks_remaining",
 )
 # Features de secuencia por paso.
-SEQ_FEATURE_NAMES = ("throughput_history_bps", "download_time_history_s")
+NOMBRES_FEATURES_SECUENCIA = ("throughput_history_bps", "download_time_history_s")
 
 
-class TemporalQuantileModelError(ValueError):
+class ErrorModeloTemporal(ValueError):
     pass
 
 
-class TemporalQuantilePredictor(nn.Module):
+class PredictorTemporalCuantiles(nn.Module):
     def __init__(
         self,
         *,
@@ -61,7 +61,7 @@ class TemporalQuantilePredictor(nn.Module):
         self.mlp_hidden = tuple(int(h) for h in mlp_hidden)
         self.dropout = float(dropout)
         if self.horizon_segments <= 0 or not self.quantiles:
-            raise TemporalQuantileModelError("invalid horizon/quantiles")
+            raise ErrorModeloTemporal("horizonte o cuantiles invalidos")
 
         self.gru = nn.GRU(self.seq_features, self.gru_hidden, num_layers=self.gru_layers, batch_first=True)
         width = self.gru_hidden + self.scalar_dim
@@ -77,9 +77,9 @@ class TemporalQuantilePredictor(nn.Module):
 
     def forward(self, seq: torch.Tensor, scalar: torch.Tensor) -> torch.Tensor:
         if seq.ndim != 3 or seq.shape[2] != self.seq_features:
-            raise TemporalQuantileModelError("seq tensor has invalid shape")
+            raise ErrorModeloTemporal("el tensor de secuencia tiene forma invalida")
         if scalar.ndim != 2 or scalar.shape[1] != self.scalar_dim:
-            raise TemporalQuantileModelError("scalar tensor has invalid shape")
+            raise ErrorModeloTemporal("el tensor escalar tiene forma invalida")
         _, hidden = self.gru(seq)  # hidden: [layers, B, gru_hidden]
         feat = torch.cat([hidden[-1], scalar], dim=1)
         raw = self.head(feat).reshape(seq.shape[0], self.horizon_segments, len(self.quantiles))
@@ -90,13 +90,13 @@ class TemporalQuantilePredictor(nn.Module):
 
     def config(self) -> Mapping[str, object]:
         return {
-            "schema_id": TEMPORAL_MODEL_CONFIG_SCHEMA_ID,
-            "model_key": MPC_PRUDENTE_TEMPORAL_MODEL_KEY,
+            "schema_id": SCHEMA_ID_CONFIG_TEMPORAL,
+            "model_key": CLAVE_MODELO_TEMPORAL,
             "model_type": "gru_monotonic_quantile_predictor",
             "seq_features": self.seq_features,
-            "seq_feature_names": list(SEQ_FEATURE_NAMES),
+            "seq_feature_names": list(NOMBRES_FEATURES_SECUENCIA),
             "scalar_dim": self.scalar_dim,
-            "scalar_feature_names": list(SCALAR_FEATURE_NAMES),
+            "scalar_feature_names": list(NOMBRES_FEATURES_ESCALARES),
             "horizon_segments": self.horizon_segments,
             "quantiles": list(self.quantiles),
             "gru_hidden": self.gru_hidden,
@@ -106,7 +106,7 @@ class TemporalQuantilePredictor(nn.Module):
         }
 
 
-def ensemble_quantiles(
+def combinar_cuantiles_ensemble(
     predictions: torch.Tensor, quantiles: Sequence[float], *, downside_widen: float = 1.0
 ) -> torch.Tensor:
     """Combina M predicciones [M, B, H, Q] en [B, H, Q].
@@ -115,7 +115,7 @@ def ensemble_quantiles(
     discrepancia epistémica (std entre miembros de la mediana). Re-monotoniza.
     """
     if predictions.ndim != 4:
-        raise TemporalQuantileModelError("predictions must be [M, B, H, Q]")
+        raise ErrorModeloTemporal("las predicciones deben tener forma [M, B, H, Q]")
     quants = tuple(float(q) for q in quantiles)
     median_index = min(range(len(quants)), key=lambda i: abs(quants[i] - 0.5))
     mean_q = predictions.mean(dim=0)  # [B, H, Q]

@@ -7,7 +7,7 @@ from .bba import BbaController
 from .fixed_quality import FixedQualityController
 from .max_quality_controller import MaxQualityController
 from .mpc import MpcController
-from .mpc_prudente_runtime import MpcPrudenteRuntimeController, MpcPrudenteTemporalRuntimeController
+from .mpc_prudente_runtime import ControllerRuntimeMpcPrudente, ControllerRuntimeMpcPrudenteTemporal
 from .neural_abr_lite import NeuralAbrLiteRobustMpcController, NeuralAbrLiteTeacherHibridoController
 from .phase45_v3_neural_mpc import Phase45V3NeuralMpcController, Phase45V3NeuralMpcV2Controller
 from .rate_based import RateBasedController
@@ -93,12 +93,12 @@ CONTROLLER_REGISTRY = {
     "mpc_prudente_v1": ControllerSpec(
         key="mpc_prudente_v1",
         label="MPC Neuronal Prudente (media-faithful, risk-aware)",
-        factory=MpcPrudenteRuntimeController,
+        factory=ControllerRuntimeMpcPrudente,
     ),
     "mpc_prudente_v2": ControllerSpec(
         key="mpc_prudente_v2",
         label="MPC Neuronal Prudente v2 (temporal ensemble)",
-        factory=MpcPrudenteTemporalRuntimeController,
+        factory=ControllerRuntimeMpcPrudenteTemporal,
     ),
     "fixed_quality": ControllerSpec(
         key="fixed_quality",

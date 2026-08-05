@@ -2,16 +2,16 @@ from __future__ import annotations
 
 import unittest
 
-from core.mpc_prudente.media_profile import (
-    MEDIA_PROFILE_SEGMENT_SIZES_SCHEMA_ID,
-    MediaProfileSegmentSizes,
+from core.mpc_prudente.perfil_medio import (
+    SCHEMA_ID_TAMANOS_SEGMENTOS,
+    PerfilTamanosSegmentos,
 )
-from core.mpc_prudente.planner import (
-    PrudentDecision,
-    PrudentMpcController,
+from core.mpc_prudente.planificador import (
+    DecisionPrudente,
+    ControllerMpcPrudente,
     _cvar,
-    buffer_risk_alpha,
-    plan_prudent_action,
+    alpha_riesgo_por_buffer,
+    planificar_accion_prudente,
 )
 from core.phase45_v3.abr_closed_loop_env import AbrClosedLoopState
 
@@ -24,16 +24,16 @@ def _ladder(segment_count: int = 6):
     for bandwidth in bitrates:
         nominal = int(bandwidth * 4.0 / 8.0)
         representations.append({"bandwidth_bps": bandwidth, "segment_bytes": [nominal] * 8})
-    profile = MediaProfileSegmentSizes.from_mapping(
+    profile = PerfilTamanosSegmentos.desde_dict(
         {
-            "schema_id": MEDIA_PROFILE_SEGMENT_SIZES_SCHEMA_ID,
+            "schema_id": SCHEMA_ID_TAMANOS_SEGMENTOS,
             "media_profile_id": "synthetic_test",
             "segment_duration_s": 4.0,
             "segment_count": 8,
             "representations": representations,
         }
     )
-    return profile.to_faithful_ladder(segment_count=segment_count, max_buffer_s=60.0)
+    return profile.a_escalera_fiel(segment_count=segment_count, max_buffer_s=60.0)
 
 
 def _state(buffer_s: float):
@@ -64,7 +64,7 @@ class CvarTest(unittest.TestCase):
         self.assertEqual(_cvar(scores, 1.0), 2.5)   # media (neutral)
 
     def test_buffer_risk_alpha_monotone(self):
-        self.assertLess(buffer_risk_alpha(2.0), buffer_risk_alpha(30.0))
+        self.assertLess(alpha_riesgo_por_buffer(2.0), alpha_riesgo_por_buffer(30.0))
 
 
 class PrudentPlannerTest(unittest.TestCase):
@@ -73,12 +73,12 @@ class PrudentPlannerTest(unittest.TestCase):
         state = _state(buffer_s=8.0)
         prediction = _wide_prediction(horizon=2)
 
-        prudent = plan_prudent_action(
-            state=state, ladder=ladder, predicted_bps_by_horizon_quantile=prediction,
+        prudent = planificar_accion_prudente(
+            state=state, ladder=ladder, prediccion_bps_por_horizonte_y_cuantil=prediction,
             quantiles=QUANTILES, horizon_segments=2, risk_alpha=0.25,
         )
-        neutral = plan_prudent_action(
-            state=state, ladder=ladder, predicted_bps_by_horizon_quantile=prediction,
+        neutral = planificar_accion_prudente(
+            state=state, ladder=ladder, prediccion_bps_por_horizonte_y_cuantil=prediction,
             quantiles=QUANTILES, horizon_segments=2, risk_alpha=1.0,
         )
         # El prudente (mira el peor caso) elige un bitrate más bajo que el neutral.
@@ -90,8 +90,8 @@ class PrudentPlannerTest(unittest.TestCase):
         state = _state(buffer_s=20.0)
         prediction = _wide_prediction(horizon=2)
         mask = (True, True, False, False, False, False)  # solo acciones 0 y 1
-        decision = plan_prudent_action(
-            state=state, ladder=ladder, predicted_bps_by_horizon_quantile=prediction,
+        decision = planificar_accion_prudente(
+            state=state, ladder=ladder, prediccion_bps_por_horizonte_y_cuantil=prediction,
             quantiles=QUANTILES, horizon_segments=2, action_mask=mask, risk_alpha=0.5,
         )
         self.assertIn(decision.action, (0, 1))
@@ -102,11 +102,11 @@ class PrudentControllerTest(unittest.TestCase):
         ladder = _ladder()
         state = _state(buffer_s=10.0)
         prediction = _wide_prediction(horizon=2)
-        controller = PrudentMpcController(
+        controller = ControllerMpcPrudente(
             predictor=lambda s, l: prediction, quantiles=QUANTILES, horizon_segments=2
         )
         decision = controller.select_action(state, ladder)
-        self.assertIsInstance(decision, PrudentDecision)
+        self.assertIsInstance(decision, DecisionPrudente)
         self.assertFalse(decision.fallback_used)
         self.assertIn(decision.action, range(ladder.representation_count))
 
@@ -117,7 +117,7 @@ class PrudentControllerTest(unittest.TestCase):
         def broken_predictor(s, l):
             raise RuntimeError("predictor down")
 
-        controller = PrudentMpcController(
+        controller = ControllerMpcPrudente(
             predictor=broken_predictor, quantiles=QUANTILES, horizon_segments=2
         )
         decision = controller.select_action(state, ladder)

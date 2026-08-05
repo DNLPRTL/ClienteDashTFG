@@ -9,8 +9,8 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence
 from core.output_artifacts import LEGACY_OUTPUT_FILENAMES
 
 
-REQUIRED_DIRS = ("00_protocolo", "01_ejecucion", "02_resultados", "03_graficas", "04_informe")
-REQUIRED_RESULT_FILES = (
+DIRECTORIOS_REQUERIDOS = ("00_protocolo", "01_ejecucion", "02_resultados", "03_graficas", "04_informe")
+FICHEROS_RESULTADOS_REQUERIDOS = (
     "raw_chunks.csv",
     "session_summary.csv",
     "aggregates_by_controller.json",
@@ -20,7 +20,7 @@ REQUIRED_RESULT_FILES = (
 )
 
 
-def verify_phase6_package(
+def verificar_paquete_phase6(
     package_root: str | Path,
     *,
     require_plots: bool = True,
@@ -29,12 +29,12 @@ def verify_phase6_package(
     root = Path(package_root)
     results_dir = root / "02_resultados"
     plots_dir = root / "03_graficas"
-    protocol = _read_json(root / "00_protocolo" / "protocolo_validacion.json")
-    session_plan = _read_json(root / "00_protocolo" / "session_plan.json")
-    results = _read_json(results_dir / "resultados_para_validar.json")
-    summaries = _read_csv_dicts(results_dir / "session_summary.csv")
-    raw_chunks = _read_csv_dicts(results_dir / "raw_chunks.csv")
-    plot_manifest = _read_json(plots_dir / "plot_manifest.json")
+    protocol = _leer_json(root / "00_protocolo" / "protocolo_validacion.json")
+    session_plan = _leer_json(root / "00_protocolo" / "session_plan.json")
+    results = _leer_json(results_dir / "resultados_para_validar.json")
+    summaries = _leer_csv_dicts(results_dir / "session_summary.csv")
+    raw_chunks = _leer_csv_dicts(results_dir / "raw_chunks.csv")
+    plot_manifest = _leer_json(plots_dir / "plot_manifest.json")
 
     sessions = session_plan.get("sessions", []) if isinstance(session_plan, Mapping) else []
     sessions = [item for item in sessions if isinstance(item, Mapping)]
@@ -44,25 +44,25 @@ def verify_phase6_package(
     evaluable_rows = [row for row in summaries if _int(row.get("evaluable"))]
     failed_session_ids = {str(row.get("session_id")) for row in failed_rows}
     raw_failed_rows = [row for row in raw_chunks if str(row.get("session_id")) in failed_session_ids]
-    legacy_paths = _legacy_artifact_paths(root)
-    plot_checks = _verify_plots(plot_manifest, plots_dir=plots_dir, require_plots=require_plots)
+    legacy_paths = _rutas_artefactos_legacy(root)
+    plot_checks = _verificar_graficas(plot_manifest, plots_dir=plots_dir, require_plots=require_plots)
 
     checks = [
-        _check("package_root_exists", root.is_dir(), str(root)),
-        _check("required_dirs_present", all((root / name).is_dir() for name in REQUIRED_DIRS), ", ".join(REQUIRED_DIRS)),
-        _check(
+        _item_check("package_root_exists", root.is_dir(), str(root)),
+        _item_check("required_dirs_present", all((root / name).is_dir() for name in DIRECTORIOS_REQUERIDOS), ", ".join(DIRECTORIOS_REQUERIDOS)),
+        _item_check(
             "required_result_files_present",
-            all((results_dir / name).is_file() for name in REQUIRED_RESULT_FILES),
-            ", ".join(REQUIRED_RESULT_FILES),
+            all((results_dir / name).is_file() for name in FICHEROS_RESULTADOS_REQUERIDOS),
+            ", ".join(FICHEROS_RESULTADOS_REQUERIDOS),
         ),
-        _check("session_plan_present", bool(sessions), "{0} sessions".format(len(sessions))),
-        _check("session_summary_matches_plan", len(summaries) == len(sessions), "{0}/{1}".format(len(summaries), len(sessions))),
-        _check("no_failed_sessions", not failed_rows and not missing_rows, _failure_summary(failed_rows + missing_rows)),
-        _check("completed_sessions_evaluable", len(completed_rows) == len(evaluable_rows), "{0}/{1}".format(len(evaluable_rows), len(completed_rows))),
-        _check("failed_sessions_not_in_raw_chunks", not raw_failed_rows, "{0} raw rows".format(len(raw_failed_rows))),
-        _check("legacy_artifacts_absent", not legacy_paths, ", ".join(legacy_paths[:10])),
-        _check("synthetic_reported_separately", _synthetic_reported(results, summaries), ""),
-        _check("audit_text_package_available", (results_dir / "resultados_para_validar.md").is_file() and (results_dir / "resultados_para_validar.json").is_file(), ""),
+        _item_check("session_plan_present", bool(sessions), "{0} sessions".format(len(sessions))),
+        _item_check("session_summary_matches_plan", len(summaries) == len(sessions), "{0}/{1}".format(len(summaries), len(sessions))),
+        _item_check("no_failed_sessions", not failed_rows and not missing_rows, _resumen_fallos(failed_rows + missing_rows)),
+        _item_check("completed_sessions_evaluable", len(completed_rows) == len(evaluable_rows), "{0}/{1}".format(len(evaluable_rows), len(completed_rows))),
+        _item_check("failed_sessions_not_in_raw_chunks", not raw_failed_rows, "{0} raw rows".format(len(raw_failed_rows))),
+        _item_check("legacy_artifacts_absent", not legacy_paths, ", ".join(legacy_paths[:10])),
+        _item_check("synthetic_reported_separately", _sinteticas_reportadas(results, summaries), ""),
+        _item_check("audit_text_package_available", (results_dir / "resultados_para_validar.md").is_file() and (results_dir / "resultados_para_validar.json").is_file(), ""),
     ]
     checks.extend(plot_checks)
 
@@ -79,7 +79,7 @@ def verify_phase6_package(
             "evaluable": len(evaluable_rows),
             "raw_chunks": len(raw_chunks),
         },
-        "failure_reasons": _failure_reasons(failed_rows + missing_rows),
+        "failure_reasons": _motivos_fallo(failed_rows + missing_rows),
         "checks": checks,
         "all_checks_passed": all(bool(item["passed"]) for item in checks),
         "artifacts": {
@@ -90,12 +90,12 @@ def verify_phase6_package(
     if write_artifacts:
         results_dir.mkdir(parents=True, exist_ok=True)
         (results_dir / "verificacion_paquete.json").write_text(json.dumps(package, indent=2, sort_keys=True), encoding="utf-8")
-        (results_dir / "verificacion_paquete.md").write_text(render_phase6_verification_markdown(package), encoding="utf-8")
-        _append_verification_to_validation_markdown(results_dir / "resultados_para_validar.md", package)
+        (results_dir / "verificacion_paquete.md").write_text(render_markdown_verificacion(package), encoding="utf-8")
+        _anexar_verificacion_al_markdown(results_dir / "resultados_para_validar.md", package)
     return package
 
 
-def render_phase6_verification_markdown(package: Mapping[str, Any]) -> str:
+def render_markdown_verificacion(package: Mapping[str, Any]) -> str:
     lines = [
         "# Verificacion de paquete Phase 6",
         "",
@@ -122,27 +122,27 @@ def render_phase6_verification_markdown(package: Mapping[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _verify_plots(plot_manifest: Mapping[str, Any], *, plots_dir: Path, require_plots: bool) -> List[Dict[str, Any]]:
+def _verificar_graficas(plot_manifest: Mapping[str, Any], *, plots_dir: Path, require_plots: bool) -> List[Dict[str, Any]]:
     plots = plot_manifest.get("plots", []) if isinstance(plot_manifest, Mapping) else []
     plots = [dict(item) for item in plots if isinstance(item, Mapping)]
     generated = [item for item in plots if item.get("status") == "generated"]
     bad_generated = [
         item
         for item in generated
-        if not _resolved_plot_path(item, plots_dir).is_file() or _resolved_plot_path(item, plots_dir).stat().st_size <= 0
+        if not _ruta_grafica_resuelta(item, plots_dir).is_file() or _ruta_grafica_resuelta(item, plots_dir).stat().st_size <= 0
     ]
     errored = [item for item in plots if item.get("status") == "error"]
     checks = [
-        _check("plot_manifest_present", bool(plots) or not require_plots, "{0} plots".format(len(plots))),
-        _check("plots_without_errors", not errored, _plot_problem_summary(errored)),
-        _check("generated_plots_non_empty", not bad_generated, _plot_problem_summary(bad_generated)),
+        _item_check("plot_manifest_present", bool(plots) or not require_plots, "{0} plots".format(len(plots))),
+        _item_check("plots_without_errors", not errored, _resumen_problemas_graficas(errored)),
+        _item_check("generated_plots_non_empty", not bad_generated, _resumen_problemas_graficas(bad_generated)),
     ]
     if require_plots:
-        checks.append(_check("at_least_one_plot_generated", bool(generated), "{0} generated".format(len(generated))))
+        checks.append(_item_check("at_least_one_plot_generated", bool(generated), "{0} generated".format(len(generated))))
     return checks
 
 
-def _resolved_plot_path(item: Mapping[str, Any], plots_dir: Path) -> Path:
+def _ruta_grafica_resuelta(item: Mapping[str, Any], plots_dir: Path) -> Path:
     configured = Path(str(item.get("path", "")))
     if configured.is_file():
         return configured
@@ -151,7 +151,7 @@ def _resolved_plot_path(item: Mapping[str, Any], plots_dir: Path) -> Path:
     return configured
 
 
-def _append_verification_to_validation_markdown(path: Path, package: Mapping[str, Any]) -> None:
+def _anexar_verificacion_al_markdown(path: Path, package: Mapping[str, Any]) -> None:
     if not path.is_file():
         return
     text = path.read_text(encoding="utf-8")
@@ -171,25 +171,25 @@ def _append_verification_to_validation_markdown(path: Path, package: Mapping[str
     path.write_text(text.rstrip() + "\n\n" + "\n".join(lines) + "\n", encoding="utf-8")
 
 
-def _check(name: str, passed: bool, detail: str) -> Dict[str, Any]:
+def _item_check(name: str, passed: bool, detail: str) -> Dict[str, Any]:
     return {"name": name, "passed": bool(passed), "detail": str(detail or "")}
 
 
-def _failure_reasons(rows: Sequence[Mapping[str, Any]]) -> List[Dict[str, Any]]:
+def _motivos_fallo(rows: Sequence[Mapping[str, Any]]) -> List[Dict[str, Any]]:
     counter = Counter(str(row.get("failure_reason", "") or row.get("non_evaluable_reason", "") or "sin motivo") for row in rows)
     return [{"reason": reason, "count": count} for reason, count in counter.most_common()]
 
 
-def _failure_summary(rows: Sequence[Mapping[str, Any]]) -> str:
-    reasons = _failure_reasons(rows)
+def _resumen_fallos(rows: Sequence[Mapping[str, Any]]) -> str:
+    reasons = _motivos_fallo(rows)
     return ", ".join("{0} x {1}".format(row["count"], row["reason"]) for row in reasons[:5])
 
 
-def _plot_problem_summary(rows: Sequence[Mapping[str, Any]]) -> str:
+def _resumen_problemas_graficas(rows: Sequence[Mapping[str, Any]]) -> str:
     return ", ".join(str(row.get("plot_id", "")) for row in rows[:10])
 
 
-def _synthetic_reported(results: Mapping[str, Any], summaries: Sequence[Mapping[str, Any]]) -> bool:
+def _sinteticas_reportadas(results: Mapping[str, Any], summaries: Sequence[Mapping[str, Any]]) -> bool:
     gates = _mapping(results.get("gates"))
     gate_items = _mapping(gates.get("gate_items"))
     if "synthetic_reported_separately" in gate_items:
@@ -197,7 +197,7 @@ def _synthetic_reported(results: Mapping[str, Any], summaries: Sequence[Mapping[
     return any(_bool(row.get("synthetic")) for row in summaries)
 
 
-def _legacy_artifact_paths(root: Path) -> List[str]:
+def _rutas_artefactos_legacy(root: Path) -> List[str]:
     found = []
     runs_root = root / "01_ejecucion" / "runs"
     if not runs_root.is_dir():
@@ -209,7 +209,7 @@ def _legacy_artifact_paths(root: Path) -> List[str]:
     return found
 
 
-def _read_json(path: Path) -> Dict[str, Any]:
+def _leer_json(path: Path) -> Dict[str, Any]:
     if not path.is_file():
         return {}
     try:
@@ -219,7 +219,7 @@ def _read_json(path: Path) -> Dict[str, Any]:
         return {}
 
 
-def _read_csv_dicts(path: Path) -> List[Dict[str, str]]:
+def _leer_csv_dicts(path: Path) -> List[Dict[str, str]]:
     if not path.is_file():
         return []
     with path.open("r", newline="", encoding="utf-8") as handle:
