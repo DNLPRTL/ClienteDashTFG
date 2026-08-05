@@ -1,15 +1,9 @@
-"""Entrenamiento del predictor de cuantiles para MPC Prudente.
+"""Entrenamiento del predictor MLP de cuantiles para MPC Prudente.
 
-Reutiliza el entrenador probado de Neural-MPC (`train_phase45_v3_throughput_quantile_predictor`)
-SIN tocarlo, y le añade lo que faltaba para esta era: **gates de calibración reales**.
-
-El entrenador base solo comprobaba que la loss fuese finita (que no explotara a NaN).
-Para un predictor de cuantiles eso no basta: lo que importa es que esté
-**bien calibrado** (la cobertura empírica de cada cuantil ≈ su nivel nominal) y que
-los cuantiles sean **monótonos** (sin crossing), porque el planner prudente confiará
-en la cola de la distribución para decidir con seguridad.
-
-Por eso, tras entrenar, se hace una auditoría de calibración sobre validación.
+Reutiliza el entrenador de `phase45_v3` sin tocarlo y añade una auditoría de
+calibración sobre validación: cobertura empírica de cada cuantil cerca de su nivel
+nominal y cuantiles monótonos (sin crossing), que es lo que el planner necesita
+para fiarse de la cola de la distribución.
 """
 
 from __future__ import annotations

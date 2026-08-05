@@ -1,15 +1,9 @@
-"""Perfil de medio fiel: tamaños reales (VBR) de segmento del servidor DASH.
+"""Tamaños reales (VBR) de segmento por representación.
 
-Carga los descriptores generados por `scripts/extraer_tamanos_reales_segmentos.py`
-(`media_profiles/segment_sizes/<id>.json`, schema `media_profile_segment_sizes_v1`)
-y expone un "ladder fiel" compatible con el `ContentLadder` clásico, pero cuyo
-`segment_size_bytes(representation_index, segment_index)` devuelve el peso REAL del
-segmento medido en el servidor, no `bitrate * duración / 8` (CBR).
-
-Ese ladder fiel se usa tal cual en `core.phase45_v3.abr_closed_loop_env` y en
-cualquier rollout/planner: el motor llama `ladder.segment_size_bytes(...)` por
-duck-typing, así que la física de descarga pasa a ser la real sin tocar el código
-congelado de `phase45_v3`.
+Carga los descriptores de `media_profiles/segment_sizes/<id>.json` (extraídos del
+servidor con `scripts/extraer_tamanos_reales_segmentos.py`) y construye un ladder
+compatible con `ContentLadder` cuyo `segment_size_bytes()` devuelve el peso real
+del segmento, no la aproximación CBR `bitrate * duración / 8`.
 """
 
 from __future__ import annotations
@@ -52,11 +46,7 @@ class MediaProfileError(ValueError):
 
 @dataclass(frozen=True)
 class MediaFaithfulLadder:
-    """Ladder con tamaños reales de segmento, compatible con `ContentLadder`.
-
-    Implementa la misma interfaz pública que `ContentLadder` (duck-typing) salvo
-    que `segment_size_bytes` lee de una tabla real por segmento.
-    """
+    """Ladder con la interfaz de `ContentLadder` pero tamaños reales por segmento."""
 
     media_profile_id: str
     representations: tuple[Representation, ...]

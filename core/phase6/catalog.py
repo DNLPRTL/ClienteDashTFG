@@ -28,7 +28,8 @@ DEFAULT_CONTROLLER_ALIASES = {
     "spbc_abr_v2_dpo_anchor_safe_rank": "propio_spbc_v2_anchor",
     "phase45_v3_neural_throughput_calibrated_mpc_v1": "propio_neural_mpc_v1",
     "phase45_v3_neural_throughput_calibrated_mpc_v2": "propio_neural_mpc_v2",
-    "mpc_prudente_v1": "propio_mpc_prudente",
+    "mpc_prudente_v1": "propio_mpc_prudente_v1",
+    "mpc_prudente_v2": "propio_mpc_prudente_v2",
 }
 
 DEFAULT_CONTROLLER_HUMAN_NAMES = {
@@ -42,7 +43,8 @@ DEFAULT_CONTROLLER_HUMAN_NAMES = {
     "spbc_abr_v2_dpo_anchor_safe_rank": "Propio SPBC v2 Anchor",
     "phase45_v3_neural_throughput_calibrated_mpc_v1": "Propio Neural-MPC v1",
     "phase45_v3_neural_throughput_calibrated_mpc_v2": "Propio Neural-MPC v2",
-    "mpc_prudente_v1": "Propio MPC Prudente",
+    "mpc_prudente_v1": "Propio MPC Prudente v1 (MLP)",
+    "mpc_prudente_v2": "Propio MPC Prudente v2 (temporal)",
 }
 
 MEDIA_PROFILES = {

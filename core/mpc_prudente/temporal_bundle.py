@@ -1,9 +1,7 @@
-"""Bundle de runtime para el predictor TEMPORAL (ensemble GRU) de MPC Prudente.
+"""Bundle de runtime para MPC Prudente v2: ensemble temporal (GRU) + config.
 
-Empaqueta el ensemble entrenado (`modelo_temporal_ensemble.pt` con los M state
-dicts) + config + normalización + config del planner (risk_alpha, media_profile_id,
-downside_widen). En runtime carga los M miembros y predice con `ensemble_quantiles`
-(media + ensanchado de la cola inferior según la incertidumbre epistémica).
+En runtime carga los M miembros y predice con `ensemble_quantiles` (media +
+ensanchado de la cola inferior según la discrepancia entre miembros).
 """
 
 from __future__ import annotations
@@ -25,6 +23,8 @@ from core.mpc_prudente.bundle import (
     DEFAULT_RISK_ALPHA,
     DEFAULT_SWITCH_WEIGHT,
     MpcPrudenteBundleError,
+    log_ratio_rows_to_bps,
+    verify_manifest_file_records,
 )
 from core.mpc_prudente.temporal_model import (
     MPC_PRUDENTE_TEMPORAL_MODEL_KEY,
@@ -120,18 +120,7 @@ def validate_mpc_prudente_temporal_bundle_dir(bundle_dir: object, *, verify_hash
     files = manifest.get("files")
     if not isinstance(files, Mapping):
         raise MpcPrudenteBundleError("temporal bundle manifest files must be a mapping")
-    mismatches = []
-    for filename in HASHED_TEMPORAL_BUNDLE_FILES:
-        record = files.get(filename)
-        if not isinstance(record, Mapping):
-            raise MpcPrudenteBundleError("manifest missing file record for {0}".format(filename))
-        actual = bundle_file_record(bundle_path / filename, filename)
-        if int(record.get("size_bytes", 0) or 0) != actual["size_bytes"]:
-            mismatches.append("{0}: size mismatch".format(filename))
-        if verify_hashes and str(record.get("sha256", "")) != actual["sha256"]:
-            mismatches.append("{0}: sha256 mismatch".format(filename))
-    if mismatches:
-        raise MpcPrudenteBundleError("; ".join(mismatches))
+    verify_manifest_file_records(bundle_path, files, HASHED_TEMPORAL_BUNDLE_FILES, verify_hashes=verify_hashes)
     return {"status": "PASS", "bundle_dir": str(bundle_path), "manifest": dict(manifest)}
 
 
@@ -224,15 +213,4 @@ class MpcPrudenteTemporalRuntimeBundle:
             combined = ensemble_quantiles(preds, self.quantiles, downside_widen=self.downside_widen)[0]  # [H,Q]
         self.last_latency_ms = (time.perf_counter() - started) * 1000.0
         base_tp = harmonic_mean_bps(state.throughput_history_bps)
-        rows = []
-        for h in range(self.horizon_segments):
-            row = []
-            for q in range(len(self.quantiles)):
-                log_ratio = float(combined[h, q])
-                if not math.isfinite(log_ratio):
-                    raise MpcPrudenteBundleError("non-finite temporal prediction")
-                clipped = max(min(log_ratio, math.log(4.0)), math.log(0.15))
-                predicted = float(base_tp) * math.exp(clipped)
-                row.append(min(max(predicted, 0.15 * float(base_tp)), 4.0 * float(base_tp)))
-            rows.append(tuple(sorted(row)))
-        return tuple(rows)
+        return log_ratio_rows_to_bps(combined, base_tp, self.horizon_segments, len(self.quantiles))

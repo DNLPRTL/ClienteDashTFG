@@ -1,17 +1,12 @@
 """Predictor temporal de cuantiles de throughput (GRU) para MPC Prudente.
 
-Mejora respecto al MLP:
-1. Lee la SECUENCIA de red (GRU) en vez de un vector aplanado → capta tendencias.
-2. Cuantiles MONÓTONOS por construcción (base + incrementos softplus acumulados):
-   imposible que q10 > q25 > ... Sin penalización de crossing, sin postproceso.
-3. Pensado para ENSEMBLE profundo: varios modelos con semillas distintas. Su
-   discrepancia mide la incertidumbre epistémica; el combinador ensancha la cola
-   inferior cuando los modelos no se ponen de acuerdo (ventanas raras/OOD), que es
-   justo donde el MLP se pasaba de optimista (caso real_012).
+Frente al MLP: lee la secuencia de red con una GRU (capta tendencias), produce
+cuantiles monótonos por construcción (base + incrementos softplus acumulados) y
+está pensado para ensemble: la discrepancia entre miembros mide la incertidumbre
+epistémica y ensancha la cola inferior en ventanas raras.
 
-Entrada del modelo: `seq` [B, L, F_seq] (throughput, download_time por paso) y
-`scalar` [B, F_scalar] (buffer, último bitrate, rebuffer reciente, etc.).
-Salida: `[B, horizon, n_quantiles]` en el mismo espacio log-ratio que el target.
+Entrada: `seq` [B, L, 2] (throughput, download_time por paso) y `scalar`
+[B, F]. Salida: `[B, horizon, n_quantiles]` en espacio log-ratio.
 """
 
 from __future__ import annotations

@@ -1,18 +1,10 @@
-"""Diagnóstico closed-loop offline de MPC Prudente sobre el entorno FIEL.
+"""Diagnóstico closed-loop offline de MPC Prudente (no es benchmark ni ranking).
 
-Compara el controller prudente vs `robust_mpc`, `bola` y el Neural-MPC viejo en el
-entorno closed-loop con el **ladder fiel** (tamaños reales VBR), sobre ventanas de
-VALIDACIÓN (no eval; eval queda para Phase 6).
-
-Lección aprendida: el corpus de validación incluye trazas **impracticables**
-(media de pocas kbps) y con **outages** (throughput→0). En ellas ningún controller
-puede evitar rebuffer, así que prudente y robust empatan y los números absolutos se
-disparan, ahogando la señal. Por eso, como Phase 6, se aplica un **suelo de
-servibilidad** (media de throughput) para el titular, y se **estratifica por bucket
-de capacidad y variabilidad**, que es donde se ve si la prudencia ayuda (régimen
-`2_5_mbps` variable, tipo `real_006`).
-
-No es benchmark ni ranking.
+Compara el controller prudente contra robust_mpc, bola y el Neural-MPC previo en
+el entorno closed-loop con ladder fiel, sobre ventanas de VALIDACIÓN (eval queda
+reservado para Phase 6). Aplica un suelo de servibilidad porque el corpus incluye
+trazas impracticables (throughput medio ínfimo u outages) donde ningún controller
+puede evitar rebuffer, y estratifica por bucket de capacidad/variabilidad.
 """
 
 from __future__ import annotations

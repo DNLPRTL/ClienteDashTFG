@@ -1,9 +1,7 @@
-"""Entrenamiento del predictor temporal (GRU) en ENSEMBLE profundo.
+"""Entrenamiento del predictor temporal (GRU) en ensemble.
 
-Entrena M modelos con semillas distintas sobre el dataset fiel y los guarda juntos.
-La incertidumbre epistémica (discrepancia entre miembros) se usa después para
-ensanchar la cola inferior y ser prudente en ventanas raras. Auditoría de
-calibración (cobertura empírica) con la predicción de ensemble.
+Entrena M modelos con semillas distintas sobre el dataset fiel, los guarda juntos
+y audita la calibración (cobertura empírica) de la predicción combinada.
 """
 
 from __future__ import annotations
@@ -114,7 +112,9 @@ def _load_examples(path: Path, role: str, horizon: int) -> tuple[list, list, lis
         if row.get("data_role") != role:
             raise TemporalTrainingError("data_role mismatch")
         s, sc, t = _sample_arrays(row, horizon)
-        seqs.append(s); scalars.append(sc); targets.append(t)
+        seqs.append(s)
+        scalars.append(sc)
+        targets.append(t)
     if not seqs:
         raise TemporalTrainingError("no examples in {0}".format(path))
     return seqs, scalars, targets
@@ -296,7 +296,11 @@ def _gates(calibration, member_reports, coverage_tolerance) -> dict:
             "passed": float(calibration["max_coverage_abs_error"]) <= float(coverage_tolerance),
             "observed": calibration["max_coverage_abs_error"], "threshold": coverage_tolerance,
         },
-        "all_members_finite_loss": {"passed": bool(learned), "observed": [m["val_pinball"] for m in member_reports], "threshold": "finite"},
+        "all_members_finite_loss": {
+            "passed": bool(learned),
+            "observed": [m["val_pinball"] for m in member_reports],
+            "threshold": "finita y < 10.0",
+        },
     }
     failed = [n for n, g in gates.items() if not g["passed"]]
     return {"failed": failed, "gates": gates}

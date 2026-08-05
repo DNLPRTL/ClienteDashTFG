@@ -1,13 +1,8 @@
-"""Dataset de entrenamiento FIEL para MPC Neuronal Prudente.
+"""Dataset de entrenamiento para MPC Prudente con física de descarga real (VBR).
 
-Reutiliza el generador probado de cuantiles de throughput de `phase45_v3`, pero
-le inyecta un `ladder_factory` que usa el peso REAL (VBR) de cada segmento del
-medio (`media_profiles/segment_sizes/<id>.json`). Así los rollouts que generan el
-dataset avanzan el buffer con la física de descarga real del cliente, no con CBR.
-
-El predictor resultante es agnóstico al medio (predice throughput), así que un solo
-medio representativo (Paseo) basta para entrenarlo; el planner prudente usará en
-runtime los tamaños reales del MPD que esté reproduciendo en cada experimento.
+Reutiliza el generador de cuantiles de throughput de `phase45_v3` inyectándole un
+`ladder_factory` que usa los tamaños reales de segmento del medio, de forma que los
+rollouts avanzan el buffer igual que el cliente y no con la aproximación CBR.
 """
 
 from __future__ import annotations
@@ -143,12 +138,8 @@ def build_mpc_prudente_multimedia_dataset(
     horizon_segments: int = DEFAULT_THROUGHPUT_QUANTILE_HORIZON,
     quantiles: Sequence[float] = DEFAULT_THROUGHPUT_QUANTILES,
 ) -> Mapping[str, object]:
-    """Dataset multi-vídeo: cada ventana de red rota entre los medios de 4 s.
-
-    Misma cobertura de red que un solo vídeo (mismas ventanas) pero las dinámicas de
-    buffer cubren TODOS los vídeos → sin sesgo a uno solo. El throughput (lo que
-    predice el modelo) es propiedad de la red, así que esto solo enriquece el estado.
-    """
+    """Dataset multi-vídeo: cada ventana de red rota entre los medios de 4 s,
+    para que la dinámica de buffer no quede sesgada a un solo vídeo."""
     media_profiles = [
         MediaProfileSegmentSizes.load_by_id(str(mid), base_dir=media_profile_base_dir)
         for mid in media_profile_ids

@@ -1,19 +1,10 @@
-"""Planner prudente: MPC consciente del riesgo (CVaR) con tamaños reales.
+"""Planner MPC prudente: evalúa cada secuencia de acciones bajo todos los
+cuantiles de throughput predichos y agrega con CVaR_alpha (media de los peores
+escenarios), usando los tamaños reales (VBR) de los segmentos.
 
-Mejora el planner de Neural-MPC en sus dos debilidades:
-
-1. Fidelidad: el planner viejo estimaba el tiempo de descarga con CBR
-   (`bitrate * duración`). Aquí se usa el peso REAL del segmento del medio activo
-   (`ladder.segment_size_bytes(...)`), igual que el cliente.
-2. Prudencia: el planner viejo elegía UN cuantil de throughput según una regla
-   fija buffer→cuantil. Aquí se evalúa cada acción candidata bajo TODOS los
-   cuantiles predichos y se agrega con **CVaR_alpha** (media de los peores
-   escenarios). El nivel de riesgo `alpha` se reduce con el buffer: poco buffer →
-   más pesimista (mira el peor caso), mucho buffer → expectativa neutral.
-
-Esto generaliza la regla buffer→cuantil a un objetivo de riesgo principiado y
-ataca el caso `real_006` (capacidad media variable): si la cola predictiva avisa
-de riesgo de stall, la acción agresiva recibe mala puntuación y se evita.
+El nivel de riesgo `alpha` es configurable: existe una regla adaptativa por buffer
+(`buffer_risk_alpha`, usada en los diagnósticos offline), pero en la evaluación
+final de Phase 6 se fijó `alpha=0.75` (media de los 3 peores escenarios de 4).
 """
 
 from __future__ import annotations

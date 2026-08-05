@@ -1,10 +1,5 @@
-"""Bundle de runtime para MPC Prudente: predictor + config del planner.
-
-El predictor es el mismo `ThroughputQuantilePredictor` entrenado; el bundle añade
-la configuración del planner prudente (`risk_alpha`, `media_profile_id`, pesos) y
-los hashes sha256 para verificación en runtime. El controller runtime lo carga,
-reconstruye la `MediaFaithfulLadder` del medio (tamaños reales VBR) y planifica con
-`plan_prudent_action`.
+"""Bundle de runtime para MPC Prudente v1: predictor MLP + config del planner
+(risk_alpha, media_profile_id, pesos), con hashes sha256 verificados al cargar.
 """
 
 from __future__ import annotations
@@ -54,6 +49,49 @@ DEFAULT_SWITCH_WEIGHT = 1.0
 
 class MpcPrudenteBundleError(ValueError):
     """Raised when the prudent runtime bundle is invalid."""
+
+
+def verify_manifest_file_records(
+    bundle_path: Path,
+    files: Mapping,
+    hashed_files,
+    *,
+    verify_hashes: bool,
+) -> None:
+    """Comprueba tamaño y sha256 de cada archivo del bundle contra su manifiesto."""
+    mismatches = []
+    for filename in hashed_files:
+        record = files.get(filename)
+        if not isinstance(record, Mapping):
+            raise MpcPrudenteBundleError("manifest missing file record for {0}".format(filename))
+        actual = bundle_file_record(bundle_path / filename, filename)
+        if int(record.get("size_bytes", 0) or 0) != actual["size_bytes"]:
+            mismatches.append("{0}: size mismatch".format(filename))
+        if verify_hashes and str(record.get("sha256", "")) != actual["sha256"]:
+            mismatches.append("{0}: sha256 mismatch".format(filename))
+    if mismatches:
+        raise MpcPrudenteBundleError("; ".join(mismatches))
+
+
+def log_ratio_rows_to_bps(matrix, base_tp_bps: float, horizon: int, quantile_count: int):
+    """Convierte la salida del modelo (log-ratio sobre la media armónica) a bps.
+
+    Recorta el ratio a [0.15, 4.0] para que una predicción disparatada no pueda
+    arrastrar al planner, y ordena cada fila por seguridad (monotonía).
+    """
+    base = float(base_tp_bps)
+    rows = []
+    for h in range(int(horizon)):
+        row = []
+        for q in range(int(quantile_count)):
+            value = float(matrix[h, q])
+            if not math.isfinite(value):
+                raise MpcPrudenteBundleError("non-finite throughput prediction")
+            clipped = max(min(value, math.log(4.0)), math.log(0.15))
+            predicted = base * math.exp(clipped)
+            row.append(min(max(predicted, 0.15 * base), 4.0 * base))
+        rows.append(tuple(sorted(row)))
+    return tuple(rows)
 
 
 def export_mpc_prudente_bundle(
@@ -119,18 +157,7 @@ def validate_mpc_prudente_bundle_dir(bundle_dir: object, *, verify_hashes: bool 
     files = manifest.get("files")
     if not isinstance(files, Mapping):
         raise MpcPrudenteBundleError("bundle manifest files must be a mapping")
-    mismatches = []
-    for filename in HASHED_BUNDLE_FILES:
-        record = files.get(filename)
-        if not isinstance(record, Mapping):
-            raise MpcPrudenteBundleError("manifest missing file record for {0}".format(filename))
-        actual = bundle_file_record(bundle_path / filename, filename)
-        if int(record.get("size_bytes", 0) or 0) != actual["size_bytes"]:
-            mismatches.append("{0}: size mismatch".format(filename))
-        if verify_hashes and str(record.get("sha256", "")) != actual["sha256"]:
-            mismatches.append("{0}: sha256 mismatch".format(filename))
-    if mismatches:
-        raise MpcPrudenteBundleError("; ".join(mismatches))
+    verify_manifest_file_records(bundle_path, files, HASHED_BUNDLE_FILES, verify_hashes=verify_hashes)
     return {"status": "PASS", "bundle_dir": str(bundle_path), "manifest": dict(manifest)}
 
 
@@ -187,15 +214,4 @@ class MpcPrudenteRuntimeBundle:
             log_ratio = self.model(torch.tensor([normalized], dtype=torch.float32)).detach().cpu()[0]
         self.last_latency_ms = (time.perf_counter() - started) * 1000.0
         base_tp = harmonic_mean_bps(state.throughput_history_bps)
-        rows = []
-        for h in range(self.horizon_segments):
-            row = []
-            for q in range(len(self.quantiles)):
-                value = float(log_ratio[h, q])
-                if not math.isfinite(value):
-                    raise MpcPrudenteBundleError("non-finite throughput prediction")
-                clipped = max(min(value, math.log(4.0)), math.log(0.15))
-                predicted = float(base_tp) * math.exp(clipped)
-                row.append(min(max(predicted, 0.15 * float(base_tp)), 4.0 * float(base_tp)))
-            rows.append(tuple(sorted(row)))
-        return tuple(rows)
+        return log_ratio_rows_to_bps(log_ratio, base_tp, self.horizon_segments, len(self.quantiles))

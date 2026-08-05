@@ -1,13 +1,9 @@
 """Controller runtime: MPC Neuronal Prudente integrado en el cliente DASH.
 
-Reutiliza la maquinaria guarded de Neural-MPC (feature builder, safety, fallback a
-robust_mpc, diagnósticos neurales, verificación de hash), pero:
-
-- planifica sobre la **MediaFaithfulLadder** (tamaños reales VBR del MPD activo),
-  no CBR;
-- usa el planner prudente CVaR (`plan_prudent_action`) con `risk_alpha` del bundle.
-
-Si el bundle o el perfil de medio fallan, cae a robust_mpc (auditado).
+Reutiliza la maquinaria guarded de Neural-MPC (features, safety, diagnósticos,
+verificación de hash) pero planifica sobre la `MediaFaithfulLadder` (tamaños VBR
+reales del MPD activo) con el planner CVaR. Si el bundle o el perfil de medio
+fallan, cae a robust_mpc y queda auditado en la telemetría.
 """
 
 from __future__ import annotations
@@ -188,12 +184,21 @@ class MpcPrudenteRuntimeController(BaseController):
         if self._ladder is None:
             media = MediaProfileSegmentSizes.load_by_id(self.media_profile_id, base_dir=self.media_profile_dir)
             self._ladder = media.to_faithful_ladder(max_buffer_s=self.max_buffer_s)
-        if self._ladder.representation_count != len(tuple(rates_Bps)):
+        rates = tuple(float(value) for value in rates_Bps)
+        if self._ladder.representation_count != len(rates):
             raise MpcPrudenteBundleError(
                 "media ladder ({0} reps) does not match client rates ({1})".format(
-                    self._ladder.representation_count, len(tuple(rates_Bps))
+                    self._ladder.representation_count, len(rates)
                 )
             )
+        # La escalera del perfil y la del MPD del cliente deben ser la misma.
+        for index, rate_Bps in enumerate(rates):
+            if abs(rate_Bps * 8.0 - float(self._ladder.bitrate_bps(index))) > 8.0:
+                raise MpcPrudenteBundleError(
+                    "media ladder bitrate mismatch at index {0}: {1} vs {2}".format(
+                        index, rate_Bps * 8.0, self._ladder.bitrate_bps(index)
+                    )
+                )
         return self._ladder
 
     def _fallback_decision(self, reason: str, diagnostics: NeuralAbrDiagnostics, payload) -> float:
@@ -246,6 +251,8 @@ class MpcPrudenteTemporalRuntimeController(MpcPrudenteRuntimeController):
         super().__init__(bundle_dir=bundle_dir or DEFAULT_MPC_PRUDENTE_TEMPORAL_BUNDLE_DIR, **kwargs)
         self.name = MPC_PRUDENTE_TEMPORAL_CONTROLLER_KEY
         self.controller_key = MPC_PRUDENTE_TEMPORAL_CONTROLLER_KEY
+        # Regenerar los diagnostics base ya con la key de v2.
+        self._diagnostics = self._base_diagnostics()
 
     def _base_diagnostics(self):
         diagnostics = super()._base_diagnostics()
