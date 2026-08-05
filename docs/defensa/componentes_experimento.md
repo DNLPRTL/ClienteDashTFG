@@ -1,144 +1,237 @@
-# Componentes del experimento — hardware, software, red y formatos (todo, exacto)
+# Componentes del experimento — hardware, software, red, herramientas y formatos
 
-Fecha: 2026-08-05. Propósito: sección de referencia para la memoria y la defensa:
-QUÉ máquinas, QUÉ software con QUÉ versiones, QUÉ formatos y CÓMO se conecta todo.
-Los huecos marcados `[PENDIENTE: informe <máquina>]` se completan con la salida de
-`scripts/recopilar_info_entorno.sh` ejecutado en cada máquina (no se inventa nada).
+Fecha: 2026-08-05. Sección de referencia para la memoria y la defensa: QUÉ
+máquinas, QUÉ software con QUÉ versiones exactas, CÓMO se generó el contenido y
+CÓMO se conecta todo. Fuentes: informes de entorno recogidos en cada máquina el
+05/08/2026 (`TFG Material/00_info_entorno/`) + los propios artefactos (MPD,
+scripts del servidor, repo).
 
 ---
 
 ## 1. Topología general
 
 Un único PC físico (Windows) aloja TODO el experimento: dos máquinas virtuales
-VirtualBox (cliente y servidor, en red puente con el router doméstico) y un WSL2
-para el entrenamiento GPU. No hay red real en las mediciones: las condiciones de
-red se EMULAN reproduciendo trazas (replay determinista); el HTTP entre cliente y
-servidor solo transporta los bytes del vídeo.
+VirtualBox en red puente con el router doméstico (cliente y servidor, clones de
+una misma VM base — mismo hostname `TFGv1`) y un WSL2 para el entrenamiento GPU.
+No hay red real en las mediciones: las condiciones de red se EMULAN reproduciendo
+trazas (replay determinista en el cliente); el HTTP cliente↔servidor solo
+transporta los bytes del vídeo.
 
 ```text
 PC físico (Windows 11)
-├── VirtualBox 7.0.14
-│   ├── VM Ubuntu CLIENTE  (192.168.1.160) — ejecuta el cliente DASH y Phase 6
-│   └── VM Ubuntu SERVIDOR (192.168.1.132) — sirve MPD + segmentos por HTTP
-├── WSL2 (2.7.3) Ubuntu 24.04 — entrenamiento IA con GPU AMD (ROCm)
-└── Windows nativo — desarrollo, tests rápidos, git, memoria del TFG
-        └── GitHub (DNLPRTL/ClienteDashTFG) = puente de código entre todos
+├── VirtualBox 7.0.14 (red puente)
+│   ├── VM Ubuntu CLIENTE  (192.168.1.160) — cliente DASH + Phase 6
+│   └── VM Ubuntu SERVIDOR (192.168.1.132) — Apache sirve el contenido DASH
+├── WSL2 2.7.3 · Ubuntu 24.04 — entrenamiento IA (GPU AMD por /dev/dxg)
+└── Windows nativo — desarrollo (PyCharm), git, tests rápidos, memoria
+        └── GitHub (DNLPRTL/ClienteDashTFG) = puente de código entre máquinas
 ```
 
-## 2. Host físico (Windows) — verificado
+## 2. Host físico (Windows)
 
 | Componente | Valor |
 |---|---|
 | SO | Windows 11 Home 10.0.26200 |
 | CPU | Intel Core i5-14600KF (14 núcleos / 20 hilos) |
 | RAM | 32 GB |
-| GPU | AMD Radeon RX 7800 XT (la usa WSL2/ROCm para entrenar) |
-| Placa | ASUS ROG STRIX Z690-A GAMING WIFI |
-| Python (Windows) | 3.12.8 |
+| GPU | AMD Radeon RX 7800 XT (entrenamiento vía WSL2/ROCm) |
+| Placa base | ASUS ROG STRIX Z690-A GAMING WIFI |
+| Python | 3.12.8 |
 | VirtualBox | 7.0.14 |
 | WSL | 2.7.3.0 (kernel 6.6.114.1-1) |
+| IDE | PyCharm Community Edition |
+| Control de versiones | git + GitHub (repo `DNLPRTL/ClienteDashTFG`) |
 
 ## 3. VM Ubuntu CLIENTE (192.168.1.160) — el banco de pruebas
 
-- **Rol:** único entorno donde se ejecuta lo que cuenta: el cliente DASH real,
-  los 6 controllers y la evaluación formal Phase 6 (las 360 sesiones del
-  resultado final salieron de aquí).
-- **SO / hardware asignado:** `[PENDIENTE: informe cliente]` (SO, CPU/RAM/disco
-  asignados por VirtualBox, versión de Python; nota conocida: su Python es 3.8.x,
-  lo que motivó el arreglo de compatibilidad del 05/08/2026).
-- **Software necesario para replicar (lo que hubo que instalar):**
-  - Python 3 + `pip install -r requirements.txt` del repo (mínimo: `requests`).
-  - PyTorch (CPU) — para cargar los bundles y ejecutar la inferencia de v1/v2.
-  - GStreamer + PyGObject (paquetes del sistema) — SOLO para el motor de
-    reproducción real; **Phase 6 usa el motor `fake`** (sin decodificar vídeo),
-    así que para replicar el experimento formal no es imprescindible.
-  - Versiones exactas instaladas: `[PENDIENTE: informe cliente — pip freeze + dpkg]`.
-- **Material local:** `~/TFG/ClienteDashTFG` (repo) + `~/TFG/manifests_trazas`,
-  `~/TFG/datasets_normalizados/phase3`, `~/TFG/modelos/mpc_prudente`,
-  `~/TFG/runs_trazas/phase6/...` (evidencia). Config local:
-  `config/phase6.local.json` (rutas + URLs del servidor).
+Único entorno donde se ejecuta lo que cuenta: el cliente DASH, los 6 controllers
+y la evaluación formal Phase 6 (las 360 sesiones del resultado final).
+
+| Componente | Valor (informe 05/08/2026) |
+|---|---|
+| SO | Ubuntu 20.04.6 LTS (focal), kernel 5.15.0-139-generic |
+| Virtualización | VirtualBox ("oracle"); 8 vCPU, 8 GB RAM, disco 151 GB |
+| Python | 3.8.10 (del sistema) |
+| PyTorch | 2.4.1+cu121 (build CUDA ejecutando en CPU — la VM no tiene GPU; la inferencia de los bundles es CPU) |
+| requests | 2.22.0 (descargas HTTP del cliente) |
+| GStreamer | 1.16.3 + PyGObject 3.36.0 (motor de reproducción real; Phase 6 usa el motor `fake`) |
+| numpy / pandas | 2.2.6 / 2.3.1 (análisis y gráficas de Phase 6) |
+| matplotlib | (dependencia de análisis, requirements-analysis.txt) |
+| openssh-server | 8.2p1 (transferencias scp con el host) |
+| Otros presentes | ffmpeg 4.2.7, gpac 0.5.2, apache2 2.4.41 (instalados en la VM base clonada; no intervienen en el experimento) |
+
+Qué habría que instalar en un PC nuevo para REPLICAR el rol de cliente:
+`python3` + `pip install -r requirements.txt` (requests) + PyTorch CPU +
+`pip install -r requirements-analysis.txt` (numpy/pandas/matplotlib) y, solo si
+se quiere el motor de reproducción real, GStreamer 1.x con PyGObject del sistema.
 
 ## 4. VM Ubuntu SERVIDOR (192.168.1.132) — el reparto de vídeo
 
-- **Rol:** servir por HTTP el contenido DASH desde `/var/www/html/dash`. NO
-  ejecuta nada del experimento ni define la red (eso lo hace el replay de trazas
-  en el cliente).
-- **Servidor web y SO:** `[PENDIENTE: informe servidor — apache/nginx + versión, SO]`.
-- **Contenido alojado** (verificado desde el cliente y las tablas VBR del repo):
-  2 contenidos (Paseo de Almuñécar — grabación propia— y Blender Sunflower) ×
-  2 duraciones (10 min y 1 min) × 2 framerates (30 y 60 fps) = 8 perfiles, cada
-  uno con MPD estático (`*_simple_4s.mpd`), 1 init por representación y
-  segmentos `.m4s` de 4 s. Escalera de 6 representaciones:
-  **300 / 750 / 1200 / 1850 / 2850 / 4300 kbps, codificación VBR** (los tamaños
-  reales por segmento están extraídos en `media_profiles/segment_sizes/*.json`;
-  variabilidad medida `vbr_cv_max` hasta ~0.16 en Blender 60fps).
-  Conteos de segmentos (10 min): Paseo 30fps = 151, Paseo 60fps = 150,
-  Blender 30fps = 151, Blender 60fps = 159.
-- **Cómo se generaron los MPD y segmentos:** `[PENDIENTE: informe servidor —
-  el script recoge las versiones de ffmpeg/MP4Box, el MPD completo (su atributo
-  generator delata la herramienta) y los scripts de generación que haya en la
-  máquina; con eso se documentan aquí los comandos exactos]`.
-- **Extracción de tamaños reales:** `scripts/extraer_tamanos_reales_segmentos.py`
-  (del repo) recorre el servidor por HTTP y escribe las tablas VBR versionadas.
+| Componente | Valor (informe 05/08/2026) |
+|---|---|
+| SO | Ubuntu 20.04.6 LTS, kernel 5.15.0-139 (clon de la misma VM base que el cliente) |
+| Recursos | 6 vCPU, 8 GB RAM, disco 99 GB (78 GB usados) |
+| Servidor web | **Apache 2.4.41 (Ubuntu)**, activo como servicio, sirviendo estáticos desde `/var/www/html/dash` (13 GB) |
+| Herramientas de generación | **ffmpeg 4.2.7** (codificación) + **MP4Box de GPAC 2.5-DEV vía Docker** (imagen `jjlin/gpac`; por eso MP4Box no está instalado nativo) |
+
+### 4.1 Contenido alojado (verificado en el servidor)
+
+- 2 contenidos × 2 duraciones × 2 framerates = **8 vídeos**: Paseo de Almuñécar
+  (grabación propia 1080p; fuentes de 637 MB/728 MB) y Blender Sunflower
+  (película abierta) en 10 min y 1 min, a 30 y 60 fps.
+- Cada vídeo tiene: el `.mp4` fuente, la carpeta `_reps_<video>/` con las 6
+  representaciones codificadas (`<video>_<res>_<bitrate>k.mp4`), y los
+  empaquetados `2sec/` y `4sec/` (el experimento usa **4 s**).
+- Escalera de 6 representaciones (del MPD, exacta):
+
+| id | Resolución | Codec (perfil H.264) | Bitrate |
+|---|---|---|---|
+| 6 | 256×144 | avc1.64000C | 300 kbps |
+| 5 | 426×240 | avc1.640015 | 750 kbps |
+| 4 | 640×360 | avc1.64001E | 1200 kbps |
+| 3 | 854×480 | avc1.64001F | 1850 kbps |
+| 2 | 1280×720 | avc1.64001F | 2850 kbps |
+| 1 | 1920×1080 | avc1.640032 | 4300 kbps |
+
+### 4.2 Cómo se generó el contenido (metodología, de los scripts conservados en el servidor + el MPD)
+
+Proceso en dos pasos, guionizado en bash (los scripts de las iteraciones se
+conservan en `~/Escritorio/` del servidor: `generate_dash.sh`,
+`auto_dash_resume.sh`, `pack_walk_docker.sh`):
+
+**Paso 1 — Codificación de las representaciones (ffmpeg/libx264):** por cada
+nivel de la escalera, a partir del máster:
+
+```bash
+ffmpeg -y -i FUENTE.mp4 -an \
+  -c:v libx264 -preset fast -profile:v high \
+  -b:v <kbps>k -maxrate <kbps>k -bufsize <2·kbps>k \
+  -vf "scale=W:H:force_original_aspect_ratio=decrease,pad=W:H:(ow-iw)/2:(oh-ih)/2" \
+  -x264-params keyint=<GOP>:min-keyint=<GOP>:scenecut=0 \
+  _reps_<video>/<video>_<res>_<kbps>k.mp4
+```
+
+Claves del comando: sin audio (`-an`); control de tasa VBR con tope
+(`-b:v`+`-maxrate`+`-bufsize`) — por eso los segmentos tienen tamaños VBR reales
+y no CBR exacto, que es el hecho que explota el controller; GOP fijo y
+`scenecut=0` para que los keyframes caigan alineados con los cortes de segmento.
+
+**Paso 2 — Empaquetado DASH (MP4Box/GPAC 2.5-DEV en Docker):**
+
+```bash
+docker run --rm -v <dir_video>:/data jjlin/gpac:latest MP4Box \
+  -dash 4000 -frag 4000 -rap \
+  -profile live -bs-switching no -segment-ext m4s \
+  -segment-name 'chunk_$Bandwidth$bps/<video>_4s' \
+  -init-seg     'chunk_$Bandwidth$bps/<video>_4s.mp4' \
+  -out /data/4sec/<video>_simple_4s.mpd \
+  /data/_reps_<video>/*.mp4
+```
+
+Resultado: MPD **estático**, perfil `urn:mpeg:dash:profile:isoff-live:2011`,
+`SegmentTemplate` con sustitución `$Bandwidth$` y `$Number$` (timescale 15360,
+duration 61440 = 4.000 s exactos), un directorio `chunk_<bps>bps/` por
+representación con su init `.mp4` y sus segmentos `.m4s`. El atributo generator
+del MPD confirma la herramienta: *"MPD file Generated with GPAC version 2.5-DEV"*
+(17/02/2026). Se empaquetó también la variante de 2 s (no usada en el resultado
+final).
+
+**Publicación:** mover a `/var/www/html/dash/<video>/` — Apache lo sirve como
+estático sin configuración especial. Comprobación desde el cliente:
+`curl -I http://192.168.1.132/dash/<video>/4sec/<video>_simple_4s.mpd`.
+
+**Medición de los tamaños reales:** `scripts/extraer_tamanos_reales_segmentos.py`
+(repo, se ejecuta en el cliente) descarga el MPD, recorre todos los segmentos por
+HTTP y escribe `media_profiles/segment_sizes/<video>.json` (bytes reales por
+segmento y representación, `vbr_cv_max` hasta ~0.16) — la tabla que usan el
+dataset y el planner.
 
 ## 5. WSL2 — el banco de entrenamiento GPU
 
-| Componente | Valor (verificado en docs del proyecto) |
+| Componente | Valor (informe 05/08/2026) |
 |---|---|
-| Distribución | Ubuntu 24.04.4 LTS en WSL2 |
-| GPU | AMD Radeon RX 7800 XT vía `/dev/dxg` |
-| Stack GPU | ROCm (rocminfo detecta la GPU) |
-| PyTorch | 2.9.1+rocm7.2.1 |
+| Distribución | Ubuntu 24.04.4 LTS (noble), kernel 6.6.114.1-microsoft-standard-WSL2 |
+| Recursos | 20 hilos visibles, 15 GB RAM, disco virtual 1 TB |
+| GPU | AMD Radeon RX 7800 XT expuesta vía `/dev/dxg` |
+| Stack GPU | ROCm 7.2.1 (en `/opt/rocm-7.2.1`, con `amdsmi`) |
+| Python | 3.12.3 |
 | Entorno virtual | `~/venvs/rocm721` |
-| Comprobación | `torch.cuda.is_available()` → True, device = RX 7800 XT |
-| pip freeze completo | `[PENDIENTE: informe wsl]` |
+| PyTorch | **2.9.1+rocm7.2.1** (wheels locales de `~/wheels/rocm721`, con sha256) + torchvision 0.24.0 + torchaudio 2.9.0 + triton 3.5.1 |
+| numpy | 1.26.4 |
+| Comprobación | `torch.cuda.is_available()` → True; device = "AMD Radeon RX 7800 XT" |
 
-- **Rol:** generar el dataset de entrenamiento (rollouts closed-loop sobre las
-  trazas, con física VBR real) y entrenar los predictores (MLP v1; ensemble de
-  5 GRUs v2). Exporta los bundles con sha256 que luego carga el cliente.
-- **Material local:** repo + `~/TFG/datasets_normalizados/phase3` (trazas) +
-  `~/TFG/datasets_normalizados/mpc_prudente/throughput_quantile_full_v1_multimedia`
-  (dataset final) + `~/TFG/modelos/mpc_prudente` (entrenamientos y bundles).
+Rol: generar el dataset de entrenamiento (rollouts closed-loop con física VBR
+real) y entrenar los predictores (MLP v1; ensemble de 5 GRUs v2, ~80 épocas,
+pinball loss). Exporta los bundles con sha256 que luego carga el cliente.
 
 ## 6. El software del experimento (el repo)
 
-- **Lenguaje:** Python puro (sin frameworks web); tests con `unittest` (489).
-- **Dependencias de ejecución:** mínimas a propósito — `requests` (descargas
-  HTTP); PyTorch solo para los controllers IA; GStreamer opcional (motor real).
-- **Dependencias de análisis** (`requirements-analysis.txt`): numpy, pandas,
-  matplotlib (gráficas de Phase 6).
-- **Motores de reproducción:** `fake` (avanza el tiempo de media de forma
-  controlada; el usado en TODA la evaluación formal) y GStreamer (reproducción
-  real, usada solo en smokes de verificación).
+- **Lenguaje:** Python puro; sin frameworks. Tests: `unittest` (489). IDE de
+  desarrollo: PyCharm Community (Windows).
+- **Dependencias de ejecución mínimas:** `requests`; PyTorch solo para los
+  controllers IA; GStreamer opcional (motor real).
+- **Dependencias de análisis:** numpy, pandas, matplotlib (gráficas Phase 6).
+- **Motores de reproducción:** `fake` (avance de tiempo de media controlado,
+  sin decodificar; el usado en TODA la evaluación formal — hace el experimento
+  independiente del rendimiento gráfico de la VM) y GStreamer (reproducción
+  real, usada en smokes de verificación).
 - **Emulación de red:** `core/trace_replay/` reproduce una ventana de 300 s de
-  una traza normalizada, limitando el ancho de banda por intervalos; política de
-  fin `fail`, timestamps compactados, decisión cada segmento (4 s).
+  una traza normalizada limitando el ancho de banda por intervalos; política de
+  fin `fail`; decisión ABR cada segmento (4 s).
+- **GUI de experimentos:** `scripts/gui_fase6.py` (tkinter, sin dependencias).
 
 ## 7. Formatos y contratos de datos (exactos)
 
 | Dato | Formato |
 |---|---|
-| Traza de red normalizada | CSV con cabecera `timestamp_s,duration_s,throughput_kbps` |
-| Manifest del corpus | JSON (`phase3_trace_manifest_curated.json`): 6768 trazas, campos de split/leakage_group/buckets; eval reservado |
-| Contenido DASH | MPD estático (perfil "simple", plantilla de segmentos), inits `.mp4`, segmentos `.m4s` de 4 s |
-| Tamaños VBR | JSON `media_profile_segment_sizes_v1` (bytes reales por segmento y representación) |
-| Bundle de modelo | Carpeta con checkpoint torch (`weights_only`), config, normalización, config del planner y `manifest.json` con sha256 de cada fichero |
-| Telemetría de sesión | `segment_telemetry.csv` (una fila por segmento: bitrate, buffer, stall, tiempos, auditoría neural) |
+| Traza de red normalizada | CSV `timestamp_s,duration_s,throughput_kbps` |
+| Manifest del corpus | JSON `phase3_trace_manifest_curated.json`: 6768 trazas (1024 sintéticas), split por `leakage_group`, eval reservado |
+| Contenido DASH | MPD estático perfil isoff-live + `SegmentTemplate`; inits `.mp4` y segmentos `.m4s` de 4 s en `chunk_<bps>bps/`; vídeo H.264 (libx264, perfil high), sin audio |
+| Tamaños VBR | JSON `media_profile_segment_sizes_v1` (bytes reales por segmento × representación) |
+| Bundle de modelo | Carpeta con checkpoint torch (`weights_only`), config del modelo, normalización, config del planner y `manifest.json` con sha256 de cada fichero |
+| Telemetría de sesión | `segment_telemetry.csv` (fila por segmento: bitrate, buffer, stall, tiempos de descarga, auditoría de inferencia neural) |
 | Paquete de evidencia | `00_protocolo / 01_ejecucion / 02_resultados / 03_graficas / 04_informe` |
 | QoE | `qoe_linear_v1`: `bitrate_mbps − 4.3·rebuffer_s − |Δbitrate_mbps|`, media por sesión |
 
 ## 8. Flujo completo (quién produce qué)
 
 ```text
-[Servidor] vídeos fuente → (herramienta [PENDIENTE]) → MPD + inits + .m4s (VBR, 4s)
-[Repo]     extraer_tamanos_reales_segmentos.py → media_profiles/segment_sizes/*.json
-[WSL]      trazas phase3 + manifest → dataset multimedia → entrenar v1/v2 → bundles (sha256)
-[Cliente]  bundles + trazas eval + MPDs del servidor → Phase 6 tfg_final (360 sesiones)
-           → paquete de evidencia → números y gráficas de la memoria
+[Servidor]  máster .mp4 → ffmpeg/libx264 (6 reps VBR) → MP4Box/GPAC en Docker
+            (segmentos 4s + MPD) → Apache /var/www/html/dash
+[Cliente]   extraer_tamanos_reales_segmentos.py → media_profiles/*.json (repo)
+[WSL]       manifest + trazas phase3 → dataset multimedia (rollouts VBR)
+            → entrenar v1 (MLP) y v2 (ensemble 5×GRU) → bundles con sha256
+[Cliente]   bundles + trazas eval + MPDs → Phase 6 tfg_final (360 sesiones)
+            → paquete de evidencia → números y gráficas de la memoria
+[Windows]   desarrollo (PyCharm + git), tests (489), memoria del TFG
 ```
 
----
+## 9. Herramientas usadas — lista completa
 
-**Cómo completar los `[PENDIENTE]`:** ejecutar en cada máquina
-`bash scripts/recopilar_info_entorno.sh <cliente|servidor|wsl>` y volcar aquí las
-salidas (`~/info_entorno_<etiqueta>.txt`).
+| Herramienta | Versión | Para qué |
+|---|---|---|
+| Python | 3.8.10 (cliente/servidor) · 3.12.3 (WSL) · 3.12.8 (Windows) | Todo el software del proyecto |
+| PyTorch | 2.4.1 (cliente, inferencia CPU) · 2.9.1+rocm7.2.1 (WSL, entrenamiento GPU) | Modelos IA |
+| ROCm | 7.2.1 | GPU AMD en WSL |
+| ffmpeg / libx264 | 4.2.7 | Codificar las 6 representaciones VBR |
+| GPAC / MP4Box | 2.5-DEV (Docker `jjlin/gpac`) | Empaquetado DASH (segmentos + MPD) |
+| Docker | (en el servidor) | Ejecutar el MP4Box moderno sin instalarlo |
+| Apache | 2.4.41 | Servir MPD y segmentos por HTTP |
+| GStreamer + PyGObject | 1.16.3 / 3.36.0 | Motor de reproducción real (opcional) |
+| requests | 2.22.0 | Descargas HTTP del cliente |
+| numpy / pandas / matplotlib | 2.2.6 / 2.3.1 / (analysis) | Análisis y 16 gráficas de Phase 6 |
+| unittest (stdlib) | — | Suite de 489 tests |
+| tkinter (stdlib) | — | GUI de lanzamiento de experimentos |
+| VirtualBox | 7.0.14 | VMs cliente y servidor (red puente) |
+| WSL2 | 2.7.3 | Ubuntu con GPU para entrenar |
+| git + GitHub | — | Versionado y puente entre máquinas |
+| OpenSSH (scp) | 8.2p1 | Transferencia de artefactos entre máquinas |
+| PyCharm Community | — | IDE de desarrollo en Windows |
+
+Nota de honestidad para la memoria: los scripts conservados en el servidor
+corresponden a las iteraciones de la metodología (vídeos de prueba, escalera de
+20 niveles "tipo Bunny", naming `bunny_`); la versión final aplicada a
+Paseo/Blender (escalera de 6 niveles, naming `chunk_`) siguió exactamente el
+mismo proceso de dos pasos, como acreditan el MPD (generator GPAC 2.5-DEV, las
+plantillas y nombres) y las carpetas `_reps_*` con las 6 representaciones por
+vídeo que siguen en el servidor.
