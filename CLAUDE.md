@@ -108,4 +108,9 @@ bajo `~/TFG/...` (Linux) o `C:\Users\danie\Documents\TFG\...`.
 - **Resultado final (Phase 6 `tfg_final`, 360 sesiones, 6 controllers, 4 vídeos):**
   v2 temporal = QoE media más alta (2.013), empatado estadísticamente con robust_mpc
   (sign_p=0.54) y con menos rebuffering (stalls 0.29 vs 0.44, >5s 12% vs 23%); v2 > v1.
-  Todo en `HANDOFF_mpc_prudente_estado_completo_20260624.md`. PENDIENTE: la memoria.
+  Todo en `HANDOFF_mpc_prudente_estado_completo_20260624.md`.
+- **Pendiente (agosto 2026):** (1) revisión final de la parte técnica con ojos
+  frescos (código + resultados + validez); (2) pasada de naturalización del código
+  (simplificar sobre-ingeniería, comentarios breves estilo estudiante, estilo
+  uniforme) + apropiación por Daniel (poder defender cada pieza ante el tribunal);
+  (3) terminar la memoria (plan en `docs/memoria/`).
