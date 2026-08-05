@@ -7,15 +7,17 @@ from typing import Any, Dict, Mapping, Optional
 
 
 RAIZ_REPO = Path(__file__).resolve().parents[2]
-RUTA_CONFIG_EJEMPLO_PHASE6 = RAIZ_REPO / "config" / "phase6.example.yaml"
-RUTA_CONFIG_LOCAL_PHASE6 = RAIZ_REPO / "config" / "phase6.local.yaml"
+RUTA_CONFIG_EJEMPLO_FASE6 = RAIZ_REPO / "config" / "fase6.example.yaml"
+RUTA_CONFIG_LOCAL_FASE6 = RAIZ_REPO / "config" / "fase6.local.yaml"
+# Compatibilidad: nombre anterior de la config local (maquinas ya configuradas).
+RUTA_CONFIG_LOCAL_ANTERIOR = RAIZ_REPO / "config" / "phase6.local.yaml"
 
-CONFIG_PHASE6_POR_DEFECTO: Dict[str, Any] = {
+CONFIG_FASE6_POR_DEFECTO: Dict[str, Any] = {
     "schema_version": "phase6_config_v1",
     "paths": {
         "manifest_path": "/home/daniel/TFG/manifests_trazas/phase3/final/phase3_trace_manifest_curated.json",
         "output_root": "/home/daniel/TFG/runs_trazas/phase6/validacion_comparativa",
-        "repo_root": "/home/daniel/TFG/DashClientModular4",
+        "repo_root": "/home/daniel/TFG/ClienteDashPrudente",
         "python": "python",
         "trace_path_rewrites": [],
     },
@@ -93,11 +95,11 @@ CONFIG_PHASE6_POR_DEFECTO: Dict[str, Any] = {
 }
 
 
-def cargar_config_phase6(path: Optional[str | Path] = None) -> Dict[str, Any]:
+def cargar_config_fase6(path: Optional[str | Path] = None) -> Dict[str, Any]:
     selected = _elegir_ruta(path)
-    config = deepcopy(CONFIG_PHASE6_POR_DEFECTO)
-    if RUTA_CONFIG_EJEMPLO_PHASE6.exists():
-        config = _fusion_profunda(config, _cargar_fichero_mapping(RUTA_CONFIG_EJEMPLO_PHASE6))
+    config = deepcopy(CONFIG_FASE6_POR_DEFECTO)
+    if RUTA_CONFIG_EJEMPLO_FASE6.exists():
+        config = _fusion_profunda(config, _cargar_fichero_mapping(RUTA_CONFIG_EJEMPLO_FASE6))
     if selected is not None:
         if not selected.exists():
             raise FileNotFoundError("Config de Phase 6 no encontrada: {0}".format(selected))
@@ -105,18 +107,20 @@ def cargar_config_phase6(path: Optional[str | Path] = None) -> Dict[str, Any]:
     return config
 
 
-def escribir_config_ejemplo_phase6(path: Optional[str | Path] = None) -> Path:
-    target = Path(path) if path is not None else RUTA_CONFIG_EJEMPLO_PHASE6
+def escribir_config_ejemplo_fase6(path: Optional[str | Path] = None) -> Path:
+    target = Path(path) if path is not None else RUTA_CONFIG_EJEMPLO_FASE6
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(json.dumps(CONFIG_PHASE6_POR_DEFECTO, indent=2, sort_keys=True), encoding="utf-8")
+    target.write_text(json.dumps(CONFIG_FASE6_POR_DEFECTO, indent=2, sort_keys=True), encoding="utf-8")
     return target
 
 
 def _elegir_ruta(path: Optional[str | Path]) -> Optional[Path]:
     if path is not None:
         return Path(path)
-    if RUTA_CONFIG_LOCAL_PHASE6.exists():
-        return RUTA_CONFIG_LOCAL_PHASE6
+    if RUTA_CONFIG_LOCAL_FASE6.exists():
+        return RUTA_CONFIG_LOCAL_FASE6
+    if RUTA_CONFIG_LOCAL_ANTERIOR.exists():
+        return RUTA_CONFIG_LOCAL_ANTERIOR
     return None
 
 

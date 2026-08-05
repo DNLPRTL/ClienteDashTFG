@@ -14,17 +14,17 @@ RAIZ_REPO = Path(__file__).resolve().parents[1]
 if str(RAIZ_REPO) not in sys.path:
     sys.path.insert(0, str(RAIZ_REPO))
 
-from core.phase6.catalogo import descubrir_controllers_comparables
-from core.phase6.catalogo import NOMBRES_PRESET
-from core.phase6.configuracion import RUTA_CONFIG_LOCAL_PHASE6, cargar_config_phase6
+from core.fase6.catalogo import descubrir_controllers_comparables
+from core.fase6.catalogo import NOMBRES_PRESET
+from core.fase6.configuracion import RUTA_CONFIG_LOCAL_FASE6, cargar_config_fase6
 
 
-RUNNER_SCRIPT = RAIZ_REPO / "scripts" / "run_phase6_validacion_comparativa.py"
-ANALYSIS_SCRIPT = RAIZ_REPO / "scripts" / "analyze_phase6_results.py"
-CLASSIC_SCRIPT = RAIZ_REPO / "scripts" / "run_phase6_verificacion_clasica_controlada.py"
+RUNNER_SCRIPT = RAIZ_REPO / "scripts" / "ejecutar_fase6.py"
+ANALYSIS_SCRIPT = RAIZ_REPO / "scripts" / "analizar_resultados_fase6.py"
+CLASSIC_SCRIPT = RAIZ_REPO / "scripts" / "verificacion_clasica_controlada_fase6.py"
 
 
-def build_phase6_command(
+def construir_comando_fase6(
     *,
     config_path: Optional[str] = None,
     preset: str = "rapido",
@@ -85,7 +85,7 @@ def write_gui_override_config(
     output_root: str,
     controllers: Sequence[str],
 ) -> Path:
-    config = cargar_config_phase6(base_config_path)
+    config = cargar_config_fase6(base_config_path)
     config.setdefault("experiment", {})["preset"] = preset
     config.setdefault("experiment", {})["engine"] = engine
     config.setdefault("experiment", {})["controllers"] = list(controllers)
@@ -112,7 +112,7 @@ class Phase6Gui:
         self.root.geometry("980x700")
         self.process: Optional[subprocess.Popen[str]] = None
 
-        self.config_path = tk.StringVar(value=str(RUTA_CONFIG_LOCAL_PHASE6) if RUTA_CONFIG_LOCAL_PHASE6.exists() else "")
+        self.config_path = tk.StringVar(value=str(RUTA_CONFIG_LOCAL_FASE6) if RUTA_CONFIG_LOCAL_FASE6.exists() else "")
         config = self._safe_load_config()
         self.output_root = tk.StringVar(value=str(_mapping(config.get("paths")).get("output_root", "")))
         self.preset = tk.StringVar(value=str(_mapping(config.get("experiment")).get("preset", "rapido")))
@@ -228,9 +228,9 @@ class Phase6Gui:
     def _safe_load_config(self) -> Dict[str, Any]:
         path = self.config_path.get().strip() if hasattr(self, "config_path") else ""
         try:
-            return cargar_config_phase6(path or None)
+            return cargar_config_fase6(path or None)
         except Exception:
-            return cargar_config_phase6(None)
+            return cargar_config_fase6(None)
 
     def _selected_controllers(self) -> List[str]:
         return [key for key, var in self.controller_vars.items() if bool(var.get())]
@@ -247,7 +247,7 @@ class Phase6Gui:
     def _phase6_command(self, *, only_plan: Optional[bool] = None) -> List[str]:
         generated = self._generated_config()
         max_sessions = _optional_int(self.max_sessions.get())
-        return build_phase6_command(
+        return construir_comando_fase6(
             config_path=str(generated),
             preset=self.preset.get(),
             output_root=self.output_root.get(),
@@ -263,7 +263,7 @@ class Phase6Gui:
         if not hasattr(self, "command_preview"):
             return
         try:
-            command = build_phase6_command(
+            command = construir_comando_fase6(
                 config_path=self.config_path.get().strip() or None,
                 preset=self.preset.get(),
                 output_root=self.output_root.get(),
@@ -324,8 +324,8 @@ class Phase6Gui:
         )
         assert self.process.stdout is not None
         for line in self.process.stdout:
-            if line.startswith("PHASE6_PROGRESS "):
-                progress = parse_phase6_progress_line(line)
+            if line.startswith("FASE6_PROGRESO "):
+                progress = parsear_linea_progreso_fase6(line)
                 if progress:
                     self.root.after(0, self._update_progress, progress)
             self.root.after(0, self.log_text.insert, "end", line)
@@ -394,9 +394,9 @@ def _optional_int(value: Any) -> Optional[int]:
     return int(text)
 
 
-def parse_phase6_progress_line(line: str) -> Dict[str, Any]:
+def parsear_linea_progreso_fase6(line: str) -> Dict[str, Any]:
     text = str(line or "").strip()
-    if not text.startswith("PHASE6_PROGRESS "):
+    if not text.startswith("FASE6_PROGRESO "):
         return {}
     result: Dict[str, Any] = {}
     for token in text.split()[1:]:

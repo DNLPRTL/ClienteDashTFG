@@ -52,7 +52,7 @@
     "manifest_path": "/home/daniel/TFG/manifests_trazas/phase3/final/phase3_trace_manifest_curated.json",
     "output_root": "/home/daniel/TFG/runs_trazas/phase6/validacion_comparativa",
     "python": "python",
-    "repo_root": "/home/daniel/TFG/DashClientModular4",
+    "repo_root": "/home/daniel/TFG/ClienteDashPrudente",
     "trace_path_rewrites": []
   },
   "playback": {

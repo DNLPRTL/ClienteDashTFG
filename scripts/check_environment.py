@@ -36,7 +36,7 @@ class CheckResult:
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
-    parser = argparse.ArgumentParser(description="Check DashClientModular4 environment readiness.")
+    parser = argparse.ArgumentParser(description="Check ClienteDashPrudente environment readiness.")
     parser.add_argument(
         "--profile",
         choices=("dev", "analysis", "gst", "all"),
@@ -60,7 +60,7 @@ def run_profile(profile: str, strict: bool = False, stream: Optional[TextIO] = N
 
     results: List[CheckResult] = []
     selected = _expand_profiles(profile)
-    _write(stream, "DashClientModular4 environment check")
+    _write(stream, "ClienteDashPrudente environment check")
     _write(stream, "Profile: {0}  Strict: {1}".format(profile, "yes" if strict else "no"))
     _write(stream, "")
 

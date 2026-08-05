@@ -6,7 +6,7 @@
 # Genera media_profiles/segment_sizes/<perfil>.json y los sube por git.
 #
 # Uso:
-#   cd ~/TFG/DashClientModular4
+#   cd ~/TFG/ClienteDashPrudente
 #   git pull
 #   bash scripts/extraer_tamanos_reales_segmentos_ubuntu_cliente.sh
 set -euo pipefail

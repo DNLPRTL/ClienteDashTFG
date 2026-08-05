@@ -18,18 +18,18 @@ if str(RAIZ_REPO) not in sys.path:
     sys.path.insert(0, str(RAIZ_REPO))
 
 from core.evaluation.qoe import LINEAR_QOE_VERSION
-from core.phase6 import VERSION_SCHEMA_PHASE6
-from core.phase6.analisis import analizar_paquete_phase6
-from core.phase6.catalogo import (
+from core.fase6 import VERSION_SCHEMA_FASE6
+from core.fase6.analisis import analizar_paquete_fase6
+from core.fase6.catalogo import (
     NOMBRES_PRESET,
     parametros_controller,
     descubrir_controllers_comparables,
     perfiles_medio_para_preset,
     especificacion_preset,
 )
-from core.phase6.configuracion import cargar_config_phase6, escribir_config_ejemplo_phase6
-from core.phase6.seleccion import cargar_manifest_trazas, seleccionar_ventanas_trazas
-from core.phase6.verificacion import verificar_paquete_phase6
+from core.fase6.configuracion import cargar_config_fase6, escribir_config_ejemplo_fase6
+from core.fase6.seleccion import cargar_manifest_trazas, seleccionar_ventanas_trazas
+from core.fase6.verificacion import verificar_paquete_fase6
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
@@ -48,11 +48,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     args = parser.parse_args(argv)
 
     if args.write_example_config:
-        path = escribir_config_ejemplo_phase6()
+        path = escribir_config_ejemplo_fase6()
         print("Config ejemplo escrita: {0}".format(path))
         return 0
 
-    config = cargar_config_phase6(args.config)
+    config = cargar_config_fase6(args.config)
     if args.preset:
         config.setdefault("experiment", {})["preset"] = args.preset
     if args.output_root:
@@ -64,7 +64,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if args.max_sessions is not None:
         config.setdefault("execution", {})["max_sessions"] = int(args.max_sessions)
 
-    package = ejecutar_phase6(
+    package = ejecutar_fase6(
         config,
         dry_run=bool(args.dry_run),
         only_plan=bool(args.only_plan),
@@ -80,7 +80,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     return 0 if package["failed_count"] == 0 and package.get("verification_passed", True) else 1
 
 
-def ejecutar_phase6(
+def ejecutar_fase6(
     config: Mapping[str, Any],
     *,
     dry_run: bool = False,
@@ -92,7 +92,7 @@ def ejecutar_phase6(
     package_root = resolver_raiz_paquete(config, preset)
     existing = cargar_paquete_protocolo_existente(package_root)
     if existing is None:
-        protocol, sessions = construir_protocolo_y_plan_phase6(config, preset, package_root)
+        protocol, sessions = construir_protocolo_y_plan_fase6(config, preset, package_root)
         escribir_paquete_protocolo(package_root, protocol, sessions)
     else:
         protocol, sessions = existing
@@ -130,9 +130,9 @@ def ejecutar_phase6(
     verification_path = ""
     verification_passed = True
     if not dry_run and not only_plan and not skip_analysis and _bool(_mapping(config.get("execution")).get("run_analysis", True)):
-        result_package = analizar_paquete_phase6(package_root)
+        result_package = analizar_paquete_fase6(package_root)
         analysis_path = result_package["artifacts"]["resultados_para_validar_md"]
-        verification = verificar_paquete_phase6(package_root, require_plots=True, write_artifacts=True)
+        verification = verificar_paquete_fase6(package_root, require_plots=True, write_artifacts=True)
         verification_path = verification["artifacts"]["verification_md"]
         verification_passed = bool(verification["all_checks_passed"])
 
@@ -147,7 +147,7 @@ def ejecutar_phase6(
     }
 
 
-def construir_protocolo_y_plan_phase6(
+def construir_protocolo_y_plan_fase6(
     config: Mapping[str, Any],
     preset: str,
     package_root: Path,
@@ -168,7 +168,7 @@ def construir_protocolo_y_plan_phase6(
     benchmark_capable = bool(spec["benchmark_capable"] and engine == "fake")
     ranking_capable = bool(spec["ranking_capable"] and engine == "fake")
     protocol = {
-        "schema_version": VERSION_SCHEMA_PHASE6,
+        "schema_version": VERSION_SCHEMA_FASE6,
         "created_at_local": datetime.now().astimezone().isoformat(),
         "preset": preset,
         "engine": engine,
@@ -543,7 +543,7 @@ def _imprimir_progreso(
     percent = (float(processed_count) / float(total_sessions) * 100.0) if total_sessions else 100.0
     print(
         (
-            "PHASE6_PROGRESS processed={0} total={1} percent={2:.1f} executed={3} failed={4} "
+            "FASE6_PROGRESO processed={0} total={1} percent={2:.1f} executed={3} failed={4} "
             "skipped={5} elapsed_s={6:.1f} last_session_s={7:.1f} avg_session_s={8:.1f} eta_s={9:.1f} session={10}"
         ).format(
             processed_count,

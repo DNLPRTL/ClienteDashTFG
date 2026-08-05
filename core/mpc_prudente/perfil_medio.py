@@ -22,7 +22,7 @@ RAIZ_REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fi
 DIR_TAMANOS_SEGMENTOS = os.path.join(RAIZ_REPO, "media_profiles", "segment_sizes")
 
 # Los ids de media de Phase 6 (cortos) mapean a los ids de descriptor (del MPD real).
-MAPA_ID_PHASE6_A_DESCRIPTOR = {
+MAPA_ID_FASE6_A_DESCRIPTOR = {
     "paseo_10min_30fps_4s": "paseo_almunecar_10min_30fps_4s",
     "paseo_10min_60fps_4s": "paseo_almunecar_10min_60fps_4s",
     "blender_10min_30fps_4s": "blender_sunflower_10min_30fps_4s",
@@ -37,7 +37,7 @@ def resolver_id_descriptor_medio(media_profile_id: str, *, base_dir: str | None 
     mid = str(media_profile_id)
     if os.path.isfile(os.path.join(directory, mid + ".json")):
         return mid
-    return MAPA_ID_PHASE6_A_DESCRIPTOR.get(mid, mid)
+    return MAPA_ID_FASE6_A_DESCRIPTOR.get(mid, mid)
 
 
 class ErrorPerfilMedio(ValueError):

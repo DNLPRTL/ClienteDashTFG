@@ -1,10 +1,10 @@
 ﻿# Plan generico del TFG
 
-_Paquete imprescindible para trasladar DashClientModular4 a otro proyecto o a otra IA sin cargar toda la documentacion historica._
+_Paquete imprescindible para trasladar ClienteDashPrudente a otro proyecto o a otra IA sin cargar toda la documentacion historica._
 
 ## 1. Identidad del proyecto
 
-- Proyecto: DashClientModular4.
+- Proyecto: ClienteDashPrudente.
 - Tema: ABR con IA para streaming MPEG-DASH.
 - Objetivo general: construir un cliente DASH modular, implementar baselines ABR clasicos, integrar un controlador IA propio y preparar una evaluacion comparativa defendible.
 - Estado consolidado al generar este paquete: Phase 1 a Phase 5 cerradas; la Fase de Verificacion del cliente y los controllers clasicos esta cerrada en Ubuntu. La fase activa pasa a Phase 6 planning. No hay benchmark final autorizado todavia.
@@ -214,7 +214,7 @@ Para bloques documentales:
 git status --short --branch
 git diff --check
 python -m unittest discover
-python scripts/check_client_readiness.py --strict
+python scripts/comprobar_cliente.py --strict
 ```
 
 Para bloques de controller:
@@ -223,7 +223,7 @@ Para bloques de controller:
 git status --short --branch
 git diff --check
 python -m unittest discover
-python scripts/check_client_readiness.py --strict
+python scripts/comprobar_cliente.py --strict
 ```
 
 Ademas, revisar manifest, CSVs, telemetria y que no aparezcan artefactos legacy como `dataset.csv` o `dataset_training.csv`.
@@ -233,7 +233,7 @@ Para bloques de validacion:
 - validar manifests;
 - validar leakage guards;
 - validar readiness;
-- validar paquetes Phase 6 con `scripts/verificar_paquete_phase6.py`;
+- validar paquetes Phase 6 con `scripts/verificar_paquete_fase6.py`;
 - mantener datasets y reportes fuera de Git;
 - no ejecutar benchmark si `benchmark_authorized=false`.
 

@@ -5,7 +5,7 @@ import unittest
 from core.controller.phase45_v3_neural_mpc import DEFAULT_NEURAL_MPC_V2_BUNDLE_DIR
 from core.controller.registry import create_controller
 from core.phase45_v3.neural_mpc_controller import NEURAL_MPC_V2_CONTROLLER_KEY
-from core.phase6.catalogo import descubrir_controllers_comparables
+from core.fase6.catalogo import descubrir_controllers_comparables
 
 
 class Phase45V3NeuralMpcV2ControllerTest(unittest.TestCase):

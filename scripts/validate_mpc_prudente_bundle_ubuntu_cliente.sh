@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # MPC Prudente — validar el bundle ya copiado en la VM cliente Ubuntu.
 #
-#   cd ~/TFG/DashClientModular4
+#   cd ~/TFG/ClienteDashPrudente
 #   git pull
 #   bash scripts/validate_mpc_prudente_bundle_ubuntu_cliente.sh
 set -euo pipefail

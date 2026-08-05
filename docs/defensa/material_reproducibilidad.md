@@ -55,23 +55,23 @@ core/neural_abr/                       # base reutilizada (features, safety, bun
 
 ### Phase 6 (evaluación formal)
 ```text
-core/phase6/catalogo.py      # presets (tfg_final) y perfiles de medio
-core/phase6/seleccion.py     # selección determinista de ventanas eval
-core/phase6/configuracion.py # carga de config
-core/phase6/analisis.py      # métricas, estadística pareada, gates, plots
-core/phase6/verificacion.py  # verificación automática del paquete
-scripts/run_phase6_validacion_comparativa.py   # runner (orquesta las 360 sesiones)
+core/fase6/catalogo.py      # presets (tfg_final) y perfiles de medio
+core/fase6/seleccion.py     # selección determinista de ventanas eval
+core/fase6/configuracion.py # carga de config
+core/fase6/analisis.py      # métricas, estadística pareada, gates, plots
+core/fase6/verificacion.py  # verificación automática del paquete
+scripts/ejecutar_fase6.py   # runner (orquesta las 360 sesiones)
 ```
 
 ### Datos versionados y scripts
 ```text
 media_profiles/segment_sizes/*.json    # 8 tablas VBR reales (COMMITEADAS)
 scripts/extraer_tamanos_reales_segmentos.py
-scripts/run_mpc_prudente_multimedia_dataset_wsl.sh   # (re-entrenar) dataset
-scripts/run_mpc_prudente_temporal_training_wsl.sh    # (re-entrenar) ensemble
-scripts/run_mpc_prudente_temporal_bundle_wsl.sh      # (re-entrenar) export bundle
-scripts/check_client_readiness.py
-config/phase6.example.yaml             # plantilla de config
+scripts/generar_dataset_multimedia_mpc_prudente_wsl.sh   # (re-entrenar) dataset
+scripts/entrenar_temporal_mpc_prudente_wsl.sh    # (re-entrenar) ensemble
+scripts/exportar_bundle_temporal_mpc_prudente_wsl.sh      # (re-entrenar) export bundle
+scripts/comprobar_cliente.py
+config/fase6.example.yaml             # plantilla de config
 tests/                                 # 489 tests
 ```
 
@@ -101,7 +101,7 @@ Paseo_Almunecar_10min_30fps/4sec/  +  Paseo_Almunecar_10min_60fps/4sec/
 Blender_Sunflower_10min_30fps/4sec/  +  Blender_Sunflower_10min_60fps/4sec/
 ```
 
-Las URLs concretas están en `core/phase6/catalogo.py` (MEDIA_PROFILES); en otro PC
+Las URLs concretas están en `core/fase6/catalogo.py` (MEDIA_PROFILES); en otro PC
 basta cambiar la IP en la config local. Los 6 niveles son
 300/750/1200/1850/2850/4300 kbps, codificación VBR (por eso existen las tablas del
 Bloque 1).
@@ -118,7 +118,7 @@ Bloque 1).
 ```
 
 Este paquete permite re-derivar TODOS los números de la memoria sin re-ejecutar
-nada (`analizar_paquete_phase6` sobre el paquete los recalcula desde la telemetría).
+nada (`analizar_paquete_fase6` sobre el paquete los recalcula desde la telemetría).
 
 ---
 
@@ -128,8 +128,8 @@ nada (`analizar_paquete_phase6` sobre el paquete los recalcula desde la telemetr
 2. Copiar Bloque 2 (manifest + trazas eval + 2 bundles) respetando rutas o
    adaptando `config/phase6.local.json`.
 3. Servir el contenido DASH (Bloque 3) y apuntar las URLs.
-4. `python -m unittest discover` y `python scripts/check_client_readiness.py --strict`.
-5. `python3 scripts/run_phase6_validacion_comparativa.py --config config/phase6.local.json --preset tfg_final`
+4. `python -m unittest discover` y `python scripts/comprobar_cliente.py --strict`.
+5. `python3 scripts/ejecutar_fase6.py --config config/phase6.local.json --preset tfg_final`
    (~12.5 h estimadas; selección de ventanas y semillas deterministas → mismas
    trazas y mismos escenarios que el paquete original).
 

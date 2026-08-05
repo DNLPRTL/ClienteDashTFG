@@ -92,7 +92,7 @@ ensemble temporal mejora al MLP."* (NO afirmar "gano a todos" — es empate hone
 - `core/controller/mpc_prudente_runtime.py` — controllers runtime v1 + v2
   (`ControllerRuntimeMpcPrudente`, `ControllerRuntimeMpcPrudenteTemporal`).
 - Registry: `mpc_prudente_v1`, `mpc_prudente_v2`.
-- Phase 6: `core/phase6/analisis.py` (métricas cola/catastróficas/stalls + plots
+- Phase 6: `core/fase6/analisis.py` (métricas cola/catastróficas/stalls + plots
   `qoe_robustez_peor_caso`, `stalls_por_controller`), `catalogo.py` (preset
   `comparativa` y `tfg_final`), runner inyecta media por sesión.
 - Tablas VBR commiteadas: `media_profiles/segment_sizes/*.json` (8 perfiles).
@@ -107,11 +107,11 @@ ensemble temporal mejora al MLP."* (NO afirmar "gano a todos" — es empate hone
 
 ## 6. Comandos clave (Daniel ejecuta; Claude prepara/commitea desde Windows)
 
-- WSL dataset multivídeo: `bash scripts/run_mpc_prudente_multimedia_dataset_wsl.sh`
-- WSL train temporal: `bash scripts/run_mpc_prudente_temporal_training_wsl.sh`
-- WSL export bundle temporal: `bash scripts/run_mpc_prudente_temporal_bundle_wsl.sh` (luego mover tarball a Ubuntu)
+- WSL dataset multivídeo: `bash scripts/generar_dataset_multimedia_mpc_prudente_wsl.sh`
+- WSL train temporal: `bash scripts/entrenar_temporal_mpc_prudente_wsl.sh`
+- WSL export bundle temporal: `bash scripts/exportar_bundle_temporal_mpc_prudente_wsl.sh` (luego mover tarball a Ubuntu)
 - Ubuntu Phase 6 final: GUI preset `tfg_final` + 6 controllers, o
-  `python3 scripts/run_phase6_validacion_comparativa.py --config config/phase6.local.json --preset tfg_final`
+  `python3 scripts/ejecutar_fase6.py --config config/phase6.local.json --preset tfg_final`
 - Sync: WSL/Ubuntu `git pull`; Windows (Claude) commitea con rutas explícitas.
 
 ## 7. Pendiente / opciones

@@ -271,7 +271,7 @@ Pero el flujo deseado es que Daniel no tenga que hacer commits, push, tests manu
 En Ubuntu cliente sí debe ejecutar lo importante:
 
 ```bash
-cd ~/TFG/DashClientModular4
+cd ~/TFG/ClienteDashPrudente
 git pull
 ```
 
@@ -319,7 +319,7 @@ Ejemplos orientativos:
 ```powershell
 git status --short --branch
 pytest
-python scripts/check_client_readiness.py --strict
+python scripts/comprobar_cliente.py --strict
 git diff --check
 ```
 
@@ -357,7 +357,7 @@ Después del push de Codex, Daniel debe sincronizar Ubuntu cliente.
 Ejemplo base:
 
 ```bash
-cd ~/TFG/DashClientModular4
+cd ~/TFG/ClienteDashPrudente
 git status --short --branch
 git pull
 git status --short --branch
@@ -390,8 +390,8 @@ wsl -d Ubuntu-24.04
 cd ~
 mkdir -p ~/TFG
 cd ~/TFG
-git clone https://github.com/DNLPRTL/DashClientModular4.git
-cd DashClientModular4
+git clone https://github.com/DNLPRTL/ClienteDashPrudente.git
+cd ClienteDashPrudente
 git checkout rebuild/phase3-from-phase2
 source ~/venvs/rocm721/bin/activate
 python3 -c "import torch; print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0))"
@@ -401,7 +401,7 @@ Sincronización diaria si el repo ya existe:
 
 ```bash
 wsl -d Ubuntu-24.04
-cd ~/TFG/DashClientModular4
+cd ~/TFG/ClienteDashPrudente
 git status --short --branch
 git pull
 source ~/venvs/rocm721/bin/activate
@@ -575,7 +575,7 @@ Validado en Windows:
 
 Ahora en Ubuntu cliente ejecuta:
 
-cd ~/TFG/DashClientModular4
+cd ~/TFG/ClienteDashPrudente
 git pull
 <comando de validación real>
 

@@ -6,7 +6,7 @@ from collections import defaultdict, deque
 from pathlib import Path
 from typing import Any, Deque, Dict, Iterable, List, Mapping, Sequence
 
-from core.phase6.catalogo import especificacion_preset
+from core.fase6.catalogo import especificacion_preset
 
 
 DATASET_ID_SINTETICO = "synthetic_controlled_network"

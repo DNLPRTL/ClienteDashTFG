@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # MPC Prudente — empaquetar el bundle para moverlo a la VM cliente Ubuntu.
 #
-#   bash scripts/package_mpc_prudente_bundle_transfer_wsl.sh
+#   bash scripts/empaquetar_bundle_mpc_prudente_wsl.sh
 set -euo pipefail
 
 BUNDLE_DIR="${MPC_PRUDENTE_BUNDLE_DIR:-$HOME/TFG/modelos/mpc_prudente/runtime_bundle_v1}"

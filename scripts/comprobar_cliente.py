@@ -55,19 +55,19 @@ REQUIRED_IMPORTS = (
     "core.media_engine.fake",
     "core.media_engine.gst_media_engine",
     "core.phase45_v1.spbc_v2_dpo_bundle",
-    "core.phase6.analisis",
-    "core.phase6.catalogo",
-    "core.phase6.configuracion",
-    "core.phase6.seleccion",
-    "core.phase6.verificacion",
+    "core.fase6.analisis",
+    "core.fase6.catalogo",
+    "core.fase6.configuracion",
+    "core.fase6.seleccion",
+    "core.fase6.verificacion",
     "core.trace_replay.controlled_downloader",
     "scripts.check_environment",
     "scripts.verificar_cliente_y_controllers_clasicos",
-    "scripts.run_phase6_validacion_comparativa",
-    "scripts.analyze_phase6_results",
-    "scripts.phase6_gui",
-    "scripts.run_phase6_verificacion_clasica_controlada",
-    "scripts.verificar_paquete_phase6",
+    "scripts.ejecutar_fase6",
+    "scripts.analizar_resultados_fase6",
+    "scripts.gui_fase6",
+    "scripts.verificacion_clasica_controlada_fase6",
+    "scripts.verificar_paquete_fase6",
     "scripts.export_phase45_v2_spbc_dpo_bundle",
     "scripts.validate_phase45_v2_spbc_dpo_bundle",
 )
@@ -113,7 +113,7 @@ class Result:
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
-    parser = argparse.ArgumentParser(description="Check DashClientModular4 client-readiness gate.")
+    parser = argparse.ArgumentParser(description="Check ClienteDashPrudente client-readiness gate.")
     parser.add_argument("--strict", action="store_true", help="Fail on any non-allowlisted warning.")
     args = parser.parse_args(argv)
     return run_checks(strict=args.strict)
@@ -147,7 +147,7 @@ def run_checks(strict: bool = False, stream: Optional[TextIO] = None) -> int:
     fails = [r for r in results if r.status == "FAIL"]
     unallowlisted_warns = [r for r in warns if r.code not in STRICT_ALLOWED_WARN_CODES]
 
-    _write(stream, "DashClientModular4 client readiness check")
+    _write(stream, "ClienteDashPrudente client readiness check")
     _write(stream, "Strict: {0}".format("yes" if strict else "no"))
     _write(stream, "")
     for result in results:

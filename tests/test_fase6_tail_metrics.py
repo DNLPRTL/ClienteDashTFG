@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from core.phase6.analisis import agregar_resumenes, estadistica_pareada
+from core.fase6.analisis import agregar_resumenes, estadistica_pareada
 
 _NUMERIC_DEFAULTS = {
     "qoe_log_mean": 0.0,

@@ -2,10 +2,10 @@
 # MPC Prudente — exportar el bundle runtime desde el modelo entrenado (WSL).
 #
 #   wsl -d Ubuntu-24.04
-#   cd ~/TFG/DashClientModular4
+#   cd ~/TFG/ClienteDashPrudente
 #   git pull
 #   source ~/venvs/rocm721/bin/activate
-#   bash scripts/export_mpc_prudente_bundle_wsl.sh
+#   bash scripts/exportar_bundle_mpc_prudente_wsl.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

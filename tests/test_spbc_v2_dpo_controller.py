@@ -20,7 +20,7 @@ from core.phase45_v1.spbc_v2_dpo_training import (
     SPBC_V2_DPO_MODEL_KEY,
     SpbcAbrV2DpoPolicy,
 )
-from core.phase6.catalogo import descubrir_controllers_comparables
+from core.fase6.catalogo import descubrir_controllers_comparables
 from tests.spbc_v2_dpo_bundle_utils import build_minimal_spbc_v2_dpo_bundle, minimal_spbc_feedback
 
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from core.phase6.catalogo import NOMBRES_PRESET, especificacion_preset
+from core.fase6.catalogo import NOMBRES_PRESET, especificacion_preset
 
 
 class Phase6ComparativaPresetTest(unittest.TestCase):
@@ -24,7 +24,7 @@ class Phase6ComparativaPresetTest(unittest.TestCase):
         self.assertIn("blender_10min_60fps_4s", spec["media_profile_ids"])
 
     def test_comparativa_authorizes_ranking_gate(self):
-        from core.phase6.analisis import evaluar_gates
+        from core.fase6.analisis import evaluar_gates
 
         # Protocolo comparativa con todo correcto -> benchmark/ranking autorizado.
         protocol = {"preset": "comparativa", "benchmark_capable": True}

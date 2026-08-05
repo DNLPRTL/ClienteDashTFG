@@ -22,7 +22,7 @@ PREFIJOS_PROPIOS = ("propio_",)
 FICHERO_MANIFIESTO_GRAFICAS = "plot_manifest.json"
 
 
-def analizar_paquete_phase6(package_root: str | Path, *, generate_plots: bool = True) -> Dict[str, Any]:
+def analizar_paquete_fase6(package_root: str | Path, *, generate_plots: bool = True) -> Dict[str, Any]:
     root = Path(package_root)
     protocol_dir = root / "00_protocolo"
     results_dir = root / "02_resultados"
@@ -72,7 +72,7 @@ def analizar_paquete_phase6(package_root: str | Path, *, generate_plots: bool = 
     }
 
     if generate_plots:
-        generar_graficas_phase6(raw_chunks, summaries, aggregates, plots_dir)
+        generar_graficas_fase6(raw_chunks, summaries, aggregates, plots_dir)
 
     (results_dir / "aggregates_by_controller.json").write_text(
         json.dumps(aggregates, indent=2, sort_keys=True),
@@ -553,7 +553,7 @@ def construir_ranking(
     }
 
 
-def generar_graficas_phase6(
+def generar_graficas_fase6(
     raw_chunks: Sequence[Mapping[str, Any]],
     summaries: Sequence[Mapping[str, Any]],
     aggregates: Sequence[Mapping[str, Any]],

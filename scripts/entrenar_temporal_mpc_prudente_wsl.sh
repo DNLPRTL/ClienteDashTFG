@@ -2,10 +2,10 @@
 # MPC Prudente — entrenar el predictor TEMPORAL (GRU) ensemble (full) en GPU.
 #
 #   wsl -d Ubuntu-24.04
-#   cd ~/TFG/DashClientModular4
+#   cd ~/TFG/ClienteDashPrudente
 #   git pull
 #   source ~/venvs/rocm721/bin/activate
-#   bash scripts/run_mpc_prudente_temporal_training_wsl.sh
+#   bash scripts/entrenar_temporal_mpc_prudente_wsl.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

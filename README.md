@@ -1,4 +1,4 @@
-# DashClientModular4
+# ClienteDashPrudente
 
 Modular DASH client for a TFG project. Phase 1 client hardening is ready to close after the Block 14 readiness gate: the repository is a stable technical base for returning to Phase 0 methodology before adding real ABR algorithms.
 
@@ -53,7 +53,7 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 python -m unittest discover
 python scripts/check_environment.py --profile dev
-python scripts/check_client_readiness.py --strict
+python scripts/comprobar_cliente.py --strict
 ```
 
 Optional offline analysis dependencies live in `requirements-analysis.txt`. Optional GStreamer support is checked separately on Ubuntu with:

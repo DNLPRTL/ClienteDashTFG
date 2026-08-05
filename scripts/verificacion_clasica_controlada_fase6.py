@@ -14,10 +14,10 @@ RAIZ_REPO = Path(__file__).resolve().parents[1]
 if str(RAIZ_REPO) not in sys.path:
     sys.path.insert(0, str(RAIZ_REPO))
 
-from core.phase6.catalogo import NOMBRES_PRESET
-from core.phase6.configuracion import cargar_config_phase6
-from core.phase6.seleccion import cargar_manifest_trazas, seleccionar_ventanas_trazas
-from scripts.run_phase6_validacion_comparativa import aplicar_overrides_preset
+from core.fase6.catalogo import NOMBRES_PRESET
+from core.fase6.configuracion import cargar_config_fase6
+from core.fase6.seleccion import cargar_manifest_trazas, seleccionar_ventanas_trazas
+from scripts.ejecutar_fase6 import aplicar_overrides_preset
 from scripts.verificar_cliente_y_controllers_clasicos import (
     CLASSIC_CONTROLLERS,
     DEFAULT_MPD_URL,
@@ -41,7 +41,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--timeout-seconds", type=float, default=240.0)
     args = parser.parse_args(argv)
 
-    config = aplicar_overrides_preset(cargar_config_phase6(args.config), args.preset)
+    config = aplicar_overrides_preset(cargar_config_fase6(args.config), args.preset)
     if args.output_root:
         config.setdefault("paths", {})["output_root"] = args.output_root
     output_root = Path(str(config["paths"]["output_root"])) / OUTPUT_FOLDER_NAME / time.strftime("%Y%m%d_%H%M%S")

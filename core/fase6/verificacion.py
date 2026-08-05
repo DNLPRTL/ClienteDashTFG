@@ -20,7 +20,7 @@ FICHEROS_RESULTADOS_REQUERIDOS = (
 )
 
 
-def verificar_paquete_phase6(
+def verificar_paquete_fase6(
     package_root: str | Path,
     *,
     require_plots: bool = True,

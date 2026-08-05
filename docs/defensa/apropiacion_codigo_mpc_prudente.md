@@ -143,7 +143,7 @@ Las dos causas raíz que ataca (aprendidas de los fracasos previos):
 - **Por qué existe:** es la etapa 5 del embudo (antes de tocar el cliente real);
   eval queda intacto para Phase 6. No es benchmark.
 
-## 10. Phase 6 (`core/phase6/` + runner) — la evaluación formal
+## 10. Phase 6 (`core/fase6/` + runner) — la evaluación formal
 
 - `catalogo.py`: presets; `tfg_final` = 12 ventanas reales + 3 sintéticas × 4
   vídeos × 6 controllers = 360 sesiones.
