@@ -93,48 +93,61 @@ se quiere el motor de reproducción real, GStreamer 1.x con PyGObject del sistem
 | 2 | 1280×720 | avc1.64001F | 2850 kbps |
 | 1 | 1920×1080 | avc1.640032 | 4300 kbps |
 
-### 4.2 Cómo se generó el contenido (metodología, de los scripts conservados en el servidor + el MPD)
+### 4.2 Cómo se generó el contenido (proceso real, scripts en `scripts/servidor/` del repo)
 
-Proceso en dos pasos, guionizado en bash (los scripts de las iteraciones se
-conservan en `~/Escritorio/` del servidor: `generate_dash.sh`,
-`auto_dash_resume.sh`, `pack_walk_docker.sh`):
+Proceso en tres pasos con dos scripts bash propios (versionados en el repo:
+`scripts/servidor/herramienta_video.sh` y `scripts/servidor/generar_dash_lote.sh`):
 
-**Paso 1 — Codificación de las representaciones (ffmpeg/libx264):** por cada
-nivel de la escalera, a partir del máster:
+**Paso 0 — Preparación de los másteres (`herramienta_video.sh`, interactivo,
+ffmpeg):** a partir de las fuentes (grabación propia de Paseo de Almuñécar y la
+película abierta Blender Sunflower): recorte a 10 min / 1 min
+(`ffmpeg -ss INICIO -t DURACION`), conversión a 30 fps de las variantes
+(`ffmpeg -r 30`, las versiones 30fps salen del máster 60fps) y normalización a
+MP4 H.264 limpio (libx264, `-pix_fmt yuv420p`, `+faststart`). Resultado: los 8
+másteres `<video>.mp4`, uno por carpeta.
+
+**Paso 1 — Codificación de las 6 representaciones (`generar_dash_lote.sh`,
+ffmpeg/libx264):** el script recorre carpeta por carpeta, detecta los FPS con
+`ffprobe` y genera la escalera en orden mayor→menor (por eso los ids del MPD son
+1=1080p … 6=144p):
 
 ```bash
-ffmpeg -y -i FUENTE.mp4 -an \
-  -c:v libx264 -preset fast -profile:v high \
-  -b:v <kbps>k -maxrate <kbps>k -bufsize <2·kbps>k \
-  -vf "scale=W:H:force_original_aspect_ratio=decrease,pad=W:H:(ow-iw)/2:(oh-ih)/2" \
-  -x264-params keyint=<GOP>:min-keyint=<GOP>:scenecut=0 \
-  _reps_<video>/<video>_<res>_<kbps>k.mp4
+ffmpeg -y -i MASTER.mp4 \
+  -vf "scale=W:H:force_original_aspect_ratio=decrease,pad=W:H:(ow-iw)/2:(oh-ih)/2,setsar=1,setdar=16/9" \
+  -c:v libx264 -preset slow -profile:v high -pix_fmt yuv420p \
+  -b:v BRk -maxrate BRk -bufsize $((2*BR))k \
+  -x264-params keyint=$((FPS*2)):min-keyint=$((FPS*2)):scenecut=0 \
+  -movflags +faststart -an \
+  _reps_<video>/<video>_<H>p_<BR>k.mp4
 ```
 
-Claves del comando: sin audio (`-an`); control de tasa VBR con tope
-(`-b:v`+`-maxrate`+`-bufsize`) — por eso los segmentos tienen tamaños VBR reales
-y no CBR exacto, que es el hecho que explota el controller; GOP fijo y
-`scenecut=0` para que los keyframes caigan alineados con los cortes de segmento.
+Claves: sin audio (`-an`); control de tasa VBR con tope
+(`-b:v`+`-maxrate`+`-bufsize 2×`) — por eso los segmentos tienen tamaños VBR
+reales y no CBR exacto, el hecho que explota el controller; GOP fijo de 2 s
+(`keyint=2×FPS`, `scenecut=0`) para que cada corte de segmento (2 s y 4 s)
+caiga en keyframe; preset `slow` (calidad de codificación).
 
-**Paso 2 — Empaquetado DASH (MP4Box/GPAC 2.5-DEV en Docker):**
+**Paso 2 — Empaquetado DASH (mismo script, MP4Box/GPAC 2.5-DEV vía Docker
+`jjlin/gpac`), con el bandwidth FORZADO por entrada** — así el MPD anuncia
+exactamente 300000…4300000 bps:
 
 ```bash
-docker run --rm -v <dir_video>:/data jjlin/gpac:latest MP4Box \
+sudo docker run --rm -u "$(id -u)":"$(id -g)" -v "$(pwd)":/data jjlin/gpac:latest MP4Box \
   -dash 4000 -frag 4000 -rap \
   -profile live -bs-switching no -segment-ext m4s \
   -segment-name 'chunk_$Bandwidth$bps/<video>_4s' \
-  -init-seg     'chunk_$Bandwidth$bps/<video>_4s.mp4' \
+  -init-seg     'chunk_$Bandwidth$bps/<video>_4s_init.mp4' \
   -out /data/4sec/<video>_simple_4s.mpd \
-  /data/_reps_<video>/*.mp4
+  /data/_reps_<video>/<video>_1080p_4300k.mp4#video:bandwidth=4300000 \
+  ... (las 6 reps, cada una con su #video:bandwidth=...)
 ```
 
 Resultado: MPD **estático**, perfil `urn:mpeg:dash:profile:isoff-live:2011`,
-`SegmentTemplate` con sustitución `$Bandwidth$` y `$Number$` (timescale 15360,
-duration 61440 = 4.000 s exactos), un directorio `chunk_<bps>bps/` por
-representación con su init `.mp4` y sus segmentos `.m4s`. El atributo generator
-del MPD confirma la herramienta: *"MPD file Generated with GPAC version 2.5-DEV"*
-(17/02/2026). Se empaquetó también la variante de 2 s (no usada en el resultado
-final).
+`SegmentTemplate` con `$Bandwidth$` y `$Number$` (timescale 15360, duration
+61440 = 4.000 s exactos), un directorio `chunk_<bps>bps/` por representación con
+su init `.mp4` y sus segmentos `.m4s`. El atributo generator del MPD confirma la
+herramienta: *"MPD file Generated with GPAC version 2.5-DEV"* (17/02/2026). Se
+generó también la variante de 2 s (no usada en el resultado final).
 
 **Publicación:** mover a `/var/www/html/dash/<video>/` — Apache lo sirve como
 estático sin configuración especial. Comprobación desde el cliente:
@@ -228,10 +241,11 @@ pinball loss). Exporta los bundles con sha256 que luego carga el cliente.
 | OpenSSH (scp) | 8.2p1 | Transferencia de artefactos entre máquinas |
 | PyCharm Community | — | IDE de desarrollo en Windows |
 
-Nota de honestidad para la memoria: los scripts conservados en el servidor
-corresponden a las iteraciones de la metodología (vídeos de prueba, escalera de
-20 niveles "tipo Bunny", naming `bunny_`); la versión final aplicada a
-Paseo/Blender (escalera de 6 niveles, naming `chunk_`) siguió exactamente el
-mismo proceso de dos pasos, como acreditan el MPD (generator GPAC 2.5-DEV, las
-plantillas y nombres) y las carpetas `_reps_*` con las 6 representaciones por
-vídeo que siguen en el servidor.
+Trazabilidad: los dos scripts de generación reales están versionados en
+`scripts/servidor/` del repo. Su salida cuadra con lo observado en el servidor:
+el naming de las representaciones (`<video>_<H>p_<BR>k.mp4` en las carpetas
+`_reps_*`), los bandwidth exactos del MPD (forzados por entrada), el generator
+GPAC 2.5-DEV y la estructura `chunk_<bps>bps/` + `2sec/`/`4sec/`. Los scripts
+del Escritorio del servidor (`generate_dash.sh`, `auto_dash_resume.sh`,
+`pack_walk_docker.sh`, escalera de 20 niveles "tipo Bunny") son iteraciones
+previas, legacy.
