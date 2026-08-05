@@ -59,7 +59,7 @@ decisión / doc operativo.
 
 | Entorno | Rol | Ruta |
 |---|---|---|
-| Windows físico | desarrollo, tests rápidos, commits, push | `C:\Users\danie\Documents\TFG\ClienteDashTFG` |
+| Windows físico | desarrollo, tests rápidos, commits, push | `C:\Users\danie\Documents\TFG\DashClientModular4` (carpeta con nombre antiguo A PROPÓSITO: conserva el proyecto/memoria de Claude Code; el remote ya apunta a ClienteDashTFG) |
 | WSL2 Ubuntu ROCm | entrenamiento IA pesado (GPU AMD RX 7800 XT) | `~/TFG/ClienteDashTFG`, venv `~/venvs/rocm721` |
 | Ubuntu cliente | validación real, Phase 6, evidencia | `~/TFG/ClienteDashTFG` |
 | Ubuntu servidor | sirve MPD/segmentos/inits por HTTP | `192.168.1.132:/var/www/html/dash` |

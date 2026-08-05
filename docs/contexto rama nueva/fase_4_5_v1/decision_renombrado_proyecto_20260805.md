@@ -44,9 +44,11 @@ Los módulos de líneas congeladas (phase45_*) no se tocan.
   estándar, TFG_PLAN_GENERICO, HANDOFF, docs/defensa, todos los scripts/*.sh
   (`cd ~/TFG/ClienteDashTFG`), defaults de `core/fase6/configuracion.py` y
   `config/fase6.example.yaml` (`/home/daniel/TFG/ClienteDashTFG`).
-- Renombrado de carpetas EN CADA MÁQUINA (lo hace Daniel, comandos en el chat):
-  Windows `C:\Users\danie\Documents\TFG\ClienteDashTFG`, WSL y Ubuntu
-  cliente `~/TFG/ClienteDashTFG` + `git remote set-url` + ajustar
-  `repo_root` en `config/phase6.local.json` del cliente.
+- Renombrado de carpetas: Ubuntu cliente y WSL → `~/TFG/ClienteDashTFG`
+  (+ `git remote set-url` + ajustar `repo_root` en `config/phase6.local.json`
+  del cliente). **Windows: Daniel decidió NO renombrar la carpeta**
+  (`C:\Users\danie\Documents\TFG\DashClientModular4`) para conservar el
+  proyecto/memoria de Claude Code; solo se actualizó el remote. El nombre de la
+  carpeta local es irrelevante para git y para los tests.
 - El paquete de evidencia y los artefactos externos NO se mueven (viven bajo
   `~/TFG/...`, fuera del repo; sus rutas no contienen el nombre del repo).
