@@ -43,16 +43,17 @@ Qué dicen que afecte a la bibliografía:
    el repo (`style_and_format_rules.md`): memoria en español, **títulos de los
    papers sin traducir**.
 
-**AVISO IMPORTANTE — falta `miunsrturl.bst`:** en tu copia de
-`Plantilla_TFG_latex` no hay ningún `.bst` (comprobado en todo `TFG/`). Sin ese
-fichero, LaTeX no compila la bibliografía. Dos salidas:
-- Re-descargar el ZIP oficial de la plantilla (trae el `.bst`) desde la página
-  del grado: `https://grados.ugr.es/telecomunicacion/docencia/trabajo-fin-grado`
-  → "Plantilla_TFG_latex [maximo 100 paginas].zip", y copiar `miunsrturl.bst`
-  junto al `TFG.tex`.
-- O cambiar a un estilo estándar: `\bibliographystyle{unsrt}` (mismo orden de
-  cita; pierde el formateo de URLs, que se puede suplir porque el `.bib` ya
-  lleva `\url{}` en `howpublished`/`note`).
+**RESUELTO (10/08) — `miunsrturl.bst` no existe ni en el ZIP oficial:** Daniel
+re-descargó la plantilla oficial del grado y tampoco trae ningún `.bst` (el
+`TFG.tex` referencia un estilo que la escuela nunca distribuyó con el ZIP).
+**Decisión: usar `\bibliographystyle{unsrt}`** (estándar, viene con cualquier
+LaTeX/Prism; misma numeración por orden de cita). El `.bib` está preparado para
+ello: los papers se identifican por venue+DOI en `note` cuando hace falta, y
+todos los recursos web/software llevan su `\url{}` dentro de `howpublished`,
+que `unsrt` SÍ imprime (el `TFG.tex` ya carga `\usepackage{url}`). Cambio
+concreto en el proyecto Prism al activar la bibliografía:
+`\bibliographystyle{miunsrturl}` → `\bibliographystyle{unsrt}` y copiar
+`docs/memoria/bibliografia.bib` como `bibliografia/bibliografia.bib`.
 
 ---
 
@@ -80,7 +81,7 @@ y `0_field_map/local_streaming_source_evidence.md`:**
 | Clave | Fuente | Justifica |
 |---|---|---|
 | `ameigeiras2012youtubeTraffic` | Ameigeiras, Ramos-Muñoz, Navarro-Ortiz, López-Soler 2012 | Caracterización de tráfico de vídeo del grupo del profesor; motivación local. **Hay hasta un párrafo en español ya redactado** en `local_streaming_source_evidence.md` (líneas 103-105) para el cap 2. |
-| `ramosMunoz2014mobileYoutube` | Ramos-Muñoz et al. 2014, IEEE Wireless Comm. | Ídem, versión móvil. |
+| `ramosMunoz2014mobileYoutube` | Ramos-Muñoz et al. 2014, IEEE Wireless Comm. | Ídem, versión móvil. **El primer autor ES el tutor del TFG (Juan José Ramos Muñoz, confirmado 10/08)** → cita doblemente obligada. |
 
 **DASH y estándar (Cap 2.2, 4.2):**
 | Clave | Fuente | Justifica |
@@ -234,14 +235,14 @@ red → `yin2024ant`; mixture-of-experts → `wang2026nmoeabr`; RL en producció
 
 ## 5. Dudas marcadas (regla de oro: se preguntan, no se inventan)
 
-1. **¿Quién firma como tutor?** `portada_prefacio_metadata.md` dice `tutor: TBD`.
-   Los papers locales son del grupo de Ameigeiras/Ramos-Muñoz/Navarro-Ortiz/
-   López-Soler — la bibliografía no cambia sea quien sea, pero la portada y el
-   capítulo de agradecimientos sí.
-2. **`miunsrturl.bst`** — falta (sección 1). ¿Re-bajas el ZIP oficial o cambiamos
-   a `unsrt`?
-3. **DASH-IF IOP**: la entrada está sin versión. Abre `04_DASH_IF_IOP.pdf` y dime
-   qué versión es (portada) para fijarla en el `.bib`.
+1. ~~¿Quién firma como tutor?~~ **RESUELTO (10/08): el tutor es Juan José
+   Ramos Muñoz** — primer autor de `ramosMunoz2014mobileYoutube` y coautor de
+   `ameigeiras2012youtubeTraffic`. Va a la portada (`\myProf` de la plantilla)
+   y da todo el sentido a la subsección de antecedentes locales del cap 2.
+2. ~~`miunsrturl.bst`~~ **RESUELTO (10/08)**: el ZIP oficial tampoco lo trae →
+   `\bibliographystyle{unsrt}` (ver sección 1).
+3. ~~DASH-IF IOP sin versión~~ **RESUELTO (10/08)**: portada del PDF local =
+   **Version 4.1, 7 de septiembre de 2017** — fijado en el `.bib`.
 4. **Estadística del cap 6** (bootstrap CI95, sign test): no hay fuente en tu
    material. Si quieres cita metodológica (recomendable pero opcional), la
    clásica es Efron & Tibshirani, *An Introduction to the Bootstrap* — dila y la
