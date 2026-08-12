@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 780" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="f2flecha" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <polygon points="0 0, 9 3.5, 0 7" fill="#495057"/>
+    </marker>
+    <marker id="f2gris" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <polygon points="0 0, 9 3.5, 0 7" fill="#868e96"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="940" height="780" fill="#ffffff"/>
+
+  <!-- 1 configuracion -->
+  <rect x="60" y="20" width="360" height="46" fill="#f8f9fa" stroke="#495057" stroke-width="1.2" rx="6"/>
+  <text x="240" y="39" font-size="12.5" fill="#212529" text-anchor="middle">1. Cargar y validar la configuración</text>
+  <text x="240" y="56" font-size="11" fill="#495057" text-anchor="middle">main.py + configuracion_cliente (YAML/JSON)</text>
+
+  <!-- 2 contexto -->
+  <rect x="60" y="86" width="360" height="46" fill="#f8f9fa" stroke="#495057" stroke-width="1.2" rx="6"/>
+  <text x="240" y="105" font-size="12.5" fill="#212529" text-anchor="middle">2. Crear el contexto de ejecución</text>
+  <text x="240" y="122" font-size="11" fill="#495057" text-anchor="middle">directorio de la sesión: config resuelta, manifiesto, entorno</text>
+
+  <!-- 3 montar piezas -->
+  <rect x="60" y="152" width="360" height="46" fill="#f8f9fa" stroke="#495057" stroke-width="1.2" rx="6"/>
+  <text x="240" y="171" font-size="12.5" fill="#212529" text-anchor="middle">3. Montar las piezas de la sesión</text>
+  <text x="240" y="188" font-size="11" fill="#495057" text-anchor="middle">controlador (registro) · motor de vídeo · descargador (± traza)</text>
+
+  <!-- 4 MPD -->
+  <rect x="60" y="218" width="360" height="46" fill="#f8f9fa" stroke="#495057" stroke-width="1.2" rx="6"/>
+  <text x="240" y="237" font-size="12.5" fill="#212529" text-anchor="middle">4. Descargar y analizar el MPD</text>
+  <text x="240" y="254" font-size="11" fill="#495057" text-anchor="middle">escalera de niveles + lista de segmentos por nivel</text>
+
+  <!-- 5 decision inicial -->
+  <rect x="60" y="284" width="360" height="46" fill="#f8f9fa" stroke="#495057" stroke-width="1.2" rx="6"/>
+  <text x="240" y="303" font-size="12.5" fill="#212529" text-anchor="middle">5. Decisión inicial del controlador</text>
+  <text x="240" y="320" font-size="11" fill="#495057" text-anchor="middle">nivel de partida; primer segmento sin cambio (calentamiento)</text>
+
+  <line x1="240" y1="66" x2="240" y2="86" stroke="#495057" stroke-width="1.3" marker-end="url(#f2flecha)"/>
+  <line x1="240" y1="132" x2="240" y2="152" stroke="#495057" stroke-width="1.3" marker-end="url(#f2flecha)"/>
+  <line x1="240" y1="198" x2="240" y2="218" stroke="#495057" stroke-width="1.3" marker-end="url(#f2flecha)"/>
+  <line x1="240" y1="264" x2="240" y2="284" stroke="#495057" stroke-width="1.3" marker-end="url(#f2flecha)"/>
+  <line x1="240" y1="330" x2="240" y2="356" stroke="#495057" stroke-width="1.3" marker-end="url(#f2flecha)"/>
+
+  <!-- BUCLE -->
+  <rect x="40" y="356" width="560" height="298" fill="none" stroke="#1971c2" stroke-width="1.8" rx="10"/>
+  <text x="56" y="378" font-size="12" fill="#1971c2" font-weight="bold">BUCLE: para cada segmento del vídeo</text>
+
+  <!-- a buffer lleno -->
+  <rect x="70" y="390" width="500" height="40" fill="#ffffff" stroke="#495057" stroke-width="1.1" rx="6"/>
+  <text x="320" y="406" font-size="12" fill="#212529" text-anchor="middle">a. Si el buffer supera el máximo (60 s): esperar en pasos de 0,5 s</text>
+  <text x="320" y="422" font-size="10.5" fill="#495057" text-anchor="middle">control de ocupación previo a cada descarga</text>
+
+  <!-- b descargar -->
+  <rect x="70" y="440" width="500" height="40" fill="#ffffff" stroke="#495057" stroke-width="1.1" rx="6"/>
+  <text x="320" y="456" font-size="12" fill="#212529" text-anchor="middle">b. Descargar el segmento del nivel vigente (HTTP, con reintentos;</text>
+  <text x="320" y="472" font-size="12" fill="#212529" text-anchor="middle">ante fallo persistente se baja de nivel)</text>
+
+  <!-- c motor -->
+  <rect x="70" y="490" width="500" height="34" fill="#ffffff" stroke="#495057" stroke-width="1.1" rx="6"/>
+  <text x="320" y="511" font-size="12" fill="#212529" text-anchor="middle">c. Entregar los datos al motor de vídeo (entra en el buffer)</text>
+
+  <!-- d realimentacion -->
+  <rect x="70" y="534" width="500" height="40" fill="#e7f1fa" stroke="#1971c2" stroke-width="1.3" rx="6"/>
+  <text x="320" y="550" font-size="12" fill="#1864ab" text-anchor="middle">d. Construir la realimentación y entregarla al controlador</text>
+  <text x="320" y="566" font-size="10.5" fill="#1864ab" text-anchor="middle">buffer, tamaño y tiempo de la descarga, estimación de ancho de banda, nivel…</text>
+
+  <!-- e decision -->
+  <rect x="70" y="584" width="500" height="26" fill="#e7f1fa" stroke="#1971c2" stroke-width="1.3" rx="6"/>
+  <text x="320" y="601" font-size="12" fill="#1864ab" text-anchor="middle">e. El controlador decide el nivel del siguiente segmento</text>
+
+  <!-- f telemetria -->
+  <rect x="70" y="618" width="500" height="26" fill="#ffffff" stroke="#495057" stroke-width="1.1" rx="6"/>
+  <text x="320" y="635" font-size="12" fill="#212529" text-anchor="middle">f. Registrar la fila de telemetría del segmento</text>
+
+  <line x1="320" y1="430" x2="320" y2="440" stroke="#495057" stroke-width="1.1" marker-end="url(#f2flecha)"/>
+  <line x1="320" y1="480" x2="320" y2="490" stroke="#495057" stroke-width="1.1" marker-end="url(#f2flecha)"/>
+  <line x1="320" y1="524" x2="320" y2="534" stroke="#495057" stroke-width="1.1" marker-end="url(#f2flecha)"/>
+  <line x1="320" y1="574" x2="320" y2="584" stroke="#495057" stroke-width="1.1" marker-end="url(#f2flecha)"/>
+  <line x1="320" y1="610" x2="320" y2="618" stroke="#495057" stroke-width="1.1" marker-end="url(#f2flecha)"/>
+
+  <!-- retorno del bucle -->
+  <path d="M 570 631 H 588 V 410 H 570" fill="none" stroke="#1971c2" stroke-width="1.3" marker-end="url(#f2flecha)"/>
+  <text x="580" y="524" font-size="10" fill="#1971c2" transform="rotate(-90 580 524)" text-anchor="middle">siguiente segmento</text>
+
+  <!-- motor lateral -->
+  <rect x="660" y="420" width="240" height="120" fill="#fff9db" stroke="#b08d00" stroke-width="1.2" rx="8"/>
+  <text x="780" y="442" font-size="12" fill="#212529" text-anchor="middle" font-weight="bold">Motor de vídeo (asíncrono)</text>
+  <text x="780" y="462" font-size="11" fill="#495057" text-anchor="middle">consume el buffer y avanza</text>
+  <text x="780" y="478" font-size="11" fill="#495057" text-anchor="middle">el tiempo de reproducción</text>
+  <text x="780" y="500" font-size="11" fill="#495057" text-anchor="middle">eventos: stall · stall_recuperado ·</text>
+  <text x="780" y="516" font-size="11" fill="#495057" text-anchor="middle">segmento_consumido</text>
+  <line x1="660" y1="470" x2="600" y2="505" stroke="#868e96" stroke-width="1.1" stroke-dasharray="4 3" marker-end="url(#f2gris)"/>
+  <line x1="700" y1="540" x2="620" y2="628" stroke="#868e96" stroke-width="1.1" stroke-dasharray="4 3" marker-end="url(#f2gris)"/>
+  <text x="700" y="592" font-size="10.5" fill="#868e96">anota stalls en la telemetría</text>
+
+  <!-- fin -->
+  <line x1="240" y1="654" x2="240" y2="676" stroke="#495057" stroke-width="1.3" marker-end="url(#f2flecha)"/>
+  <rect x="60" y="676" width="360" height="46" fill="#f8f9fa" stroke="#495057" stroke-width="1.2" rx="6"/>
+  <text x="240" y="695" font-size="12.5" fill="#212529" text-anchor="middle">6. Fin de flujo: drenar el buffer y parar el motor</text>
+  <text x="240" y="712" font-size="11" fill="#495057" text-anchor="middle">se reproduce lo pendiente, con límite temporal</text>
+
+  <line x1="420" y1="699" x2="500" y2="699" stroke="#495057" stroke-width="1.3" marker-end="url(#f2flecha)"/>
+  <rect x="500" y="676" width="400" height="46" fill="#f8f9fa" stroke="#495057" stroke-width="1.2" rx="6"/>
+  <text x="700" y="695" font-size="12.5" fill="#212529" text-anchor="middle">7. Cierre de artefactos de la sesión</text>
+  <text x="700" y="712" font-size="11" fill="#495057" text-anchor="middle">telemetria_segmentos.csv · segmentos_evaluacion.csv · log</text>
+
+  <!-- leyenda -->
+  <rect x="660" y="80" width="240" height="96" fill="none" stroke="#adb5bd" stroke-width="1" rx="6"/>
+  <text x="672" y="100" font-size="11" fill="#868e96" font-weight="bold">Leyenda</text>
+  <rect x="672" y="110" width="26" height="13" fill="#e7f1fa" stroke="#1971c2" stroke-width="1.2" rx="3"/>
+  <text x="706" y="121" font-size="10.5" fill="#495057">bucle de decisión ABR</text>
+  <rect x="672" y="130" width="26" height="13" fill="#fff9db" stroke="#b08d00" stroke-width="1.2" rx="3"/>
+  <text x="706" y="141" font-size="10.5" fill="#495057">proceso asíncrono</text>
+  <line x1="672" y1="158" x2="698" y2="158" stroke="#868e96" stroke-width="1.1" stroke-dasharray="4 3"/>
+  <text x="706" y="162" font-size="10.5" fill="#495057">notificación de eventos</text>
+</svg>

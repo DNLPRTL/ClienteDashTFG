@@ -559,7 +559,7 @@ pide cifras, están en el histórico).
 | Cap 1 Introducción | TODO | |
 | Cap 2 Estado del arte | TODO | NotebookLM (listas de fuentes fijadas 12/08) |
 | Cap 3 Planificación/costes | TODO | sacar Gantt del git log |
-| Cap 4 Diseño | TODO | EN CURSO — siguiente apartado: 4.1 |
+| Cap 4 Diseño | EN CURSO | 4.1 BORRADOR entregado 12/08 (borradores/cap4_1_vision_global.md + F1/F2 en figuras/); siguiente: 4.2 |
 | Cap 5 Implementación | TODO | reutilizar notes_for_memory baselines |
 | Cap 6 Evaluación | TODO | números canónicos fijados en §5 (paquete 20260810) |
 | Cap 7 Conclusiones | TODO | al final |

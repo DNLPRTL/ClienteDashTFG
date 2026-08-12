@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 660" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="flecha" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <polygon points="0 0, 9 3.5, 0 7" fill="#495057"/>
+    </marker>
+    <marker id="flechagris" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <polygon points="0 0, 9 3.5, 0 7" fill="#868e96"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="940" height="660" fill="#ffffff"/>
+
+  <!-- ================= ZONA 1: entrada y orquestacion ================= -->
+  <rect x="20" y="18" width="900" height="86" fill="#f8f9fa" stroke="#adb5bd" stroke-width="1" rx="8"/>
+  <text x="34" y="40" font-size="12" fill="#868e96" font-weight="bold">ENTRADA Y ORQUESTACIÓN</text>
+
+  <rect x="60" y="50" width="200" height="42" fill="#ffffff" stroke="#495057" stroke-width="1.4" rx="6"/>
+  <text x="160" y="68" font-size="13" fill="#212529" text-anchor="middle" font-weight="bold">main.py</text>
+  <text x="160" y="84" font-size="11" fill="#495057" text-anchor="middle">punto de entrada</text>
+
+  <rect x="330" y="50" width="240" height="42" fill="#ffffff" stroke="#495057" stroke-width="1" rx="6"/>
+  <text x="450" y="68" font-size="12.5" fill="#212529" text-anchor="middle">configuracion_cliente</text>
+  <text x="450" y="84" font-size="11" fill="#495057" text-anchor="middle">config YAML/JSON validada</text>
+
+  <rect x="640" y="50" width="240" height="42" fill="#ffffff" stroke="#495057" stroke-width="1" rx="6"/>
+  <text x="760" y="68" font-size="12.5" fill="#212529" text-anchor="middle">contexto_ejecucion</text>
+  <text x="760" y="84" font-size="11" fill="#495057" text-anchor="middle">directorio y manifiesto por sesión</text>
+
+  <line x1="260" y1="71" x2="330" y2="71" stroke="#495057" stroke-width="1.2" marker-end="url(#flecha)"/>
+  <line x1="570" y1="71" x2="640" y2="71" stroke="#495057" stroke-width="1.2" marker-end="url(#flecha)"/>
+
+  <!-- main -> reproductor -->
+  <line x1="160" y1="92" x2="160" y2="270" stroke="#495057" stroke-width="1.4" marker-end="url(#flecha)"/>
+  <text x="168" y="150" font-size="11" fill="#495057">monta la sesión</text>
+
+  <!-- ================= ZONA 2: nucleo y apoyos ================= -->
+  <text x="34" y="136" font-size="12" fill="#868e96" font-weight="bold">SESIÓN DE REPRODUCCIÓN</text>
+
+  <!-- analizador_mpd -->
+  <rect x="330" y="150" width="250" height="52" fill="#ffffff" stroke="#495057" stroke-width="1" rx="6"/>
+  <text x="455" y="171" font-size="12.5" fill="#212529" text-anchor="middle">core/analizador_mpd/</text>
+  <text x="455" y="188" font-size="11" fill="#495057" text-anchor="middle">ParserDash: MPD → niveles y segmentos</text>
+
+  <!-- Reproductor (nucleo) -->
+  <rect x="60" y="270" width="200" height="120" fill="#e7f1fa" stroke="#1971c2" stroke-width="1.8" rx="8"/>
+  <text x="160" y="298" font-size="14" fill="#1864ab" text-anchor="middle" font-weight="bold">Reproductor</text>
+  <text x="160" y="316" font-size="11.5" fill="#1864ab" text-anchor="middle">(reproductor.py)</text>
+  <text x="160" y="340" font-size="11" fill="#495057" text-anchor="middle">bucle de sesión:</text>
+  <text x="160" y="355" font-size="11" fill="#495057" text-anchor="middle">un segmento por iteración</text>
+  <text x="160" y="370" font-size="11" fill="#495057" text-anchor="middle">+ telemetría por segmento</text>
+
+  <!-- reproductor <-> analizador -->
+  <line x1="200" y1="270" x2="395" y2="202" stroke="#495057" stroke-width="1.2" marker-end="url(#flecha)"/>
+  <text x="262" y="226" font-size="11" fill="#495057">carga el MPD</text>
+
+  <!-- descargador -->
+  <rect x="330" y="240" width="250" height="52" fill="#ffffff" stroke="#495057" stroke-width="1" rx="6"/>
+  <text x="455" y="261" font-size="12.5" fill="#212529" text-anchor="middle">core/descargador.py</text>
+  <text x="455" y="278" font-size="11" fill="#495057" text-anchor="middle">descarga HTTP con reintentos</text>
+
+  <line x1="260" y1="300" x2="330" y2="272" stroke="#495057" stroke-width="1.2" marker-end="url(#flecha)"/>
+  <text x="270" y="272" font-size="11" fill="#495057">pide segmentos</text>
+
+  <!-- reproduccion_trazas (envuelve descargador) -->
+  <rect x="640" y="228" width="250" height="76" fill="#fff9db" stroke="#b08d00" stroke-width="1.2" rx="6"/>
+  <text x="765" y="250" font-size="12.5" fill="#212529" text-anchor="middle">core/reproduccion_trazas/</text>
+  <text x="765" y="267" font-size="11" fill="#495057" text-anchor="middle">descargador controlado por traza:</text>
+  <text x="765" y="282" font-size="11" fill="#495057" text-anchor="middle">limita el caudal según una traza real</text>
+  <text x="765" y="297" font-size="11" fill="#495057" text-anchor="middle">(red emulada, apdo. 4.7)</text>
+  <line x1="640" y1="266" x2="580" y2="266" stroke="#b08d00" stroke-width="1.2" marker-end="url(#flecha)"/>
+  <text x="586" y="256" font-size="10.5" fill="#b08d00">envuelve</text>
+
+  <!-- motores -->
+  <rect x="330" y="330" width="250" height="62" fill="#ffffff" stroke="#495057" stroke-width="1" rx="6"/>
+  <text x="455" y="351" font-size="12.5" fill="#212529" text-anchor="middle">core/motores/</text>
+  <text x="455" y="368" font-size="11" fill="#495057" text-anchor="middle">MotorSimulado | MotorGStreamer</text>
+  <text x="455" y="383" font-size="11" fill="#495057" text-anchor="middle">buffer y avance de reproducción</text>
+
+  <line x1="260" y1="345" x2="330" y2="355" stroke="#495057" stroke-width="1.2" marker-end="url(#flecha)"/>
+  <text x="266" y="338" font-size="11" fill="#495057">empuja datos</text>
+  <line x1="330" y1="375" x2="262" y2="382" stroke="#868e96" stroke-width="1.1" stroke-dasharray="4 3" marker-end="url(#flechagris)"/>
+  <text x="252" y="404" font-size="10.5" fill="#868e96">eventos: stall / recuperación / consumo</text>
+
+  <!-- controladores -->
+  <rect x="60" y="452" width="330" height="96" fill="#e7f1fa" stroke="#1971c2" stroke-width="1.8" rx="8"/>
+  <text x="225" y="476" font-size="13" fill="#1864ab" text-anchor="middle" font-weight="bold">core/controladores/</text>
+  <text x="225" y="494" font-size="11" fill="#495057" text-anchor="middle">contrato + registro + máscara de acciones</text>
+  <text x="225" y="511" font-size="11" fill="#495057" text-anchor="middle">basado_en_tasa · bba · bola · mpc · mpc_robusto</text>
+  <text x="225" y="528" font-size="11.5" fill="#1864ab" text-anchor="middle" font-weight="bold">controlador_propio</text>
+
+  <!-- realimentacion bidireccional -->
+  <line x1="140" y1="390" x2="140" y2="452" stroke="#1971c2" stroke-width="1.5" marker-end="url(#flecha)"/>
+  <text x="16" y="420" font-size="11" fill="#1971c2">realimentación</text>
+  <text x="16" y="434" font-size="10.5" fill="#868e96">(feedback_reproductor)</text>
+  <line x1="185" y1="452" x2="185" y2="390" stroke="#1971c2" stroke-width="1.5" marker-end="url(#flecha)"/>
+  <text x="196" y="426" font-size="11" fill="#1971c2">tasa objetivo → nivel</text>
+
+  <!-- modelo_propio -->
+  <rect x="450" y="470" width="250" height="62" fill="#ffffff" stroke="#1971c2" stroke-width="1.2" rx="6"/>
+  <text x="575" y="491" font-size="12.5" fill="#212529" text-anchor="middle">core/modelo_propio/</text>
+  <text x="575" y="508" font-size="11" fill="#495057" text-anchor="middle">paquete de modelo + planificador</text>
+  <text x="575" y="523" font-size="11" fill="#495057" text-anchor="middle">(solo el controlador propio)</text>
+  <line x1="390" y1="504" x2="450" y2="501" stroke="#1971c2" stroke-width="1.2" marker-end="url(#flecha)"/>
+
+  <!-- telemetria -->
+  <rect x="640" y="360" width="250" height="70" fill="#ffffff" stroke="#495057" stroke-width="1" rx="6"/>
+  <text x="765" y="381" font-size="12.5" fill="#212529" text-anchor="middle">esquema_telemetria +</text>
+  <text x="765" y="397" font-size="12.5" fill="#212529" text-anchor="middle">artefactos_salida</text>
+  <text x="765" y="415" font-size="11" fill="#495057" text-anchor="middle">telemetria_segmentos.csv · logs</text>
+  <path d="M 240 390 V 444 H 800 V 430" fill="none" stroke="#495057" stroke-width="1.2" marker-end="url(#flecha)"/>
+  <text x="500" y="458" font-size="11" fill="#495057">una fila por segmento</text>
+
+  <!-- ================= ZONA 3: fuera de sesion ================= -->
+  <rect x="20" y="570" width="900" height="74" fill="none" stroke="#868e96" stroke-width="1.2" stroke-dasharray="6 4" rx="8"/>
+  <text x="34" y="592" font-size="12" fill="#868e96" font-weight="bold">FUERA DE LA SESIÓN (procesos independientes)</text>
+
+  <rect x="330" y="600" width="250" height="36" fill="#f8f9fa" stroke="#868e96" stroke-width="1" rx="6"/>
+  <text x="455" y="616" font-size="12" fill="#212529" text-anchor="middle">core/evaluacion/</text>
+  <text x="455" y="630" font-size="10.5" fill="#495057" text-anchor="middle">planes, QoE y análisis (apdo. 4.8)</text>
+  <path d="M 765 430 V 560 H 500 V 600" fill="none" stroke="#868e96" stroke-width="1.1" stroke-dasharray="4 3" marker-end="url(#flechagris)"/>
+  <text x="778" y="520" font-size="10.5" fill="#868e96">consume solo los CSV</text>
+
+  <rect x="640" y="600" width="250" height="36" fill="#f8f9fa" stroke="#868e96" stroke-width="1" rx="6"/>
+  <text x="765" y="616" font-size="12" fill="#212529" text-anchor="middle">entrenamiento/</text>
+  <text x="765" y="630" font-size="10.5" fill="#495057" text-anchor="middle">fabrica el paquete del modelo propio</text>
+  <line x1="700" y1="600" x2="640" y2="534" stroke="#868e96" stroke-width="1.1" stroke-dasharray="4 3" marker-end="url(#flechagris)"/>
+  <text x="585" y="588" font-size="10.5" fill="#868e96">genera el bundle</text>
+</svg>
