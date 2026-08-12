@@ -1,5 +1,25 @@
 # Inventario bibliográfico de la memoria
 
+> **REORGANIZACIÓN FÍSICA HECHA (12/08/2026):** las dos carpetas viejas
+> (`para justificar el cliente`, `todo lo demas que no se como ordenar`) YA NO
+> EXISTEN. La biblioteca limpia vive en
+> `C:\Users\danie\Documents\TFG\literatura\biblioteca_final\` con **cada fichero
+> renombrado a su CLAVE BibTeX** (`bentaleb2019survey.pdf`...) y una sola copia
+> por fuente (74 ficheros): `01_surveys_qoe` (12) · `02_trabajos_locales_ugr` (2)
+> · `03_dash_estandares_http` (9) · `04_abr_clasicos` (6) · `05_abr_ia` (6) ·
+> `06_riesgo_simtoreal` (6) · `07_datasets_emulacion` (8) ·
+> `08_herramientas_seguridad` (12) · `09_amplitud_reserva` (13).
+> Duplicados y descartes (26, nombres originales) →
+> `TFG\legacy\literatura_duplicados_descartes\`; la carpeta espejo `abr ia pdf`
+> (32) → `TFG\legacy\abr ia pdf\`. Verificación: 74+26 = 100 ficheros, 0 perdidos.
+> Las rutas citadas más abajo en este documento son las HISTÓRICAS (pre-12/08);
+> la identificación fichero→fuente sigue siendo válida.
+>
+> **NORMA DE FUENTES (12/08):** los `.md` convertidos del repo
+> (`docs/todos los estudios pdf convertidos a md/`) se usan SOLO como índice de
+> búsqueda. Toda afirmación que entre en la memoria con cita se verifica contra
+> el **PDF original** de `biblioteca_final\` antes de redactarla.
+
 > Identificación real de los 100 ficheros de `literatura/` (80 + 20), con clave de
 > cita, título/autor/año/venue, tema, calidad (tier), capítulo(s) destino y notas
 > (duplicado / usar / descartar). Es el mapa **fuente → capítulo** que usa el

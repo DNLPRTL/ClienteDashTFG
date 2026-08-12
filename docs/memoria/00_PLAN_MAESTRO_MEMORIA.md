@@ -96,6 +96,10 @@ Del profesor + anti-"olor a IA":
 - Separar nítido **diseño (cap 4) / implementación (cap 5) / evaluación (cap 6)**.
 - **Nada de rastro de uso de IA para redactar.** El controlador IA del proyecto SÍ
   se describe (es la aportación); lo que no aparece es que la redacción se apoyó en IA.
+- **Norma de fuentes (12/08):** toda afirmación con cita se verifica contra el
+  **PDF original** (`literatura\biblioteca_final\<carpeta>\<claveBib>.pdf`) antes
+  de entrar en la memoria. Los `.md` convertidos del repo son solo índice de
+  búsqueda, nunca fuente final.
 
 ---
 
@@ -107,11 +111,19 @@ Del profesor + anti-"olor a IA":
 | **NotebookLM** | Experto en papers (cita fiel) | Cap 2 estado del arte y justificaciones biblio. Subes las fuentes del inventario por notebook temático |
 | **Prism / LaTeX UGR** | Maqueta final | Pegar texto ya redactado → PDF con plantilla. No redactar de cero ahí |
 
-**Notebooks de NotebookLM sugeridos** (≤50 fuentes c/u, según inventario):
-1. `NB_estado_del_arte` — surveys + DASH/estándares + familias ABR + QoE.
-2. `NB_cliente_dash` — estándares DASH/MPD, RFCs HTTP, docs de herramientas (cap 4/5).
-3. `NB_ia_riesgo` — Pensieve, Puffer, BayesMPC, CausalSim, SafeSABR, SODA, Oboe,
-   sim-to-real (cap 5 controlador propio + cap 2 familia IA).
+**Notebooks de NotebookLM** (fuentes desde `literatura\biblioteca_final\`;
+NotebookLM solo interviene en el cap 2 + estudio para la defensa):
+1. `NB_estado_del_arte` (37): carpetas `01_surveys_qoe` + `02_trabajos_locales_ugr`
+   + `04_abr_clasicos` + `05_abr_ia` + `06_riesgo_simtoreal` ENTERAS +
+   `03/stockhammer2011dash.pdf` + de `09`: kan2022merina, huang2022a2br,
+   yin2024ant, wang2026nmoeabr.
+2. `NB_cliente_dash` (18 + webs): carpetas `03_dash_estandares_http` +
+   `07_datasets_emulacion` ENTERAS + `04/spiteri2019dashjs.pdf`; las docs de
+   herramientas de `08` se añaden como fuente "sitio web" (URL oficial), no como
+   fichero (NotebookLM no admite .html locales).
+3. `NB_ia_riesgo` (16): carpetas `05_abr_ia` + `06_riesgo_simtoreal` ENTERAS +
+   `04/yin2015mpc.pdf` + `04/akhtar2018oboe.pdf` +
+   `07/wei2019traceBasedEmulation.pdf` + `08/digregorio2026mlLoading.pdf`.
 
 **Prompt base para NotebookLM** (adaptar por capítulo): *"Usando exclusivamente los
 PDF subidos, redacta en español, estilo impersonal y frases cortas, un borrador del
