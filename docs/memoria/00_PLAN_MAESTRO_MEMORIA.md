@@ -9,11 +9,22 @@
 
 | Campo | Valor |
 |---|---|
-| Fecha | 2026-06-25 |
+| Fecha | 2026-06-25 (actualizado 2026-08-12) |
 | Autor | Daniel Pretel |
 | Centro | Universidad de Granada (UGR) — plantilla LaTeX oficial |
 | Estado proyecto | Parte técnica TERMINADA. Esta fase = redacción de la memoria (Fase 7). |
 | Estructura | Fijada por el profesor: Cap 1–7 + Bibliografía + Anexos (no se cambia el macro) |
+
+> **ACTUALIZACIÓN 2026-08-12 (vigente):** (1) De cara a la memoria SOLO existe
+> `C:\Users\danie\Documents\TFG Material\` (regla cero; el repo es bruto para
+> contexto/planes/bibliografía). (2) La nomenclatura de este plan es la vieja de
+> junio: se traduce SIEMPRE con `04_CORRESPONDENCIAS_NOMENCLATURA.md`. (3) Los
+> números de resultados citados en este plan eran de junio: los CANÓNICOS son los
+> del paquete `20260810_133520_tfg_final` (300 sesiones, **5 controladores**, sin
+> v1) — el cap 6 de abajo ya está reescrito con ellos. (4) Citas: SOLO claves de
+> `bibliografia.bib` (ver `02_BIBLIOGRAFIA_DEFINITIVA.md`); las claves [B] de este
+> plan son etiquetas provisionales de junio, mapear a las del .bib. (5) Tutor:
+> Juan José Ramos Muñoz (portada `\myProf`); plantilla en Prism con `unsrt`.
 
 ---
 
@@ -361,27 +372,72 @@ eval ≈1025).
 - **[F/T]** **Tabla: niveles de calidad.** **Tabla: vídeos.** **Tabla: corpus trazas.**
 - **[B]** `Riiser13`, `Raca18`, `Raca20`, `Lumos5G20`, `Puffer20`.
 
-**6.4 Controladores comparados.** Los 6: `rate_based`, `bba`, `bola`, `mpc`/
-`robust_mpc`, prudente v1, prudente v2.
+**6.4 Controladores comparados.** Los **5 del experimento canónico**:
+`basado_en_tasa`, `bba`, `bola`, `mpc_robusto`, `controlador_propio`. Nota de una
+frase: el proyecto implementa también el MPC básico (`mpc`, FastMPC), pero la
+comparativa evalúa su variante robusta por ser la referencia fuerte de la
+literatura (Yin 2015). La antigua "ablación v1↔v2" NO va aquí: la variante MLP
+del predictor quedó fuera del sistema final y se cuenta en 7.5 como iteración.
 
 **6.5 Métricas.** QoE lineal (`reward_n = bitrate_mbps − 4.3·rebuffer_s −
-smoothness_mbps`), rebuffer medio, stalls/sesión, sesiones >5s/>10s, cola (P5,
-peor-caso), inferencia ms, fallback. QoE log como secundaria; startup report-only.
+smoothness_mbps`; columna `qoe_lineal_media`), rebuffer medio, stalls/sesión,
+sesiones >5s/>10s, cola (P5, mínimo, peor 5%), latencia de decisión, auditoría de
+inferencia (0 respaldos). QoE log secundaria; sintéticas reportadas aparte.
 - **[F/T]** **Tabla: definición de métricas.**
 
-**6.6 Resultados.** Paquete `20260624_182747_tfg_final` (360 sesiones, 6 controllers,
-4 vídeos, gates OK, 0 fallback). Tabla principal de QoE/rebuffer/stalls + estadística
-pareada vs `robust_mpc`. Ablación v1 vs v2.
-- **[F/T]** **Tabla principal de resultados.** **Figura: QoE por controlador.**
-  **Figura: robustez peor-caso / stalls** (plots `qoe_robustez_peor_caso`,
-  `stalls_por_controller`). **Tabla: ablación v1↔v2.**
-- **[R]** `~/TFG/runs_trazas/phase6/20260624_182747_tfg_final` (artefacto externo).
+**6.6 Resultados.** Paquete **`20260810_133520_tfg_final`** (300 sesiones = 240
+reales + 60 sintéticas diagnósticas; 48 escenarios reales pareados × 5
+controladores; 4 vídeos; gates 8/8; 0 respaldos; 1740/1740 inferencias auditadas;
+inferencia neural media 1.26 ms; latencia de decisión media 174 ms).
+Números canónicos (reales):
+- QoE media: propio **2.0097** > basado_en_tasa 1.9701 > mpc_robusto 1.9471 >
+  bba 1.7874 > bola 1.2439. Conclusión del paquete: "sin ganador
+  estadísticamente concluyente" (empate en cabeza).
+- Pareado vs mpc_robusto (n=48): propio Δ=+0.063, IC95 [−0.043,+0.209],
+  sign_p=0.152 (empate); basado_en_tasa Δ=+0.023 pero **pierde 36/48 ventanas**
+  (sign_p=7.2e-4); bba Δ=−0.160 (sign_p=3.3e-6); bola Δ=−0.703, IC excluye 0
+  (sign_p=1.4e-8).
+- Propio vs mpc_robusto por ventanas: **W8/L16/T24** — 24 empates exactos
+  (ventanas fáciles, decisiones idénticas); la ventaja del propio es AGREGADA
+  (evita catástrofes), NUNCA redactar "gana en la mayoría de escenarios".
+- Claims positivos con significancia: propio > basado_en_tasa (W37/L11,
+  sign_p=2.2e-4), > bba (W40/L8, IC [−0.331,−0.114] excluye 0, sign_p=3.3e-6),
+  > bola (W42/L6, sign_p=1.0e-7).
+- Rebuffering: propio 3.04 s vs robusto 3.85 s; stalls/sesión 0.33 vs 0.46;
+  sesiones con stall 33% ambos; **sesiones >5 s: 12.5% vs 25%**; >10 s: 10.4% vs
+  12.5%. rate_based el más conservador (1.49 s, 0.19 stalls) a costa de bitrate
+  (2350 vs 2636 kbps del propio).
+- Cola QoE: propio P5=−3.38/min=−3.90; robusto P5=−3.13/min=−3.22; peor delta del
+  propio vs robusto −0.699 (ventana real_012, paseo 30fps). bba/bola colas peores
+  (min −4.57/−4.89). Mediana: propio 2.89 (la más alta).
+- **[F/T]** **T9: tabla principal** (QoE/bitrate/rebuffer/stalls/colas por
+  controlador, de `agregados_por_controlador.json`). **T10: deltas pareados vs
+  mpc_robusto** (Δ, IC95, sign test, W/L/T, de `estadistica.json` + cómputo
+  propio verificado). **F8/F9: gráficas reales del paquete** (16 disponibles en
+  `03_graficas/`: cdf_qoe_lineal, componentes_qoe, calidad_vs_rebuffering,
+  qoe_robustez_peor_caso, stalls_por_controlador, cdf_rebuffering, cdf_bitrate,
+  cdf_buffer, cdf_smoothness, cdf_qoe_log, qoe_por_dificultad_red,
+  qoe_por_dataset, qoe_por_condicion_red, caso_temporal_bitrate_qoe,
+  latencia_decision, sinteticas_diagnostico).
+- **[R]** `TFG Material\04_evidencia_final\20260810_133520_tfg_final` (única
+  fuente de números; junio y 06/08 solo como nota de consistencia si hace falta:
+  propio 1º en media en las tres ejecuciones, robusto ~1.95 estable).
 
-**6.7 Interpretación y limitaciones.** Lectura honesta: v2 = QoE media más alta,
-**empate estadístico** con `robust_mpc` (sign_p=0.54), pero **menos rebuffering**;
-v2 > v1 (valida ensemble temporal). Limitaciones: muestra, cola extrema en Blender
-60fps, objetivo interno de MPC vs métrica de eval, simulación.
-- **[P]** **Propia.** Honestidad explícita (no "gano a todos").
+**6.7 Interpretación y limitaciones.** Lectura honesta: el controlador propio
+obtiene la QoE media y mediana más altas y **empata estadísticamente** con
+mpc_robusto (IC95 cruza 0, sign_p=0.152), **reduciendo el rebuffering** (menos
+stalls/sesión y la mitad de sesiones >5 s); gana con significancia a los otros
+tres baselines. La ventaja frente a mpc_robusto es agregada (evita catástrofes),
+no por ventanas (W8/L16/T24). Limitaciones: 48 escenarios reales (n moderado),
+2 ventanas comparten `leakage_group` (ghent bus), cola extrema residual del
+propio (P5 −3.38, peor ventana real_012), los MPC clásicos optimizan
+internamente un objetivo log distinto de la QoE lineal de evaluación (decisión
+documentada que juega EN CONTRA del propio), y evaluación en emulación por
+trazas (sim-to-real acotado por diseño, no eliminado).
+- **[P]** **Propia.** Honestidad explícita (no "gano a todos"). Redactar los
+  matices EXACTAMENTE como manda `decision_revision_final_tecnica_20260805.md`:
+  citar el CI, no solo medias; empates exactos explican el n efectivo del sign
+  test; nada de claims fuera de los autorizados.
 
 > Resumen del capítulo.
 
@@ -396,9 +452,18 @@ reproducible.
 **7.3 Limitaciones honestas.** Muestra, fidelidad simulación, alcance de vídeos/red.
 **7.4 Trabajo futuro.** Conectado a limitaciones: afinar cola extrema, alinear objetivo
 de planner con QoE de eval, más vídeos/redes, validación en despliegue real.
-**7.5 Resultados negativos como aportación.** SPBC/SPC (colapso offline↔cliente),
-Q_H scorer (target no aprendible), "más datos no mejora" (Neural-MPC v1 vs v2).
-- **[R]** `decision_*` y `plan_maestro_controller_ia_claude_*`.
+**7.5 Resultados negativos como aportación.** Cuatro iteraciones descartadas,
+contadas con descripciones funcionales (sin claves internas, ver 04_CORRESPONDENCIAS §5):
+(1) políticas de clonación de comportamiento (colapso offline↔cliente);
+(2) función de puntuación con horizonte (objetivo no aprendible desde el estado
+observable); (3) "más datos no mejora" sin fidelidad al medio (el predecesor
+entrenado con más datos empeoró); (4) **variante MLP del predictor, eliminada
+del sistema final**: en la iteración de junio el ensemble temporal la superó de
+forma consistente en QoE, cola y rebuffering → se cuenta CUALITATIVAMENTE como
+decisión de diseño (regla: números de junio NO van a la memoria; si el tribunal
+pide cifras, están en el histórico).
+- **[R]** `why_not_*.md` de `docs/contexto rama original/04_neural_abr/`,
+  `decision_*` y `plan_maestro_controller_ia_claude_*` (solo como contexto).
 - **[P]** **Propia.** Madurez científica.
 
 > Resumen del capítulo.
@@ -428,8 +493,8 @@ Q_H scorer (target no aprendible), "más datos no mejora" (Neural-MPC v1 vs v2).
 | F5 | Arquitectura predictor + planner MPC prudente | 5.6 | diagrama propio |
 | F6 | Bucle de decisión del controlador | 5.6 | diagrama propio |
 | F7 | Topología de los 4 entornos | 6.2 | diagrama propio |
-| F8 | QoE media por controlador | 6.6 | plot Phase 6 |
-| F9 | Robustez peor-caso / stalls | 6.6 | plots Phase 6 |
+| F8 | QoE por controlador (CDF y/o media) | 6.6 | plots reales del paquete canónico `03_graficas/` |
+| F9 | Robustez peor-caso / stalls | 6.6 | `qoe_robustez_peor_caso.png` + `stalls_por_controlador.png` del paquete canónico |
 | F10 | Diagrama de Gantt | 3.3 | git log |
 
 (Las figuras propias las puedo generar en SVG/diagrama cuando lleguemos a cada cap.)
@@ -446,14 +511,23 @@ Q_H scorer (target no aprendible), "más datos no mejora" (Neural-MPC v1 vs v2).
 | T6 | Vídeos usados | 6.3 |
 | T7 | Corpus de trazas | 6.3 / Anexo D |
 | T8 | Definición de métricas | 6.5 |
-| T9 | Resultados principales (tfg_final) | 6.6 |
-| T10 | Ablación v1 ↔ v2 | 6.6 |
+| T9 | Resultados principales (paquete canónico 20260810) | 6.6 |
+| T10 | Deltas pareados vs mpc_robusto (Δ, IC95, sign test, W/L/T) | 6.6 |
 | T11 | Hardware/software del entorno | 6.2 |
 
 ---
 
 ## 8. Material del repo ya reutilizable (no reinventar)
 
+- **FUENTE DE VERDAD del sistema descrito:** `C:\Users\danie\Documents\TFG Material\`
+  (código `01_codigo\ClienteDashTFG`, corpus `02_corpus_red\catalogo_trazas.json`,
+  bundle `03_modelos`, **evidencia canónica `04_evidencia_final\20260810_133520_tfg_final`**,
+  contenido `05_contenido_dash`, dataset `06_dataset_entrenamiento`, informes
+  `00_info_entorno`). Traducción de nombres: `04_CORRESPONDENCIAS_NOMENCLATURA.md`.
+- **Cómo redactar resultados:** `decision_revision_final_tecnica_20260805.md`
+  (citar CI, no solo medias; matices win/loss; empates exactos).
+- **Componentes/versiones del experimento:** `docs/defensa/componentes_experimento.md`
+  (topología, versiones exactas, generación DASH; conteos de sesiones = canónico).
 - **Baselines:** `docs/contexto rama original/01_baselines/<x>/notes_for_memory.md`,
   `paper_card.md`, `source_evidence.md`, `implementation_spec.md` (5 controladores).
 - **Resultado final + tesis honesta:** `HANDOFF_mpc_prudente_estado_completo_20260624.md`,
@@ -469,13 +543,14 @@ Q_H scorer (target no aprendible), "más datos no mejora" (Neural-MPC v1 vs v2).
 
 | Apartado | Estado | Nota |
 |---|---|---|
-| Título / resumen / keywords | BORRADOR | confirmar título con tutor |
+| Título / resumen / keywords | BORRADOR | título A elegido; confirmar con tutor |
 | Cap 1 Introducción | TODO | |
-| Cap 2 Estado del arte | TODO | NotebookLM |
+| Cap 2 Estado del arte | TODO | NotebookLM (listas de fuentes fijadas 12/08) |
 | Cap 3 Planificación/costes | TODO | sacar Gantt del git log |
-| Cap 4 Diseño | TODO | empezar por aquí |
+| Cap 4 Diseño | TODO | EN CURSO — siguiente apartado: 4.1 |
 | Cap 5 Implementación | TODO | reutilizar notes_for_memory baselines |
-| Cap 6 Evaluación | TODO | datos tfg_final listos |
+| Cap 6 Evaluación | TODO | números canónicos fijados en §5 (paquete 20260810) |
 | Cap 7 Conclusiones | TODO | al final |
-| Bibliografía (BibTeX) | TODO | solo lo citado |
+| Bibliografía (BibTeX) | HECHA (92 entradas) | `bibliografia.bib` cerrado 10/08; solo se imprime lo citado |
 | Anexos | TODO | |
+| Tabla de correspondencias | HECHA 12/08 | `04_CORRESPONDENCIAS_NOMENCLATURA.md` |
