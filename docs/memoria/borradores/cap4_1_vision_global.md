@@ -112,20 +112,20 @@ La Tabla 4.1 resume los módulos y su responsabilidad.
 
 | Módulo | Responsabilidad |
 |---|---|
-| `main.py` | Punto de entrada; monta la sesión a partir de la configuración |
-| `core/configuracion_cliente.py` | Carga y validación de la configuración (YAML/JSON) |
-| `core/contexto_ejecucion.py` | Directorio por sesión; config resuelta, manifiesto y entorno |
-| `reproductor.py` | Bucle de sesión; coordinación y telemetría |
-| `core/analizador_mpd/` | Interpretación del MPD (representaciones y segmentos) |
-| `core/descargador.py` | Descarga HTTP de segmentos con reintentos |
-| `core/reproduccion_trazas/` | Emulación de red por reproducción de trazas |
-| `core/motores/` | Consumo del buffer y avance de la reproducción (simulado / GStreamer) |
-| `core/controladores/` | Interfaz común, registro e implementaciones ABR |
-| `core/modelo_propio/` | Modelo de predicción y planificador del controlador propio |
-| `core/feedback_reproductor.py` | Construcción de la realimentación para el controlador |
-| `core/esquema_telemetria.py`, `core/artefactos_salida.py` | Esquema y ficheros de salida |
-| `core/evaluacion/` | Planes de experimento, QoE y análisis (fuera de sesión) |
-| `entrenamiento/` | Fabricación del modelo propio (fuera de sesión) |
+| `main.py` | Punto de partida; construye la sesión a raíz de la configuración |
+| `core/configuracion_cliente.py` | Carga y valida la configuración |
+| `core/contexto_ejecucion.py` | Crea un directorio por sesión donde incluye la configuracion resuelta, el manifiesto y entorno |
+| `reproductor.py` | Bucle de sesión, tareas de coordinación y telemetría |
+| `core/analizador_mpd/` | Análisis del MPD (representaciones o calidades y segmentos) |
+| `core/descargador.py` | Bajada HTTP de segmentos con posibilidad de reintentos |
+| `core/reproduccion_trazas/` | Emulación de red a través de la reproducción de trazas reales de red |
+| `core/motores/` | Creación del buffer y reproducción del contenido (motores simulado y GStreamer) |
+| `core/controladores/` | Registro e implementación de los controladores |
+| `core/modelo_propio/` | Modelo de predicción y planificador referentes al controlador propuesto |
+| `core/feedback_reproductor.py` | Generación de la realimentación usada por el controlador |
+| `core/esquema_telemetria.py`, `core/artefactos_salida.py` | Esquema y ficheros creados a la salida |
+| `core/evaluacion/` | QoE y análisis de los resultados (fuera del núcleo o sesión) |
+| `entrenamiento/` | Creación del modelo de predicción para el controlador propio (fuera del nucleo o sesión) |
 
 *Pie: Tabla 4.1: Módulos del sistema y responsabilidad de cada uno.*
 

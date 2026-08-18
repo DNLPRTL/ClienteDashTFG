@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 560" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="f3flecha" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <polygon points="0 0, 9 3.5, 0 7" fill="#495057"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="940" height="560" fill="#ffffff"/>
+
+  <!-- ============ IZQUIERDA: MPD XML ============ -->
+  <rect x="20" y="30" width="330" height="470" fill="#f8f9fa" stroke="#495057" stroke-width="1.3" rx="8"/>
+  <text x="185" y="56" font-size="13" fill="#212529" text-anchor="middle" font-weight="bold">Manifiesto MPD (XML)</text>
+  <text x="185" y="72" font-size="10.5" fill="#868e96" text-anchor="middle">valores reales del contenido del experimento</text>
+
+  <text x="40" y="100" font-size="11.5" font-family="Consolas, monospace" fill="#212529">&lt;MPD type="static"</text>
+  <text x="56" y="116" font-size="11.5" font-family="Consolas, monospace" fill="#212529">profiles="isoff-live:2011"</text>
+  <text x="56" y="132" font-size="11.5" font-family="Consolas, monospace" fill="#212529">mediaPresentationDuration=…&gt;</text>
+
+  <text x="52" y="156" font-size="11.5" font-family="Consolas, monospace" fill="#212529">&lt;Period&gt;</text>
+  <text x="64" y="174" font-size="11.5" font-family="Consolas, monospace" fill="#212529">&lt;AdaptationSet</text>
+  <text x="76" y="190" font-size="11.5" font-family="Consolas, monospace" fill="#212529">contentType="video"&gt;</text>
+
+  <text x="76" y="214" font-size="11.5" font-family="Consolas, monospace" fill="#1971c2">&lt;SegmentTemplate</text>
+  <text x="88" y="230" font-size="11.5" font-family="Consolas, monospace" fill="#1971c2">timescale="15360"</text>
+  <text x="88" y="246" font-size="11.5" font-family="Consolas, monospace" fill="#1971c2">duration="61440"</text>
+  <text x="88" y="262" font-size="11.5" font-family="Consolas, monospace" fill="#1971c2">media="chunk_$Bandwidth$bps/</text>
+  <text x="100" y="278" font-size="11.5" font-family="Consolas, monospace" fill="#1971c2">…_4s$Number$.m4s"/&gt;</text>
+  <text x="200" y="298" font-size="10.5" fill="#1971c2">61440 / 15360 = 4,000 s por segmento</text>
+
+  <text x="76" y="326" font-size="11.5" font-family="Consolas, monospace" fill="#212529">&lt;Representation id="6"</text>
+  <text x="88" y="342" font-size="11.5" font-family="Consolas, monospace" fill="#212529">bandwidth="300000"  …/&gt;</text>
+  <text x="76" y="362" font-size="11.5" font-family="Consolas, monospace" fill="#212529">&lt;Representation id="5"</text>
+  <text x="88" y="378" font-size="11.5" font-family="Consolas, monospace" fill="#212529">bandwidth="750000"  …/&gt;</text>
+  <text x="86" y="398" font-size="12" font-family="Consolas, monospace" fill="#868e96">⋮  (6 representaciones)</text>
+  <text x="76" y="418" font-size="11.5" font-family="Consolas, monospace" fill="#212529">&lt;Representation id="1"</text>
+  <text x="88" y="434" font-size="11.5" font-family="Consolas, monospace" fill="#212529">bandwidth="4300000" …/&gt;</text>
+
+  <text x="64" y="458" font-size="11.5" font-family="Consolas, monospace" fill="#212529">&lt;/AdaptationSet&gt;</text>
+  <text x="52" y="474" font-size="11.5" font-family="Consolas, monospace" fill="#212529">&lt;/Period&gt;</text>
+  <text x="40" y="490" font-size="11.5" font-family="Consolas, monospace" fill="#212529">&lt;/MPD&gt;</text>
+
+  <!-- ============ CENTRO: ParserDash ============ -->
+  <line x1="350" y1="260" x2="410" y2="260" stroke="#495057" stroke-width="1.4" marker-end="url(#f3flecha)"/>
+
+  <rect x="410" y="150" width="220" height="230" fill="#e7f1fa" stroke="#1971c2" stroke-width="1.8" rx="8"/>
+  <text x="520" y="178" font-size="13.5" fill="#1864ab" text-anchor="middle" font-weight="bold">Analizador del MPD</text>
+  <text x="520" y="195" font-size="11" fill="#1864ab" text-anchor="middle">(core/analizador_mpd/ · ParserDash)</text>
+
+  <text x="426" y="222" font-size="11" fill="#212529">1. Lee la jerarquía del XML</text>
+  <text x="426" y="244" font-size="11" fill="#212529">2. Direccionamiento (3 esquemas):</text>
+  <text x="440" y="260" font-size="10.5" fill="#495057">· SegmentList (lista explícita)</text>
+  <text x="440" y="275" font-size="10.5" fill="#1971c2" font-weight="bold">· SegmentTemplate (el usado)</text>
+  <text x="440" y="290" font-size="10.5" fill="#495057">· SegmentBase + índice sidx</text>
+  <text x="426" y="312" font-size="11" fill="#212529">3. URL relativas → absolutas</text>
+  <text x="440" y="327" font-size="10.5" fill="#495057">(BaseURL, RFC 3986)</text>
+  <text x="426" y="349" font-size="11" fill="#212529">4. Duraciones ISO 8601 → segundos</text>
+  <text x="426" y="368" font-size="11" fill="#212529">5. Expande la plantilla de URL</text>
+
+  <line x1="630" y1="260" x2="690" y2="260" stroke="#495057" stroke-width="1.4" marker-end="url(#f3flecha)"/>
+
+  <!-- ============ DERECHA: estructuras ============ -->
+  <rect x="690" y="30" width="230" height="470" fill="#f8f9fa" stroke="#495057" stroke-width="1.3" rx="8"/>
+  <text x="805" y="56" font-size="13" fill="#212529" text-anchor="middle" font-weight="bold">Estructuras para el</text>
+  <text x="805" y="72" font-size="13" fill="#212529" text-anchor="middle" font-weight="bold">reproductor</text>
+
+  <!-- escalera -->
+  <text x="706" y="100" font-size="11.5" fill="#212529" font-weight="bold">Escalera de niveles</text>
+  <text x="706" y="114" font-size="10.5" fill="#868e96">(ordenada por tasa creciente)</text>
+  <rect x="706" y="124" width="70" height="18" fill="#dee2e6" stroke="#868e96" stroke-width="0.8"/>
+  <text x="712" y="137" font-size="10" fill="#212529">nivel 0 · 300</text>
+  <rect x="706" y="146" width="94" height="18" fill="#ced4da" stroke="#868e96" stroke-width="0.8"/>
+  <text x="712" y="159" font-size="10" fill="#212529">nivel 1 · 750</text>
+  <rect x="706" y="168" width="118" height="18" fill="#ced4da" stroke="#868e96" stroke-width="0.8"/>
+  <text x="712" y="181" font-size="10" fill="#212529">nivel 2 · 1200</text>
+  <rect x="706" y="190" width="142" height="18" fill="#adb5bd" stroke="#868e96" stroke-width="0.8"/>
+  <text x="712" y="203" font-size="10" fill="#212529">nivel 3 · 1850</text>
+  <rect x="706" y="212" width="166" height="18" fill="#adb5bd" stroke="#868e96" stroke-width="0.8"/>
+  <text x="712" y="225" font-size="10" fill="#ffffff">nivel 4 · 2850</text>
+  <rect x="706" y="234" width="190" height="18" fill="#868e96" stroke="#868e96" stroke-width="0.8"/>
+  <text x="712" y="247" font-size="10" fill="#ffffff">nivel 5 · 4300 kbps</text>
+
+  <!-- por nivel -->
+  <text x="706" y="284" font-size="11.5" fill="#212529" font-weight="bold">Por cada nivel</text>
+  <text x="706" y="302" font-size="10.5" fill="#495057">· URL de inicialización</text>
+  <text x="706" y="318" font-size="10.5" fill="#495057">· lista de URL de segmentos</text>
+  <text x="706" y="334" font-size="10.5" fill="#495057">· duración por segmento (4,0 s)</text>
+  <text x="706" y="350" font-size="10.5" fill="#495057">· rangos de bytes (si procede)</text>
+  <text x="706" y="366" font-size="10.5" fill="#495057">· resolución, códec, fps</text>
+
+  <!-- ejemplo -->
+  <rect x="706" y="386" width="198" height="96" fill="#ffffff" stroke="#adb5bd" stroke-width="1" rx="6"/>
+  <text x="716" y="406" font-size="10.5" fill="#868e96" font-weight="bold">Ejemplo (vídeo de 10 min)</text>
+  <text x="716" y="424" font-size="10.5" fill="#495057">6 niveles × (1 init + 151</text>
+  <text x="716" y="440" font-size="10.5" fill="#495057">segmentos de 4 s)</text>
+  <text x="716" y="458" font-size="10.5" fill="#495057">El reproductor ya no toca</text>
+  <text x="716" y="474" font-size="10.5" fill="#495057">el XML en toda la sesión</text>
+</svg>
