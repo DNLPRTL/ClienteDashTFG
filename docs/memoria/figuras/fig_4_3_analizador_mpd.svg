@@ -13,7 +13,7 @@
 
   <text x="40" y="100" font-size="11.5" font-family="Consolas, monospace" fill="#212529">&lt;MPD type="static"</text>
   <text x="56" y="116" font-size="11.5" font-family="Consolas, monospace" fill="#212529">profiles="isoff-live:2011"</text>
-  <text x="56" y="132" font-size="11.5" font-family="Consolas, monospace" fill="#212529">mediaPresentationDuration=…&gt;</text>
+  <text x="56" y="132" font-size="11.5" font-family="Consolas, monospace" fill="#212529">…Duration="PT0H10M0.100S"&gt;</text>
 
   <text x="52" y="156" font-size="11.5" font-family="Consolas, monospace" fill="#212529">&lt;Period&gt;</text>
   <text x="64" y="174" font-size="11.5" font-family="Consolas, monospace" fill="#212529">&lt;AdaptationSet</text>

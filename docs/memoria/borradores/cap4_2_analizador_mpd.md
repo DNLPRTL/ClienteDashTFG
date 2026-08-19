@@ -40,8 +40,10 @@ habituales en manifiestos estáticos:
   el número de segmentos a partir de la duración del periodo y expande la
   plantilla para generar todas las URL. Es el esquema del contenido usado en
   este trabajo: los manifiestos generados para el experimento emplean una
-  plantilla con `$Bandwidth$` y `$Number$`, con `timescale` 15360 y `duration`
-  61440, es decir, segmentos de 4,000 segundos exactos.
+  plantilla con `$Bandwidth$` y `$Number$`; en el contenido a 30 fps,
+  `timescale` 15360 y `duration` 61440, es decir, segmentos de 4,000 segundos
+  exactos (las variantes a 60 fps usan una escala de 60000 con idéntico
+  resultado).
 - **Fichero único con índice (`SegmentBase`):** toda la representación está en
   un solo fichero y el MPD indica el rango de bytes de su índice (`sidx`). El
   analizador descarga solo ese rango, interpreta el índice y deriva el rango
@@ -53,8 +55,9 @@ direcciones: las URL del MPD pueden ser relativas, de modo que el analizador
 las convierte en absolutas a partir del elemento `BaseURL` o, en su ausencia,
 de la URL del propio manifiesto, según las reglas generales de resolución de
 referencias \cite{rfc3986}. Segundo, la información temporal: las duraciones
-globales del MPD se expresan en formato de duración ISO 8601 (por ejemplo,
-`PT10M1.6S`) y el analizador las convierte a segundos; cuando el esquema de
+globales del MPD se expresan en formato de duración ISO 8601 (en el contenido
+principal del experimento, `PT0H10M0.100S`: diez minutos y una décima de
+segundo) y el analizador las convierte a segundos; cuando el esquema de
 direccionamiento no da la duración exacta de cada segmento, se reparte la
 duración del periodo de forma uniforme, ajustando el último segmento al
 tiempo restante.
@@ -109,11 +112,15 @@ buffer.)*
   `\cite{stockhammer2011dash}` (principios de diseño DASH),
   `\cite{rfc3986}` (resolución de URL relativas). Las tres están en el
   plan y en la lista ganadora.
-- Los valores `timescale=15360`, `duration=61440` → 4,000 s son los REALES del
-  contenido del experimento (verificados en el servidor; doc de componentes).
-  El ejemplo `PT10M1.6S` es ilustrativo del FORMATO — si quieres el valor
-  exacto del MPD real, se comprueba cuando copies `05_contenido_dash` (está
-  pendiente el scp) y lo ajustamos.
+- COMPLETADO tras el scp (12/08): todos los valores del apartado están ahora
+  verificados contra los MPD reales de `05_contenido_dash`. Paseo 30fps:
+  `mediaPresentationDuration="PT0H10M0.100S"`, timescale 15360 / duration
+  61440; **el 60fps usa timescale 60000** (mismo 4,000 s); Blender 10min dura
+  en realidad `PT0H10M34.600S` (~10,6 min → 159 segmentos). En disco, Paseo
+  30fps tiene **151 segmentos** por representación: 150 de 4,000 s + 1
+  residual de 0,1 s (el cliente reproduce las 150 medias completas; en la
+  evaluación además se corta a 30 segmentos por sesión). Si el tribunal
+  pregunta por el "151": esa es la explicación.
 - El soporte de `SegmentList`/`SegmentBase` existe de verdad en el código (no
   es adorno): da robustez al cliente ante manifiestos de otras herramientas.
   En la defensa: "el contenido del experimento usa SegmentTemplate; los otros
