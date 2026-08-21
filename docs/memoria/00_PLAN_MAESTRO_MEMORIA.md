@@ -559,7 +559,7 @@ pide cifras, están en el histórico).
 | Cap 1 Introducción | TODO | |
 | Cap 2 Estado del arte | TODO | NotebookLM (listas de fuentes fijadas 12/08) |
 | Cap 3 Planificación/costes | TODO | sacar Gantt del git log |
-| Cap 4 Diseño | EN CURSO | 4.1 REDACTADO por Daniel; 4.2 BORRADOR entregado 12/08 (borradores/cap4_2_analizador_mpd.md + F4.3); siguiente: 4.3 |
+| Cap 4 Diseño | EN CURSO | 4.1 y 4.2 REDACTADOS por Daniel (pasados a Word); 4.3 BORRADOR entregado 12/08 (cap4_3_descarga_buffer.md + F4.4 + T4.3); siguiente: 4.4 |
 | Cap 5 Implementación | TODO | reutilizar notes_for_memory baselines |
 | Cap 6 Evaluación | TODO | números canónicos fijados en §5 (paquete 20260810) |
 | Cap 7 Conclusiones | TODO | al final |

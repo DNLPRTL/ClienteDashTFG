@@ -83,23 +83,22 @@ cliente.
 los valores reales del contenido del experimento) a las estructuras que
 consume el reproductor.*
 
-**[TABLA 4.2 — Información del MPD utilizada por el cliente]**
+**[TABLA 4.2 — Información del MPD que usa el cliente]**
 
-| Elemento / atributo del MPD | Información | Uso en el cliente |
+| Parámetro del MPD | Información | Uso en el cliente |
 |---|---|---|
-| `MPD@type`, `@profiles` | Manifiesto estático, perfil de interoperabilidad | Sesión de vídeo bajo demanda |
-| `MPD@mediaPresentationDuration` | Duración total del contenido | Número de segmentos y fin de la sesión |
-| `Representation@bandwidth` | Tasa binaria nominal | Escalera de niveles; entrada de la decisión ABR |
-| `@width`, `@height`, `@codecs`, `@frameRate` | Características de cada representación | Registro y telemetría |
-| `SegmentTemplate@media` + `$Number$`, `$Bandwidth$` | Plantilla de URL de segmentos | Generación de las URL de descarga |
-| `SegmentTemplate@initialization` | URL del segmento de inicialización | Arranque del descodificador |
-| `SegmentTemplate@timescale`, `@duration`, `@startNumber` | Duración de segmento y numeración | Planificación temporal y gestión del buffer |
-| `SegmentList` / `SegmentURL@media` | Lista explícita de segmentos | Alternativa de direccionamiento |
-| `SegmentBase@indexRange` + caja `sidx` | Índice de subsegmentos | Rangos de bytes y duraciones por subsegmento |
-| `BaseURL` | Base de resolución de direcciones | Conversión de URL relativas en absolutas |
+| `MPD@type`, `@profiles` | Tipo de manifiesto (estático) y perfil dash empleado | Saber que está frente a una sesión de vídeo bajo demanda |
+| `MPD@mediaPresentationDuration` | Duración completa del vídeo | Número de segmentos totales y fin de la sesión de reproducción |
+| `Representation@bandwidth` | Tasa binaria nominal | Para crear la escalera de niveles; se usa como entrada de la decisión ABR |
+| `@width`, `@height`, `@codecs`, `@frameRate` | Características varias de cada representación | Registros y telemetría |
+| `SegmentTemplate@media` + `$Number$`, `$Bandwidth$` | Plantilla de URL | Para generar las URL de descarga |
+| `SegmentTemplate@initialization` | Dirección del segmento de inicialización | Sirve para que el descodificador sepa como interpretar el contenido |
+| `SegmentTemplate@timescale`, `@duration`, `@startNumber` | Duración de los segmentos y como se numeran | Planificación del tiempo y gestión del buffer |
+| `SegmentList` / `SegmentURL@media` | Lista directa de segmentos | Otro tipo de direccionamiento |
+| `SegmentBase@indexRange` + caja `sidx` | Índice de los subsegmentos | Agrupaciones de bytes y duraciones por cada subsegmento |
+| `BaseURL` | Dirección principal del MPD | Para convertir URL relativas en absolutas |
 
-*Pie: Tabla 4.2: Información extraída del MPD y uso que el cliente hace de
-cada elemento.*
+*Pie: Tabla 4.2: Información que se extrae del MPD y que uso se le da en el cliente.*
 
 *(El apartado 4.3 continúa con el diseño de la descarga y la gestión del
 buffer.)*
