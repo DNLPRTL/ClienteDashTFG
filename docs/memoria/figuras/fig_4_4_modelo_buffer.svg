@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 420" font-family="Helvetica, Arial, sans-serif">
   <defs>
     <marker id="f4flecha" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
@@ -11,55 +12,38 @@
     </marker>
   </defs>
   <rect x="0" y="0" width="940" height="420" fill="#ffffff"/>
-
-  <!-- productor -->
   <rect x="40" y="130" width="180" height="70" fill="#e7f1fa" stroke="#1971c2" stroke-width="1.5" rx="8"/>
-  <text x="130" y="158" font-size="12.5" fill="#1864ab" text-anchor="middle" font-weight="bold">Descargador</text>
-  <text x="130" y="176" font-size="10.5" fill="#495057" text-anchor="middle">llena el buffer a ritmo</text>
-  <text x="130" y="190" font-size="10.5" fill="#495057" text-anchor="middle">variable (según la red)</text>
-
+  <text x="130" y="158" font-size="12.5" fill="#1864ab" text-anchor="middle" font-weight="bold" style="white-space: pre;">Descargador</text>
+  <text x="130" y="176" font-size="10.5" fill="#495057" text-anchor="middle" style="white-space: pre;">llena el buffer a un ritmo</text>
+  <text x="130" y="190" font-size="10.5" fill="#495057" text-anchor="middle" style="white-space: pre;">variable (depende de la red)</text>
   <line x1="220" y1="165" x2="290" y2="165" stroke="#1971c2" stroke-width="1.6" marker-end="url(#f4azul)"/>
-  <text x="255" y="152" font-size="10.5" fill="#1971c2" text-anchor="middle">entrada</text>
-
-  <!-- buffer -->
+  <text x="255" y="152" font-size="10.5" fill="#1971c2" text-anchor="middle" style="white-space: pre;">entra</text>
   <rect x="290" y="120" width="420" height="90" fill="#ffffff" stroke="#495057" stroke-width="1.6" rx="6"/>
-  <!-- ocupacion ejemplo -->
   <rect x="292" y="122" width="240" height="86" fill="#dee2e6"/>
-  <text x="412" y="170" font-size="11.5" fill="#212529" text-anchor="middle">segundos de vídeo almacenados</text>
-
-  <!-- eje -->
+  <text x="412" y="170" font-size="11.5" fill="#212529" text-anchor="middle" style="white-space: pre;">segundos de vídeo guardados</text>
   <line x1="290" y1="240" x2="710" y2="240" stroke="#868e96" stroke-width="1"/>
   <line x1="290" y1="234" x2="290" y2="246" stroke="#868e96" stroke-width="1"/>
   <line x1="710" y1="234" x2="710" y2="246" stroke="#868e96" stroke-width="1"/>
-  <text x="274" y="262" font-size="10.5" fill="#495057" text-anchor="end">0 s</text>
-  <text x="726" y="262" font-size="10.5" fill="#495057" text-anchor="start">60 s (tope)</text>
-
-  <!-- umbral 0: stall -->
+  <text x="274" y="262" font-size="10.5" fill="#495057" text-anchor="end" style="white-space: pre;">0 s</text>
+  <text x="726" y="262" font-size="10.5" fill="#495057" text-anchor="start" style="white-space: pre;">60 s (tímite)</text>
   <line x1="290" y1="120" x2="290" y2="228" stroke="#c92a2a" stroke-width="1.6" stroke-dasharray="5 3"/>
   <rect x="120" y="280" width="300" height="52" fill="#fff5f5" stroke="#c92a2a" stroke-width="1.2" rx="6"/>
-  <text x="270" y="300" font-size="11.5" fill="#c92a2a" text-anchor="middle" font-weight="bold">Buffer vacío → stall</text>
-  <text x="270" y="318" font-size="10.5" fill="#495057" text-anchor="middle">el motor detiene la reproducción y notifica</text>
+  <text x="270" y="300" font-size="11.5" fill="#c92a2a" text-anchor="middle" font-weight="bold" style="white-space: pre;">Buffer se vacía -&gt; stall</text>
+  <text x="270" y="318" font-size="10.5" fill="#495057" text-anchor="middle" style="white-space: pre;">el motor detiene la reproducción y se notifica</text>
   <line x1="286" y1="280" x2="288" y2="250" stroke="#c92a2a" stroke-width="1.2" marker-end="url(#f4rojo)"/>
-
-  <!-- umbral 60: tope -->
   <line x1="710" y1="120" x2="710" y2="228" stroke="#b08d00" stroke-width="1.6" stroke-dasharray="5 3"/>
   <rect x="560" y="280" width="330" height="52" fill="#fff9db" stroke="#b08d00" stroke-width="1.2" rx="6"/>
-  <text x="725" y="300" font-size="11.5" fill="#846200" text-anchor="middle" font-weight="bold">Ocupación &gt; 60 s → pausa de descarga</text>
-  <text x="725" y="318" font-size="10.5" fill="#495057" text-anchor="middle">espera en pasos de 0,5 s hasta bajar del tope</text>
+  <text x="725" y="300" font-size="11.5" fill="#846200" text-anchor="middle" font-weight="bold" style="white-space: pre;">Ocupación mayor a 60 s -&gt; pausa de descarga</text>
+  <text x="725" y="318" font-size="10.5" fill="#495057" text-anchor="middle" style="white-space: pre;">se espera en pasos de 0,5 s hasta bajar dell límite</text>
   <line x1="714" y1="280" x2="712" y2="250" stroke="#b08d00" stroke-width="1.2" marker-end="url(#f4flecha)"/>
-
-  <!-- consumidor -->
   <line x1="710" y1="165" x2="780" y2="165" stroke="#495057" stroke-width="1.6" marker-end="url(#f4flecha)"/>
-  <text x="745" y="152" font-size="10.5" fill="#495057" text-anchor="middle">salida</text>
+  <text x="745" y="152" font-size="10.5" fill="#495057" text-anchor="middle" style="white-space: pre;">sale</text>
   <rect x="780" y="130" width="140" height="70" fill="#f8f9fa" stroke="#495057" stroke-width="1.5" rx="8"/>
-  <text x="850" y="158" font-size="12.5" fill="#212529" text-anchor="middle" font-weight="bold">Motor de vídeo</text>
-  <text x="850" y="176" font-size="10.5" fill="#495057" text-anchor="middle">consume a velocidad</text>
-  <text x="850" y="190" font-size="10.5" fill="#495057" text-anchor="middle">real (1×)</text>
-
-  <!-- titulo y nota -->
-  <text x="470" y="60" font-size="13.5" fill="#212529" text-anchor="middle" font-weight="bold">Buffer de reproducción (medido en tiempo de vídeo)</text>
-  <text x="470" y="80" font-size="11" fill="#495057" text-anchor="middle">la dinámica de la sesión es la carrera entre el ritmo de llegada (red) y el consumo constante (reproducción)</text>
-
-  <text x="470" y="376" font-size="10.5" fill="#868e96" text-anchor="middle">El controlador ABR observa la ocupación en cada decisión: buffer alto permite arriesgar más calidad;</text>
-  <text x="470" y="392" font-size="10.5" fill="#868e96" text-anchor="middle">buffer bajo aconseja proteger la reproducción con niveles inferiores.</text>
+  <text x="850" y="158" font-size="12.5" fill="#212529" text-anchor="middle" font-weight="bold" style="white-space: pre;">Motor de vídeo</text>
+  <text x="850" y="176" font-size="10.5" fill="#495057" text-anchor="middle" style="white-space: pre;">consume vídeo a la velocidad</text>
+  <text x="850" y="190" font-size="10.5" fill="#495057" text-anchor="middle" style="white-space: pre;">real (1×)</text>
+  <text x="470" y="60" font-size="13.5" fill="#212529" text-anchor="middle" font-weight="bold" style="white-space: pre;">Buffer de reproducción (medido en tiempo real de contenido)</text>
+  <text x="470" y="80" font-size="11" fill="#495057" text-anchor="middle" style="white-space: pre;"><tspan x="470" dy="1em">​</tspan>La manera en que funciona la sesión es la competición entre el ritmo de llegada (la red) y el consumo constante de los segmentos (la reproducción)<tspan x="470" dy="1em">​</tspan></text>
+  <text x="470" y="376" font-size="10.5" fill="#868e96" text-anchor="middle" style="white-space: pre;">El controlador ABR comprueba la ocupación en cada decisión que toma: buffer alto permite probar mayor calidad,</text>
+  <text x="470" y="392" font-size="10.5" fill="#868e96" text-anchor="middle" style="white-space: pre;">mientras que buffer bajo suele aconsejar blindar la reproducción con menores niveles de calidad.</text>
 </svg>

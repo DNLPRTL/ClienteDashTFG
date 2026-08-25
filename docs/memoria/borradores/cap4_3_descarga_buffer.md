@@ -86,25 +86,25 @@ del buffer con sus umbrales.
 
 **[TABLA 4.3 — Parámetros de descarga y buffer]**
 
-| Parámetro | Valor por defecto | Papel |
+| Parámetro | Valor por defecto usado en el capítulo 6 | Función que desempeña |
 |---|---|---|
-| Tope del buffer | 60 s | Ocupación máxima; por encima se pausa la descarga |
-| Paso de espera | 0,5 s | Granularidad de la espera cuando el buffer está lleno |
-| Tiempo máximo por petición | 10 s | Corte de peticiones colgadas |
-| Reintentos de transporte | 3 | Reintento inmediato de la misma petición |
-| Intentos por segmento | 6 | Tras agotarlos, se baja de nivel |
-| Espera entre intentos | 0,5 s → 10 s | Retroceso exponencial |
-| Ventana de arranque (preroll) | 10 s (0 en evaluación) | Marca los primeros segundos como fase de arranque en la telemetría (apartado 4.6) |
+| Límite del buffer | 60 s | Máxima ocupación posible, si se supera se pausa la descarga |
+| Paso de espera | 0,5 s | Tiempo de espera cuando el buffer se llena |
+| Tiempo máximo por petición | 10 s | Tiempo para las peticiones colgadas |
+| Reintentos de transporte | 3 | Reintento inmediato en una misma petición |
+| Intentos por segmento | 6 | Si se agotan, se baja la calidad |
+| Espera entre intentos | 0,5 s → 10 s | Retroceso con carácter exponencial |
+| Ventana de arranque (preroll) | 10 s (0 en lo que respecta a evaluación) | Señala los primeros instantes solo como fase de arranque en la telemetría (apartado 4.6) |
 
-*Pie: Tabla 4.3: Parámetros de la descarga y del buffer, con los valores por
-defecto de la configuración.*
+*Pie: Tabla 4.3: Parámetros empleados en la descarga y el buffer, con los valores por
+defecto usados en el capítulo 6.*
 
-**[FIGURA 4.4 — Modelo del buffer de reproducción. Fichero:
+**[FIGURA 4.4 — Diseño del buffer de reproducción. Fichero:
 `figuras/fig_4_4_modelo_buffer.svg`]**
-*Pie: Figura 4.4: Modelo del buffer de reproducción: el descargador lo llena a
-ritmo variable (según la red), el motor lo consume a velocidad real, y dos
-umbrales gobiernan la dinámica (parada al vaciarse; pausa de descarga al
-superar el tope de 60 s).*
+*Pie: Figura 4.4: Diseño del buffer de reproducción: el descargador le envía a
+un ritmo variable (en función de la red), el motor lo vacía a velocidad real, y dos
+límites orquestan la dinámica (parada cuando se vacia y pausa en la descarga al
+superar el límite de 60 segundos).*
 
 *(El apartado 4.4 continúa con el diseño de los motores de reproducción.)*
 
