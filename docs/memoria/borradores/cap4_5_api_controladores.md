@@ -66,7 +66,7 @@ predictivo (MPC y su variante robusta) y el controlador propio. Sus diseños
 se contextualizan en el capítulo 2 y su implementación se detalla en el
 capítulo 5.
 
-**Salvaguardas para controladores con modelo.** La interfaz descrita basta
+**Salvaguardas para controlares con modelo.** La interfaz descrita basta
 para los algoritmos deterministas. Un controlador que decide con un modelo
 aprendido introduce riesgos nuevos: puede producir una acción sin sentido,
 tardar demasiado o fallar al cargar el modelo. El diseño añade para ese caso
@@ -87,24 +87,24 @@ La Figura 4.5 resume la frontera completa: el ciclo de realimentación y
 decisión, el contenido del contrato, lo que queda explícitamente fuera y las
 salvaguardas.
 
-**[FIGURA 4.5 — Interfaz de los controladores. Fichero:
+**[FIGURA 4.5 — Interfaz común de los controladores. Fichero:
 `figuras/fig_4_5_interfaz_controladores.svg`]**
-*Pie: Figura 4.5: Interfaz común de los controladores: contrato de
-realimentación (con sus cuatro bloques), ciclo de decisión con cuantización
-centralizada, información excluida por diseño y salvaguardas para
-controladores con modelo.*
+*Pie: Figura 4.5: Interfaz común a todos los controladores: un contrato de
+realimentación (divido en cuatro bloques), proceso de decisión con cuantización
+en un solo punto del código, información descartada por razones de diseño y respaldo para
+controladores que usen modelos predictivos.*
 
-**[TABLA 4.5 — Contrato de realimentación]**
+**[TABLA 4.5 — Contrato de realimentación de los controladores]**
 
-| Bloque | Claves | Qué aporta a la decisión |
+| Los cuatro bloques | Claves | Aporte en la decisión |
 |---|---|---|
-| Estado del buffer | ocupación en tiempo y en bytes | Cuánto margen hay antes de una parada |
-| Escalera de calidades | lista de tasas, tasa y nivel actuales, máximos y mínimos, duración de segmento | El espacio de acciones disponible |
-| Última descarga | tamaño, tiempo empleado, estimación simple de ancho de banda, instantes de petición | La señal de red observada |
-| Progreso de la sesión | índice de segmento, total de segmentos, bytes acumulados | Dónde está la sesión y cuánto queda |
+| Estado del buffer | ocupación en segundos y bytes | margen existente antes de que ocurra una parada |
+| Escalera de calidades | tasas disponibles, tasa y nivel del momento actual,nivel máximo y mínimo, duración en segundos del segmento | El grupo de acciones disponible |
+| Última descarga realizada | tamaño, tiempo usado, estimación base del ancho de banda, instantes en los que sucede la petición | La señal de red que se observa |
+| Estado de la sesión | índice de cada segmento, numero total de segmentos, bytes acumulados | En que punto está la sesión y cuanto le resta para finalizar |
 
-*Pie: Tabla 4.5: Bloques del contrato de realimentación que el reproductor
-entrega al controlador en cada decisión.*
+*Pie: Tabla 4.5: Los cuatro bloques del contrato de realimentación que el reproductor
+envía al controlador en cada una de las decisiones.*
 
 *(El apartado 4.6 continúa con la telemetría y el registro de la sesión.)*
 
