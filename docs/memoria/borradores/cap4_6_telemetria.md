@@ -81,17 +81,17 @@ y duración). Es la vista que consume el cálculo de la calidad de experiencia:
 suficiente para computar la métrica y pequeña, sin arrastrar el esquema
 completo.
 
-**[TABLA 4.6 — Bloques del registro de telemetría]**
+**[TABLA 4.6 — Los distintos bloques del registro en la telemetría]**
 
-| Bloque | Contenido | Para qué sirve |
+| Bloque | Contenido | Uso que se le da |
 |---|---|---|
-| Identificación | índice de segmento, marca de tiempo | Ordenar y cruzar filas |
-| Realimentación (20 columnas) | copia exacta de lo que vio el controlador | Reconstruir cada decisión; transparencia |
-| Metadatos de descarga | si es init, reintentos, instantes de petición, tiempo de sesión | Trazabilidad de la descarga |
-| Derivadas | throughput instantáneo y suavizado, variabilidad reciente, buffer en segmentos, marcas de cambio de nivel, decisión de la política y su latencia, fases, marca de uso en evaluación | Análisis y filtrado posterior |
-| Paradas | marca de stall y duración acumulada en el segmento | Componente de rebuffering de la QoE |
+| Identificación | número índice de cada segmento, marca temporal | Ordenar a las filas |
+| Realimentación (como son 20 claves, 20 columnas) | copia idéntica a lo que ve el controlador | Poder reconstruir cada decisión |
+| Metadatos en la descarga | si es fragmento de inicialización, número de reintentos, instantes de petición, tiempo transcurrido en la sesión | Control o seguimiento de la descarga |
+| Derivadas del cálculo | throughput actual y suavizado o estable, variabilidad de la red reciente , buffer en número de segmentos, registros de cambio de nivel de calidad, decisión de la política del controlador y su cuanto tardo en tomarla, fases, marca de si se usa en evaluación | Análisis y filtrado en momentos posteriores  |
+| Paradas | stall y duración total acumulada en ese mismo segmento | Para el rebuffering de la QoE |
 
-*Pie: Tabla 4.6: Bloques de columnas del registro de telemetría de segmentos.*
+*Pie: Tabla 4.6: Los cuatro bloques de columnas que costituyen el registro de telemetría de los segmentos.*
 
 *(El apartado 4.7 continúa con la emulación de red por trazas y el perfil
 real del contenido.)*

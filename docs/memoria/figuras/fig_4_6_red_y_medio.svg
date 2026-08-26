@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 640" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="f6f" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <polygon points="0 0, 9 3.5, 0 7" fill="#495057"/>
+    </marker>
+    <marker id="f6a" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <polygon points="0 0, 9 3.5, 0 7" fill="#1971c2"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="940" height="640" fill="#ffffff"/>
+
+  <!-- ================= PLANO RED ================= -->
+  <rect x="20" y="20" width="900" height="270" fill="#f8f9fa" stroke="#adb5bd" stroke-width="1" rx="10"/>
+  <text x="36" y="46" font-size="13" fill="#1971c2" font-weight="bold">LA RED — decide CUÁNDO llegan los bits (emulada por trazas)</text>
+
+  <!-- corpus -->
+  <rect x="40" y="66" width="200" height="88" fill="#ffffff" stroke="#495057" stroke-width="1.2" rx="6"/>
+  <text x="140" y="88" font-size="12" fill="#212529" text-anchor="middle" font-weight="bold">Corpus de trazas</text>
+  <text x="140" y="106" font-size="10.5" fill="#495057" text-anchor="middle">6768 trazas normalizadas</text>
+  <text x="140" y="121" font-size="10.5" fill="#495057" text-anchor="middle">12 conjuntos públicos reales</text>
+  <text x="140" y="136" font-size="10.5" fill="#495057" text-anchor="middle">+ sintéticas de diagnóstico</text>
+
+  <!-- catalogo -->
+  <rect x="290" y="66" width="210" height="88" fill="#ffffff" stroke="#495057" stroke-width="1.2" rx="6"/>
+  <text x="395" y="88" font-size="12" fill="#212529" text-anchor="middle" font-weight="bold">Catálogo con particiones</text>
+  <text x="395" y="106" font-size="10.5" fill="#495057" text-anchor="middle">entrenamiento / prueba / evaluación</text>
+  <text x="395" y="121" font-size="10.5" fill="#495057" text-anchor="middle">por grupos semánticos:</text>
+  <text x="395" y="136" font-size="10.5" fill="#495057" text-anchor="middle">sin fuga hacia la evaluación</text>
+
+  <!-- ventana -->
+  <rect x="550" y="66" width="150" height="88" fill="#ffffff" stroke="#495057" stroke-width="1.2" rx="6"/>
+  <text x="625" y="88" font-size="12" fill="#212529" text-anchor="middle" font-weight="bold">Ventana</text>
+  <text x="625" y="106" font-size="10.5" fill="#495057" text-anchor="middle">300 s de una traza</text>
+  <text x="625" y="121" font-size="10.5" fill="#495057" text-anchor="middle">por sesión</text>
+  <text x="625" y="136" font-size="10.5" fill="#495057" text-anchor="middle">(determinista)</text>
+
+  <line x1="240" y1="110" x2="290" y2="110" stroke="#495057" stroke-width="1.3" marker-end="url(#f6f)"/>
+  <line x1="500" y1="110" x2="550" y2="110" stroke="#495057" stroke-width="1.3" marker-end="url(#f6f)"/>
+  <line x1="700" y1="110" x2="750" y2="110" stroke="#495057" stroke-width="1.3" marker-end="url(#f6f)"/>
+
+  <!-- envoltorio -->
+  <rect x="750" y="66" width="160" height="88" fill="#e7f1fa" stroke="#1971c2" stroke-width="1.6" rx="6"/>
+  <text x="830" y="88" font-size="12" fill="#1864ab" text-anchor="middle" font-weight="bold">Envoltorio del</text>
+  <text x="830" y="103" font-size="12" fill="#1864ab" text-anchor="middle" font-weight="bold">descargador</text>
+  <text x="830" y="121" font-size="10.5" fill="#495057" text-anchor="middle">integra la traza y</text>
+  <text x="830" y="136" font-size="10.5" fill="#495057" text-anchor="middle">retiene cada entrega</text>
+
+  <!-- mecanica -->
+  <rect x="40" y="176" width="870" height="94" fill="#ffffff" stroke="#1971c2" stroke-width="1.2" rx="8"/>
+  <text x="475" y="200" font-size="11.5" fill="#1864ab" text-anchor="middle" font-weight="bold">Mecánica de cada descarga emulada</text>
+  <text x="475" y="220" font-size="10.5" fill="#495057" text-anchor="middle">1. el segmento se descarga DE VERDAD del servidor (bytes reales)   ·   2. el modelo calcula cuánto habría durado bajo la traza</text>
+  <text x="475" y="237" font-size="10.5" fill="#495057" text-anchor="middle">3. la entrega se retiene hasta cumplir esa duración   ·   4. la posición en la traza avanza con el tiempo de sesión (los huecos también consumen traza)</text>
+  <text x="475" y="258" font-size="10.5" fill="#c92a2a" text-anchor="middle" font-style="italic">si la ventana se agota, la sesión falla: nunca se inventan condiciones de red</text>
+
+  <!-- ================= PLANO MEDIO ================= -->
+  <rect x="20" y="310" width="900" height="240" fill="#f8f9fa" stroke="#adb5bd" stroke-width="1" rx="10"/>
+  <text x="36" y="336" font-size="13" fill="#b08d00" font-weight="bold">EL CONTENIDO — decide CUÁNTOS bits son (medido, no supuesto)</text>
+
+  <!-- servidor -->
+  <rect x="40" y="356" width="200" height="88" fill="#ffffff" stroke="#495057" stroke-width="1.2" rx="6"/>
+  <text x="140" y="378" font-size="12" fill="#212529" text-anchor="middle" font-weight="bold">Servidor DASH real</text>
+  <text x="140" y="396" font-size="10.5" fill="#495057" text-anchor="middle">8 vídeos publicados</text>
+  <text x="140" y="411" font-size="10.5" fill="#495057" text-anchor="middle">6 representaciones VBR</text>
+  <text x="140" y="426" font-size="10.5" fill="#495057" text-anchor="middle">segmentos de 4 s</text>
+
+  <!-- extractor -->
+  <rect x="290" y="356" width="210" height="88" fill="#ffffff" stroke="#495057" stroke-width="1.2" rx="6"/>
+  <text x="395" y="378" font-size="12" fill="#212529" text-anchor="middle" font-weight="bold">Extractor de tamaños</text>
+  <text x="395" y="396" font-size="10.5" fill="#495057" text-anchor="middle">sondea por HTTP cada segmento</text>
+  <text x="395" y="411" font-size="10.5" fill="#495057" text-anchor="middle">(906 sondas por perfil:</text>
+  <text x="395" y="426" font-size="10.5" fill="#495057" text-anchor="middle">151 segmentos × 6 niveles)</text>
+
+  <!-- descriptor -->
+  <rect x="550" y="356" width="150" height="88" fill="#fff9db" stroke="#b08d00" stroke-width="1.4" rx="6"/>
+  <text x="625" y="378" font-size="12" fill="#846200" text-anchor="middle" font-weight="bold">Descriptor VBR</text>
+  <text x="625" y="396" font-size="10.5" fill="#495057" text-anchor="middle">bytes reales por</text>
+  <text x="625" y="411" font-size="10.5" fill="#495057" text-anchor="middle">segmento × nivel</text>
+  <text x="625" y="426" font-size="10.5" fill="#495057" text-anchor="middle">(JSON versionado)</text>
+
+  <line x1="240" y1="400" x2="290" y2="400" stroke="#495057" stroke-width="1.3" marker-end="url(#f6f)"/>
+  <line x1="500" y1="400" x2="550" y2="400" stroke="#495057" stroke-width="1.3" marker-end="url(#f6f)"/>
+
+  <!-- consumidores -->
+  <rect x="750" y="336" width="160" height="60" fill="#ffffff" stroke="#495057" stroke-width="1.2" rx="6"/>
+  <text x="830" y="358" font-size="11" fill="#212529" text-anchor="middle" font-weight="bold">Entrenamiento</text>
+  <text x="830" y="374" font-size="10" fill="#495057" text-anchor="middle">el simulador usa</text>
+  <text x="830" y="388" font-size="10" fill="#495057" text-anchor="middle">pesos reales</text>
+  <rect x="750" y="410" width="160" height="60" fill="#ffffff" stroke="#495057" stroke-width="1.2" rx="6"/>
+  <text x="830" y="432" font-size="11" fill="#212529" text-anchor="middle" font-weight="bold">Planificador propio</text>
+  <text x="830" y="448" font-size="10" fill="#495057" text-anchor="middle">estima descargas con el</text>
+  <text x="830" y="462" font-size="10" fill="#495057" text-anchor="middle">tamaño del segmento real</text>
+  <line x1="700" y1="385" x2="750" y2="366" stroke="#b08d00" stroke-width="1.2" marker-end="url(#f6f)"/>
+  <line x1="700" y1="415" x2="750" y2="437" stroke="#b08d00" stroke-width="1.2" marker-end="url(#f6f)"/>
+
+  <!-- dato VBR -->
+  <rect x="40" y="466" width="660" height="66" fill="#ffffff" stroke="#b08d00" stroke-width="1.2" rx="8"/>
+  <text x="370" y="488" font-size="11" fill="#846200" text-anchor="middle" font-weight="bold">Por qué importa: la codificación es VBR</text>
+  <text x="370" y="506" font-size="10.5" fill="#495057" text-anchor="middle">variación típica del tamaño ≈ 10% (hasta 16% en animación); ejemplo real (nivel de 300 kbps):</text>
+  <text x="370" y="522" font-size="10.5" fill="#495057" text-anchor="middle">nominal 150 000 bytes · reales entre 130 643 y 167 995 bytes por segmento</text>
+
+  <!-- cierre -->
+  <text x="470" y="596" font-size="12.5" fill="#212529" text-anchor="middle" font-weight="bold">Dos ejes independientes: la traza fija la temporalidad; el contenido, los bytes reales.</text>
+  <text x="470" y="616" font-size="11" fill="#495057" text-anchor="middle">Todo queda registrado en la telemetría, y las sesiones descargan siempre los bytes verdaderos del servidor.</text>
+</svg>
