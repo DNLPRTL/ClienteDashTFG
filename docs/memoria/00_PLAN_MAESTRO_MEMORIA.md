@@ -329,7 +329,15 @@ PyYAML, PyTorch (controlador IA), ONNX (si aplica). Justificar cada elección.
 
 **5.2 Cliente y player.** Implementación de descarga/buffer/reproducción; decisiones
 relevantes (no transcribir código; solo fragmentos que expliquen una decisión).
-- **[R]** `core/` player y motor.
+**Incluye la implementación de la reproducción de trazas** (`core/reproduccion_trazas/`:
+cargador+validación del CSV, modelo de red, descargador controlado) — el diseño se
+contó en 4.7; aquí el cómo.
+- **[R]** `core/` reproductor, motores y reproduccion_trazas.
+- NOTA de reparto (fijado 25/08): la NORMALIZACIÓN del corpus (12 datasets brutos →
+  esquema común, catálogo, splits) NO va al cap 5 (su código no está en el
+  entregable): se cuenta en 6.3 como preparación de datos + cap 3 como paquete de
+  trabajo. El MUESTREO de ventanas para el dataset del modelo
+  (`entrenamiento/corpus_trazas/`) va en 5.7.
 
 **5.3 Parser MPD.** Detalles de implementación, casos del MPD real (Paseo/Blender).
 
