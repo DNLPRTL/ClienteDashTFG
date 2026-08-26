@@ -559,7 +559,7 @@ pide cifras, están en el histórico).
 | Cap 1 Introducción | TODO | |
 | Cap 2 Estado del arte | TODO | NotebookLM (listas de fuentes fijadas 12/08) |
 | Cap 3 Planificación/costes | TODO | sacar Gantt del git log |
-| Cap 4 Diseño | EN CURSO | 4.1–4.3 REDACTADOS por Daniel (a Word); 4.4 BORRADOR entregado 25/08 (cap4_4_motores_reproduccion.md + T4.4, sin figura); siguiente: 4.5 |
+| Cap 4 Diseño | EN CURSO | 4.1–4.4 REDACTADOS por Daniel; 4.5 BORRADOR entregado 25/08 (cap4_5_api_controladores.md + F4.5 + T4.5); siguiente: 4.6 |
 | Cap 5 Implementación | TODO | reutilizar notes_for_memory baselines |
 | Cap 6 Evaluación | TODO | números canónicos fijados en §5 (paquete 20260810) |
 | Cap 7 Conclusiones | TODO | al final |

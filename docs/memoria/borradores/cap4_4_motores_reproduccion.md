@@ -72,17 +72,17 @@ la misma telemetría. La evaluación formal, en cambio, no depende de él.
 La Tabla 4.4 resume la comparación entre ambos motores y su papel en el
 trabajo.
 
-**[TABLA 4.4 — Motores de reproducción]**
+**[TABLA 4.4 — Comparando los dos motores de reproducción]**
 
-| Aspecto | Motor simulado | Motor GStreamer |
+| Aspecto a comparar | Motor simulado sin decodificación | Motor basado en GStreamer |
 |---|---|---|
-| Consumo del buffer | Descuento temporal a 1× (reloj), sin decodificar | Pipeline multimedia real (appsrc → demux → H.264 → sink) |
-| Detección de paradas | Cola vacía; duración por reloj | Cola real del pipeline |
-| Dependencias | Ninguna (biblioteca estándar) | GStreamer + PyGObject (Linux) |
-| Papel en el proyecto | Toda la evaluación formal (cap. 6) | Verificación funcional con reproducción real |
-| Motivo | Aísla la medición del coste de decodificación; determinista y portable | Prueba que el cliente reproduce contenido real |
+| Consumo del buffer | Se descuenta a velocidad real 1x | Pipeline multimedia real (appsrc, demux, H.264, sink) |
+| Detección de paradas | Cuando la cola se vacía, el reloj mide la duración | Con la cola real del pipeline |
+| Dependencias | No tiene (usa la biblioteca estándar) | GStreamer, PyGObject (en Linux) |
+| Desempeño en el proyecto | La evaluación formal del capítulo 6 | Verificación funcional del cliente con reproducción real |
+| Razón detrás | Confina la medida del coste de decodificación, es un comportamiento predecible | Para ver que el cliente es capaz de reproducir contenido real |
 
-*Pie: Tabla 4.4: Comparación de los dos motores de reproducción y papel de
+*Pie: Tabla 4.4: Comparación de los dos motores de reproducción y papel que desempeña
 cada uno.*
 
 *(El apartado 4.5 continúa con la interfaz común de los controladores ABR.)*
