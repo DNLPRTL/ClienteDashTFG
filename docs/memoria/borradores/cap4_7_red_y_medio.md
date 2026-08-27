@@ -92,6 +92,33 @@ bytes reales del servidor, de modo que el descriptor no altera ninguna
 sesión: es conocimiento del contenido puesto a disposición de quien sabe
 usarlo.
 
+Esta asimetría informativa —el controlador propio conoce los tamaños reales y
+los clásicos no los usan— merece justificación explícita, porque podría
+parecer una ventaja artificial. No lo es, por tres razones. Primera: el
+tamaño de los segmentos es una propiedad estática del contenido, consultable
+por cualquier cliente en un despliegue real (los índices de segmentación la
+anuncian y una petición de cabecera HTTP la obtiene sin descargar el
+segmento); no es información del futuro de la red, que sigue siendo
+inobservable para todos los controladores por igual. Segunda: emplearla es
+práctica establecida. La formulación original del MPC ya expresa el tiempo de
+descarga en función del tamaño de cada segmento según su calidad, advierte de
+que en codificación VBR ese tamaño varía entre segmentos y señala como
+carencia del estándar que el manifiesto no los anuncie \cite{yin2015mpc}; las
+redes neuronales de Pensieve reciben los tamaños de los segmentos entre sus
+observaciones \cite{mao2017pensieve}; y el sistema desplegado en Puffer
+predice el tiempo de transmisión de cada segmento a partir de su tamaño real,
+en lugar de suponerlo proporcional a la tasa nominal \cite{yan2020puffer}.
+Tercera: los baselines se mantienen deliberadamente fieles a sus
+formulaciones publicadas —el basado en tasa y BBA no contemplan tamaños;
+BOLA y los MPC emplean el valor nominal—, porque modificarlos convertiría la
+comparativa en una entre variantes propias sin respaldo bibliográfico. El
+efecto de la diferencia está además acotado: la media real por
+representación coincide con la nominal (desviación del 0,4%), de modo que el
+supuesto nominal no está sesgado, solo ignora la varianza entre segmentos; y
+el resultado del capítulo 6, donde la variante robusta del MPC empata en
+calidad media con el controlador propio, confirma que la comparativa no deja
+indefensos a los clásicos.
+
 La Figura 4.6 resume los dos planos y su independencia.
 
 **[FIGURA 4.6 — Los dos ejes de las condiciones experimentales. Fichero:
@@ -108,11 +135,34 @@ evaluación.)*
 
 ### Notas para Daniel (no van a la memoria)
 
-- Citas usadas (6): fccMeasuringBroadbandAmerica, riiser2013commutePath,
+- Citas usadas (9): fccMeasuringBroadbandAmerica, riiser2013commutePath,
   raca2018beyondThroughput4g, narayanan2020lumos5g (corpus, representativas),
   netravali2015mahimahi (alternativa a nivel de paquete),
-  alomar2023causalsim (sesgo del simulador). El corpus COMPLETO con sus 12
-  datasets y conteos va en 6.3 (T7) con el resto de citas de datasets.
+  alomar2023causalsim (sesgo del simulador) + AÑADIDAS 27/08 en el párrafo de
+  justificación: yin2015mpc, mao2017pensieve, yan2020puffer. El corpus
+  COMPLETO con sus 12 datasets y conteos va en 6.3 (T7).
+- PÁRRAFO DE JUSTIFICACIÓN (añadido 27/08 tras tu pregunta "¿no es trampa?"):
+  VERIFICADO contra los PDF originales (norma PDF-primero). Citas textuales
+  por si el tribunal aprieta:
+  · Yin 2015: "Let dk(Rk) be the size of chunk k encoded at bitrate Rk...
+    in variable bitrate (VBR) case the dk ~ Rk relationship can differ
+    across chunks" + "a key requirement for any control algorithms is to
+    know the size (in bytes) of each video chunk, but the standard does not
+    mandate the manifest to report chunk sizes, which may be a key
+    shortcoming of the current specification". EL PAPER DEL MPC dice que
+    conocer tamaños es requisito clave y su ausencia una carencia del
+    estándar → tu extractor la resuelve.
+  · Pensieve: la red mapea "raw observations (e.g., throughput samples,
+    playback buffer occupancy, video chunk sizes)".
+  · Puffer/Fugu: el TTP "predicts transmission time given a chunk's file
+    size (vs. estimating throughput)... rather than modeling transmission
+    time as scaling linearly with chunk size".
+  Respuesta-resumen de defensa: "uso información estática del contenido,
+  disponible para cualquier cliente y usada por Yin, Pensieve y Fugu; los
+  clásicos se quedan como los publicaron sus autores para no comparar contra
+  variantes mías; la media real coincide con la nominal (±0,4%) así que el
+  nominal no está sesgado; y robust_mpc empata conmigo, prueba de que no
+  queda indefenso". Reaparece como limitación honesta en 6.7 (una frase).
 - Verificado en código/datos: ModeloRedPorTraza integra la traza muestra a
   muestra (kbps→bytes/s × duración útil) y devuelve duración exacta +
   throughput medido; politica_fin=fail (lanza error si la traza se agota);
