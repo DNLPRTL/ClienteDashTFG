@@ -567,7 +567,7 @@ pide cifras, están en el histórico).
 | Cap 1 Introducción | TODO | |
 | Cap 2 Estado del arte | TODO | NotebookLM (listas de fuentes fijadas 12/08) |
 | Cap 3 Planificación/costes | TODO | sacar Gantt del git log |
-| Cap 4 Diseño | EN CURSO | 4.1–4.6 REDACTADOS por Daniel; 4.7 BORRADOR entregado 25/08 (cap4_7_red_y_medio.md + F4.6); siguiente: 4.8 (último) |
+| Cap 4 Diseño | BORRADORES COMPLETOS | 4.1–4.7 redactados por Daniel; 4.8 BORRADOR entregado 27/08 (cap4_8_separacion_evaluacion.md + T4.7 gates + resumen del capítulo). Al masticar 4.8: pasada de coherencia del capítulo entero. Siguiente capítulo: 5 |
 | Cap 5 Implementación | TODO | reutilizar notes_for_memory baselines |
 | Cap 6 Evaluación | TODO | números canónicos fijados en §5 (paquete 20260810) |
 | Cap 7 Conclusiones | TODO | al final |
