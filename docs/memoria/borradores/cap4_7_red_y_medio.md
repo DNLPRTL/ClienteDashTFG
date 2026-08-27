@@ -85,7 +85,15 @@ metadatos del perfil. Estos descriptores tienen dos consumidores: el
 entrenamiento del controlador propio, cuyo simulador de sesiones descarga
 segmentos con sus pesos reales en lugar de pesos nominales, y su
 planificador en ejecución, que estima el tiempo de descarga del segmento
-concreto que viene a continuación con su tamaño verdadero. Los controladores
+concreto que viene a continuación con su tamaño verdadero. Conviene precisar
+el papel de esta información en el aprendizaje: los tamaños no son una
+entrada del modelo de predicción, que solo observa medidas de red; forman
+parte de la física del entorno de entrenamiento. Con ellos, las situaciones
+de las que aprende el modelo (duración de cada descarga, evolución del
+buffer) son las que produce el contenido real, igual que en el cliente; el
+modelo permanece ciego al contenido en ambos mundos. El capítulo 5 desarrolla
+esta separación entre el predictor, agnóstico al contenido, y el
+planificador, que sí consume el descriptor como dato. Los controladores
 clásicos no utilizan esta información, porque sus algoritmos originales no
 la contemplan; y conviene subrayar que las sesiones descargan siempre los
 bytes reales del servidor, de modo que el descriptor no altera ninguna
