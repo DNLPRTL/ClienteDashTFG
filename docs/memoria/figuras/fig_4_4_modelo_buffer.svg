@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 420" font-family="Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 420" font-family="Helvetica, Arial, sans-serif" xmlns:bx="https://boxy-svg.com">
   <defs>
     <marker id="f4flecha" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
       <polygon points="0 0, 9 3.5, 0 7" fill="#495057"/>
@@ -10,6 +10,9 @@
     <marker id="f4rojo" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
       <polygon points="0 0, 9 3.5, 0 7" fill="#c92a2a"/>
     </marker>
+    <bx:export>
+      <bx:file format="jpeg" path="Sin título.jpeg"/>
+    </bx:export>
   </defs>
   <rect x="0" y="0" width="940" height="420" fill="#ffffff"/>
   <rect x="40" y="130" width="180" height="70" fill="#e7f1fa" stroke="#1971c2" stroke-width="1.5" rx="8"/>
@@ -25,7 +28,7 @@
   <line x1="290" y1="234" x2="290" y2="246" stroke="#868e96" stroke-width="1"/>
   <line x1="710" y1="234" x2="710" y2="246" stroke="#868e96" stroke-width="1"/>
   <text x="274" y="262" font-size="10.5" fill="#495057" text-anchor="end" style="white-space: pre;">0 s</text>
-  <text x="726" y="262" font-size="10.5" fill="#495057" text-anchor="start" style="white-space: pre;">60 s (tímite)</text>
+  <text x="726" y="262" font-size="10.5" fill="#495057" text-anchor="start" style="white-space: pre;">60 s (límite)</text>
   <line x1="290" y1="120" x2="290" y2="228" stroke="#c92a2a" stroke-width="1.6" stroke-dasharray="5 3"/>
   <rect x="120" y="280" width="300" height="52" fill="#fff5f5" stroke="#c92a2a" stroke-width="1.2" rx="6"/>
   <text x="270" y="300" font-size="11.5" fill="#c92a2a" text-anchor="middle" font-weight="bold" style="white-space: pre;">Buffer se vacía -&gt; stall</text>
@@ -34,7 +37,7 @@
   <line x1="710" y1="120" x2="710" y2="228" stroke="#b08d00" stroke-width="1.6" stroke-dasharray="5 3"/>
   <rect x="560" y="280" width="330" height="52" fill="#fff9db" stroke="#b08d00" stroke-width="1.2" rx="6"/>
   <text x="725" y="300" font-size="11.5" fill="#846200" text-anchor="middle" font-weight="bold" style="white-space: pre;">Ocupación mayor a 60 s -&gt; pausa de descarga</text>
-  <text x="725" y="318" font-size="10.5" fill="#495057" text-anchor="middle" style="white-space: pre;">se espera en pasos de 0,5 s hasta bajar dell límite</text>
+  <text x="725" y="318" font-size="10.5" fill="#495057" text-anchor="middle" style="white-space: pre;">se espera en pasos de 0,5 s hasta bajar del límite</text>
   <line x1="714" y1="280" x2="712" y2="250" stroke="#b08d00" stroke-width="1.2" marker-end="url(#f4flecha)"/>
   <line x1="710" y1="165" x2="780" y2="165" stroke="#495057" stroke-width="1.6" marker-end="url(#f4flecha)"/>
   <text x="745" y="152" font-size="10.5" fill="#495057" text-anchor="middle" style="white-space: pre;">sale</text>

@@ -1,168 +1,162 @@
-# Prompt de reentrada al hilo de la memoria (v2 — 10/08/2026)
+# Prompt de reentrada al hilo de la memoria (v3 — 27/08/2026)
 
 > Uso: copiar TODO lo que hay debajo de la raya y pegarlo tal cual como primer
-> mensaje al retomar el hilo/chat de la memoria. Versionado aquí para que
-> cualquier hilo sepa qué contexto se le dio al de la memoria.
+> mensaje del NUEVO hilo de la memoria (hilo del capítulo 5). Versionado aquí
+> para que cualquier hilo sepa qué contexto se le dio.
 >
-> v2 (10/08 tarde): (1) paquete de evidencia canónico fijado por el hilo
-> técnico = `20260810_133520_tfg_final`; (2) regla de fuente de verdad: de cara
-> a la memoria solo existe `C:\Users\danie\Documents\TFG Material\`.
+> v3 (27/08): capítulo 4 COMPLETO en borradores (8 apartados + F4.1–F4.6 +
+> T4.1–T4.7), protocolo por apartado rodado, hilo VBR de 6 preguntas resuelto
+> y apuntado. El hilo nuevo arranca directamente con el capítulo 5.
+> v2 (10/08): paquete canónico 20260810_133520_tfg_final; regla cero TFG Material.
 
 ---
 
-Retomo el TFG tras un mes parado para EMPEZAR A REDACTAR LA MEMORIA. Tú eres el
-arquitecto de la memoria y mi guía milimétrica.
+Retomamos la redacción de la MEMORIA de mi TFG (cliente DASH + controlador ABR
+propio). Venimos de un hilo donde completamos TODO el capítulo 4 (Diseño) con
+un protocolo que funcionó de lujo; tú eres el mismo arquitecto de la memoria y
+mi guía milimétrica. Este hilo es para el CAPÍTULO 5 (Implementación).
 
 REGLA CERO — FUENTE DE VERDAD (no la olvides nunca):
 De cara a la memoria SOLO EXISTE `C:\Users\danie\Documents\TFG Material\`.
 Es el material final de entrega: `01_codigo\ClienteDashTFG` (el código real que
-se describe y defiende: podado, en castellano), `02_corpus_red`, `03_modelos`,
-`04_evidencia_final`, `05_contenido_dash`, `06_dataset_entrenamiento`,
-`00_info_entorno` (informes reales de cada máquina) y su `LEEME.md`.
-El repo en el que trabajas (DashClientModular4/GitHub) es el BRUTO sin
-procesar: sirve para contexto, planes, decisiones y bibliografía (docs/), pero
-su código está en la nomenclatura vieja inglesa y NO es lo que se entrega.
-Cuando la memoria describa el sistema (módulos, nombres, firmas, configs,
-scripts, números), la fuente es TFG Material; si el repo y TFG Material
-discrepan, manda TFG Material.
+se describe y defiende: podado, en castellano, 81 .py), `02_corpus_red`,
+`03_modelos\modelo_propio\bundle`, `04_evidencia_final`, `05_contenido_dash`
+(completo, 12,5 GB), `06_dataset_entrenamiento`, `00_info_entorno` y su
+`LEEME.md` (actualizado 12/08). El repo donde trabajas
+(DashClientModular4/GitHub) es el BRUTO: sirve para contexto, planes,
+decisiones y bibliografía (docs/), pero su código está en nomenclatura vieja
+inglesa y NO es lo que se entrega. Si el repo y TFG Material discrepan, manda
+TFG Material. ANTES de redactar cada apartado, LEES el código real del
+entregable que le corresponde (así se hizo todo el cap 4: nada se afirma sin
+verificarlo en código o datos).
 
-Ponte al día EN ESTE ORDEN:
+Ponte al día EN ESTE ORDEN (sin narrarme cada lectura; resumen final corto):
 
-1. `CLAUDE.md` + tu memoria persistente (en especial `bibliografia-tfg-estado`,
-   `ordenacion-material-tfg`, `revision-consciente-agosto`,
-   `fase1-revision-final-hallazgos`, `memoria-tooling-y-no-rastro-ia`).
-2. `C:\Users\danie\Documents\TFG Material\LEEME.md` + estructura de la carpeta
-   (para saber qué existe en el entregable).
-3. `docs/memoria/00_PLAN_MAESTRO_MEMORIA.md` — la biblia: índice expandido con
-   [Q]/[R]/[F-T]/[B]/[P] de cada apartado. ES LA ESTRUCTURA (no se cambia el
-   macro), pero OJO: está escrito en junio — nomenclatura vieja y números de
-   junio; se traduce con la tabla de correspondencias del primer turno.
-4. `docs/memoria/02_BIBLIOGRAFIA_DEFINITIVA.md` + `docs/memoria/bibliografia.bib`
-   — bibliografía CERRADA y VERIFICADA (10/08): lista ganadora anotada por
-   capítulo, descartes, normativa ETSIIT aplicada. Las claves de ese `.bib` son
-   las ÚNICAS citas válidas; ni una referencia fuera de él.
-5. `docs/memoria/01_INVENTARIO_BIBLIOGRAFIA.md` — mapa fichero→fuente de los
-   ~100 PDFs de `C:\Users\danie\Documents\TFG\literatura\`.
-6. `docs/contexto rama nueva/fase_4_5_v1/HANDOFF_mpc_prudente_estado_completo_20260624.md`
-   y `docs/defensa/componentes_experimento.md` — la mejor descripción técnica
-   del sistema y de los componentes reales (máquinas, versiones, generación
-   DASH). ADVERTENCIA: sus NÚMEROS de resultados son de junio y ya NO son los
-   canónicos (ver evidencia, abajo).
+1. `CLAUDE.md` + tu memoria persistente — la clave es
+   `memoria-redaccion-estado` (estado del hilo de redacción: números canónicos,
+   qué está entregado, el hilo VBR de 6 preguntas con sus destinos por
+   apartado, apuntes para 5.5/5.6/5.7/6.7/7.4). También
+   `bibliografia-tfg-estado`, `ordenacion-material-tfg`,
+   `revision-consciente-agosto`, `memoria-tooling-y-no-rastro-ia`.
+2. `docs/memoria/00_PLAN_MAESTRO_MEMORIA.md` — la biblia (índice expandido).
+   Su §9 tiene el checklist al día. OJO: nomenclatura vieja de junio → se
+   traduce SIEMPRE con `docs/memoria/04_CORRESPONDENCIAS_NOMENCLATURA.md`.
+   El reparto de la emulación ya está fijado en el plan: replay→5.2,
+   normalización del corpus→6.3(+cap 3), muestreo de ventanas→5.7.
+3. `docs/memoria/02_BIBLIOGRAFIA_DEFINITIVA.md` + `bibliografia.bib` (92
+   claves): las ÚNICAS citas válidas; ni una referencia fuera del .bib.
+   NORMA PDF-PRIMERO: toda afirmación con cita se verifica contra el PDF
+   original de `C:\Users\danie\Documents\TFG\literatura\biblioteca_final\`
+   (ficheros renombrados a su clave BibTeX; los .md convertidos del repo son
+   solo índice de búsqueda).
+4. Los 8 borradores del cap 4 en `docs/memoria/borradores/cap4_*.md` —
+   LÉELOS: definen el estilo, la terminología ya fijada y las fronteras
+   diseño↔implementación (cada uno delega detalles concretos al cap 5; esas
+   promesas hay que cumplirlas ahora). Yo los mastico y reescribo en Word, y
+   edito las figuras SVG con Boxy — los cambios que veas en borradores y
+   figuras son míos: NUNCA los reviertas; si ves un typo mío, avísame sin
+   tocarlo.
+5. `docs/contexto rama original/01_baselines/<x>/notes_for_memory.md` +
+   `paper_card.md` + `implementation_spec.md` de los 5 clásicos — material ya
+   escrito que se reutiliza en el 5.5 (con Citation Plan).
+6. `docs/defensa/componentes_experimento.md` (versiones exactas de todo) y
+   `docs/defensa/apropiacion_codigo.md` + `preguntas_tribunal.md` si existen.
+   `HANDOFF_mpc_prudente_estado_completo_20260624.md` solo como contexto
+   técnico del controlador propio — ADVERTENCIA: sus números son de junio.
 7. `docs/contexto rama nueva/fase_4_5_v1/decision_revision_final_tecnica_20260805.md`
-   — CÓMO se redactan los resultados (matices win/loss; "citar el CI, no solo
-   las medias").
-8. Material reutilizable ya escrito: `docs/contexto rama original/01_baselines/<x>/notes_for_memory.md`
-   (los 5 clásicos, con Citation Plan), `docs/contexto rama original/07_memory/`
-   (política de citación, registro de figuras/tablas F1-F30/T1-T49) y los
-   `why_not_*.md` de `04_neural_abr` (resultados negativos del cap 7.5).
+   — cómo se redactan los resultados (citar CI, no solo medias). Y las
+   decisiones `decision_mpc_prudente_*.md` como contexto del diseño del
+   controlador propio (nomenclatura vieja).
 
-EVIDENCIA CANÓNICA (fijada por el hilo técnico el 10/08 — no se re-verifica,
-se usa):
+EVIDENCIA CANÓNICA (no se re-verifica, se usa): TODOS los números de
+resultados salen EXCLUSIVAMENTE del paquete
+`TFG Material\04_evidencia_final\20260810_133520_tfg_final` (300 sesiones,
+5 controladores, gates 8/8). Los números que veas en HANDOFF/plan
+maestro/decisiones de junio NO van a la memoria. Los números clave ya están
+resumidos en la memoria persistente (`memoria-redaccion-estado`) y en el §5
+cap 6 del plan maestro (reescrito con el paquete canónico).
 
-- Los números de la memoria salen EXCLUSIVAMENTE del paquete
-  **`20260810_133520_tfg_final`**, que vive en
-  `C:\Users\danie\Documents\TFG Material\04_evidencia_final\20260810_133520_tfg_final`
-  (hay copia también en `C:\Users\danie\Documents\TFG\`). Es el experimento
-  definitivo con los 5 controladores del entregable (`basado_en_tasa`, `bba`,
-  `bola`, `mpc_robusto`, `controlador_propio`).
-- Los paquetes de junio (`20260624_182747_tfg_final`, 6 controllers con v1) y
-  del 06/08 (`20260806_212937_tfg_final`) ya NO van a la memoria salvo, como
-  mucho, una nota de consistencia. Cualquier número de QoE/rebuffer/stalls que
-  veas en HANDOFF, plan maestro o decisiones es de junio: NO lo copies a la
-  memoria; recalcula el relato desde el paquete canónico.
+ESTADO ACTUAL (27/08): capítulo 4 COMPLETO — 8 borradores entregados y
+masticados por mí (4.1 visión global, 4.2 analizador MPD, 4.3
+descarga/buffer, 4.4 motores, 4.5 interfaz de controladores, 4.6 telemetría,
+4.7 red y medio con el párrafo de justificación VBR verificado contra PDFs,
+4.8 separación ejecución/evaluación + resumen del capítulo). Figuras
+F4.1–F4.6 en `docs/memoria/figuras/` (SVG editables, estilo sobrio: grises +
+azul #1971c2 decisión + amarillo #fff9db asíncrono/medio + rojo #c92a2a
+alertas — MANTENER ese estilo). Tablas T4.1–T4.7 dentro de los borradores.
 
-QUÉ MÁS HA PASADO en este mes (para que no trabajes con estado viejo):
+EL ENCARGO (mismo protocolo rodado, innegociable): trabajamos UN apartado por
+turno. En cada turno me entregas el paquete completo:
+(a) Alcance (qué cuenta y qué NO, para no pisar otros apartados).
+(b) BORRADOR COMPLETO en español, impersonal, frases cortas, calidad
+    académica alta (soy alumno del Grado de Teleco, ETSIIT UGR — nivel de TFG
+    de grado, no paper), listo para masticar; la longitud que necesite. En la
+    memoria no queda NINGÚN rastro de IA.
+(c) FIGURAS que toquen: SVG editable hecho por ti con contenido técnico EXACTO
+    del entregable, verificado renderizándolo (abrir en el navegador y
+    corregir solapes ANTES de entregarlo), pie numerado y referencia en el
+    texto. Nada de IA generativa de imágenes. Me las envías renderizadas.
+(d) TABLAS con contenido real del entregable o del paquete canónico.
+(e) CITAS: solo claves del .bib, las del plan; afirmaciones con cita
+    verificadas contra el PDF original (pdfminer; el Read visual de PDF no
+    funciona en este entorno).
+(f) Checklist de cierre + actualizar el §9 del plan maestro + commit y push
+    con rutas explícitas (nunca git add .) + notas "no van a la memoria" con
+    los argumentos de defensa y citas textuales cuando las haya.
+Cuando yo diga "listo, X terminado, vamos con Y", conservas mis versiones
+masticadas tal cual y sigues.
 
-- Revisión técnica final + naturalización: el código del entregable
-  (`TFG Material\01_codigo\ClienteDashTFG`) está castellanizado y renombrado
-  ENTERO: el controlador IA se llama `controlador_propio` (el v1 MLP quedó
-  eliminado del entregable; la marca "mpc_prudente/v2/temporal" desapareció de
-  los nombres), clásicos `basado_en_tasa`/`bba`/`bola`/`mpc_robusto`,
-  `player.py`→`reproductor.py`, `core/modelo_propio/`, etc.
-- Bibliografía y normativa CERRADAS (hilo de bibliografía, 10/08): normativa
-  ETSIIT leída de los PDF oficiales (no impone estilo de citas; su rúbrica
-  puntúa "fuentes adecuadas/fiables/variadas/suficientes" y el "uso adecuado de
-  bibliografía" puede suspender si es muy deficiente); memoria ≤100 páginas,
-  castellano, títulos de papers en inglés.
+PLAN DE SESIÓN DEL CAPÍTULO 5 (construido en el hilo anterior; síguelo):
+- 5.1 Lenguaje, frameworks y librerías (por qué Python puro, requests,
+  ElementTree, PyYAML, PyTorch solo para el propio, GStreamer opcional;
+  versiones reales de componentes_experimento; cita digregorio2026mlLoading
+  para la carga segura del modelo, weights_only).
+- 5.2 Cliente y reproductor — INCLUYE la implementación del replay
+  (`core/reproduccion_trazas/`): cargador+validación del CSV, modelo de red,
+  descargador controlado. Fragmentos de código SOLO si explican una decisión.
+- 5.3 Analizador del MPD (ElementTree, namespaces, duraciones ISO 8601,
+  parseo binario del sidx — lo prometido en 4.2).
+- 5.4 Runner y configuración (scripts/3_evaluacion/ejecutar_evaluacion.py,
+  GUI tkinter, config JSON, generación de configs por sesión).
+- 5.5 Baselines clásicos (basado_en_tasa/bba/bola/mpc/mpc_robusto):
+  REUTILIZAR notes_for_memory + paper cards; mapping fórmula-paper→código;
+  citas liu2011rateAdaptation, huang2014bba, spiteri2020bola, yin2015mpc
+  (+spiteri2019dashjs contexto). Marco "familias reactiva vs informada del
+  contenido" del hilo VBR.
+- 5.6 Controlador propio — EL PLATO FUERTE (2 turnos si hace falta):
+  predictor de cuantiles (ensemble de 5 GRU, incertidumbre epistémica que
+  ensancha la cola inferior) + planificador CVaR (α=0,75 fijo, tamaños VBR
+  reales, media de los escenarios pesimistas q10/q25/q50) + salvaguardas
+  (respaldo mpc_robusto, latencia máx 50 ms, hashes) + ARQUITECTURA DE
+  GENERALIZACIÓN (predictor agnóstico al contenido; tabla del vídeo activo
+  como dato → vídeo nuevo sin reentrenar). Citas: kan2021bayesmpc,
+  yan2020puffer, koenker1978quantiles, rockafellar2000cvar, cho2014gru,
+  lakshminarayanan2017ensembles. Figuras nuevas F5.x: arquitectura
+  predictor+planificador y bucle de decisión (F5/F6 del plan maestro).
+  USAR las respuestas del hilo VBR (en memoria-redaccion-estado): reacción vs
+  anticipación, tres papeles de la información, chuletas de defensa.
+- 5.7 Entorno de entrenamiento fiel (entrenamiento/: simulador de sesiones,
+  dataset de cuantiles, muestreo de ventanas SOLO de la partición de
+  entrenamiento, rotación de los 8 vídeos, entrenamiento del ensemble en WSL
+  con ROCm, exportación del bundle). Contar: los tamaños como FÍSICA del
+  entorno (tres papeles), régimen de diseño declarado, y el resultado
+  negativo del predecesor CBR como motivación (sin números de junio).
+- Cierre: resumen del capítulo 5 + pasada de coherencia.
 
-DATOS FIJOS NUEVOS:
+REGLAS DE ESTILO (plan maestro §2): impersonal; una idea por frase; capítulo
+abre con contexto y cierra con resumen; siglas definidas la primera vez;
+figuras/tablas numeradas, con pie, referenciadas, nada decorativo; títulos de
+papers en inglés; terminología del entregable (04_CORRESPONDENCIAS §5:
+"controlador propio", nunca mpc_prudente/v2/Phase 6); cero claims sin el
+paquete canónico; ≤100 páginas en total (el cap 5 debe ser sustancioso pero
+no un manual: fragmentos de código solo si justifican una decisión).
 
-- Tutor: **Juan José Ramos Muñoz** — además primer autor de
-  `ramosMunoz2014mobileYoutube` y coautor de `ameigeiras2012youtubeTraffic`,
-  los "trabajos locales" del cap 1-2 (hay un párrafo en español ya redactado en
-  `docs/contexto rama original/0_field_map/local_streaming_source_evidence.md`,
-  líneas 103-105). Va en la portada (`\myProf`).
-- Plantilla LaTeX: la oficial del grado, ya montada en Prism con logos y mi
-  nombre (copia local: `C:\Users\danie\Documents\TFG\Plantilla_TFG_latex`).
-  El ZIP oficial NO trae `miunsrturl.bst` → al activar la bibliografía:
-  `\bibliographystyle{unsrt}` y copiar `docs/memoria/bibliografia.bib` como
-  `bibliografia/bibliografia.bib` del proyecto Prism.
-- NotebookLM está VACÍO todavía.
+Reparto de herramientas: TÚ = arquitecto + capítulos técnicos + figuras +
+tablas + coherencia. NotebookLM = solo cap 2 (más adelante) y estudio para la
+defensa. Prism/LaTeX = solo maquetar texto ya masticado. Yo paso los
+borradores a limpio en Word.
 
-EL ENCARGO (modo de trabajo, innegociable):
-
-Guíame PASO A PASO, MILÍMETRO A MILÍMETRO, en la construcción de la memoria:
-cada apartado, cada figura, cada tabla, cada cita, cada título y cada número.
-Empezamos por el **Cap 4** y seguimos el orden del plan maestro §4
-(4→5→6→2→3→1→7; bibliografía y anexos en paralelo). En cada turno trabajamos
-UN apartado (p. ej. 4.1) y me entregas el paquete completo:
-
-(a) **Alcance**: qué cuenta ese apartado y qué NO (para no pisar otros).
-(b) **BORRADOR COMPLETO** del texto en español, estilo impersonal, frases
-    cortas, calidad académica alta, listo para que yo lo mastique y lo
-    reescriba con mis palabras (regla del tutor: si no lo mastico, no lo
-    defiendo; en la memoria no queda NINGÚN rastro de IA). Sin recortarte: la
-    longitud que el apartado necesite.
-(c) **FIGURAS**: las generas TÚ como fichero editable (SVG, o TikZ si encaja
-    mejor en LaTeX) con el contenido técnico EXACTO sacado de TFG Material
-    (nombres de módulos, IPs, escalera VBR, flujos reales), más pie de figura
-    numerado y el punto del texto donde se referencia. NADA de IA generativa de
-    imágenes para diagramas técnicos (texto corrupto, no editable, no
-    reproducible, y huele a IA). Las gráficas de resultados salen de los plots
-    reales del paquete canónico; el Gantt, del `git log`.
-(d) **TABLAS** con contenido real extraído de TFG Material o del paquete
-    canónico (nada inventado).
-(e) **CITAS**: exactamente las de `bibliografia.bib` con su clave
-    (`\cite{...}`), solo las que tocan en ese apartado (columna [B] del plan
-    maestro + secciones 2.x de 02_BIBLIOGRAFIA_DEFINITIVA). Ni una referencia
-    que no esté en el `.bib`.
-(f) **Checklist de cierre** del apartado + actualización del checklist §9 del
-    plan maestro (00) para que el progreso quede versionado.
-
-PRIMER TURNO (antes de redactar nada, en este orden):
-
-1. Lee el paquete canónico (`04_evidencia_final\20260810_133520_tfg_final`:
-   resumen, agregados, estadística, gráficas) y dame: los números clave que
-   irán al cap 6 (QoE por controlador, deltas pareados con CI, sign test,
-   stalls/rebuffer, cola), la lista de gráficas disponibles, y el AJUSTE del
-   plan maestro que implica (el experimento final es de 5 controladores sin
-   v1 → la "ablación v1↔v2" del plan pasa a resultados negativos del cap
-   7.5/anexo; propón el cambio concreto de las secciones 6.4/6.6).
-2. Construye la TABLA DE CORRESPONDENCIAS terminológica plan-viejo →
-   entregable (rate_based→basado_en_tasa, robust_mpc→mpc_robusto,
-   "MPC prudente v2/temporal"→controlador propio, player→reproductor,
-   core/mpc_prudente→core/modelo_propio, etc., completada leyendo TFG
-   Material) y fija la nomenclatura de la memoria = la del entregable, aplicada
-   de forma consistente en TODO lo que redactes.
-3. Dame la LISTA EXACTA de PDFs que subo a cada notebook de NotebookLM
-   (NB_estado_del_arte / NB_cliente_dash / NB_ia_riesgo), con la ruta de cada
-   fichero dentro de `C:\Users\danie\Documents\TFG\literatura\` — una sola
-   copia por paper (duplicados cazados en 01 §K y 02 §4) y solo fuentes de la
-   lista ganadora (02 §2). Recuérdame el prompt base de NotebookLM del plan
-   maestro §3 adaptado al cap 2.
-4. Dame el plan de sesión del Cap 4: secuencia de apartados, qué figura/tabla
-   cae en cada uno (F1-F4, T5-T7 del plan maestro) y de qué parte de TFG
-   Material sale el contenido en cada caso.
-
-REGLAS DE ESTILO (plan maestro §2, repásalas y aplícalas SIEMPRE): impersonal;
-una idea por frase; cada capítulo abre con 2-3 líneas de contexto y cierra con
-resumen; siglas definidas en la primera aparición; toda figura/tabla numerada,
-con pie y referenciada; títulos de papers en inglés; cero claims de mejora sin
-gates y el relato de resultados sale SOLO del paquete canónico del 10/08; cero
-muletillas de IA; terminología consistente con el código del entregable;
-≤100 páginas.
-
-Reparto de herramientas (no lo mezcles): TÚ = arquitecto + todos los capítulos
-técnicos + figuras + tablas + coherencia global. NotebookLM = solo cap 2 /
-justificaciones con cita fiel a los PDFs subidos. Prism = solo maquetar texto
-ya masticado (no se redacta allí de cero).
+PRIMER TURNO DE ESTE HILO: ponte al día con las lecturas de arriba (di solo
+"al día" + 3-4 líneas de confirmación del estado) y entrega DIRECTAMENTE el
+paquete completo del **5.1** según el protocolo. Después seguimos apartado a
+apartado como siempre.
