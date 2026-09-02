@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="600" viewBox="0 0 940 600" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="flecha" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <polygon points="0 0, 9 3.5, 0 7" fill="#495057"/>
+    </marker>
+    <marker id="flechaAzul" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <polygon points="0 0, 9 3.5, 0 7" fill="#1971c2"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="940" height="600" fill="#ffffff"/>
+
+  <!-- ===================== CARRIL SUPERIOR: TIEMPO DE SESION ===================== -->
+  <text x="80" y="34" font-size="14" font-weight="bold" fill="#212529">Tiempo de sesión (el reloj del cliente)</text>
+
+  <!-- eje -->
+  <line x1="80" y1="150" x2="890" y2="150" stroke="#495057" stroke-width="1.5" marker-end="url(#flecha)"/>
+  <text x="894" y="154" font-size="11" fill="#495057" text-anchor="end" dy="14">t</text>
+
+  <!-- bloque: descarga k -->
+  <rect x="80" y="98" width="150" height="44" fill="#e9ecef" stroke="#868e96"/>
+  <text x="155" y="116" font-size="12" fill="#212529" text-anchor="middle">descarga del</text>
+  <text x="155" y="132" font-size="12" fill="#212529" text-anchor="middle">segmento k</text>
+
+  <!-- bloque: espera buffer lleno -->
+  <rect x="230" y="98" width="150" height="44" fill="#fff9db" stroke="#f08c00" stroke-dasharray="5 3"/>
+  <text x="305" y="116" font-size="12" fill="#212529" text-anchor="middle">espera</text>
+  <text x="305" y="132" font-size="12" fill="#212529" text-anchor="middle">(buffer lleno)</text>
+
+  <!-- bloque: descarga k+1 emulada -->
+  <rect x="380" y="98" width="280" height="44" fill="#e7f0fa" stroke="#1971c2" stroke-width="1.5"/>
+  <text x="520" y="116" font-size="12" fill="#1971c2" text-anchor="middle" font-weight="bold">descarga del segmento k+1</text>
+  <text x="520" y="132" font-size="12" fill="#1971c2" text-anchor="middle">(duración impuesta por la traza)</text>
+
+  <!-- subtramos de la descarga emulada -->
+  <rect x="380" y="152" width="34" height="10" fill="#868e96"/>
+  <rect x="414" y="152" width="246" height="10" fill="#fff9db" stroke="#f08c00" stroke-width="0.8"/>
+  <rect x="380" y="172" width="9" height="9" fill="#868e96"/>
+  <text x="394" y="180" font-size="11" fill="#495057">descarga real de los bytes (rápida en la red local)</text>
+  <rect x="380" y="188" width="9" height="9" fill="#fff9db" stroke="#f08c00" stroke-width="0.8"/>
+  <text x="394" y="196" font-size="11" fill="#495057">espera hasta cumplir la duración que dicta la traza</text>
+
+  <!-- anotacion de anclaje -->
+  <text x="80" y="222" font-size="12" fill="#212529">La posición en la traza sigue al reloj de la</text>
+  <text x="80" y="238" font-size="12" fill="#212529">sesión: la espera también la hace avanzar.</text>
+
+  <!-- lineas de correspondencia -->
+  <line x1="380" y1="142" x2="380" y2="330" stroke="#1971c2" stroke-width="1.2" stroke-dasharray="6 4"/>
+  <line x1="660" y1="142" x2="660" y2="330" stroke="#1971c2" stroke-width="1.2" stroke-dasharray="6 4"/>
+  <text x="376" y="248" font-size="11" fill="#1971c2" text-anchor="end">posición al pedir</text>
+  <text x="666" y="248" font-size="11" fill="#1971c2">entrega completada</text>
+
+  <!-- ===================== CARRIL INFERIOR: VENTANA DE TRAZA ===================== -->
+  <text x="80" y="285" font-size="14" font-weight="bold" fill="#212529">Ventana de la traza (throughput disponible)</text>
+
+  <!-- ejes -->
+  <line x1="80" y1="490" x2="890" y2="490" stroke="#495057" stroke-width="1.5" marker-end="url(#flecha)"/>
+  <line x1="80" y1="490" x2="80" y2="305" stroke="#495057" stroke-width="1.5" marker-end="url(#flecha)"/>
+  <text x="66" y="300" font-size="11" fill="#495057">kbps</text>
+
+  <!-- escalera de muestras (gris) -->
+  <!-- m1: 80..230 h=70 -->
+  <rect x="80" y="420" width="150" height="70" fill="#f1f3f5" stroke="#adb5bd"/>
+  <!-- m2: 230..330 h=120 -->
+  <rect x="230" y="370" width="100" height="120" fill="#f1f3f5" stroke="#adb5bd"/>
+  <!-- m3: 330..470 h=55 -->
+  <rect x="330" y="435" width="140" height="55" fill="#f1f3f5" stroke="#adb5bd"/>
+  <!-- m4: 470..560 h=0 (corte) -->
+  <line x1="470" y1="490" x2="560" y2="490" stroke="#495057" stroke-width="3"/>
+  <!-- m5: 560..700 h=95 -->
+  <rect x="560" y="395" width="140" height="95" fill="#f1f3f5" stroke="#adb5bd"/>
+  <!-- m6: 700..800 h=60 -->
+  <rect x="700" y="430" width="100" height="60" fill="#f1f3f5" stroke="#adb5bd"/>
+
+  <!-- sombreado azul del tramo integrado: fraccion m3 (380..470), m4 (470..560, cero), fraccion m5 (560..660) -->
+  <rect x="380" y="435" width="90" height="55" fill="#1971c2" fill-opacity="0.28" stroke="#1971c2" stroke-width="1.2"/>
+  <rect x="560" y="395" width="100" height="95" fill="#1971c2" fill-opacity="0.28" stroke="#1971c2" stroke-width="1.2"/>
+  <line x1="470" y1="490" x2="560" y2="490" stroke="#1971c2" stroke-width="3"/>
+
+  <!-- etiqueta area = bytes -->
+  <text x="420" y="416" font-size="11" fill="#1971c2" font-weight="bold">área sombreada = bytes entregados</text>
+  <line x1="430" y1="420" x2="425" y2="440" stroke="#1971c2" stroke-width="1" marker-end="url(#flechaAzul)"/>
+  <line x1="560" y1="420" x2="590" y2="440" stroke="#1971c2" stroke-width="1" marker-end="url(#flechaAzul)"/>
+
+  <!-- etiqueta corte -->
+  <text x="515" y="516" font-size="11" fill="#495057" text-anchor="middle">muestra a 0 kbps:</text>
+  <text x="515" y="530" font-size="11" fill="#495057" text-anchor="middle">consume tiempo, no entrega bytes</text>
+
+  <!-- etiqueta ultima muestra fraccionada -->
+  <text x="790" y="372" font-size="11" fill="#1971c2" text-anchor="end">última muestra, usada en fracción:</text>
+  <text x="790" y="386" font-size="11" fill="#1971c2" text-anchor="end">duración = bytes restantes / caudal</text>
+  <line x1="700" y1="390" x2="655" y2="400" stroke="#1971c2" stroke-width="1" marker-end="url(#flechaAzul)"/>
+
+  <!-- fin de ventana -->
+  <line x1="800" y1="310" x2="800" y2="490" stroke="#c92a2a" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="806" y="322" font-size="11" fill="#c92a2a" font-weight="bold">fin de la</text>
+  <text x="806" y="336" font-size="11" fill="#c92a2a" font-weight="bold">ventana</text>
+  <text x="806" y="356" font-size="10" fill="#c92a2a">si se agota antes de</text>
+  <text x="806" y="369" font-size="10" fill="#c92a2a">completar una entrega,</text>
+  <text x="806" y="382" font-size="10" fill="#c92a2a">la sesión falla y queda</text>
+  <text x="806" y="395" font-size="10" fill="#c92a2a">marcada (política fail)</text>
+
+  <!-- nota inferior -->
+  <rect x="80" y="548" width="720" height="34" fill="#fff9db" stroke="#f08c00" stroke-width="0.8"/>
+  <text x="90" y="562" font-size="11.5" fill="#212529">Los bytes entregados son siempre los reales, descargados del servidor; la traza impone únicamente</text>
+  <text x="90" y="576" font-size="11.5" fill="#212529">la temporalidad de la entrega. El registro de cada descarga anota posición en la traza y muestras usadas.</text>
+</svg>
