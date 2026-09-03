@@ -568,7 +568,7 @@ pide cifras, están en el histórico).
 | Cap 2 Estado del arte | TODO | NotebookLM (listas de fuentes fijadas 12/08) |
 | Cap 3 Planificación/costes | TODO | sacar Gantt del git log |
 | Cap 4 Diseño | BORRADORES COMPLETOS | 4.1–4.7 redactados por Daniel; 4.8 BORRADOR entregado 27/08 (cap4_8_separacion_evaluacion.md + T4.7 gates + resumen del capítulo). Al masticar 4.8: pasada de coherencia del capítulo entero. Siguiente capítulo: 5 |
-| Cap 5 Implementación | EN CURSO | 5.1 entregado 31/08 (cap5_1_lenguaje_librerias.md + T5.1). 5.2 BORRADOR entregado 02/09 (cap5_2_cliente_replay.md + T5.2 validación de trazas + F5.1 fig_5_1_emulacion_descarga.svg; sin citas nuevas). Siguiente: 5.3 analizador MPD (sidx). Para 5.5: reutilizar notes_for_memory baselines |
+| Cap 5 Implementación | EN CURSO | 5.1 entregado 31/08 (T5.1). 5.2 entregado 02/09 (T5.2 + F5.1). 5.3 BORRADOR entregado 03/09 (cap5_3_analizador_mpd.md + T5.3 campos sidx; ISO 14496-12 §8.16.3 e ISO 23009-1 verificadas en PDF; sin figura nueva). Siguiente: 5.4 runner/GUI/config. Para 5.5: reutilizar notes_for_memory baselines |
 | Cap 6 Evaluación | TODO | números canónicos fijados en §5 (paquete 20260810) |
 | Cap 7 Conclusiones | TODO | al final |
 | Bibliografía (BibTeX) | HECHA (92 entradas) | `bibliografia.bib` cerrado 10/08; solo se imprime lo citado |
