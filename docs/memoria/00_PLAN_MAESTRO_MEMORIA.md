@@ -568,7 +568,7 @@ pide cifras, están en el histórico).
 | Cap 2 Estado del arte | TODO | NotebookLM (listas de fuentes fijadas 12/08) |
 | Cap 3 Planificación/costes | TODO | sacar Gantt del git log |
 | Cap 4 Diseño | BORRADORES COMPLETOS | 4.1–4.7 redactados por Daniel; 4.8 BORRADOR entregado 27/08 (cap4_8_separacion_evaluacion.md + T4.7 gates + resumen del capítulo). Al masticar 4.8: pasada de coherencia del capítulo entero. Siguiente capítulo: 5 |
-| Cap 5 Implementación | EN CURSO | 5.1–5.4 entregados y masticados por Daniel. 5.5 BORRADOR entregado 04/09 (cap5_5_controladores_clasicos.md + T5.5 mapeo fórmula→código; 5 citas verificadas en PDF: liu2011, huang2014, spiteri2020, spiteri2019, yin2015; parámetros = defaults verificados en el paquete canónico; sin figura). PENDIENTE EN CAP 4: corregir T4.3 "paso de espera 0,5 s" → "0,5 s (0,01 s en la evaluación)". Siguiente: 5.6 controlador propio (2 turnos, F5.2/F5.3 nuevas) |
+| Cap 5 Implementación | EN CURSO | 5.1–5.5 entregados (5.5 en masticado). 5.6 PARTE 1 entregada 05/09 (cap5_6_controlador_propio.md: visión general, entradas, predictor de cuantiles, generalización + F5.2 fig_5_2_arquitectura_controlador_propio.svg; citas yan2020puffer/kan2021bayesmpc verificadas en PDF + cho/koenker/lakshminarayanan; parámetros contados en el bundle: 46 292/miembro). Siguiente: 5.6 PARTE 2 (planificador CVaR, salvaguardas, paquete, T5.6, F5.3). PENDIENTE EN CAP 4: corregir T4.3 "paso de espera 0,5 s" → "0,5 s (0,01 s en la evaluación)" |
 | Cap 6 Evaluación | TODO | números canónicos fijados en §5 (paquete 20260810) |
 | Cap 7 Conclusiones | TODO | al final |
 | Bibliografía (BibTeX) | HECHA (92 entradas) | `bibliografia.bib` cerrado 10/08; solo se imprime lo citado |
