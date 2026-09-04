@@ -568,7 +568,7 @@ pide cifras, están en el histórico).
 | Cap 2 Estado del arte | TODO | NotebookLM (listas de fuentes fijadas 12/08) |
 | Cap 3 Planificación/costes | TODO | sacar Gantt del git log |
 | Cap 4 Diseño | BORRADORES COMPLETOS | 4.1–4.7 redactados por Daniel; 4.8 BORRADOR entregado 27/08 (cap4_8_separacion_evaluacion.md + T4.7 gates + resumen del capítulo). Al masticar 4.8: pasada de coherencia del capítulo entero. Siguiente capítulo: 5 |
-| Cap 5 Implementación | EN CURSO | 5.1 (T5.1), 5.2 (T5.2+F5.1), 5.3 (T5.3) entregados y masticados por Daniel. 5.4 BORRADOR entregado 04/09 (cap5_4_lanzador_configuracion.md + T5.4 presets; verificado contra las 300 configs del paquete canónico; sin citas ni figura). PENDIENTE EN CAP 4: corregir T4.3 "paso de espera 0,5 s" → "0,5 s (0,01 s en la evaluación)". Siguiente: 5.5 baselines (reutilizar notes_for_memory + paper cards) |
+| Cap 5 Implementación | EN CURSO | 5.1–5.4 entregados y masticados por Daniel. 5.5 BORRADOR entregado 04/09 (cap5_5_controladores_clasicos.md + T5.5 mapeo fórmula→código; 5 citas verificadas en PDF: liu2011, huang2014, spiteri2020, spiteri2019, yin2015; parámetros = defaults verificados en el paquete canónico; sin figura). PENDIENTE EN CAP 4: corregir T4.3 "paso de espera 0,5 s" → "0,5 s (0,01 s en la evaluación)". Siguiente: 5.6 controlador propio (2 turnos, F5.2/F5.3 nuevas) |
 | Cap 6 Evaluación | TODO | números canónicos fijados en §5 (paquete 20260810) |
 | Cap 7 Conclusiones | TODO | al final |
 | Bibliografía (BibTeX) | HECHA (92 entradas) | `bibliografia.bib` cerrado 10/08; solo se imprime lo citado |
