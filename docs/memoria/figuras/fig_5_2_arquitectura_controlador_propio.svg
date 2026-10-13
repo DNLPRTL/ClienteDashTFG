@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="640" viewBox="0 0 960 640" font-family="Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="480" viewBox="0 0 960 480" font-family="Helvetica, Arial, sans-serif">
   <defs>
     <marker id="fl" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
       <polygon points="0 0, 9 3.5, 0 7" fill="#495057"/>
@@ -9,129 +9,88 @@
     <marker id="flAmar" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
       <polygon points="0 0, 9 3.5, 0 7" fill="#f08c00"/>
     </marker>
+    <marker id="flRojo" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <polygon points="0 0, 9 3.5, 0 7" fill="#c92a2a"/>
+    </marker>
   </defs>
-  <rect x="0" y="0" width="960" height="640" fill="#ffffff"/>
+  <rect x="0" y="0" width="960" height="480" fill="#ffffff"/>
 
-  <!-- ================= COLUMNA A: ENTRADAS ================= -->
-  <rect x="24" y="40" width="222" height="60" fill="#e9ecef" stroke="#868e96"/>
-  <text x="135" y="64" font-size="12.5" font-weight="bold" fill="#212529" text-anchor="middle">Realimentación del reproductor</text>
-  <text x="135" y="82" font-size="11.5" fill="#495057" text-anchor="middle">(contrato de 20 claves, apartado 4.5)</text>
+  <!-- ============ CARRIL 1: RED (observada) ============ -->
+  <rect x="20" y="30" width="636" height="120" fill="#f1f3f5"/>
+  <text x="30" y="47" font-size="11" font-weight="bold" fill="#495057" letter-spacing="0.5">INFORMACIÓN DE RED: OBSERVADA EN EL PASADO</text>
 
-  <line x1="135" y1="100" x2="135" y2="128" stroke="#495057" stroke-width="1.5" marker-end="url(#fl)"/>
+  <rect x="30" y="58" width="160" height="76" fill="#ffffff" stroke="#868e96"/>
+  <text x="110" y="82" font-size="13" font-weight="bold" fill="#212529" text-anchor="middle">Realimentación</text>
+  <text x="110" y="101" font-size="12.5" fill="#212529" text-anchor="middle">del reproductor</text>
+  <text x="110" y="120" font-size="11" fill="#868e96" text-anchor="middle">(apartado 4.5)</text>
+  <line x1="190" y1="96" x2="216" y2="96" stroke="#495057" stroke-width="1.5" marker-end="url(#fl)"/>
 
-  <rect x="24" y="130" width="222" height="188" fill="#f8f9fa" stroke="#868e96"/>
-  <text x="135" y="152" font-size="12.5" font-weight="bold" fill="#212529" text-anchor="middle">Constructor de entradas</text>
-  <text x="36" y="176" font-size="11.5" fill="#212529">• secuencia: 5 últimas descargas</text>
-  <text x="48" y="191" font-size="11" fill="#495057">(throughput, tiempo de descarga)</text>
-  <text x="36" y="212" font-size="11.5" fill="#212529">• 7 escalares de sesión: buffer,</text>
-  <text x="48" y="227" font-size="11" fill="#495057">último nivel y bitrate, cambio</text>
-  <text x="48" y="242" font-size="11" fill="#495057">reciente, progreso de la sesión</text>
-  <text x="36" y="266" font-size="11.5" fill="#212529">• máscara de acciones válidas</text>
-  <text x="36" y="290" font-size="11.5" fill="#c92a2a">• rechaza los campos prohibidos</text>
-  <text x="48" y="305" font-size="11" fill="#c92a2a">(identidad de traza, partición, futuro)</text>
+  <rect x="218" y="58" width="200" height="76" fill="#ffffff" stroke="#868e96"/>
+  <text x="318" y="82" font-size="13" font-weight="bold" fill="#212529" text-anchor="middle">Constructor de entradas</text>
+  <text x="318" y="101" font-size="12.5" fill="#212529" text-anchor="middle">historial de 5 descargas</text>
+  <text x="318" y="120" font-size="12.5" fill="#212529" text-anchor="middle">y 7 escalares de sesión</text>
+  <line x1="418" y1="96" x2="444" y2="96" stroke="#495057" stroke-width="1.5" marker-end="url(#fl)"/>
 
-  <!-- flecha A -> B -->
-  <line x1="246" y1="224" x2="296" y2="224" stroke="#495057" stroke-width="1.5" marker-end="url(#fl)"/>
+  <rect x="446" y="58" width="200" height="76" fill="#ffffff" stroke="#868e96"/>
+  <text x="546" y="82" font-size="13" font-weight="bold" fill="#212529" text-anchor="middle">Predictor de cuantiles</text>
+  <text x="546" y="101" font-size="12.5" fill="#212529" text-anchor="middle">conjunto de 5 redes GRU</text>
+  <text x="546" y="120" font-size="11" fill="#868e96" text-anchor="middle">pesos verificados (SHA-256)</text>
 
-  <!-- ================= COLUMNA B: PREDICTOR ================= -->
-  <rect x="300" y="40" width="330" height="378" fill="#f8f9fa" stroke="#868e96"/>
-  <text x="465" y="62" font-size="12.5" font-weight="bold" fill="#212529" text-anchor="middle">Predictor de cuantiles de throughput</text>
+  <!-- salida del predictor hacia el planificador -->
+  <line x1="646" y1="96" x2="708" y2="96" stroke="#1971c2" stroke-width="1.8" marker-end="url(#flAzul)"/>
+  <text x="677" y="86" font-size="11" font-weight="bold" fill="#1971c2" text-anchor="middle">5 × 4</text>
+  <text x="677" y="113" font-size="10.5" fill="#1971c2" text-anchor="middle">escenarios</text>
 
-  <rect x="316" y="76" width="298" height="30" fill="#e9ecef" stroke="#adb5bd"/>
-  <text x="465" y="95" font-size="11.5" fill="#212529" text-anchor="middle">normalización (media y desviación del entrenamiento)</text>
-  <line x1="465" y1="106" x2="465" y2="118" stroke="#495057" stroke-width="1.2" marker-end="url(#fl)"/>
+  <!-- ============ CARRIL 2: CONTENIDO (conocido de antemano) ============ -->
+  <rect x="20" y="172" width="636" height="98" fill="#fff9db"/>
+  <text x="30" y="189" font-size="11" font-weight="bold" fill="#8a6d00" letter-spacing="0.5">INFORMACIÓN DEL CONTENIDO: CONOCIDA DE ANTEMANO</text>
 
-  <rect x="316" y="120" width="140" height="44" fill="#e9ecef" stroke="#adb5bd"/>
-  <text x="386" y="138" font-size="11.5" fill="#212529" text-anchor="middle">GRU (96 unidades)</text>
-  <text x="386" y="154" font-size="11" fill="#495057" text-anchor="middle">sobre la secuencia</text>
-  <rect x="474" y="120" width="140" height="44" fill="#e9ecef" stroke="#adb5bd"/>
-  <text x="544" y="138" font-size="11.5" fill="#212529" text-anchor="middle">7 escalares</text>
-  <text x="544" y="154" font-size="11" fill="#495057" text-anchor="middle">normalizados</text>
-  <line x1="386" y1="164" x2="450" y2="186" stroke="#495057" stroke-width="1.2"/>
-  <line x1="544" y1="164" x2="480" y2="186" stroke="#495057" stroke-width="1.2"/>
+  <rect x="30" y="200" width="616" height="58" fill="#ffffff" stroke="#f08c00"/>
+  <text x="338" y="223" font-size="13" font-weight="bold" fill="#212529" text-anchor="middle">Tabla de tamaños reales del vídeo activo</text>
+  <text x="338" y="243" font-size="12" fill="#212529" text-anchor="middle">bytes de cada segmento en cada representación · uno por vídeo · inyectado por sesión</text>
+  <line x1="646" y1="229" x2="708" y2="229" stroke="#f08c00" stroke-width="1.8" marker-end="url(#flAmar)"/>
 
-  <rect x="316" y="188" width="298" height="30" fill="#e9ecef" stroke="#adb5bd"/>
-  <text x="465" y="207" font-size="11.5" fill="#212529" text-anchor="middle">concatenación → MLP (96, 64) → 5 horizontes × 4 cuantiles</text>
-  <line x1="465" y1="218" x2="465" y2="230" stroke="#495057" stroke-width="1.2" marker-end="url(#fl)"/>
+  <!-- ============ DECISION ============ -->
+  <rect x="710" y="58" width="230" height="212" fill="#e7f0fa" stroke="#1971c2" stroke-width="2"/>
+  <text x="825" y="82" font-size="13.5" font-weight="bold" fill="#1971c2" text-anchor="middle">Planificador MPC (CVaR)</text>
+  <text x="825" y="110" font-size="12.5" fill="#212529" text-anchor="middle">7 776 secuencias de 5 acciones</text>
+  <text x="825" y="129" font-size="12.5" fill="#212529" text-anchor="middle">× 4 escenarios de throughput</text>
+  <text x="825" y="155" font-size="12.5" fill="#212529" text-anchor="middle">descarga simulada con el</text>
+  <text x="825" y="174" font-size="12.5" fill="#212529" text-anchor="middle">tamaño real de cada segmento</text>
+  <text x="825" y="200" font-size="12.5" fill="#212529" text-anchor="middle">elige el máximo CVaR (α = 0,75)</text>
+  <text x="825" y="219" font-size="12.5" fill="#212529" text-anchor="middle">y aplica la primera acción</text>
+  <text x="825" y="252" font-size="11" fill="#868e96" text-anchor="middle">(apartado 5.6.3)</text>
 
-  <rect x="316" y="232" width="298" height="30" fill="#e9ecef" stroke="#adb5bd"/>
-  <text x="465" y="251" font-size="11.5" fill="#212529" text-anchor="middle">cuantiles monótonos por construcción (q10 ≤ q25 ≤ q50 ≤ q75)</text>
+  <line x1="825" y1="270" x2="825" y2="300" stroke="#495057" stroke-width="1.5" marker-end="url(#fl)"/>
 
-  <!-- ensemble: cajas apiladas -->
-  <rect x="330" y="278" width="270" height="18" fill="#ffffff" stroke="#adb5bd"/>
-  <rect x="324" y="284" width="270" height="18" fill="#ffffff" stroke="#adb5bd"/>
-  <rect x="318" y="290" width="270" height="18" fill="#ffffff" stroke="#adb5bd"/>
-  <text x="453" y="303" font-size="11" fill="#212529" text-anchor="middle">× 5 miembros independientes (ensemble)</text>
-  <line x1="465" y1="262" x2="465" y2="276" stroke="#495057" stroke-width="1.2" marker-end="url(#fl)"/>
-  <line x1="465" y1="308" x2="465" y2="322" stroke="#495057" stroke-width="1.2" marker-end="url(#fl)"/>
+  <!-- ============ SALVAGUARDAS Y SALIDA ============ -->
+  <rect x="710" y="302" width="230" height="70" fill="#fff5f5" stroke="#c92a2a" stroke-width="1.5"/>
+  <text x="825" y="324" font-size="13" font-weight="bold" fill="#c92a2a" text-anchor="middle">Salvaguardas</text>
+  <text x="825" y="344" font-size="12" fill="#212529" text-anchor="middle">acción en la máscara · tasa válida</text>
+  <text x="825" y="362" font-size="12" fill="#212529" text-anchor="middle">inferencia ≤ 50 ms</text>
 
-  <rect x="316" y="324" width="298" height="46" fill="#e7f0fa" stroke="#1971c2" stroke-width="1.5"/>
-  <text x="465" y="342" font-size="11.5" fill="#1971c2" font-weight="bold" text-anchor="middle">combinación: media por cuantil;</text>
-  <text x="465" y="358" font-size="11" fill="#1971c2" text-anchor="middle">la cola inferior baja según el desacuerdo entre miembros</text>
-  <line x1="465" y1="370" x2="465" y2="382" stroke="#495057" stroke-width="1.2" marker-end="url(#fl)"/>
+  <line x1="710" y1="337" x2="654" y2="337" stroke="#c92a2a" stroke-width="1.5" marker-end="url(#flRojo)"/>
+  <text x="682" y="329" font-size="11" fill="#c92a2a" text-anchor="middle">fallo</text>
 
-  <rect x="316" y="384" width="298" height="26" fill="#e9ecef" stroke="#adb5bd"/>
-  <text x="465" y="401" font-size="11" fill="#212529" text-anchor="middle">a bit/s: base (media armónica) × e^ratio, acotado en [0,15×, 4×]</text>
+  <rect x="400" y="302" width="252" height="70" fill="#fff5f5" stroke="#c92a2a" stroke-width="1.5"/>
+  <text x="526" y="324" font-size="13" font-weight="bold" fill="#c92a2a" text-anchor="middle">Respaldo: MPC robusto</text>
+  <text x="526" y="344" font-size="12" fill="#212529" text-anchor="middle">con la misma realimentación</text>
+  <text x="526" y="362" font-size="12" fill="#212529" text-anchor="middle">(último recurso: tasa mínima)</text>
 
-  <!-- flecha B -> C -->
-  <line x1="630" y1="224" x2="676" y2="224" stroke="#1971c2" stroke-width="1.5" marker-end="url(#flAzul)"/>
-  <text x="653" y="214" font-size="10.5" fill="#1971c2" text-anchor="middle">5 × 4</text>
-  <text x="653" y="240" font-size="10.5" fill="#1971c2" text-anchor="middle">escenarios</text>
+  <line x1="825" y1="372" x2="825" y2="410" stroke="#495057" stroke-width="1.5" marker-end="url(#fl)"/>
+  <text x="834" y="395" font-size="11" fill="#495057">válida</text>
+  <line x1="526" y1="372" x2="526" y2="410" stroke="#c92a2a" stroke-width="1.5" marker-end="url(#flRojo)"/>
 
-  <!-- ================= COLUMNA C: PLANIFICADOR + SALVAGUARDAS ================= -->
-  <rect x="680" y="40" width="256" height="240" fill="#e7f0fa" stroke="#1971c2" stroke-width="1.5"/>
-  <text x="808" y="62" font-size="12.5" font-weight="bold" fill="#1971c2" text-anchor="middle">Planificador MPC (CVaR)</text>
-  <text x="692" y="88" font-size="11.5" fill="#212529">• enumera secuencias de 5 acciones</text>
-  <text x="692" y="108" font-size="11.5" fill="#212529">• simula el buffer bajo cada cuantil</text>
-  <text x="704" y="123" font-size="11" fill="#495057">con el tamaño real de cada segmento</text>
-  <text x="692" y="145" font-size="11.5" fill="#212529">• puntúa cada escenario (QoE lineal)</text>
-  <text x="692" y="167" font-size="11.5" fill="#212529">• CVaR con α = 0,75: media de los</text>
-  <text x="704" y="182" font-size="11" fill="#495057">tres escenarios peores (q10, q25, q50)</text>
-  <text x="692" y="204" font-size="11.5" fill="#212529">• aplica la primera acción de la</text>
-  <text x="704" y="219" font-size="11" fill="#495057">mejor secuencia (horizonte deslizante)</text>
-  <text x="692" y="244" font-size="11" fill="#495057">(apartado 5.6, segunda parte)</text>
+  <rect x="400" y="412" width="540" height="54" fill="#e9ecef" stroke="#868e96"/>
+  <text x="670" y="434" font-size="13" font-weight="bold" fill="#212529" text-anchor="middle">Tasa objetivo → cuantización común del reproductor</text>
+  <text x="670" y="454" font-size="12" fill="#495057" text-anchor="middle">cada decisión deja su diagnóstico en la telemetría (25 campos)</text>
 
-  <line x1="808" y1="280" x2="808" y2="300" stroke="#495057" stroke-width="1.5" marker-end="url(#fl)"/>
-
-  <rect x="680" y="302" width="256" height="108" fill="#fff5f5" stroke="#c92a2a" stroke-width="1.5"/>
-  <text x="808" y="322" font-size="12.5" font-weight="bold" fill="#c92a2a" text-anchor="middle">Salvaguardas</text>
-  <text x="692" y="344" font-size="11.5" fill="#212529">• acción dentro de la máscara</text>
-  <text x="692" y="362" font-size="11.5" fill="#212529">• latencia de inferencia ≤ 50 ms</text>
-  <text x="692" y="380" font-size="11.5" fill="#212529">• respaldo: MPC robusto (4.5)</text>
-  <text x="692" y="398" font-size="11.5" fill="#212529">• diagnóstico por decisión → telemetría</text>
-
-  <line x1="808" y1="410" x2="808" y2="440" stroke="#495057" stroke-width="1.5" marker-end="url(#fl)"/>
-  <rect x="700" y="442" width="216" height="40" fill="#e9ecef" stroke="#868e96"/>
-  <text x="808" y="459" font-size="11.5" fill="#212529" text-anchor="middle">tasa objetivo (bytes/s)</text>
-  <text x="808" y="474" font-size="11" fill="#495057" text-anchor="middle">→ cuantización común del reproductor</text>
-
-  <!-- ================= FILA INFERIOR: DATOS ================= -->
-  <!-- paquete del modelo -->
-  <rect x="300" y="456" width="330" height="74" fill="#fff9db" stroke="#f08c00"/>
-  <text x="465" y="476" font-size="12" font-weight="bold" fill="#212529" text-anchor="middle">Paquete del modelo (bundle)</text>
-  <text x="465" y="494" font-size="11" fill="#212529" text-anchor="middle">pesos de los 5 miembros · configuración del modelo ·</text>
-  <text x="465" y="509" font-size="11" fill="#212529" text-anchor="middle">normalización · configuración del planificador ·</text>
-  <text x="465" y="524" font-size="11" fill="#212529" text-anchor="middle">manifiesto con SHA-256 de cada fichero</text>
-  <line x1="465" y1="456" x2="465" y2="422" stroke="#f08c00" stroke-width="1.5" marker-end="url(#flAmar)"/>
-
-  <!-- tabla de tamaños del video activo -->
-  <rect x="680" y="500" width="256" height="90" fill="#fff9db" stroke="#f08c00"/>
-  <text x="808" y="520" font-size="12" font-weight="bold" fill="#212529" text-anchor="middle">Tabla de tamaños del vídeo activo</text>
-  <text x="808" y="538" font-size="11" fill="#212529" text-anchor="middle">descriptor JSON: bytes reales de cada</text>
-  <text x="808" y="553" font-size="11" fill="#212529" text-anchor="middle">segmento × representación (apartado 4.7)</text>
-  <text x="808" y="571" font-size="11" fill="#212529" text-anchor="middle">un fichero por vídeo, inyectado por sesión (5.4)</text>
-  <!-- flecha tabla -> planificador (bordea por la derecha) -->
-  <line x1="936" y1="545" x2="948" y2="545" stroke="#f08c00" stroke-width="1.5"/>
-  <line x1="948" y1="545" x2="948" y2="130" stroke="#f08c00" stroke-width="1.5"/>
-  <line x1="948" y1="130" x2="940" y2="130" stroke="#f08c00" stroke-width="1.5" marker-end="url(#flAmar)"/>
-  <text x="808" y="608" font-size="11" fill="#c92a2a" text-anchor="middle" font-weight="bold">el predictor no la ve: es un dato del planificador</text>
-
-  <!-- nota anti-fuga bajo columna A -->
-  <rect x="24" y="456" width="222" height="134" fill="#f8f9fa" stroke="#868e96" stroke-dasharray="5 3"/>
-  <text x="135" y="478" font-size="12" font-weight="bold" fill="#212529" text-anchor="middle">Lo que el modelo NO ve</text>
-  <text x="36" y="500" font-size="11" fill="#212529">• tamaños de segmento ni descriptor</text>
-  <text x="48" y="515" font-size="11" fill="#495057">del contenido (agnóstico al vídeo)</text>
-  <text x="36" y="535" font-size="11" fill="#212529">• identidad de la traza, partición,</text>
-  <text x="48" y="550" font-size="11" fill="#495057">dificultad, throughput futuro</text>
-  <text x="36" y="570" font-size="11" fill="#212529">• ningún resultado de evaluación</text>
+  <!-- ============ LO QUE EL PREDICTOR NO RECIBE ============ -->
+  <rect x="30" y="302" width="340" height="164" fill="#ffffff" stroke="#c92a2a" stroke-dasharray="5 3"/>
+  <text x="44" y="326" font-size="12.5" font-weight="bold" fill="#c92a2a">Lo que el predictor no recibe</text>
+  <text x="44" y="350" font-size="12" fill="#212529">• tamaños de segmento ni rasgos de la escena</text>
+  <text x="44" y="372" font-size="12" fill="#212529">• identidad de la traza ni partición</text>
+  <text x="44" y="394" font-size="12" fill="#212529">• throughput futuro ni resultados</text>
+  <text x="44" y="420" font-size="11" fill="#495057">29 campos prohibidos, rechazados en</text>
+  <text x="44" y="437" font-size="11" fill="#495057">ejecución (apartado 5.6.1)</text>
 </svg>

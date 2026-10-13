@@ -100,6 +100,13 @@ Del profesor + anti-"olor a IA":
   **PDF original** (`literatura\biblioteca_final\<carpeta>\<claveBib>.pdf`) antes
   de entrar en la memoria. Los `.md` convertidos del repo son solo índice de
   búsqueda, nunca fuente final.
+- **Estándar de redacción v2 (13/10, desde el 5.6):** estructura problema →
+  idea → mecanismo → ecuación → ejemplo real → límites; ecuaciones numeradas
+  para los mecanismos centrales; ejemplos con datos reales del paquete canónico
+  reproducidos por script (`docs/memoria/apoyo/`) y elegidos con regla fijada
+  de antemano; cada decisión con la alternativa descartada y su motivo; sin
+  rayas para incisos ni muletillas; recuentos verificados por programa;
+  figuras de datos generadas por script y comprobadas sin solapes.
 
 ---
 
@@ -568,7 +575,7 @@ pide cifras, están en el histórico).
 | Cap 2 Estado del arte | TODO | NotebookLM (listas de fuentes fijadas 12/08) |
 | Cap 3 Planificación/costes | TODO | sacar Gantt del git log |
 | Cap 4 Diseño | BORRADORES COMPLETOS | 4.1–4.7 redactados por Daniel; 4.8 BORRADOR entregado 27/08 (cap4_8_separacion_evaluacion.md + T4.7 gates + resumen del capítulo). Al masticar 4.8: pasada de coherencia del capítulo entero. Siguiente capítulo: 5 |
-| Cap 5 Implementación | EN CURSO | 5.1–5.5 entregados (5.5 en masticado). 5.6 COMPLETO en borrador 05/09 (cap5_6_controlador_propio.md, partes 1+2: predictor de cuantiles, generalización, planificador CVaR, salvaguardas, paquete; F5.2 + F5.3 + T5.6; citas puffer/bayesmpc/yin verificadas en PDF + cho/koenker/lakshminarayanan/rockafellar). Siguiente: 5.7 entorno de entrenamiento fiel. PENDIENTE EN CAP 4: corregir T4.3 "paso de espera 0,5 s" → "0,5 s (0,01 s en la evaluación)" |
+| Cap 5 Implementación | EN CURSO | 5.1–5.5 masticados por Daniel. 5.6 VERSIÓN 2 entregada 13/10 (cap5_6_controlador_propio.md rehecho: 6 subapartados, 8 ecuaciones, decisión real reproducida, T5.6 comparativa MPC/robusto/propio, T5.7 efecto de cada componente, ficha al Anexo A; F5.2 rehecha + F5.3 nueva `fig_5_3_decision_real.svg` generada por script; reproducción 1740/1740 en `docs/memoria/apoyo/`). AVISO para 6.7: ventanas de evaluación = las de las comparativas de junio (reutilizadas en desarrollo) + discrepancias de progreso/rebuffering. Siguiente: 5.7 entorno de entrenamiento fiel. PENDIENTE EN CAP 4: corregir T4.3 "paso de espera 0,5 s" → "0,5 s (0,01 s en la evaluación)" |
 | Cap 6 Evaluación | TODO | números canónicos fijados en §5 (paquete 20260810) |
 | Cap 7 Conclusiones | TODO | al final |
 | Bibliografía (BibTeX) | HECHA (92 entradas) | `bibliografia.bib` cerrado 10/08; solo se imprime lo citado |

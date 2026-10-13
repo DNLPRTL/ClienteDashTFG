@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420" font-family="Helvetica, Arial, sans-serif">
+<rect x="0" y="0" width="960" height="420" fill="#ffffff"/>
+<text x="20" y="26" font-size="14" font-weight="bold" fill="#212529">(a) Escenarios de throughput predichos</text>
+<text x="20" y="46" font-size="12" fill="#495057">Paseo 30 fps · traza de banda ancha fija (FCC) · buffer 16,6 s · nivel actual 1850 kbit/s</text>
+<line x1="78" y1="313.6" x2="458" y2="313.6" stroke="#ced4da" stroke-width="1" stroke-dasharray="3 3"/>
+<line x1="78" y1="277.1" x2="458" y2="277.1" stroke="#ced4da" stroke-width="1" stroke-dasharray="3 3"/>
+<line x1="78" y1="240.5" x2="458" y2="240.5" stroke="#ced4da" stroke-width="1" stroke-dasharray="3 3"/>
+<line x1="78" y1="187.7" x2="458" y2="187.7" stroke="#1971c2" stroke-width="6" stroke-opacity="0.35"/>
+<line x1="78" y1="106.4" x2="458" y2="106.4" stroke="#c92a2a" stroke-width="2" stroke-dasharray="7 4"/>
+<text x="84" y="255.5" font-size="11" fill="#868e96">1200 kbit/s</text>
+<text x="84" y="292.1" font-size="11" fill="#868e96">750 kbit/s</text>
+<text x="84" y="308.6" font-size="11" fill="#868e96">300 kbit/s</text>
+<line x1="86" y1="90.2" x2="108" y2="90.2" stroke="#c92a2a" stroke-width="2" stroke-dasharray="7 4"/>
+<text x="114" y="94.2" font-size="11.5" fill="#c92a2a">2850 kbit/s: mejor secuencia si solo se mira la mediana</text>
+<line x1="86" y1="130.8" x2="108" y2="130.8" stroke="#1971c2" stroke-width="6" stroke-opacity="0.35"/>
+<text x="114" y="134.8" font-size="11.5" fill="#1971c2" font-weight="bold">1850 kbit/s: secuencia elegida por el CVaR</text>
+<polygon points="78.0,188.5 154.0,188.5 154.0,187.7 230.0,187.7 230.0,185.6 306.0,185.6 306.0,185.4 382.0,185.4 382.0,185.4 458.0,185.4 458.0,238.2 382.0,238.2 382.0,238.2 306.0,238.2 306.0,238.2 230.0,238.2 230.0,236.8 154.0,236.8 154.0,236.9 78.0,236.9" fill="#1971c2" fill-opacity="0.2" stroke="none"/>
+<polygon points="78.0,168.9 154.0,168.9 154.0,166.9 230.0,166.9 230.0,161.9 306.0,161.9 306.0,161.6 382.0,161.6 382.0,161.6 458.0,161.6 458.0,185.4 382.0,185.4 382.0,185.4 306.0,185.4 306.0,185.6 230.0,185.6 230.0,187.7 154.0,187.7 154.0,188.5 78.0,188.5" fill="#868e96" fill-opacity="0.22" stroke="none"/>
+<polyline points="78.0,236.9 154.0,236.9 154.0,236.8 230.0,236.8 230.0,238.2 306.0,238.2 306.0,238.2 382.0,238.2 382.0,238.2 458.0,238.2" fill="none" stroke="#1971c2" stroke-width="2.0"/>
+<polyline points="78.0,204.7 154.0,204.7 154.0,205.3 230.0,205.3 230.0,206.2 306.0,206.2 306.0,206.2 382.0,206.2 382.0,206.2 458.0,206.2" fill="none" stroke="#1971c2" stroke-width="1.4"/>
+<polyline points="78.0,188.5 154.0,188.5 154.0,187.7 230.0,187.7 230.0,185.6 306.0,185.6 306.0,185.4 382.0,185.4 382.0,185.4 458.0,185.4" fill="none" stroke="#1971c2" stroke-width="1.4" stroke-dasharray="5 3"/>
+<polyline points="78.0,168.9 154.0,168.9 154.0,166.9 230.0,166.9 230.0,161.9 306.0,161.9 306.0,161.6 382.0,161.6 382.0,161.6 458.0,161.6" fill="none" stroke="#868e96" stroke-width="1.4"/>
+<text x="464" y="165.6" font-size="11.5" fill="#868e96" font-weight="bold">q75</text>
+<text x="464" y="189.4" font-size="11.5" fill="#1971c2" font-weight="bold">q50</text>
+<text x="464" y="210.2" font-size="11.5" fill="#1971c2" font-weight="bold">q25</text>
+<text x="464" y="242.2" font-size="11.5" fill="#1971c2" font-weight="bold">q10</text>
+<circle cx="116.0" cy="211.1" r="4.5" fill="#212529"/>
+<line x1="116.0" y1="216.1" x2="186.0" y2="292.5" stroke="#212529" stroke-width="0.9"/>
+<text x="189.0" y="296.5" font-size="11" fill="#212529">medido en la descarga siguiente: 1,56 Mbit/s</text>
+<line x1="78" y1="338" x2="458" y2="338" stroke="#495057" stroke-width="1.2"/>
+<line x1="78" y1="338" x2="78" y2="72" stroke="#495057" stroke-width="1.2"/>
+<line x1="74" y1="338.0" x2="78" y2="338.0" stroke="#495057"/>
+<text x="70" y="342.0" font-size="11" fill="#495057" text-anchor="end">0</text>
+<line x1="74" y1="256.8" x2="78" y2="256.8" stroke="#495057"/>
+<text x="70" y="260.8" font-size="11" fill="#495057" text-anchor="end">1</text>
+<line x1="74" y1="175.5" x2="78" y2="175.5" stroke="#495057"/>
+<text x="70" y="179.5" font-size="11" fill="#495057" text-anchor="end">2</text>
+<line x1="74" y1="94.2" x2="78" y2="94.2" stroke="#495057"/>
+<text x="70" y="98.2" font-size="11" fill="#495057" text-anchor="end">3</text>
+<text x="70" y="66" font-size="11" fill="#495057" text-anchor="end">Mbit/s</text>
+<text x="116.0" y="355" font-size="11.5" fill="#495057" text-anchor="middle">k+1</text>
+<text x="192.0" y="355" font-size="11.5" fill="#495057" text-anchor="middle">k+2</text>
+<text x="268.0" y="355" font-size="11.5" fill="#495057" text-anchor="middle">k+3</text>
+<text x="344.0" y="355" font-size="11.5" fill="#495057" text-anchor="middle">k+4</text>
+<text x="420.0" y="355" font-size="11.5" fill="#495057" text-anchor="middle">k+5</text>
+<text x="268.0" y="373" font-size="11.5" fill="#495057" text-anchor="middle">segmento futuro</text>
+<rect x="78" y="388" width="14" height="10" fill="#1971c2" fill-opacity="0.20"/>
+<text x="98" y="397" font-size="11" fill="#495057">escenarios que pondera el CVaR (q10 a q50)</text>
+<rect x="358" y="388" width="14" height="10" fill="#868e96" fill-opacity="0.22"/>
+<text x="378" y="397" font-size="11" fill="#495057">escenario optimista (excluido)</text>
+<line x1="530" y1="20" x2="530" y2="400" stroke="#e9ecef" stroke-width="1.5"/>
+<text x="552" y="26" font-size="14" font-weight="bold" fill="#212529">(b) Puntuación de cada secuencia por escenario</text>
+<text x="552" y="46" font-size="12" fill="#495057">Σ de (Mbit/s − 4,3 · rebuffering − |Δ Mbit/s|) en 5 segmentos</text>
+<rect x="548" y="62" width="392" height="32" fill="#f1f3f5"/>
+<text x="552" y="84" font-size="12" font-weight="bold" fill="#212529">Escenario</text>
+<text x="700" y="84" font-size="12" font-weight="bold" fill="#1971c2">1850 × 5</text>
+<text x="818" y="84" font-size="12" font-weight="bold" fill="#c92a2a">2850 × 5</text>
+<text x="552" y="118" font-size="12" fill="#212529">q10 (pesimista)</text>
+<text x="700" y="118" font-size="12" fill="#212529">9,25</text>
+<text x="818" y="118" font-size="12" fill="#212529">−50,00  (14,7 s de rebuf.)</text>
+<line x1="548" y1="127" x2="940" y2="127" stroke="#e9ecef"/>
+<text x="552" y="146" font-size="12" fill="#212529">q25</text>
+<text x="700" y="146" font-size="12" fill="#212529">9,25</text>
+<text x="818" y="146" font-size="12" fill="#212529">−0,89  (3,3 s de rebuf.)</text>
+<line x1="548" y1="155" x2="940" y2="155" stroke="#e9ecef"/>
+<text x="552" y="174" font-size="12" fill="#212529">q50 (mediana)</text>
+<text x="700" y="174" font-size="12" fill="#212529">9,25</text>
+<text x="818" y="174" font-size="12" fill="#212529">13,25</text>
+<line x1="548" y1="183" x2="940" y2="183" stroke="#e9ecef"/>
+<text x="552" y="202" font-size="12" fill="#868e96">q75 (optimista)</text>
+<text x="700" y="202" font-size="12" fill="#868e96">9,25</text>
+<text x="818" y="202" font-size="12" fill="#868e96">13,25</text>
+<line x1="548" y1="211" x2="940" y2="211" stroke="#e9ecef"/>
+<rect x="548" y="212" width="392" height="28" fill="#e7f0fa"/>
+<text x="552" y="230" font-size="12" font-weight="bold" fill="#1971c2">CVaR (α = 0,75)</text>
+<text x="700" y="230" font-size="12.5" font-weight="bold" fill="#1971c2">9,25  ← elige</text>
+<text x="818" y="230" font-size="12" fill="#212529">−12,55</text>
+<text x="552" y="260" font-size="12" fill="#495057">Solo la mediana</text>
+<text x="700" y="260" font-size="12" fill="#495057">9,25</text>
+<text x="818" y="260" font-size="12" font-weight="bold" fill="#c92a2a">13,25  ← elige</text>
+<text x="552" y="294" font-size="11.5" fill="#495057">La secuencia de 2850 kbit/s gana con la mediana, pero con</text>
+<text x="552" y="311" font-size="11.5" fill="#495057">q25 y q10 acumula rebuffering; el CVaR promedia los tres</text>
+<text x="552" y="328" font-size="11.5" fill="#495057">escenarios no optimistas y mantiene 1850 kbit/s.</text>
+<text x="552" y="345" font-size="11.5" fill="#495057">Tamaño real del segmento siguiente: +9 % (1850) y +11 %</text>
+<text x="552" y="362" font-size="11.5" fill="#495057">(2850) sobre el nominal; la simulación usa el real.</text>
+</svg>
