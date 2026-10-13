@@ -1,0 +1,11 @@
+fcc_measuring_broadband_america:unit_10678
+fcc_measuring_broadband_america:unit_25017861
+fcc_measuring_broadband_america:unit_32833341
+fcc_measuring_broadband_america:unit_40518949
+fcc_measuring_broadband_america:unit_40730021
+fcc_measuring_broadband_america:unit_55518785
+fcc_measuring_broadband_america:unit_999461
+ghent_4g_lte:bus
+lumos5g:run_12
+norway_hsdpa_umass:car.oslo-grimstad
+norway_hsdpa_umass:train.vestby-oslo

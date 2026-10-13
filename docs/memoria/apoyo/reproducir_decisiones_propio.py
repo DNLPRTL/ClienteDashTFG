@@ -26,6 +26,7 @@ PKG = Path(r"C:\Users\danie\Documents\TFG Material\04_evidencia_final\20260810_1
 OUT = Path(r"C:\Users\danie\Documents\TFG\apoyo_memoria")
 OUT.mkdir(parents=True, exist_ok=True)
 
+sys.dont_write_bytecode = True
 sys.path.insert(0, str(CODE))
 
 import torch  # noqa: E402

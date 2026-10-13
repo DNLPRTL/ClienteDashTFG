@@ -1,0 +1,39 @@
+{
+  "nombres_visibles_controladores": {
+    "controlador_propio": "Controlador propio"
+  },
+  "parametros_controladores": {
+    "controlador_propio": {
+      "dir_bundle": "/home/daniel/TFG/modelos/modelo_propio/bundle",
+      "id_perfil_video": "paseo_almunecar_10min_30fps_4s",
+      "alfa_riesgo": 0.75,
+      "solo_diagnostico": false,
+      "controlador_respaldo": "mpc_robusto",
+      "latencia_max_inferencia_ms": 50.0,
+      "verificar_hashes": true
+    }
+  },
+  "experimento": {
+    "controladores": [
+      "basado_en_tasa",
+      "bba",
+      "bola",
+      "mpc_robusto",
+      "controlador_propio"
+    ],
+    "motor": "simulado",
+    "incluir_diagnostico_sintetico": true,
+    "ids_perfiles_video": [],
+    "preset": "tfg_final",
+    "repeticiones": 1,
+    "semilla": 606
+  },
+  "rutas": {
+    "ruta_catalogo": "/home/daniel/TFG/replica_ventanas_nuevas/catalogo_trazas_replica.json",
+    "raiz_salida": "/home/daniel/TFG/validacion_comparativa_replica",
+    "raiz_repo": "/home/daniel/TFG/ClienteDashTFG",
+    "python": "python3",
+    "reescrituras_rutas_trazas": []
+  },
+  "version_esquema": "config_evaluacion_v1"
+}
