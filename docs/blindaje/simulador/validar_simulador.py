@@ -15,7 +15,6 @@ import argparse
 import csv
 import glob
 import json
-import math
 import os
 import statistics
 import sys

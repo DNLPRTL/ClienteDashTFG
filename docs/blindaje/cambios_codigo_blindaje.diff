@@ -1,3 +1,1446 @@
+diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/controladores/constructor_entradas.py "TFG Material/01_codigo/ClienteDashTFG/core/controladores/constructor_entradas.py"
+--- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/controladores/constructor_entradas.py	2026-10-14 12:33:28.245661000 +0200
++++ "TFG Material/01_codigo/ClienteDashTFG/core/controladores/constructor_entradas.py"	2026-10-14 19:01:22.743633100 +0200
+@@ -39,16 +39,23 @@
+         self._buffer_previo_s = 0.0
+         self._rebuffering_reciente_s = 0.0
+ 
+-    def registrar_realimentacion(self, feedback: Mapping[str, object]) -> None:
++    def registrar_realimentacion(self, feedback: Mapping[str, object]) -> bool:
+         # Se llama con cada fila del reproductor, tambien con las que no piden decision,
+         # para que el historial y el rebuffering de la ultima descarga se calculen como
+         # en el simulador de entrenamiento: max(tiempo de descarga - buffer previo, 0).
+-        if self._anadir_muestra_descarga(feedback):
++        # Devuelve si la fila aporta una descarga nueva al historial.
++        nueva = self._anadir_muestra_descarga(feedback)
++        if nueva:
+             tiempo_descarga_s = float(feedback.get("tiempo_ultima_descarga"))
+             self._rebuffering_reciente_s = max(tiempo_descarga_s - self._buffer_previo_s, 0.0)
+         tiempo_en_cola = _numero_finito(feedback.get("tiempo_en_cola"))
+         if tiempo_en_cola is not None:
+             self._buffer_previo_s = max(float(tiempo_en_cola), 0.0)
++        return nueva
++
++    @property
++    def historial_throughput_bps(self) -> tuple[float, ...]:
++        return tuple(self._historial_throughput_bps)
+ 
+     def construir(self, feedback: Mapping[str, object]) -> CargaEntradas:
+         self._rechazar_campos_prohibidos(feedback)
+diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/controladores/controlador_propio.py "TFG Material/01_codigo/ClienteDashTFG/core/controladores/controlador_propio.py"
+--- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/controladores/controlador_propio.py	2026-10-14 12:33:46.398136300 +0200
++++ "TFG Material/01_codigo/ClienteDashTFG/core/controladores/controlador_propio.py"	2026-10-14 19:08:42.670175200 +0200
+@@ -1,11 +1,11 @@
+ from __future__ import annotations
+ 
+-import math
+-
+-from numbers import Real
++import json
+ 
+ from collections.abc import Mapping, Sequence
+ 
++import numpy as np
++
+ from core.controladores.base import ControladorBase
+ from core.controladores.contrato import cuantizar_tasa_a_nivel
+ from core.controladores.diagnosticos_red import (
+@@ -14,10 +14,15 @@
+     motivo_estable,
+ )
+ from core.controladores.constructor_entradas import ConstructorEntradas, ErrorEntradasRuntime
++from core.controladores.entradas_planificador import (
++    estado_desde_carga as _estado_desde_carga,
++    flotante_finito as _flotante_finito,
++    segmentos_video_sesion as _segmentos_video_sesion,
++)
+ from core.controladores.seguridad_red import ErrorSeguridadRed, accion_segura_a_tasa
+ from core.controladores.robust_mpc import ControladorMpcRobusto
+-from core.modelo_propio.estado_sesion import EstadoSesion
+-from core.modelo_propio.bundle import BundleModelo, ErrorBundle, cargar_bundle
++from core.modelo_propio.estado_sesion import media_armonica_bps
++from core.modelo_propio.bundle import BundleModelo, ErrorBundle, cargar_bundle, filas_log_ratio_a_bps
+ from core.modelo_propio.perfil_video import ErrorPerfilVideo, PerfilTamanosSegmentos
+ from core.modelo_propio.planificador import CLAVE_CONTROLADOR_PROPIO, planificar_accion
+ 
+@@ -27,35 +32,28 @@
+ BUFFER_MAXIMO_S_POR_DEFECTO = 60.0
+ LATENCIA_MAX_INFERENCIA_MS = 50.0
+ 
+-
+-def _flotante_finito(valor: object) -> float | None:
+-    if isinstance(valor, bool) or not isinstance(valor, Real):
+-        return None
+-    convertido = float(valor)
+-    if not math.isfinite(convertido):
+-        return None
+-    return convertido
+-
+-
+-def _entero_positivo(valor: object, por_defecto: int, *, permitir_cero: bool = False) -> int:
+-    try:
+-        convertido = int(valor)
+-    except (TypeError, ValueError):
+-        return int(por_defecto)
+-    if convertido < 0 or (convertido == 0 and not permitir_cero):
+-        return int(por_defecto)
+-    return int(convertido)
+-
+-
+-def _historial_positivo(valores: object) -> tuple[float, ...]:
+-    if not isinstance(valores, (list, tuple)):
+-        return ()
+-    positivos = []
+-    for valor in valores:
+-        numero = _flotante_finito(valor)
+-        if numero is not None and numero > 0.0:
+-            positivos.append(float(numero))
+-    return tuple(positivos)
++# Modos de prediccion. "red" es el controlador propio. Los demas son variantes de ablacion con el
++# mismo planificador: "mediana" decide solo con la mediana de la red (sin CVaR), y
++# "cuantiles_fijos" / "cuantiles_recientes" sustituyen la red por cuantiles sin red: los cuantiles
++# del error de la media armonica en el dataset de entrenamiento, o los de las ultimas descargas.
++MODO_RED = "red"
++MODO_MEDIANA = "mediana"
++MODO_CUANTILES_FIJOS = "cuantiles_fijos"
++MODO_CUANTILES_RECIENTES = "cuantiles_recientes"
++MODOS_PREDICCION = (MODO_RED, MODO_MEDIANA, MODO_CUANTILES_FIJOS, MODO_CUANTILES_RECIENTES)
++MODOS_CON_RED = (MODO_RED, MODO_MEDIANA)
++CLAVES_POR_MODO = {
++    MODO_RED: CLAVE_CONTROLADOR_PROPIO,
++    MODO_MEDIANA: "propio_mediana",
++    MODO_CUANTILES_FIJOS: "propio_cuantiles_fijos",
++    MODO_CUANTILES_RECIENTES: "propio_cuantiles_recientes",
++}
++ETIQUETAS_POR_MODO = {
++    MODO_RED: "Controlador propio (ensemble temporal)",
++    MODO_MEDIANA: "Controlador propio, solo la mediana de la red",
++    MODO_CUANTILES_FIJOS: "Controlador propio sin red, cuantiles fijos",
++    MODO_CUANTILES_RECIENTES: "Controlador propio sin red, cuantiles de las ultimas descargas",
++}
+ 
+ 
+ def _como_booleano(valor: object, por_defecto: bool) -> bool:
+@@ -94,11 +92,6 @@
+     return tuple(tasas)
+ 
+ 
+-def _segmentos_video_sesion(feedback: Mapping[str, object]) -> int:
+-    # segmentos_totales del reproductor incluye el segmento de inicializacion.
+-    return max(_entero_positivo(feedback.get("segmentos_totales"), 31) - 1, 1)
+-
+-
+ def _menor_tasa_valida(carga) -> tuple[int | None, float]:
+     if carga is None:
+         return None, 0.0
+@@ -108,32 +101,30 @@
+     return None, 0.0
+ 
+ 
+-def _estado_desde_carga(
+-    entradas_contexto: Mapping[str, object],
+-    tasas_Bps: Sequence[float],
+-    feedback: Mapping[str, object],
+-) -> EstadoSesion:
+-    # Como en el entrenamiento: el indice es el del siguiente segmento de video a descargar y la
+-    # sesion tiene segmentos_totales - 1 segmentos. La ultima decision de la sesion no tiene
+-    # segmento siguiente y se acota al ultimo.
+-    segmentos_video = _segmentos_video_sesion(feedback)
+-    indice_segmento = min(
+-        max(_entero_positivo(feedback.get("indice_segmento"), 0, permitir_cero=True), 0),
+-        segmentos_video - 1,
+-    )
+-    nivel = _entero_positivo(feedback.get("nivel"), 0, permitir_cero=True)
+-    indice_ultima_representacion = min(max(nivel, 0), max(len(tasas_Bps) - 1, 0))
+-    return EstadoSesion(
+-        indice_segmento=indice_segmento,
+-        buffer_s=float(entradas_contexto.get("buffer_s", 0.0) or 0.0),
+-        indice_ultima_representacion=indice_ultima_representacion,
+-        historial_throughput_bps=_historial_positivo(entradas_contexto.get("historial_throughput_bps")),
+-        historial_tiempo_descarga_s=_historial_positivo(entradas_contexto.get("historial_tiempo_descarga_s")),
+-        rebuffering_reciente_s=float(entradas_contexto.get("rebuffering_reciente_s", 0.0) or 0.0),
+-        cambio_reciente_abs=float(entradas_contexto.get("cambio_reciente_abs", 0.0) or 0.0),
+-        tiempo_red_s=0.0,
+-        segmentos_totales=segmentos_video,
+-    )
++def cargar_cuantiles_fijos(ruta: str, cuantiles: Sequence[float], horizonte: int) -> np.ndarray:
++    with open(ruta, encoding="utf-8") as fichero:
++        datos = json.load(fichero)
++    if datos.get("id_esquema") != "cuantiles_fijos_log_ratio_v1":
++        raise ErrorBundle("id_esquema de los cuantiles fijos inesperado")
++    if [round(float(q), 6) for q in datos["cuantiles"]] != [round(float(q), 6) for q in cuantiles]:
++        raise ErrorBundle("los cuantiles fijos no son los del modelo")
++    valores = np.asarray(datos["valores_log_ratio_por_horizonte_y_cuantil"], dtype=np.float64)
++    if valores.shape != (int(horizonte), len(cuantiles)) or not np.all(np.isfinite(valores)):
++        raise ErrorBundle("la tabla de cuantiles fijos tiene forma invalida")
++    return valores
++
++
++def cargar_desplazamientos(ruta: str, cuantiles: Sequence[float], horizonte: int) -> np.ndarray:
++    with open(ruta, encoding="utf-8") as fichero:
++        datos = json.load(fichero)
++    if datos.get("id_esquema") != "recalibracion_conformal_v1":
++        raise ErrorBundle("id_esquema de la recalibracion inesperado")
++    if [round(float(q), 6) for q in datos["cuantiles"]] != [round(float(q), 6) for q in cuantiles]:
++        raise ErrorBundle("la recalibracion no es para los cuantiles del modelo")
++    valores = np.asarray(datos["desplazamientos_log_ratio_por_horizonte_y_cuantil"], dtype=np.float32)
++    if valores.shape != (int(horizonte), len(cuantiles)) or not np.all(np.isfinite(valores)):
++        raise ErrorBundle("la recalibracion tiene forma invalida")
++    return valores
+ 
+ 
+ class ControladorPropio(ControladorBase):
+@@ -150,25 +141,45 @@
+         latencia_max_inferencia_ms: float = LATENCIA_MAX_INFERENCIA_MS,
+         solo_diagnostico: bool = False,
+         buffer_maximo_s: float = BUFFER_MAXIMO_S_POR_DEFECTO,
++        modo_prediccion: str = MODO_RED,
++        ruta_cuantiles_fijos: object | None = None,
++        ruta_recalibracion: object | None = None,
+         **_sin_uso,
+     ) -> None:
+         super().__init__()
+-        self.clave_controlador = CLAVE_CONTROLADOR_PROPIO
++        if modo_prediccion not in MODOS_PREDICCION:
++            raise ValueError("modo_prediccion desconocido: {0}".format(modo_prediccion))
++        self.modo_prediccion = str(modo_prediccion)
++        self.clave_controlador = CLAVES_POR_MODO[self.modo_prediccion]
++        self.nombre = self.clave_controlador
+         self.dir_bundle = str(dir_bundle or DIR_BUNDLE_POR_DEFECTO)
+         self.id_perfil_video = str(id_perfil_video or ID_PERFIL_VIDEO_POR_DEFECTO)
+         self.dir_perfiles_video = None if dir_perfiles_video is None else str(dir_perfiles_video)
+-        self.alfa_riesgo_forzado = None if alfa_riesgo is None else float(alfa_riesgo)
++        # alfa_riesgo: numero fijo, None para el del bundle o "buffer" para el nivel de riesgo
++        # segun el buffer del planificador (alfa_riesgo_por_buffer).
++        self.alfa_por_buffer = isinstance(alfa_riesgo, str) and alfa_riesgo.strip().lower() == "buffer"
++        self.alfa_riesgo_forzado = None if alfa_riesgo is None or self.alfa_por_buffer else float(alfa_riesgo)
+         self.verificar_hashes = _como_booleano(verificar_hashes, True)
+         self.latencia_max_inferencia_ms = _flotante_positivo(
+             latencia_max_inferencia_ms, LATENCIA_MAX_INFERENCIA_MS
+         )
+         self.buffer_maximo_s = _flotante_positivo(buffer_maximo_s, BUFFER_MAXIMO_S_POR_DEFECTO)
+         self.solo_diagnostico = bool(solo_diagnostico)
++        self.ruta_cuantiles_fijos = None if ruta_cuantiles_fijos is None else str(ruta_cuantiles_fijos)
++        if self.modo_prediccion == MODO_CUANTILES_FIJOS and not self.ruta_cuantiles_fijos:
++            raise ValueError("el modo cuantiles_fijos necesita ruta_cuantiles_fijos")
++        self.ruta_recalibracion = None if not ruta_recalibracion else str(ruta_recalibracion)
++        self._desplazamientos = None
+         self.constructor_entradas = ConstructorEntradas()
+         self.clave_controlador_respaldo = str(controlador_respaldo or RESPALDO_POR_DEFECTO)
+-        self.controlador_respaldo = ControladorMpcRobusto()
++        self.controlador_respaldo = ControladorMpcRobusto(
++            id_perfil_video=self.id_perfil_video,
++            dir_perfiles_video=self.dir_perfiles_video,
++            buffer_maximo_s=self.buffer_maximo_s,
++        )
+         self._bundle: BundleModelo | None = None
+         self._escalera = None
++        self._cuantiles_fijos = None
+         self._diagnosticos = self._diagnosticos_base()
+         self.ultimas_metricas: dict[str, object] = {}
+         self.ultima_decision = None
+@@ -179,6 +190,11 @@
+             self.constructor_entradas.registrar_realimentacion(realimentacion_dict or {})
+         except Exception:
+             pass
++        # El respaldo ve todas las descargas, para que su historial sea el de siempre si entra.
++        try:
++            self.controlador_respaldo.fijarFeedbackReproductor(realimentacion_dict or {})
++        except Exception:
++            pass
+ 
+     def ampliar_realimentacion(self, feedback, contexto=None):
+         return anadir_diagnosticos_realimentacion(feedback, self._diagnosticos)
+@@ -218,22 +234,29 @@
+             return self._decidir_por_respaldo("fallo_carga_bundle", diagnosticos, carga)
+ 
+         try:
+-            prediccion = bundle.predecir(estado, escalera)
+-            alfa_riesgo = (
+-                self.alfa_riesgo_forzado if self.alfa_riesgo_forzado is not None else bundle.alfa_riesgo
+-            )
++            prediccion, cuantiles = self._prediccion(bundle, estado, escalera)
++            if self.alfa_por_buffer:
++                alfa_riesgo = None
++            else:
++                alfa_riesgo = (
++                    self.alfa_riesgo_forzado if self.alfa_riesgo_forzado is not None else bundle.alfa_riesgo
++                )
+             decision = planificar_accion(
+                 estado=estado,
+                 escalera=escalera,
+                 prediccion_bps_por_horizonte_y_cuantil=prediccion,
+-                cuantiles=bundle.cuantiles,
++                cuantiles=cuantiles,
+                 horizonte_segmentos=bundle.horizonte_segmentos,
+                 mascara_acciones=carga.mascara_acciones,
+                 alfa_riesgo=alfa_riesgo,
+                 peso_rebuffering=bundle.peso_rebuffering,
+                 peso_cambios=bundle.peso_cambios,
+             )
+-            latencia_ms = float(getattr(bundle, "ultima_latencia_ms", 0.0) or 0.0)
++            latencia_ms = (
++                float(getattr(bundle, "ultima_latencia_ms", 0.0) or 0.0)
++                if self.modo_prediccion in MODOS_CON_RED
++                else 0.0
++            )
+             diagnosticos.ms_inferencia = "{0:.6f}".format(latencia_ms)
+             diagnosticos.accion_bruta = str(int(decision.accion))
+             diagnosticos.tasa_bruta_Bps = str(float(escalera.bitrate_bps(int(decision.accion))) / 8.0)
+@@ -261,6 +284,34 @@
+         self._registrar_decision(float(tasa_segura), diagnosticos)
+         return float(tasa_segura)
+ 
++    def _prediccion(self, bundle: BundleModelo, estado, escalera):
++        # Escenarios de throughput (bit/s) por horizonte y cuantil que recibe el planificador.
++        if self.ruta_recalibracion and self._desplazamientos is None:
++            self._desplazamientos = cargar_desplazamientos(
++                self.ruta_recalibracion, bundle.cuantiles, bundle.horizonte_segmentos
++            )
++        if self.modo_prediccion == MODO_RED:
++            return bundle.predecir(estado, escalera, self._desplazamientos), bundle.cuantiles
++        if self.modo_prediccion == MODO_MEDIANA:
++            filas = bundle.predecir(estado, escalera, self._desplazamientos)
++            indice = min(range(len(bundle.cuantiles)), key=lambda i: abs(bundle.cuantiles[i] - 0.5))
++            return tuple((fila[indice],) for fila in filas), (0.5,)
++        if self.modo_prediccion == MODO_CUANTILES_FIJOS:
++            if self._cuantiles_fijos is None:
++                self._cuantiles_fijos = cargar_cuantiles_fijos(
++                    self.ruta_cuantiles_fijos, bundle.cuantiles, bundle.horizonte_segmentos
++                )
++            base = media_armonica_bps(estado.historial_throughput_bps)
++            filas = filas_log_ratio_a_bps(
++                self._cuantiles_fijos, base, bundle.horizonte_segmentos, len(bundle.cuantiles)
++            )
++            return filas, bundle.cuantiles
++        historial = [float(v) for v in estado.historial_throughput_bps if float(v) > 0.0]
++        if not historial:
++            historial = [media_armonica_bps(())]
++        fila = tuple(sorted(float(v) for v in np.quantile(historial, bundle.cuantiles)))
++        return tuple(fila for _ in range(bundle.horizonte_segmentos)), bundle.cuantiles
++
+     def cuantizarTasa(self, tasa):
+         tasas = _tasas_desde_realimentacion(self.feedback or {})
+         if tasas:
+@@ -312,7 +363,6 @@
+         if carga is not None:
+             diagnosticos.num_acciones_validas = carga.num_acciones_validas
+         try:
+-            self.controlador_respaldo.fijarFeedbackReproductor(self.feedback or {})
+             tasa = float(self.controlador_respaldo.calcularAccionControl())
+             if carga is not None:
+                 accion = cuantizar_tasa_a_nivel(tasa, carga.tasas_Bps)
+@@ -340,11 +390,11 @@
+     def _diagnosticos_base(self) -> DiagnosticosRed:
+         return DiagnosticosRed(
+             clave_controlador=self.clave_controlador,
+-            etiqueta_modelo="Controlador propio (ensemble temporal)",
++            etiqueta_modelo=ETIQUETAS_POR_MODO[self.modo_prediccion],
+             ruta_bundle=self.dir_bundle,
+             bundle_configurado=1 if self.dir_bundle.strip() else 0,
+             solo_diagnostico=1 if self.solo_diagnostico else 0,
+         )
+ 
+ 
+-__all__ = ["ControladorPropio"]
++__all__ = ["ControladorPropio", "MODOS_PREDICCION", "MODOS_CON_RED", "CLAVES_POR_MODO"]
+diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/controladores/entradas_planificador.py "TFG Material/01_codigo/ClienteDashTFG/core/controladores/entradas_planificador.py"
+--- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/controladores/entradas_planificador.py	1970-01-01 01:00:00.000000000 +0100
++++ "TFG Material/01_codigo/ClienteDashTFG/core/controladores/entradas_planificador.py"	2026-10-14 19:01:05.112252100 +0200
+@@ -0,0 +1,103 @@
++from __future__ import annotations
++
++import math
++from collections.abc import Mapping, Sequence
++from numbers import Real
++
++from core.modelo_propio.estado_sesion import EstadoSesion
++from core.modelo_propio.perfil_video import PerfilTamanosSegmentos
++
++# Estado de la sesion y escalera con los tamanos reales del video activo, comunes a los
++# controladores que deciden con el planificador de core/modelo_propio/planificador.py (el propio
++# y el MPC), para que todos planifiquen sobre la misma informacion.
++
++
++def flotante_finito(valor: object) -> float | None:
++    if isinstance(valor, bool) or not isinstance(valor, Real):
++        return None
++    convertido = float(valor)
++    if not math.isfinite(convertido):
++        return None
++    return convertido
++
++
++def entero_positivo(valor: object, por_defecto: int, *, permitir_cero: bool = False) -> int:
++    try:
++        convertido = int(valor)
++    except (TypeError, ValueError):
++        return int(por_defecto)
++    if convertido < 0 or (convertido == 0 and not permitir_cero):
++        return int(por_defecto)
++    return int(convertido)
++
++
++def historial_positivo(valores: object) -> tuple[float, ...]:
++    if not isinstance(valores, (list, tuple)):
++        return ()
++    positivos = []
++    for valor in valores:
++        numero = flotante_finito(valor)
++        if numero is not None and numero > 0.0:
++            positivos.append(float(numero))
++    return tuple(positivos)
++
++
++def segmentos_video_sesion(feedback: Mapping[str, object]) -> int:
++    # segmentos_totales del reproductor incluye el segmento de inicializacion.
++    return max(entero_positivo(feedback.get("segmentos_totales"), 31) - 1, 1)
++
++
++def estado_desde_carga(
++    entradas_contexto: Mapping[str, object],
++    tasas_Bps: Sequence[float],
++    feedback: Mapping[str, object],
++) -> EstadoSesion:
++    # Como en el entrenamiento: el indice es el del siguiente segmento de video a descargar y la
++    # sesion tiene segmentos_totales - 1 segmentos. La ultima decision de la sesion no tiene
++    # segmento siguiente y se acota al ultimo.
++    segmentos_video = segmentos_video_sesion(feedback)
++    indice_segmento = min(
++        max(entero_positivo(feedback.get("indice_segmento"), 0, permitir_cero=True), 0),
++        segmentos_video - 1,
++    )
++    nivel = entero_positivo(feedback.get("nivel"), 0, permitir_cero=True)
++    indice_ultima_representacion = min(max(nivel, 0), max(len(tasas_Bps) - 1, 0))
++    return EstadoSesion(
++        indice_segmento=indice_segmento,
++        buffer_s=float(entradas_contexto.get("buffer_s", 0.0) or 0.0),
++        indice_ultima_representacion=indice_ultima_representacion,
++        historial_throughput_bps=historial_positivo(entradas_contexto.get("historial_throughput_bps")),
++        historial_tiempo_descarga_s=historial_positivo(entradas_contexto.get("historial_tiempo_descarga_s")),
++        rebuffering_reciente_s=float(entradas_contexto.get("rebuffering_reciente_s", 0.0) or 0.0),
++        cambio_reciente_abs=float(entradas_contexto.get("cambio_reciente_abs", 0.0) or 0.0),
++        tiempo_red_s=0.0,
++        segmentos_totales=segmentos_video,
++    )
++
++
++def cargar_escalera_sesion(
++    id_perfil_video: str,
++    *,
++    dir_perfiles_video: str | None,
++    buffer_maximo_s: float,
++    num_segmentos: int,
++):
++    # La escalera abarca los segmentos de la sesion, como en el entrenamiento; los tamanos son
++    # los reales del video desde su primer segmento.
++    perfil = PerfilTamanosSegmentos.cargar_por_id(id_perfil_video, dir_base=dir_perfiles_video)
++    return perfil.a_escalera_fiel(buffer_maximo_s=buffer_maximo_s, num_segmentos=num_segmentos)
++
++
++def diferencia_escalera(escalera, tasas_Bps: Sequence[float]) -> str:
++    # Texto vacio si la escalera del descriptor coincide con las tasas del MPD del cliente.
++    tasas = tuple(float(valor) for valor in tasas_Bps)
++    if escalera.num_representaciones != len(tasas):
++        return "la escalera del video ({0} niveles) no coincide con las tasas del cliente ({1})".format(
++            escalera.num_representaciones, len(tasas)
++        )
++    for indice, tasa_Bps in enumerate(tasas):
++        if abs(tasa_Bps * 8.0 - float(escalera.bitrate_bps(indice))) > 8.0:
++            return "bitrate de la escalera del video distinto en el indice {0}: {1} vs {2}".format(
++                indice, tasa_Bps * 8.0, escalera.bitrate_bps(indice)
++            )
++    return ""
+diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/controladores/mpc.py "TFG Material/01_codigo/ClienteDashTFG/core/controladores/mpc.py"
+--- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/controladores/mpc.py	2026-08-07 09:27:58.314386400 +0200
++++ "TFG Material/01_codigo/ClienteDashTFG/core/controladores/mpc.py"	2026-10-14 19:02:17.068355000 +0200
+@@ -1,20 +1,33 @@
+ from __future__ import annotations
+ 
+-import itertools
+ import math
+ from numbers import Real
+ 
+-from .base import ControladorBase
+-from .contrato import cuantizar_tasa_a_nivel
++from core.controladores.base import ControladorBase
++from core.controladores.constructor_entradas import ConstructorEntradas
++from core.controladores.contrato import cuantizar_tasa_a_nivel
++from core.controladores.entradas_planificador import (
++    cargar_escalera_sesion,
++    diferencia_escalera,
++    estado_desde_carga,
++    segmentos_video_sesion,
++)
++from core.modelo_propio.estado_sesion import media_armonica_bps
++from core.modelo_propio.perfil_video import PerfilTamanosSegmentos
++from core.modelo_propio.planificador import planificar_accion
++
++# MPC de Yin et al. (2015) en la forma de referencia de Pensieve (test/mpc.py): horizonte de 5
++# segmentos, QoE lineal en Mbit/s con 4,3 por segundo de rebuffering y 1 por Mbit/s de cambio,
++# tamanos reales de los segmentos del video activo y throughput previsto con la media armonica de
++# las 5 ultimas descargas. Decide con el mismo planificador que el controlador propio, con un
++# unico escenario de throughput: frente al propio solo cambia la prediccion.
+ 
+-HORIZONTE_POR_DEFECTO = 3
++HORIZONTE_POR_DEFECTO = 5
+ VENTANA_HISTORIAL_THROUGHPUT = 5
+ PENALIZACION_REBUFFERING_POR_DEFECTO = 4.3
+ PENALIZACION_CAMBIOS_POR_DEFECTO = 1.0
+-NIVEL_ARRANQUE_POR_DEFECTO = 0
+-MAX_SECUENCIAS_ENUMERADAS = 4096
+-MIN_THROUGHPUT_VALIDO_BPS_POR_DEFECTO = 0.001
+-DURACION_MIN_SEGMENTO_S = 0.001
++BUFFER_MAXIMO_S_POR_DEFECTO = 60.0
++ID_PERFIL_VIDEO_POR_DEFECTO = "paseo_almunecar_10min_30fps_4s"
+ 
+ 
+ class ControladorMpc(ControladorBase):
+@@ -22,352 +35,100 @@
+ 
+     def __init__(
+         self,
++        id_perfil_video=ID_PERFIL_VIDEO_POR_DEFECTO,
++        dir_perfiles_video=None,
+         horizonte=HORIZONTE_POR_DEFECTO,
+         historial_throughput_ventana=VENTANA_HISTORIAL_THROUGHPUT,
+         penalizacion_rebuffering=PENALIZACION_REBUFFERING_POR_DEFECTO,
+         penalizacion_cambios=PENALIZACION_CAMBIOS_POR_DEFECTO,
+-        nivel_arranque=NIVEL_ARRANQUE_POR_DEFECTO,
+-        max_secuencias_enumeradas=MAX_SECUENCIAS_ENUMERADAS,
+-        min_throughput_valido_Bps=MIN_THROUGHPUT_VALIDO_BPS_POR_DEFECTO,
+-        min_duracion_segmento_s=DURACION_MIN_SEGMENTO_S,
++        buffer_maximo_s=BUFFER_MAXIMO_S_POR_DEFECTO,
+         **_sin_uso,
+     ):
+         super().__init__()
++        self.id_perfil_video = str(id_perfil_video or ID_PERFIL_VIDEO_POR_DEFECTO)
++        self.dir_perfiles_video = None if dir_perfiles_video is None else str(dir_perfiles_video)
+         self.horizonte = _entero_positivo(horizonte, HORIZONTE_POR_DEFECTO)
+-        self.historial_throughput_ventana = _entero_positivo(
+-            historial_throughput_ventana,
+-            VENTANA_HISTORIAL_THROUGHPUT,
+-        )
++        self.historial_throughput_ventana = _entero_positivo(historial_throughput_ventana, VENTANA_HISTORIAL_THROUGHPUT)
+         self.penalizacion_rebuffering = _flotante_no_negativo(
+             penalizacion_rebuffering, PENALIZACION_REBUFFERING_POR_DEFECTO
+         )
+-        self.penalizacion_cambios = _flotante_no_negativo(
+-            penalizacion_cambios, PENALIZACION_CAMBIOS_POR_DEFECTO
+-        )
+-        self.nivel_arranque = _a_entero(nivel_arranque, NIVEL_ARRANQUE_POR_DEFECTO)
+-        self.max_secuencias_enumeradas = _entero_positivo(
+-            max_secuencias_enumeradas,
+-            MAX_SECUENCIAS_ENUMERADAS,
+-        )
+-        self.min_throughput_valido_Bps = _flotante_positivo(
+-            min_throughput_valido_Bps,
+-            MIN_THROUGHPUT_VALIDO_BPS_POR_DEFECTO,
+-        )
+-        self.min_duracion_segmento_s = _flotante_positivo(min_duracion_segmento_s, DURACION_MIN_SEGMENTO_S)
+-
+-        self._historial_throughput_Bps = []
+-        self._ultima_clave_muestra = None
+-        self._ultimas_tasas_Bps = []
+-        self._ultimo_nivel = None
++        self.penalizacion_cambios = _flotante_no_negativo(penalizacion_cambios, PENALIZACION_CAMBIOS_POR_DEFECTO)
++        self.buffer_maximo_s = _flotante_positivo(buffer_maximo_s, BUFFER_MAXIMO_S_POR_DEFECTO)
++        # El descriptor del video se lee al crear el controlador: si falta, la sesion falla al
++        # empezar en vez de decidir con otros tamanos.
++        PerfilTamanosSegmentos.cargar_por_id(self.id_perfil_video, dir_base=self.dir_perfiles_video)
++        self.constructor_entradas = ConstructorEntradas(longitud_historial=self.historial_throughput_ventana)
++        self._escalera = None
++        self._ultimas_tasas_Bps = ()
+         self.ultimas_metricas = {}
+ 
+-    def calcularAccionControl(self):
+-        feedback = self.feedback or {}
+-        tasas = _tasas_disponibles_Bps(feedback)
+-        self._ultimas_tasas_Bps = tasas
++    def fijarFeedbackReproductor(self, realimentacion_dict):
++        # Todas las descargas entran en el historial, tambien las de calentamiento, como en el
++        # controlador propio.
++        super().fijarFeedbackReproductor(realimentacion_dict)
++        if self.constructor_entradas.registrar_realimentacion(realimentacion_dict or {}):
++            self._al_registrar_descarga()
+ 
+-        if not tasas:
+-            self.ultimas_metricas = {"motivo": "escalera_invalida", "tasa_objetivo_Bps": 0.0}
+-            return _cerrar(self, 0.0)
+-
+-        nivel_actual = _nivel_actual(feedback, tasas, self._ultimo_nivel)
+-        nivel_arranque = _acotar_nivel(self.nivel_arranque, tasas)
+-
+-        if len(tasas) == 1:
+-            return self._cerrar_decision(
+-                tasas=tasas,
+-                nivel_elegido=0,
+-                nivel_actual=nivel_actual,
+-                motivo="representacion_unica",
+-            )
+-
+-        duracion_segmento_s = _flotante_finito(feedback.get("duracion_fragmento"))
+-        if duracion_segmento_s is None or duracion_segmento_s < self.min_duracion_segmento_s:
+-            return self._cerrar_decision(
+-                tasas=tasas,
+-                nivel_elegido=nivel_arranque,
+-                nivel_actual=nivel_actual,
+-                duracion_segmento_s=duracion_segmento_s,
+-                motivo="duracion_segmento_invalida",
+-            )
++    def _al_registrar_descarga(self):
++        pass
+ 
+-        self._actualizar_historial_throughput(feedback)
+-        historial_prediccion = list(self._historial_throughput_Bps[-self.historial_throughput_ventana :])
+-        throughput_previsto_Bps = _media_armonica_Bps(historial_prediccion)
+-        if throughput_previsto_Bps is None or throughput_previsto_Bps < self.min_throughput_valido_Bps:
+-            return self._cerrar_decision(
+-                tasas=tasas,
+-                nivel_elegido=nivel_arranque,
+-                nivel_actual=nivel_actual,
+-                duracion_segmento_s=duracion_segmento_s,
+-                historial_throughput_Bps=historial_prediccion,
+-                throughput_previsto_Bps=throughput_previsto_Bps,
+-                motivo="arranque_sin_throughput_valido",
+-            )
++    def prediccion_throughput_bps(self, historial_bps):
++        return media_armonica_bps(historial_bps)
+ 
+-        buffer_s = _flotante_finito(feedback.get("tiempo_en_cola"))
+-        if buffer_s is None or buffer_s < 0.0:
+-            buffer_s = 0.0
+-
+-        tamanos_candidato_B = _tamanos_candidatos_B(tasas, duracion_segmento_s)
+-        calidades = _calidades_log_ratio_tasas(tasas)
+-        horizonte_efectivo = self._horizonte_efectivo(len(tasas))
+-
+-        mejor_puntuacion = -math.inf
+-        mejor_secuencia = None
+-        mejores_metricas = None
+-        num_secuencias = 0
+-        for secuencia in itertools.product(range(len(tasas)), repeat=horizonte_efectivo):
+-            num_secuencias += 1
+-            puntuacion, metricas = _simular_secuencia(
+-                secuencia=secuencia,
+-                calidades=calidades,
+-                nivel_actual=nivel_actual,
+-                buffer_inicial_s=buffer_s,
+-                duracion_segmento_s=duracion_segmento_s,
+-                throughput_previsto_Bps=throughput_previsto_Bps,
+-                tamanos_candidato_B=tamanos_candidato_B,
+-                penalizacion_rebuffering=self.penalizacion_rebuffering,
+-                penalizacion_cambios=self.penalizacion_cambios,
+-            )
+-            if puntuacion > mejor_puntuacion:
+-                mejor_puntuacion = puntuacion
+-                mejor_secuencia = secuencia
+-                mejores_metricas = metricas
+-
+-        if not mejor_secuencia:
+-            return self._cerrar_decision(
+-                tasas=tasas,
+-                nivel_elegido=nivel_arranque,
+-                nivel_actual=nivel_actual,
+-                duracion_segmento_s=duracion_segmento_s,
+-                historial_throughput_Bps=historial_prediccion,
+-                throughput_previsto_Bps=throughput_previsto_Bps,
+-                motivo="sin_secuencia_valida",
+-            )
+-
+-        return self._cerrar_decision(
+-            tasas=tasas,
+-            nivel_elegido=mejor_secuencia[0],
+-            nivel_actual=nivel_actual,
+-            duracion_segmento_s=duracion_segmento_s,
+-            buffer_s=buffer_s,
+-            historial_throughput_Bps=historial_prediccion,
+-            throughput_previsto_Bps=throughput_previsto_Bps,
+-            horizonte_efectivo=horizonte_efectivo,
+-            num_secuencias=num_secuencias,
+-            mejor_secuencia=list(mejor_secuencia),
+-            mejor_puntuacion=mejor_puntuacion,
+-            mejores_metricas=mejores_metricas,
+-            motivo="seleccion_por_secuencia",
++    def calcularAccionControl(self):
++        feedback = self.feedback or {}
++        carga = self.constructor_entradas.construir(feedback)
++        self._ultimas_tasas_Bps = tuple(carga.tasas_Bps)
++        estado = estado_desde_carga(carga.entradas_contexto, carga.tasas_Bps, feedback)
++        escalera = self._asegurar_escalera(carga.tasas_Bps, segmentos_video_sesion(feedback))
++        prediccion_bps = float(self.prediccion_throughput_bps(estado.historial_throughput_bps))
++        decision = planificar_accion(
++            estado=estado,
++            escalera=escalera,
++            prediccion_bps_por_horizonte_y_cuantil=[(prediccion_bps,)] * self.horizonte,
++            cuantiles=(0.5,),
++            horizonte_segmentos=self.horizonte,
++            mascara_acciones=carga.mascara_acciones,
++            alfa_riesgo=1.0,
++            peso_rebuffering=self.penalizacion_rebuffering,
++            peso_cambios=self.penalizacion_cambios,
+         )
++        tasa = float(carga.tasas_Bps[decision.accion])
++        self.ultimas_metricas = {
++            "motivo": "seleccion_por_secuencia",
++            "nivel_elegido": int(decision.accion),
++            "tasa_objetivo_Bps": tasa,
++            "throughput_previsto_bps": prediccion_bps,
++            "historial_throughput_bps": list(estado.historial_throughput_bps),
++            "buffer_s": float(estado.buffer_s),
++            "mejor_secuencia": list(decision.mejor_secuencia),
++            "mejor_puntuacion": float(decision.cvar_puntuacion),
++        }
++        self.fijarDuracionInactividad(0.0)
++        self.fijarAccionControl(tasa)
++        return tasa
+ 
+     def cuantizarTasa(self, tasa):
+-        if self._ultimas_tasas_Bps:
++        tasas = self._ultimas_tasas_Bps or tuple((self.feedback or {}).get("tasas") or ())
++        if tasas:
+             try:
+-                return cuantizar_tasa_a_nivel(tasa, self._ultimas_tasas_Bps)
++                return cuantizar_tasa_a_nivel(tasa, tasas)
+             except ValueError:
+                 return 0
+         return super().cuantizarTasa(tasa)
+ 
+-    def _actualizar_historial_throughput(self, feedback):
+-        muestra = _muestra_throughput_medido_Bps(feedback)
+-        if muestra is None or muestra < self.min_throughput_valido_Bps:
+-            return
+-
+-        clave_muestra = (
+-            _a_entero(feedback.get("indice_segmento"), -1),
+-            muestra,
+-            _flotante_finito(feedback.get("tamano_ultimo_fragmento")),
+-            _flotante_finito(feedback.get("tiempo_ultima_descarga")),
+-        )
+-        if clave_muestra == self._ultima_clave_muestra:
+-            return
+-
+-        self._historial_throughput_Bps.append(muestra)
+-        if len(self._historial_throughput_Bps) > self.historial_throughput_ventana:
+-            self._historial_throughput_Bps = self._historial_throughput_Bps[
+-                -self.historial_throughput_ventana :
+-            ]
+-        self._ultima_clave_muestra = clave_muestra
+-
+-    def _horizonte_efectivo(self, num_niveles):
+-        horizonte = max(1, int(self.horizonte))
+-        while horizonte > 1 and (num_niveles**horizonte) > self.max_secuencias_enumeradas:
+-            horizonte -= 1
+-        return max(1, horizonte)
+-
+-    def _cerrar_decision(
+-        self,
+-        tasas,
+-        nivel_elegido,
+-        nivel_actual,
+-        motivo,
+-        duracion_segmento_s=None,
+-        buffer_s=None,
+-        historial_throughput_Bps=None,
+-        throughput_previsto_Bps=None,
+-        horizonte_efectivo=None,
+-        num_secuencias=None,
+-        mejor_secuencia=None,
+-        mejor_puntuacion=None,
+-        mejores_metricas=None,
+-    ):
+-        nivel_elegido = _acotar_nivel(nivel_elegido, tasas)
+-        tasa_elegida = float(tasas[nivel_elegido])
+-        self._ultimo_nivel = nivel_elegido
+-        self.ultimas_metricas = {
+-            "motivo": motivo,
+-            "nivel_actual": nivel_actual,
+-            "nivel_elegido": nivel_elegido,
+-            "tasa_objetivo_Bps": tasa_elegida,
+-            "duracion_segmento_s": duracion_segmento_s,
+-            "buffer_s": buffer_s,
+-            "historial_throughput_Bps": historial_throughput_Bps,
+-            "throughput_previsto_Bps": throughput_previsto_Bps,
+-            "horizonte_configurado": self.horizonte,
+-            "horizonte_efectivo": horizonte_efectivo,
+-            "num_secuencias": num_secuencias,
+-            "mejor_secuencia": mejor_secuencia,
+-            "mejor_puntuacion": mejor_puntuacion,
+-            "mejores_metricas": mejores_metricas,
+-            "penalizacion_rebuffering": self.penalizacion_rebuffering,
+-            "penalizacion_cambios": self.penalizacion_cambios,
+-        }
+-        return _cerrar(self, tasa_elegida)
+-
+-
+-def _simular_secuencia(
+-    secuencia,
+-    calidades,
+-    nivel_actual,
+-    buffer_inicial_s,
+-    duracion_segmento_s,
+-    throughput_previsto_Bps,
+-    tamanos_candidato_B,
+-    penalizacion_rebuffering,
+-    penalizacion_cambios,
+-):
+-    buffer_simulado_s = float(buffer_inicial_s)
+-    nivel_anterior = nivel_actual
+-    puntuacion = 0.0
+-    calidad_total = 0.0
+-    rebuffering_total_s = 0.0
+-    coste_cambios_total = 0.0
+-    tiempos_descarga_s = []
+-    rebuffer_por_paso_s = []
+-    buffer_por_paso_s = []
+-
+-    for nivel in secuencia:
+-        tamano_B = tamanos_candidato_B[nivel]
+-        tiempo_descarga_s = tamano_B / throughput_previsto_Bps
+-        if not math.isfinite(tiempo_descarga_s) or tiempo_descarga_s < 0.0:
+-            tiempo_descarga_s = math.inf
+-
+-        rebuffering_s = max(tiempo_descarga_s - buffer_simulado_s, 0.0)
+-        buffer_simulado_s = max(buffer_simulado_s - tiempo_descarga_s, 0.0) + duracion_segmento_s
+-
+-        calidad = calidades[nivel]
+-        coste_cambio = abs(calidad - calidades[nivel_anterior])
+-
+-        calidad_total += calidad
+-        rebuffering_total_s += rebuffering_s
+-        coste_cambios_total += coste_cambio
+-        puntuacion += calidad
+-        puntuacion -= penalizacion_rebuffering * rebuffering_s
+-        puntuacion -= penalizacion_cambios * coste_cambio
+-
+-        tiempos_descarga_s.append(tiempo_descarga_s)
+-        rebuffer_por_paso_s.append(rebuffering_s)
+-        buffer_por_paso_s.append(buffer_simulado_s)
+-        nivel_anterior = nivel
+-
+-    return puntuacion, {
+-        "calidad_total": calidad_total,
+-        "rebuffering_total_s": rebuffering_total_s,
+-        "coste_cambios_total": coste_cambios_total,
+-        "tiempos_descarga_s": tiempos_descarga_s,
+-        "rebuffer_por_paso_s": rebuffer_por_paso_s,
+-        "buffer_por_paso_s": buffer_por_paso_s,
+-    }
+-
+-
+-def _tasas_disponibles_Bps(feedback):
+-    if not feedback:
+-        return []
+-
+-    tasas_brutas = feedback.get("tasas", []) or []
+-    try:
+-        valores = list(tasas_brutas)
+-    except TypeError:
+-        return []
+-    if not valores:
+-        return []
+-
+-    tasas = []
+-    for valor in valores:
+-        tasa = _flotante_finito(valor)
+-        if tasa is None or tasa <= 0.0:
+-            return []
+-        tasas.append(tasa)
+-
+-    nivel_max = _a_entero(feedback.get("nivel_max"), len(tasas) - 1)
+-    nivel_max = max(0, min(nivel_max, len(tasas) - 1))
+-    return tasas[: nivel_max + 1]
+-
+-
+-def _muestra_throughput_medido_Bps(feedback):
+-    ultimo_tamano = _flotante_finito(feedback.get("tamano_ultimo_fragmento"))
+-    ultimo_tiempo = _flotante_finito(feedback.get("tiempo_ultima_descarga"))
+-    if (
+-        ultimo_tamano is not None
+-        and ultimo_tamano > 0.0
+-        and ultimo_tiempo is not None
+-        and ultimo_tiempo > 0.0
+-    ):
+-        return ultimo_tamano / ultimo_tiempo
+-    return None
+-
+-
+-def _media_armonica_Bps(valores):
+-    positivos = []
+-    for valor in valores:
+-        convertido = _flotante_finito(valor)
+-        if convertido is not None and convertido > 0.0:
+-            positivos.append(convertido)
+-    if not positivos:
+-        return None
+-    denominador = sum(1.0 / valor for valor in positivos)
+-    if denominador <= 0.0:
+-        return None
+-    return len(positivos) / denominador
+-
+-
+-def _calidades_log_ratio_tasas(tasas):
+-    tasa_min = min(tasas)
+-    return [math.log(tasa / tasa_min) for tasa in tasas]
+-
+-
+-def _tamanos_candidatos_B(tasas, duracion_segmento_s):
+-    return [float(tasa) * float(duracion_segmento_s) for tasa in tasas]
+-
+-
+-def _nivel_actual(feedback, tasas, ultimo_nivel):
+-    nivel_por_defecto = 0 if ultimo_nivel is None else ultimo_nivel
+-    return _acotar_nivel(_a_entero(feedback.get("nivel"), nivel_por_defecto), tasas)
+-
+-
+-def _acotar_nivel(valor, tasas):
+-    if not tasas:
+-        return 0
+-    nivel = _a_entero(valor, 0)
+-    return max(0, min(nivel, len(tasas) - 1))
+-
+-
+-def _cerrar(controlador, tasa):
+-    controlador.fijarDuracionInactividad(0.0)
+-    controlador.fijarAccionControl(float(tasa))
+-    return float(tasa)
++    def _asegurar_escalera(self, tasas_Bps, segmentos_video):
++        if self._escalera is None:
++            self._escalera = cargar_escalera_sesion(
++                self.id_perfil_video,
++                dir_perfiles_video=self.dir_perfiles_video,
++                buffer_maximo_s=self.buffer_maximo_s,
++                num_segmentos=segmentos_video,
++            )
++        diferencia = diferencia_escalera(self._escalera, tasas_Bps)
++        if diferencia:
++            raise ValueError(diferencia)
++        return self._escalera
+ 
+ 
+ def _entero_positivo(valor, por_defecto):
+@@ -401,10 +162,3 @@
+     if not math.isfinite(convertido):
+         return None
+     return convertido
+-
+-
+-def _a_entero(valor, por_defecto):
+-    try:
+-        return int(valor)
+-    except (TypeError, ValueError):
+-        return por_defecto
+diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/controladores/registro.py "TFG Material/01_codigo/ClienteDashTFG/core/controladores/registro.py"
+--- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/controladores/registro.py	2026-08-07 09:20:14.666264000 +0200
++++ "TFG Material/01_codigo/ClienteDashTFG/core/controladores/registro.py"	2026-10-14 19:03:45.333238000 +0200
+@@ -1,5 +1,6 @@
+ from __future__ import annotations
+ from dataclasses import dataclass
++from functools import partial
+ from typing import Callable, Mapping, Optional
+ 
+ from .bba import ControladorBba
+@@ -35,12 +36,12 @@
+     ),
+     "mpc": FichaControlador(
+         clave="mpc",
+-        etiqueta="MPC (FastMPC, Yin 2015)",
++        etiqueta="MPC (Yin 2015, forma de referencia de Pensieve)",
+         fabrica=ControladorMpc,
+     ),
+     "mpc_robusto": FichaControlador(
+         clave="mpc_robusto",
+-        etiqueta="RobustMPC (Yin 2015)",
++        etiqueta="RobustMPC (Yin 2015, forma de referencia de Pensieve)",
+         fabrica=ControladorMpcRobusto,
+     ),
+     "controlador_propio": FichaControlador(
+@@ -48,6 +49,22 @@
+         etiqueta="Controlador propio (predictor de cuantiles + planificador CVaR)",
+         fabrica=ControladorPropio,
+     ),
++    # Variantes de ablacion del controlador propio: mismo planificador, distinta prediccion.
++    "propio_mediana": FichaControlador(
++        clave="propio_mediana",
++        etiqueta="Propio sin CVaR (solo la mediana de la red)",
++        fabrica=partial(ControladorPropio, modo_prediccion="mediana"),
++    ),
++    "propio_cuantiles_fijos": FichaControlador(
++        clave="propio_cuantiles_fijos",
++        etiqueta="Propio sin red (cuantiles fijos del error de la media armonica)",
++        fabrica=partial(ControladorPropio, modo_prediccion="cuantiles_fijos"),
++    ),
++    "propio_cuantiles_recientes": FichaControlador(
++        clave="propio_cuantiles_recientes",
++        etiqueta="Propio sin red (cuantiles de las ultimas descargas)",
++        fabrica=partial(ControladorPropio, modo_prediccion="cuantiles_recientes"),
++    ),
+ }
+ 
+ 
+diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/controladores/robust_mpc.py "TFG Material/01_codigo/ClienteDashTFG/core/controladores/robust_mpc.py"
+--- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/controladores/robust_mpc.py	2026-08-07 09:26:27.541534400 +0200
++++ "TFG Material/01_codigo/ClienteDashTFG/core/controladores/robust_mpc.py"	2026-10-14 19:02:23.507954400 +0200
+@@ -1,331 +1,43 @@
+ from __future__ import annotations
+ 
+-import itertools
+-import math
++from core.modelo_propio.estado_sesion import media_armonica_bps
+ 
+-from .mpc import (
+-    HORIZONTE_POR_DEFECTO,
+-    MAX_SECUENCIAS_ENUMERADAS,
+-    DURACION_MIN_SEGMENTO_S,
+-    PENALIZACION_REBUFFERING_POR_DEFECTO,
+-    PENALIZACION_CAMBIOS_POR_DEFECTO,
+-    VENTANA_HISTORIAL_THROUGHPUT,
+-    MIN_THROUGHPUT_VALIDO_BPS_POR_DEFECTO,
+-    NIVEL_ARRANQUE_POR_DEFECTO,
+-    ControladorMpc,
+-    _tasas_disponibles_Bps,
+-    _tamanos_candidatos_B,
+-    _acotar_nivel,
+-    _nivel_actual,
+-    _flotante_finito,
+-    _media_armonica_Bps,
+-    _muestra_throughput_medido_Bps,
+-    _flotante_no_negativo,
+-    _flotante_positivo,
+-    _entero_positivo,
+-    _calidades_log_ratio_tasas,
+-    _simular_secuencia,
+-    _a_entero,
+-)
++from .mpc import ControladorMpc, _entero_positivo
+ 
+ VENTANA_ERROR_PREDICCION_POR_DEFECTO = 5
+-FACTOR_SEGURIDAD_ARRANQUE_POR_DEFECTO = 0.85
+-EPSILON_THROUGHPUT_BPS_POR_DEFECTO = 0.001
+ 
+-MOTIVO_SELECCION = "seleccion_por_secuencia"
++# RobustMPC de Yin et al. (2015, sec. 7.1): divide la prediccion por media armonica entre
++# (1 + error), con error = maximo error porcentual absoluto de esa prediccion en las 5 ultimas
++# descargas. Como en el codigo de referencia de Pensieve (test/mpc.py), el error se mide contra
++# la media armonica (no contra la prediccion ya rebajada) y no hay factor de arranque: sin errores
++# previos, la prediccion es la media armonica. Aqui el error se actualiza en cada descarga,
++# tambien en las de calentamiento.
+ 
+ 
+ class ControladorMpcRobusto(ControladorMpc):
+     nombre = "mpc_robusto"
+ 
+-    def __init__(
+-        self,
+-        horizonte=HORIZONTE_POR_DEFECTO,
+-        historial_throughput_ventana=VENTANA_HISTORIAL_THROUGHPUT,
+-        ventana_error_prediccion=VENTANA_ERROR_PREDICCION_POR_DEFECTO,
+-        factor_seguridad_arranque=FACTOR_SEGURIDAD_ARRANQUE_POR_DEFECTO,
+-        epsilon_throughput_Bps=EPSILON_THROUGHPUT_BPS_POR_DEFECTO,
+-        penalizacion_rebuffering=PENALIZACION_REBUFFERING_POR_DEFECTO,
+-        penalizacion_cambios=PENALIZACION_CAMBIOS_POR_DEFECTO,
+-        nivel_arranque=NIVEL_ARRANQUE_POR_DEFECTO,
+-        max_secuencias_enumeradas=MAX_SECUENCIAS_ENUMERADAS,
+-        min_throughput_valido_Bps=MIN_THROUGHPUT_VALIDO_BPS_POR_DEFECTO,
+-        min_duracion_segmento_s=DURACION_MIN_SEGMENTO_S,
+-        **_sin_uso,
+-    ):
+-        super().__init__(
+-            horizonte=horizonte,
+-            historial_throughput_ventana=historial_throughput_ventana,
+-            penalizacion_rebuffering=penalizacion_rebuffering,
+-            penalizacion_cambios=penalizacion_cambios,
+-            nivel_arranque=nivel_arranque,
+-            max_secuencias_enumeradas=max_secuencias_enumeradas,
+-            min_throughput_valido_Bps=min_throughput_valido_Bps,
+-            min_duracion_segmento_s=min_duracion_segmento_s,
+-        )
++    def __init__(self, ventana_error_prediccion=VENTANA_ERROR_PREDICCION_POR_DEFECTO, **parametros):
++        super().__init__(**parametros)
+         self.ventana_error_prediccion = _entero_positivo(
+-            ventana_error_prediccion,
+-            VENTANA_ERROR_PREDICCION_POR_DEFECTO,
+-        )
+-        self.factor_seguridad_arranque = _flotante_intervalo_unidad(
+-            factor_seguridad_arranque,
+-            FACTOR_SEGURIDAD_ARRANQUE_POR_DEFECTO,
+-        )
+-        self.epsilon_throughput_Bps = _flotante_positivo(
+-            epsilon_throughput_Bps,
+-            EPSILON_THROUGHPUT_BPS_POR_DEFECTO,
++            ventana_error_prediccion, VENTANA_ERROR_PREDICCION_POR_DEFECTO
+         )
++        self._errores_prediccion = []
++        self._prediccion_siguiente_bps = None
+ 
+-        self._historial_error_prediccion = []
+-        self._prediccion_pendiente_Bps = None
+-        self._ultima_clave_muestra_real = None
++    def _al_registrar_descarga(self):
++        historial = self.constructor_entradas.historial_throughput_bps
++        real_bps = float(historial[-1])
++        if self._prediccion_siguiente_bps is not None and real_bps > 0.0:
++            error = abs(self._prediccion_siguiente_bps - real_bps) / real_bps
++            self._errores_prediccion = (self._errores_prediccion + [error])[-self.ventana_error_prediccion :]
++        self._prediccion_siguiente_bps = media_armonica_bps(historial)
++
++    def prediccion_throughput_bps(self, historial_bps):
++        error_max = max(self._errores_prediccion) if self._errores_prediccion else 0.0
++        return media_armonica_bps(historial_bps) / (1.0 + error_max)
+ 
+     def calcularAccionControl(self):
+-        feedback = self.feedback or {}
+-        tasas = _tasas_disponibles_Bps(feedback)
+-        self._ultimas_tasas_Bps = tasas
+-
+-        if not tasas:
+-            self.ultimas_metricas = {"motivo": "escalera_invalida", "tasa_objetivo_Bps": 0.0}
+-            return self._cerrar_sin_pendiente(0.0)
+-
+-        nivel_actual = _nivel_actual(feedback, tasas, self._ultimo_nivel)
+-        nivel_arranque = _acotar_nivel(self.nivel_arranque, tasas)
+-
+-        if len(tasas) == 1:
+-            return self._cerrar_decision_robusta(
+-                tasas=tasas,
+-                nivel_elegido=0,
+-                nivel_actual=nivel_actual,
+-                motivo="representacion_unica",
+-            )
+-
+-        duracion_segmento_s = _flotante_finito(feedback.get("duracion_fragmento"))
+-        if duracion_segmento_s is None or duracion_segmento_s < self.min_duracion_segmento_s:
+-            return self._cerrar_decision_robusta(
+-                tasas=tasas,
+-                nivel_elegido=nivel_arranque,
+-                nivel_actual=nivel_actual,
+-                duracion_segmento_s=duracion_segmento_s,
+-                motivo="duracion_segmento_invalida",
+-            )
+-
+-        self._actualizar_historial_real_y_errores(feedback)
+-        historial_prediccion = list(self._historial_throughput_Bps[-self.historial_throughput_ventana :])
+-        prediccion_base_Bps = _media_armonica_Bps(historial_prediccion)
+-        if prediccion_base_Bps is None or prediccion_base_Bps < self.min_throughput_valido_Bps:
+-            return self._cerrar_decision_robusta(
+-                tasas=tasas,
+-                nivel_elegido=nivel_arranque,
+-                nivel_actual=nivel_actual,
+-                duracion_segmento_s=duracion_segmento_s,
+-                historial_throughput_Bps=historial_prediccion,
+-                prediccion_base_Bps=prediccion_base_Bps,
+-                motivo="arranque_sin_throughput_valido",
+-            )
+-
+-        prediccion_robusta_Bps, historial_errores, error_max, modo_correccion = self._prediccion_robusta_Bps(
+-            prediccion_base_Bps
+-        )
+-        if prediccion_robusta_Bps is None or prediccion_robusta_Bps <= 0.0:
+-            return self._cerrar_decision_robusta(
+-                tasas=tasas,
+-                nivel_elegido=nivel_arranque,
+-                nivel_actual=nivel_actual,
+-                duracion_segmento_s=duracion_segmento_s,
+-                historial_throughput_Bps=historial_prediccion,
+-                prediccion_base_Bps=prediccion_base_Bps,
+-                historial_error_prediccion=historial_errores,
+-                error_prediccion_max=error_max,
+-                modo_correccion=modo_correccion,
+-                motivo="prediccion_robusta_invalida",
+-            )
+-
+-        buffer_s = _flotante_finito(feedback.get("tiempo_en_cola"))
+-        if buffer_s is None or buffer_s < 0.0:
+-            buffer_s = 0.0
+-
+-        tamanos_candidato_B = _tamanos_candidatos_B(tasas, duracion_segmento_s)
+-        calidades = _calidades_log_ratio_tasas(tasas)
+-        horizonte_efectivo = self._horizonte_efectivo(len(tasas))
+-
+-        mejor_puntuacion = -math.inf
+-        mejor_secuencia = None
+-        mejores_metricas = None
+-        num_secuencias = 0
+-        for secuencia in itertools.product(range(len(tasas)), repeat=horizonte_efectivo):
+-            num_secuencias += 1
+-            puntuacion, metricas = _simular_secuencia(
+-                secuencia=secuencia,
+-                calidades=calidades,
+-                nivel_actual=nivel_actual,
+-                buffer_inicial_s=buffer_s,
+-                duracion_segmento_s=duracion_segmento_s,
+-                throughput_previsto_Bps=prediccion_robusta_Bps,
+-                tamanos_candidato_B=tamanos_candidato_B,
+-                penalizacion_rebuffering=self.penalizacion_rebuffering,
+-                penalizacion_cambios=self.penalizacion_cambios,
+-            )
+-            if puntuacion > mejor_puntuacion:
+-                mejor_puntuacion = puntuacion
+-                mejor_secuencia = secuencia
+-                mejores_metricas = metricas
+-
+-        if not mejor_secuencia:
+-            return self._cerrar_decision_robusta(
+-                tasas=tasas,
+-                nivel_elegido=nivel_arranque,
+-                nivel_actual=nivel_actual,
+-                duracion_segmento_s=duracion_segmento_s,
+-                historial_throughput_Bps=historial_prediccion,
+-                prediccion_base_Bps=prediccion_base_Bps,
+-                prediccion_robusta_Bps=prediccion_robusta_Bps,
+-                historial_error_prediccion=historial_errores,
+-                error_prediccion_max=error_max,
+-                modo_correccion=modo_correccion,
+-                motivo="sin_secuencia_valida",
+-            )
+-
+-        return self._cerrar_decision_robusta(
+-            tasas=tasas,
+-            nivel_elegido=mejor_secuencia[0],
+-            nivel_actual=nivel_actual,
+-            duracion_segmento_s=duracion_segmento_s,
+-            buffer_s=buffer_s,
+-            historial_throughput_Bps=historial_prediccion,
+-            prediccion_base_Bps=prediccion_base_Bps,
+-            prediccion_robusta_Bps=prediccion_robusta_Bps,
+-            historial_error_prediccion=historial_errores,
+-            error_prediccion_max=error_max,
+-            modo_correccion=modo_correccion,
+-            horizonte_efectivo=horizonte_efectivo,
+-            num_secuencias=num_secuencias,
+-            mejor_secuencia=list(mejor_secuencia),
+-            mejor_puntuacion=mejor_puntuacion,
+-            mejores_metricas=mejores_metricas,
+-            motivo=MOTIVO_SELECCION,
+-        )
+-
+-    def _actualizar_historial_real_y_errores(self, feedback):
+-        muestra = _muestra_throughput_medido_Bps(feedback)
+-        if muestra is None or muestra < self.min_throughput_valido_Bps:
+-            return
+-
+-        clave_muestra = (
+-            _a_entero(feedback.get("indice_segmento"), -1),
+-            muestra,
+-            _flotante_finito(feedback.get("tamano_ultimo_fragmento")),
+-            _flotante_finito(feedback.get("tiempo_ultima_descarga")),
+-        )
+-        if clave_muestra == self._ultima_clave_muestra_real:
+-            return
+-
+-        if self._prediccion_pendiente_Bps is not None:
+-            error = _ratio_error_prediccion(
+-                prevista_Bps=self._prediccion_pendiente_Bps,
+-                real_Bps=muestra,
+-                epsilon_Bps=self.epsilon_throughput_Bps,
+-            )
+-            if error is not None:
+-                self._historial_error_prediccion.append(error)
+-                self._historial_error_prediccion = self._historial_error_prediccion[
+-                    -self.ventana_error_prediccion :
+-                ]
+-
+-        self._historial_throughput_Bps.append(muestra)
+-        self._historial_throughput_Bps = self._historial_throughput_Bps[-self.historial_throughput_ventana :]
+-        self._ultima_clave_muestra_real = clave_muestra
+-
+-    def _prediccion_robusta_Bps(self, prediccion_base_Bps):
+-        historial_errores = list(self._historial_error_prediccion[-self.ventana_error_prediccion :])
+-        if historial_errores:
+-            error_max = max(historial_errores)
+-            prediccion_robusta = prediccion_base_Bps / (1.0 + error_max)
+-            modo_correccion = "correccion_por_error"
+-        else:
+-            error_max = None
+-            prediccion_robusta = prediccion_base_Bps * self.factor_seguridad_arranque
+-            modo_correccion = "factor_seguridad_arranque"
+-
+-        prediccion_robusta = _flotante_finito(prediccion_robusta)
+-        if prediccion_robusta is None:
+-            return None, historial_errores, error_max, modo_correccion
+-        prediccion_robusta = max(prediccion_robusta, self.epsilon_throughput_Bps)
+-        prediccion_robusta = min(prediccion_robusta, prediccion_base_Bps)
+-        return prediccion_robusta, historial_errores, error_max, modo_correccion
+-
+-    def _cerrar_decision_robusta(
+-        self,
+-        tasas,
+-        nivel_elegido,
+-        nivel_actual,
+-        motivo,
+-        duracion_segmento_s=None,
+-        buffer_s=None,
+-        historial_throughput_Bps=None,
+-        prediccion_base_Bps=None,
+-        prediccion_robusta_Bps=None,
+-        historial_error_prediccion=None,
+-        error_prediccion_max=None,
+-        modo_correccion=None,
+-        horizonte_efectivo=None,
+-        num_secuencias=None,
+-        mejor_secuencia=None,
+-        mejor_puntuacion=None,
+-        mejores_metricas=None,
+-    ):
+-        objetivo = self._cerrar_decision(
+-            tasas=tasas,
+-            nivel_elegido=nivel_elegido,
+-            nivel_actual=nivel_actual,
+-            duracion_segmento_s=duracion_segmento_s,
+-            buffer_s=buffer_s,
+-            historial_throughput_Bps=historial_throughput_Bps,
+-            throughput_previsto_Bps=prediccion_robusta_Bps,
+-            horizonte_efectivo=horizonte_efectivo,
+-            num_secuencias=num_secuencias,
+-            mejor_secuencia=mejor_secuencia,
+-            mejor_puntuacion=mejor_puntuacion,
+-            mejores_metricas=mejores_metricas,
+-            motivo=motivo,
+-        )
+-        self.ultimas_metricas.update(
+-            {
+-                "prediccion_base_Bps": prediccion_base_Bps,
+-                "prediccion_robusta_Bps": prediccion_robusta_Bps,
+-                "historial_error_prediccion": historial_error_prediccion,
+-                "error_prediccion_max": error_prediccion_max,
+-                "ventana_error_prediccion": self.ventana_error_prediccion,
+-                "factor_seguridad_arranque": self.factor_seguridad_arranque,
+-                "epsilon_throughput_Bps": self.epsilon_throughput_Bps,
+-                "modo_correccion": modo_correccion,
+-            }
+-        )
+-        if prediccion_robusta_Bps is not None and motivo == MOTIVO_SELECCION:
+-            self._prediccion_pendiente_Bps = prediccion_robusta_Bps
+-        return objetivo
+-
+-    def _cerrar_sin_pendiente(self, tasa):
+-        self.fijarDuracionInactividad(0.0)
+-        self.fijarAccionControl(float(tasa))
+-        return float(tasa)
+-
+-
+-def _ratio_error_prediccion(prevista_Bps, real_Bps, epsilon_Bps):
+-    prevista = _flotante_finito(prevista_Bps)
+-    real = _flotante_finito(real_Bps)
+-    epsilon = _flotante_finito(epsilon_Bps)
+-    if prevista is None or real is None or epsilon is None or epsilon <= 0.0:
+-        return None
+-    denominador = max(real, epsilon)
+-    error = abs(prevista - real) / denominador
+-    if not math.isfinite(error):
+-        return None
+-    return error
+-
+-
+-def _flotante_intervalo_unidad(valor, por_defecto):
+-    convertido = _flotante_no_negativo(valor, por_defecto)
+-    if convertido <= 0.0 or convertido > 1.0:
+-        return float(por_defecto)
+-    return float(convertido)
++        tasa = super().calcularAccionControl()
++        self.ultimas_metricas["errores_prediccion"] = list(self._errores_prediccion)
++        return tasa
+diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/evaluacion/analisis.py "TFG Material/01_codigo/ClienteDashTFG/core/evaluacion/analisis.py"
+--- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/evaluacion/analisis.py	2026-08-07 10:23:10.550727500 +0200
++++ "TFG Material/01_codigo/ClienteDashTFG/core/evaluacion/analisis.py"	2026-10-14 19:12:26.972637600 +0200
+@@ -18,6 +18,9 @@
+ 
+ ALIAS_REFERENCIA_CANDIDATOS = ("mpc_robusto", "base_mpc_robusto")
+ PREFIJOS_PROPIOS = ("controlador_propio", "propio")
++# Variantes del propio que infieren con la red en cada decision; las "sin red" no tienen
++# inferencia que auditar, pero si respaldo.
++ALIAS_PROPIOS_CON_RED = ("controlador_propio", "propio_mediana")
+ FICHERO_MANIFIESTO_GRAFICAS = "graficas.json"
+ 
+ 
+@@ -189,7 +192,11 @@
+     diagnostic_rows = sum(
+         1 for fila in filas_evaluables if _int(fila.get("feedback_red_solo_diagnostico")) > 0
+     )
+-    auditoria_red = _conteos_auditoria_red(filas_evaluables)
++    auditoria_red = _conteos_auditoria_red(
++        filas_evaluables,
++        exige_inferencia=not str(resumen.get("alias_controlador", "")).startswith(PREFIJOS_PROPIOS)
++        or str(resumen.get("alias_controlador", "")) in ALIAS_PROPIOS_CON_RED,
++    )
+     transiciones = max(1, int(qoe_lineal.num_segmentos) - 1)
+ 
+     resumen.update(
+@@ -527,7 +534,10 @@
+             _int(fila.get("num_segmentos")) <= 0
+             or _int(fila.get("num_filas_sin_auditoria_red")) > 0
+             or _int(fila.get("num_filas_exito_red")) != _int(fila.get("num_segmentos"))
+-            or _int(fila.get("num_filas_inferencia_red")) != _int(fila.get("num_segmentos"))
++            or (
++                str(fila.get("alias_controlador", "")) in ALIAS_PROPIOS_CON_RED
++                and _int(fila.get("num_filas_inferencia_red")) != _int(fila.get("num_segmentos"))
++            )
+         )
+     ]
+     violaciones_antiguas = [
+@@ -1242,7 +1252,7 @@
+     return positive, negative
+ 
+ 
+-def _conteos_auditoria_red(filas: Sequence[Mapping[str, Any]]) -> Dict[str, int]:
++def _conteos_auditoria_red(filas: Sequence[Mapping[str, Any]], exige_inferencia: bool = True) -> Dict[str, int]:
+     conteos = {
+         "activada": 0,
+         "bundle_cargado": 0,
+@@ -1277,7 +1287,7 @@
+             and accion_valida
+             and no_respaldo
+             and not_diagnostic
+-            and inference_ms
++            and (inference_ms or not exige_inferencia)
+         )
+     return conteos
+ 
+diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/evaluacion/catalogo.py "TFG Material/01_codigo/ClienteDashTFG/core/evaluacion/catalogo.py"
+--- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/evaluacion/catalogo.py	2026-08-07 10:18:15.219006500 +0200
++++ "TFG Material/01_codigo/ClienteDashTFG/core/evaluacion/catalogo.py"	2026-10-14 19:12:03.901278200 +0200
+@@ -23,6 +23,9 @@
+     "mpc": "mpc",
+     "mpc_robusto": "mpc_robusto",
+     "controlador_propio": "controlador_propio",
++    "propio_mediana": "propio_mediana",
++    "propio_cuantiles_fijos": "propio_cuantiles_fijos",
++    "propio_cuantiles_recientes": "propio_cuantiles_recientes",
+ }
+ 
+ NOMBRES_CONTROLADORES_POR_DEFECTO = {
+@@ -32,6 +35,9 @@
+     "mpc": "MPC",
+     "mpc_robusto": "Robust MPC",
+     "controlador_propio": "Controlador propio",
++    "propio_mediana": "Propio sin CVaR (mediana)",
++    "propio_cuantiles_fijos": "Propio sin red (cuantiles fijos)",
++    "propio_cuantiles_recientes": "Propio sin red (cuantiles recientes)",
+ }
+ 
+ PERFILES_VIDEO = {
+diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/modelo_propio/bundle.py "TFG Material/01_codigo/ClienteDashTFG/core/modelo_propio/bundle.py"
+--- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/modelo_propio/bundle.py	2026-10-14 12:53:36.284590700 +0200
++++ "TFG Material/01_codigo/ClienteDashTFG/core/modelo_propio/bundle.py"	2026-10-14 19:08:29.649249900 +0200
+@@ -179,7 +179,9 @@
+             miembros.append(modelo)
+         return miembros
+ 
+-    def predecir(self, estado, escalera) -> tuple[tuple[float, ...], ...]:
++    def predecir(self, estado, escalera, desplazamientos_log=None) -> tuple[tuple[float, ...], ...]:
++        # desplazamientos_log: recalibracion opcional, un desplazamiento por horizonte y cuantil
++        # en el espacio log-ratio de la salida.
+         from core.controladores.entradas_contexto import construir_entradas_contexto
+ 
+         contexto = construir_entradas_contexto(estado, escalera)
+@@ -211,5 +213,7 @@
+                 predicciones, self.cuantiles, ensanchado_cola=self.ensanchado_cola
+             )[0]
+         self.ultima_latencia_ms = (time.perf_counter() - inicio) * 1000.0
++        if desplazamientos_log is not None:
++            combinadas = (combinadas + torch.as_tensor(desplazamientos_log, dtype=combinadas.dtype)).sort(dim=1).values
+         tp_base = media_armonica_bps(estado.historial_throughput_bps)
+         return filas_log_ratio_a_bps(combinadas, tp_base, self.horizonte_segmentos, len(self.cuantiles))
 diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/entrenamiento/dataset_cuantiles.py "TFG Material/01_codigo/ClienteDashTFG/entrenamiento/dataset_cuantiles.py"
 --- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/entrenamiento/dataset_cuantiles.py	2026-08-07 10:34:13.695595400 +0200
 +++ "TFG Material/01_codigo/ClienteDashTFG/entrenamiento/dataset_cuantiles.py"	2026-10-14 18:37:40.424579800 +0200
@@ -19,6 +1462,48 @@ diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20
      )
 -    return {**resultado, "ids_perfiles_video": [str(mid) for id_perfil in ids_perfiles_video]}
 +    return {**resultado, "ids_perfiles_video": [str(id_perfil) for id_perfil in ids_perfiles_video]}
+diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/reproductor.py "TFG Material/01_codigo/ClienteDashTFG/reproductor.py"
+--- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/reproductor.py	2026-08-07 10:21:53.103284700 +0200
++++ "TFG Material/01_codigo/ClienteDashTFG/reproductor.py"	2026-10-14 19:11:15.836319800 +0200
+@@ -82,6 +82,7 @@
+         self._cola_reproduccion = deque()
+ 
+         self._eos_enviado = False
++        self._descargas_terminadas = False
+ 
+         self._ultimo_indice_comun = -1
+         self._num_elementos_activos = None
+@@ -215,7 +216,11 @@
+         if evento == "stall":
+             id_stall = info.get("id_stall")
+             ts_inicio = info.get("ts_evento")
+-            idx_seg = self._cola_reproduccion[0] if self._cola_reproduccion else self.indice_actual
++            # La parada se apunta al segmento que se esta esperando. Las que empiezan con todas
++            # las descargas hechas son el vaciado final del buffer y no cuentan.
++            if self._descargas_terminadas:
++                return
++            idx_seg = self.indice_actual
+             if id_stall is not None and ts_inicio is not None:
+                 self._stalls_abiertos[id_stall] = {
+                     "ts_inicio": float(ts_inicio),
+@@ -668,6 +673,7 @@
+             self.indice_actual += 1
+             time.sleep(self.controlador.obtenerDuracionInactividad())
+ 
++        self._descargas_terminadas = True
+         if not self._eos_enviado and hasattr(self.motor_video, "fin_de_flujo"):
+             try:
+                 self.motor_video.fin_de_flujo()
+@@ -802,9 +808,6 @@
+             return
+         si = self._stalls_por_segmento.pop(idx_seg, {"marca": 0, "duracion": 0.0})
+ 
+-        if idx_seg == getattr(self, "_ultimo_indice_comun", -1):
+-            si = {"marca": 0, "duracion": 0.0}
+-
+         fila_final = fila_base + [int(si.get("marca", 0)), float(si.get("duracion", 0.0))]
+         validar_longitud_fila(fila_final, self._cabecera, nombre_esquema=FICHERO_TELEMETRIA_SEGMENTOS)
+         self._escritor_csv.writerow(fila_final)
 diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/scripts/1_contenido/extraer_tamanos_reales_segmentos.py "TFG Material/01_codigo/ClienteDashTFG/scripts/1_contenido/extraer_tamanos_reales_segmentos.py"
 --- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/scripts/1_contenido/extraer_tamanos_reales_segmentos.py	2026-08-07 10:40:56.064243700 +0200
 +++ "TFG Material/01_codigo/ClienteDashTFG/scripts/1_contenido/extraer_tamanos_reales_segmentos.py"	2026-10-14 18:39:06.148787200 +0200
@@ -109,3 +1594,106 @@ diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20
                  c=perfil["_segment_count_consistent"],
              ),
              flush=True,
+diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/scripts/2_entrenamiento/calcular_cuantiles_fijos.py "TFG Material/01_codigo/ClienteDashTFG/scripts/2_entrenamiento/calcular_cuantiles_fijos.py"
+--- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/scripts/2_entrenamiento/calcular_cuantiles_fijos.py	1970-01-01 01:00:00.000000000 +0100
++++ "TFG Material/01_codigo/ClienteDashTFG/scripts/2_entrenamiento/calcular_cuantiles_fijos.py"	2026-10-14 19:00:42.903168400 +0200
+@@ -0,0 +1,81 @@
++"""Cuantiles fijos del error de la media armonica, para la variante sin red del controlador propio.
++
++La red predice, para cada horizonte h y cuantil tau, log(throughput futuro / media armonica de
++las ultimas descargas). La variante sin red usa en su lugar el cuantil empirico de esa misma
++etiqueta en el dataset de entrenamiento: es el predictor constante que minimiza la perdida
++pinball, el mismo espacio de salida sin condicionar al estado. Solo cuentan las muestras con
++historial no vacio, porque el controlador nunca decide sin descargas previas.
++
++Uso:
++  python scripts/2_entrenamiento/calcular_cuantiles_fijos.py --dataset datos_entrenamiento.jsonl --salida cuantiles_fijos.json
++"""
++from __future__ import annotations
++
++import argparse
++import hashlib
++import json
++import math
++import sys
++from datetime import datetime, timezone
++from pathlib import Path
++
++import numpy as np
++
++ID_ESQUEMA = "cuantiles_fijos_log_ratio_v1"
++
++
++def sha256_fichero(ruta: Path) -> str:
++    resumen = hashlib.sha256()
++    with ruta.open("rb") as fichero:
++        for bloque in iter(lambda: fichero.read(1 << 20), b""):
++            resumen.update(bloque)
++    return resumen.hexdigest()
++
++
++def main(argv=None) -> int:
++    args = argparse.ArgumentParser(description=__doc__.splitlines()[0])
++    args.add_argument("--dataset", type=Path, required=True)
++    args.add_argument("--salida", type=Path, required=True)
++    opciones = args.parse_args(argv)
++
++    etiquetas = []
++    cuantiles = horizonte = None
++    descartadas = 0
++    with opciones.dataset.open(encoding="utf-8") as fichero:
++        for linea in fichero:
++            muestra = json.loads(linea)
++            historial = muestra["entradas_modelo"]["contexto"]["historial_throughput_bps"]
++            if not any(float(v) > 0.0 for v in historial):
++                descartadas += 1
++                continue
++            objetivos = muestra["objetivos_cuantiles_throughput"]
++            cuantiles = cuantiles or [float(q) for q in objetivos["cuantiles"]]
++            horizonte = horizonte or int(objetivos["horizonte_segmentos"])
++            etiquetas.append([float(v) for v in objetivos["log_ratio_objetivo_por_horizonte"]])
++    matriz = np.asarray(etiquetas, dtype=np.float64)
++    if matriz.ndim != 2 or matriz.shape[1] != horizonte or not np.all(np.isfinite(matriz)):
++        print("etiquetas invalidas", file=sys.stderr)
++        return 1
++    valores = [[float(np.quantile(matriz[:, h], q)) for q in cuantiles] for h in range(horizonte)]
++    salida = {
++        "id_esquema": ID_ESQUEMA,
++        "descripcion": "cuantil empirico de log(throughput futuro / media armonica) por horizonte",
++        "cuantiles": cuantiles,
++        "horizonte_segmentos": horizonte,
++        "valores_log_ratio_por_horizonte_y_cuantil": valores,
++        "num_muestras": int(matriz.shape[0]),
++        "num_muestras_sin_historial_descartadas": int(descartadas),
++        "dataset": opciones.dataset.name,
++        "sha256_dataset": sha256_fichero(opciones.dataset),
++        "generado": datetime.now(timezone.utc).isoformat(),
++    }
++    opciones.salida.parent.mkdir(parents=True, exist_ok=True)
++    opciones.salida.write_text(json.dumps(salida, indent=2, sort_keys=True) + "\n", encoding="utf-8")
++    print("CUANTILES_FIJOS muestras={0} descartadas={1}".format(matriz.shape[0], descartadas))
++    for h, fila in enumerate(valores, start=1):
++        print("  h={0}: {1}".format(h, " ".join("{0:+.4f} (x{1:.3f})".format(v, math.exp(v)) for v in fila)))
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/scripts/3_evaluacion/ejecutar_evaluacion.py "TFG Material/01_codigo/ClienteDashTFG/scripts/3_evaluacion/ejecutar_evaluacion.py"
+--- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/scripts/3_evaluacion/ejecutar_evaluacion.py	2026-10-14 12:34:12.555053400 +0200
++++ "TFG Material/01_codigo/ClienteDashTFG/scripts/3_evaluacion/ejecutar_evaluacion.py"	2026-10-14 19:11:58.687748300 +0200
+@@ -393,11 +393,10 @@
+ def _parametros_controlador_para_sesion(
+     config: Mapping[str, Any], sesion: Mapping[str, Any]
+ ) -> Dict[str, Any]:
++    # Todos reciben el video de la sesion: el propio y el MPC planifican con sus tamanos reales;
++    # los demas lo ignoran.
+     parametros = dict(parametros_controlador(config, str(sesion["clave_controlador"])))
+-    if str(sesion.get("clave_controlador", "")).startswith("controlador_propio"):
+-        parametros["id_perfil_video"] = str(
+-            sesion.get("id_perfil_video", parametros.get("id_perfil_video", ""))
+-        )
++    parametros["id_perfil_video"] = str(sesion.get("id_perfil_video", parametros.get("id_perfil_video", "")))
+     return parametros
+ 
+ 

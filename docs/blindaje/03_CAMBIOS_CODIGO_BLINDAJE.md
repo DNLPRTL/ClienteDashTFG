@@ -63,3 +63,104 @@ utilidades.
    (`06_dataset_entrenamiento`) conserva los nombres de campo en inglés,
    mientras que las muestras `.jsonl` y el código los usan en castellano. Se
    regenera o se traduce en F8.
+
+---
+
+## C2. Asignación de paradas en el reproductor, 14/10 noche
+
+Problema, medido en los paquetes reales: el reproductor apuntaba cada parada a
+la fila en cabeza de la cola de reproducción y anulaba la fila del último
+segmento para no contar el vaciado final.
+
+- Según la fase del tic de 10 ms del motor, la cabeza era el segmento anterior
+  (~79 %) o el que se esperaba (~21 %).
+- Así, la parada antes del último segmento **se perdía a veces**. En octubre,
+  tres casos de BBA y BOLA de hasta 9,48 s, que cambian la QoE de la sesión en
+  1,4 puntos.
+- Y la parada antes del segundo segmento **contaba a veces**.
+
+Corrección en `reproductor.py`:
+- la parada se apunta al segmento que se está esperando (`indice_actual`);
+- las paradas que empiezan con todas las descargas hechas (el vaciado final)
+  se ignoran por estado (`_descargas_terminadas`);
+- ya no se anula la fila del último segmento.
+
+La suma de paradas de la sesión es la misma, salvo los dos bordes que antes
+dependían del azar.
+
+Verificación: `pruebas/test_paradas_y_variantes.py` y una sesión real en
+Windows contra el servidor, con la parada en la fila del segmento esperado.
+
+## C3. MPC robusto canónico, 14/10 noche
+
+Reescritos `core/controladores/mpc.py` y `robust_mpc.py` en la forma de
+referencia de Yin et al. (2015, sec. 7.1) y del código de Pensieve
+(`test/mpc.py`):
+
+- **horizonte** de 5;
+- **QoE lineal** en Mbit/s, con 4,3 por segundo de rebuffering y 1 por Mbit/s
+  de cambio;
+- **tamaños reales** del vídeo activo;
+- **predicción** con la media armónica de las 5 últimas descargas, incluidas
+  las de calentamiento;
+- **parte robusta:** se divide entre (1 + error porcentual máximo de esa media
+  armónica en las 5 últimas descargas). Sin factor de arranque.
+
+Decide con el planificador del controlador propio con un solo escenario, así
+que frente al propio solo cambia la predicción. El descriptor del vídeo se lee
+al crear el controlador: si falta, la sesión falla al empezar.
+
+Se van las desviaciones del MPC anterior:
+- horizonte 3;
+- ln(R/Rmin);
+- tamaños nominales;
+- error medido contra la predicción ya rebajada;
+- ×0,85 al arrancar;
+- historial sin la descarga de calentamiento.
+
+Verificación: `pruebas/test_mpc_canonico.py`.
+- En 400 estados aleatorios con tamaños reales, la secuencia elegida tiene la
+  recompensa máxima de una copia literal del bucle de Pensieve. La acción
+  coincide en ≥ 390; el resto son empates exactos.
+- Comprueba el error contra la media armónica, la ausencia de factor de
+  arranque, el historial con calentamiento y el fallo si falta el descriptor.
+
+## C4. Variantes de ablación del controlador propio, 14/10 noche
+
+- `core/controladores/entradas_planificador.py`, nuevo: estado de la sesión y
+  escalera, movidos sin cambios desde `controlador_propio.py` para
+  compartirlos con el MPC.
+- `controlador_propio.py`:
+  - parámetro `modo_prediccion`: `red` (el propio), `mediana`,
+    `cuantiles_fijos` o `cuantiles_recientes`, con claves de registro
+    `propio_mediana`, `propio_cuantiles_fijos` y `propio_cuantiles_recientes`;
+  - `alfa_riesgo="buffer"` y `ruta_recalibracion`, opcionales, para el ajuste
+    D7 (no adoptados);
+  - el respaldo es el MPC robusto canónico del mismo vídeo y recibe todas las
+    descargas.
+- `constructor_entradas.py`: `registrar_realimentacion` devuelve si entró una
+  descarga nueva, y hay una propiedad `historial_throughput_bps`. No cambia
+  nada de lo que calcula.
+- `core/modelo_propio/bundle.py`: `predecir` acepta desplazamientos opcionales
+  de recalibración (no adoptados).
+- `scripts/2_entrenamiento/calcular_cuantiles_fijos.py`, nuevo. Genera
+  `TFG Material\03_modelos\cuantiles_fijos\cuantiles_fijos.json`:
+  - 474 150 muestras con historial del dataset de entrenamiento;
+  - SHA-256 del fichero: `a3a5ceb2d086bd3f5832c71245a89f7c418dc4947360fda9a3f330eeb230dc89`;
+  - SHA-256 del dataset de origen: `eccc5f0c…1bb`.
+
+Verificación:
+- **regresión con el simulador sobre 2000 sesiones de validación:** el propio
+  repite 400/400 trayectorias bit a bit, y los clásicos también;
+- `pruebas/test_paradas_y_variantes.py` (variantes);
+- sesión real en Windows de `propio_cuantiles_recientes`, con 0 respaldos.
+
+## C5. Ejecución y análisis, 14/10 noche
+
+- `scripts/3_evaluacion/ejecutar_evaluacion.py`: el `id_perfil_video` de la
+  sesión llega a todos los controladores. El propio y el MPC planifican con sus
+  tamaños; los demás lo ignoran.
+- `core/evaluacion/catalogo.py`: alias y nombres visibles de las variantes.
+- `core/evaluacion/analisis.py`: la compuerta de inferencia auditada solo
+  exige inferencia a las variantes con red (`controlador_propio`,
+  `propio_mediana`). La de respaldo sigue para todas.
