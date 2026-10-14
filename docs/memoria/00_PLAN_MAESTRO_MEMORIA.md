@@ -384,16 +384,16 @@ fallaba; cómo el dataset y el planner usan tamaños reales por segmento.
 > Apertura: con el sistema implementado, se evalúa de forma reproducible y honesta.
 
 **6.1 Qué y cómo se evalúa (protocolo Phase 6).** Comparativa formal, gates, splits
-por `leakage_group`, deltas pareados, CI95, sign-test. **DOS EVALUACIONES (14/10):**
-la partición de evaluación nunca se usó para entrenar ni calibrar, pero las 12
-ventanas de la primera SÍ se usaron en el desarrollo para diagnosticar versiones
-anteriores (planificador prudente tras el fallo de real_006; predictor temporal
-tras real_011/012). Por eso hay una segunda evaluación, mismo sistema congelado y
-misma semilla, con 12 ventanas que ninguna ejecución anterior había ejecutado,
-y una regla fijada antes de ejecutarla: conclusiones solo con lo que se cumpla
-en las dos. NO escribir "eval reservado/intacto". Nombres: "primera evaluación"
-y "segunda evaluación". Fuente: `docs/replica_ventanas_nuevas/`
-(AFIRMACIONES_A_COMPROBAR.md y RESULTADO_REPLICA.md).
+por `leakage_group`, deltas pareados, CI95, sign-test. **EXPERIMENTO FINAL ÚNICO
+(decisión de Daniel, 14/10 tarde):** la memoria presenta SOLO el experimento
+final, con la versión final del controlador y ventanas que nunca se habían
+ejecutado; protocolo fijado antes de ejecutarlo en
+`docs/evaluacion_final/PROTOCOLO_EVALUACION_FINAL.md`. Nada de "dos
+evaluaciones" ni "réplica". Una sola frase metodológica: las ventanas se
+sortearon excluyendo todos los grupos de captura usados durante el desarrollo,
+de modo que ninguna se había ejecutado antes. Las ejecuciones anteriores
+(agosto y réplica) son desarrollo y quedan archivadas en
+`TFG\legacy\evidencia_desarrollo\`.
 - **[R]** `core/phase6/analysis.py`, `catalog.py` (preset `tfg_final`).
 - **[P]** **Propia (rigor metodológico = aportación principal).**
 
@@ -405,13 +405,11 @@ ROCm 7.2.1, torch 2.9.1) y software.
 **6.3 Vídeos y trazas.** Lista de vídeos (Paseo_Almuñécar 10min 30fps 4s + Blender,
 30/60fps; 4 vídeos en `tfg_final`); perfil VBR (6 niveles 300–4300 kbps, 151 seg).
 Corpus de trazas curado (6768 trazas; FCC/Norway/Oboe/Lumos5G/Puffer + sintéticas;
-eval ≈1025). **Ventanas de las dos evaluaciones** (tabla con ambas): primera FCC 7,
-Ghent 4G 2 (mismo grupo), Norway HSDPA 2, Lumos5G 1 (11 grupos); segunda FCC 7,
-NYU-METS 2, Puffer 2, Lumos5G 1 (12 grupos, sin solape). Tramos: la segunda es más
-fácil (baja capacidad 3 frente a 4, muy alta 4 frente a 3; el basado en tasa no
-tuvo ninguna parada). Por qué no basta cambiar la semilla: 10 de 24 cajas del
-sorteo tienen un único grupo de captura (semillas 607-699 probadas: todas solapan).
-Sintéticas: las mismas 3 en las dos.
+eval ≈1025). **Ventanas del experimento final:** semilla 606 con 27 grupos de
+captura excluidos (los usados en el desarrollo) → 12 ventanas reales nuevas de 12
+grupos distintos: FCC 8, Lumos5G 1, NYU-METS 1, Puffer 1, UCC 5G 1; tramos baja 4,
+alta 1, alta variable 2, media 1, media variable 1, muy alta 3 (la misma mezcla
+que el sorteo sin exclusiones); + 3 sintéticas de diagnóstico.
 - **[F/T]** **Tabla: niveles de calidad.** **Tabla: vídeos.** **Tabla: corpus trazas.**
 - **[B]** `Riiser13`, `Raca18`, `Raca20`, `Lumos5G20`, `Puffer20`.
 
@@ -428,81 +426,34 @@ sesiones >5s/>10s, cola (P5, mínimo, peor 5%), latencia de decisión, auditorí
 inferencia (0 respaldos). QoE log secundaria; sintéticas reportadas aparte.
 - **[F/T]** **Tabla: definición de métricas.**
 
-**6.6 Resultados.** **DOS PAQUETES (14/10), cada tabla con dos columnas.** Veredictos
-de la regla (fuente: `docs/replica_ventanas_nuevas/RESULTADO_REPLICA.md`):
-CONFIRMADAS en las dos = empate estadístico con mpc_robusto (Δ +0,063 [−0,043;
-+0,209] p 0,15 G8/P16/E24; Δ −0,009 [−0,077; +0,066] p 0,064 G7/P17/E24) y
-superioridad significativa frente a bba, bola y basado_en_tasa (prueba del signo;
-en la segunda, IC95 excluye 0 en los tres). NO CONFIRMADAS = QoE media más alta
-(segunda: robusto 2,831 > propio 2,822), menos sesiones >5 s que el robusto
-(segunda: 8,3 % ambos), sin respaldo (segunda: 1 decisión delegada). Descriptivas
-coherentes en las dos (sin contraste, decirlo así): menos rebuffering medio,
-menos paradas/sesión, menos sesiones >10 s, mediana de QoE más alta, algo menos
-de bitrate que el robusto. Segunda evaluación: 300/300, verificación OK, gates
-6/8 por 1 decisión delegada (s00005, 149,6 ms) sin cambio de acción
-(reproducción 1740/1740); sensibilidad sin ese escenario: nada cambia. VM 1,8×
-más lenta (decisión 317 ms frente a 174; inferencia 2,18 frente a 1,25 ms):
-repetibilidad con las 60 sintéticas idénticas → robusto −0,003, bba +0,007,
-propio −0,060 (0/12 trayectorias idénticas) ⇒ la segunda es, si acaso,
-desfavorable al propio. Tabla nueva sugerida: "repetibilidad del banco".
-Números de la PRIMERA evaluación (reales):
-- QoE media: propio **2.0097** > basado_en_tasa 1.9701 > mpc_robusto 1.9471 >
-  bba 1.7874 > bola 1.2439. Conclusión del paquete: "sin ganador
-  estadísticamente concluyente" (empate en cabeza).
-- Pareado vs mpc_robusto (n=48): propio Δ=+0.063, IC95 [−0.043,+0.209],
-  sign_p=0.152 (empate); basado_en_tasa Δ=+0.023 pero **pierde 36/48 ventanas**
-  (sign_p=7.2e-4); bba Δ=−0.160 (sign_p=3.3e-6); bola Δ=−0.703, IC excluye 0
-  (sign_p=1.4e-8).
-- Propio vs mpc_robusto por ventanas: **W8/L16/T24** — 24 empates exactos
-  (ventanas fáciles, decisiones idénticas); la ventaja del propio es AGREGADA
-  (evita catástrofes), NUNCA redactar "gana en la mayoría de escenarios".
-- Claims positivos con significancia: propio > basado_en_tasa (W37/L11,
-  sign_p=2.2e-4), > bba (W40/L8, IC [−0.331,−0.114] excluye 0, sign_p=3.3e-6),
-  > bola (W42/L6, sign_p=1.0e-7).
-- Rebuffering: propio 3.04 s vs robusto 3.85 s; stalls/sesión 0.33 vs 0.46;
-  sesiones con stall 33% ambos; **sesiones >5 s: 12.5% vs 25%**; >10 s: 10.4% vs
-  12.5%. rate_based el más conservador (1.49 s, 0.19 stalls) a costa de bitrate
-  (2350 vs 2636 kbps del propio).
-- Cola QoE: propio P5=−3.38/min=−3.90; robusto P5=−3.13/min=−3.22; peor delta del
-  propio vs robusto −0.699 (ventana real_012, paseo 30fps). bba/bola colas peores
-  (min −4.57/−4.89). Mediana: propio 2.89 (la más alta).
-- **[F/T]** **T9: tabla principal** (QoE/bitrate/rebuffer/stalls/colas por
-  controlador, de `agregados_por_controlador.json`). **T10: deltas pareados vs
-  mpc_robusto** (Δ, IC95, sign test, W/L/T, de `estadistica.json` + cómputo
-  propio verificado). **F8/F9: gráficas reales del paquete** (16 disponibles en
-  `03_graficas/`: cdf_qoe_lineal, componentes_qoe, calidad_vs_rebuffering,
-  qoe_robustez_peor_caso, stalls_por_controlador, cdf_rebuffering, cdf_bitrate,
-  cdf_buffer, cdf_smoothness, cdf_qoe_log, qoe_por_dificultad_red,
-  qoe_por_dataset, qoe_por_condicion_red, caso_temporal_bitrate_qoe,
-  latencia_decision, sinteticas_diagnostico).
-- **[R]** `TFG Material\04_evidencia_final\` con los DOS paquetes (únicas
-  fuentes de números) + `RESULTADO_REPLICA.md`; junio y 06/08 solo como nota de
-  consistencia si hace falta.
+**6.6 Resultados.** **Solo el paquete del experimento final** (pendiente de
+ejecutar; 300 sesiones = 240 reales + 60 sintéticas diagnósticas; 48 escenarios
+reales pareados × 5 controladores; 4 vídeos). Análisis fijado en
+`docs/evaluacion_final/PROTOCOLO_EVALUACION_FINAL.md` §4: comparación pareada
+del propio con cada clásico (Δ QoE lineal, IC95 bootstrap, prueba del signo,
+G/P/E; significativo si p < 0,05), descriptivos (media, mediana, colas,
+bitrate, rebuffering, paradas, sesiones >5 s y >10 s), mecanismo (reproducción
+y Tabla 5.7) y predictor (calibración en lazo cerrado y error frente a la media
+armónica). Se informa todo, favorable o no. NUNCA redactar "gana en la mayoría
+de escenarios" si los empates exactos dominan; citar el IC, no solo medias.
+- **[F/T]** **T9: tabla principal** (de `agregados_por_controlador.json`).
+  **T10: deltas pareados frente a cada clásico** (de `estadistica.json` + G/P/E).
+  **F8/F9: gráficas reales del paquete** (`03_graficas/`). Tabla del predictor
+  (calibración y error frente a la media armónica).
+- **[R]** `TFG Material\04_evidencia_final\` (paquete final; única fuente de
+  números). Las ejecuciones de desarrollo (junio, agosto, réplica) NO van a la
+  memoria.
 
-**6.7 Interpretación y limitaciones.** **REESCRITO 14/10 con la regla:** lectura
-principal = el propio EMPATA con mpc_robusto en las dos evaluaciones y supera con
-significación a los otros tres clásicos en las dos. YA NO se puede escribir "QoE
-media más alta" ni "la mitad de sesiones >5 s" como conclusión (solo primera
-evaluación: presentarlo como no confirmado). Declarar: ventanas de la primera
-usadas en el desarrollo (y por eso la segunda); VM más lenta en la segunda
-(desfavorable al propio, medido con las sintéticas); 1 decisión delegada sin
-efecto; discrepancia B (6,8 % / 3,4 % de decisiones, mayoría hacia más prudente)
-y C; segunda con ventanas más fáciles. Texto ANTIGUO de la primera evaluación,
-solo como referencia: el controlador propio
-obtiene la QoE media y mediana más altas y **empata estadísticamente** con
-mpc_robusto (IC95 cruza 0, sign_p=0.152), **reduciendo el rebuffering** (menos
-stalls/sesión y la mitad de sesiones >5 s); gana con significancia a los otros
-tres baselines. La ventaja frente a mpc_robusto es agregada (evita catástrofes),
-no por ventanas (W8/L16/T24). Limitaciones: 48 escenarios reales (n moderado),
-2 ventanas comparten `leakage_group` (ghent bus), cola extrema residual del
-propio (P5 −3.38, peor ventana real_012), los MPC clásicos optimizan
-internamente un objetivo log distinto de la QoE lineal de evaluación (decisión
-documentada que juega EN CONTRA del propio), y evaluación en emulación por
-trazas (sim-to-real acotado por diseño, no eliminado).
-- **[P]** **Propia.** Honestidad explícita (no "gano a todos"). Redactar los
-  matices EXACTAMENTE como manda `decision_revision_final_tecnica_20260805.md`:
-  citar el CI, no solo medias; empates exactos explican el n efectivo del sign
-  test; nada de claims fuera de los autorizados.
+**6.7 Interpretación y limitaciones.** Se redacta con los resultados del
+experimento final, sin adelantarlos. Limitaciones ya conocidas, a declarar:
+número de escenarios reales (48), emulación por trazas en el cliente (sin
+efectos de nivel de paquete), los MPC clásicos optimizan internamente la
+utilidad logarítmica y no la QoE lineal de la evaluación (juega en contra del
+propio), los cuatro vídeos de la evaluación están entre los ocho del
+entrenamiento (generalización a contenido nuevo no medida) y α se fijó en
+validación con una versión anterior del predictor (efecto acotado por la
+Tabla 5.7).
+- **[P]** **Propia.** Honestidad explícita (no "gano a todos").
 
 > Resumen del capítulo.
 
@@ -586,7 +537,7 @@ pide cifras, están en el histórico).
 
 - **FUENTE DE VERDAD del sistema descrito:** `C:\Users\danie\Documents\TFG Material\`
   (código `01_codigo\ClienteDashTFG`, corpus `02_corpus_red\catalogo_trazas.json`,
-  bundle `03_modelos`, **evidencia canónica `04_evidencia_final\` (dos paquetes: `20260810_133520_tfg_final` y `20261013_233745_tfg_final`)**,
+  bundle `03_modelos`, **evidencia canónica `04_evidencia_final\` (solo el paquete del experimento final)**,
   contenido `05_contenido_dash`, dataset `06_dataset_entrenamiento`, informes
   `00_info_entorno`). Traducción de nombres: `04_CORRESPONDENCIAS_NOMENCLATURA.md`.
 - **Cómo redactar resultados:** `decision_revision_final_tecnica_20260805.md`
@@ -612,9 +563,9 @@ pide cifras, están en el histórico).
 | Cap 1 Introducción | TODO | |
 | Cap 2 Estado del arte | TODO | NotebookLM (listas de fuentes fijadas 12/08) |
 | Cap 3 Planificación/costes | TODO | sacar Gantt del git log |
-| Cap 4 Diseño | BORRADORES COMPLETOS | 4.1–4.7 redactados por Daniel; 4.8 BORRADOR entregado 27/08 (cap4_8_separacion_evaluacion.md + T4.7 gates + resumen del capítulo). Al masticar 4.8: pasada de coherencia del capítulo entero. 14/10: 4.7 (partición "validación" + empate "en las dos evaluaciones") y 4.8 (párrafo de compuertas con los dos casos de la regla + T4.7 "validación") ajustados a la segunda evaluación; cambios listados al final de sus notas para pasarlos a Word |
-| Cap 5 Implementación | EN CURSO | 5.1–5.5 masticados por Daniel. 5.6 VERSIÓN 2 entregada 13/10 (cap5_6_controlador_propio.md rehecho: 6 subapartados, 8 ecuaciones, decisión real reproducida, T5.6 comparativa MPC/robusto/propio, T5.7 efecto de cada componente, ficha al Anexo A; F5.2 rehecha + F5.3 nueva `fig_5_3_decision_real.svg` generada por script; reproducción 1740/1740 en `docs/memoria/apoyo/`). 14/10: 5.6 v2.1 ajustada a las dos evaluaciones (reproducción 3480/3480, T5.7 a dos columnas, respaldo único de la segunda, latencias de ambas); 5.4 (GUI sin atribuir, config de 39 líneas + la de la réplica, 300 sesiones por evaluación, cómo salen ventanas nuevas) y 5.5 (referencia por diseño) ajustados; 5.1 corregido (requests 2.32.4 y matplotlib 3.7.5, registrados en cada sesión; el 2.22 venía de un pip freeze de otro Python). Cambios listados al final de las notas de cada borrador. cap5_1 queda SIN commitear porque lleva cambios de Daniel pendientes. Siguiente: 5.7 entorno de entrenamiento fiel. PENDIENTE EN CAP 4: corregir T4.3 "paso de espera 0,5 s" → "0,5 s (0,01 s en la evaluación)" |
-| Cap 6 Evaluación | TODO (datos cerrados) | DOS EVALUACIONES: primera `20260810_133520_tfg_final`, segunda `20261013_233745_tfg_final` (réplica con 12 ventanas nunca ejecutadas, hecha 13-14/10). Resultado según la regla en `docs/replica_ventanas_nuevas/RESULTADO_REPLICA.md` y en §6.6/6.7 de este plan: confirmados el empate con mpc_robusto y la superioridad frente a bba, bola y basado_en_tasa; no confirmados la QoE media más alta y la reducción de sesiones >5 s. Ambos paquetes y la regla ya están en `TFG Material\04_evidencia_final\` |
+| Cap 4 Diseño | BORRADORES COMPLETOS | 4.1–4.7 redactados por Daniel; 4.8 BORRADOR entregado 27/08 (cap4_8_separacion_evaluacion.md + T4.7 gates + resumen del capítulo). Al masticar 4.8: pasada de coherencia del capítulo entero. 14/10: VÁLIDO para Word solo "validación" en lugar de "prueba" (4.7 y T4.7 del 4.8). ANULADO lo de "dos evaluaciones" (empate "en las dos", párrafo de compuertas con la salvedad): se reescribe con el experimento final |
+| Cap 5 Implementación | EN CURSO | 5.1–5.5 masticados por Daniel. 5.6 VERSIÓN 2 entregada 13/10 (cap5_6_controlador_propio.md rehecho: 6 subapartados, 8 ecuaciones, decisión real reproducida, T5.6 comparativa MPC/robusto/propio, T5.7 efecto de cada componente, ficha al Anexo A; F5.2 rehecha + F5.3 nueva `fig_5_3_decision_real.svg` generada por script; reproducción 1740/1740 en `docs/memoria/apoyo/`). 14/10: VÁLIDO para Word: 5.1 (requests 2.32.4 y matplotlib 3.7.5, registrados en cada sesión) y 5.5 (referencia "por diseño, fijada antes de evaluar"). ANULADO lo de "dos evaluaciones" en 5.4 y 5.6 (v2.1): con la versión final del controlador cambian además 5.6.1 (entradas idénticas a las del entrenamiento: sin discrepancias que declarar), 5.6.3 (planificador vectorizado, milisegundos por decisión), 5.6.6 (inferencia de un hilo y calentamiento) y todos los números de 5.6.4 (se recalculan con el paquete final). cap5_1 queda SIN commitear porque lleva cambios de Daniel pendientes. Siguiente: 5.7 entorno de entrenamiento fiel. PENDIENTE EN CAP 4: corregir T4.3 "paso de espera 0,5 s" → "0,5 s (0,01 s en la evaluación)" |
+| Cap 6 Evaluación | TODO (pendiente del experimento final) | EXPERIMENTO FINAL ÚNICO con la versión final del controlador (planificador vectorizado, inferencia de un hilo, calentamiento, entradas como en el entrenamiento) y 12 ventanas nunca ejecutadas; protocolo y kit en `docs/evaluacion_final/`. Las ejecuciones de agosto y de la réplica son desarrollo (archivadas en `TFG\legacy\evidencia_desarrollo\`) y no van a la memoria |
 | Cap 7 Conclusiones | TODO | al final |
 | Bibliografía (BibTeX) | HECHA (92 entradas) | `bibliografia.bib` cerrado 10/08; solo se imprime lo citado |
 | Anexos | TODO | |

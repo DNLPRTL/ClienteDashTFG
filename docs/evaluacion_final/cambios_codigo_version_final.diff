@@ -1,0 +1,620 @@
+diff -ruN '--exclude=.idea' '--exclude=__pycache__' C:/Users/danie/Documents/TFG/legacy/codigo_entrega_20261014_antes_version_final/ClienteDashTFG/config/evaluacion.local.json "C:/Users/danie/Documents/TFG Material/01_codigo/ClienteDashTFG/config/evaluacion.local.json"
+--- C:/Users/danie/Documents/TFG/legacy/codigo_entrega_20261014_antes_version_final/ClienteDashTFG/config/evaluacion.local.json	2026-08-06 17:56:02.930818100 +0200
++++ "C:/Users/danie/Documents/TFG Material/01_codigo/ClienteDashTFG/config/evaluacion.local.json"	2026-10-14 12:34:30.845993800 +0200
+@@ -26,7 +26,36 @@
+     "ids_perfiles_video": [],
+     "preset": "tfg_final",
+     "repeticiones": 1,
+-    "semilla": 606
++    "semilla": 606,
++    "grupos_fuga_excluidos": [
++      "fcc_measuring_broadband_america:unit_10678",
++      "fcc_measuring_broadband_america:unit_25017861",
++      "fcc_measuring_broadband_america:unit_32833341",
++      "fcc_measuring_broadband_america:unit_38713769",
++      "fcc_measuring_broadband_america:unit_3894081",
++      "fcc_measuring_broadband_america:unit_40518949",
++      "fcc_measuring_broadband_america:unit_40730021",
++      "fcc_measuring_broadband_america:unit_55518785",
++      "fcc_measuring_broadband_america:unit_626768",
++      "fcc_measuring_broadband_america:unit_80213901",
++      "fcc_measuring_broadband_america:unit_806200",
++      "fcc_measuring_broadband_america:unit_82066621",
++      "fcc_measuring_broadband_america:unit_82067161",
++      "fcc_measuring_broadband_america:unit_999461",
++      "ghent_4g_lte:bus",
++      "lumos5g:run_110",
++      "lumos5g:run_12",
++      "norway_hsdpa_umass:car.oslo-grimstad",
++      "norway_hsdpa_umass:train.vestby-oslo",
++      "nyu_mets:Lumos5G, UCC 4G LTE, UCC 5G, NYU‑METS/NYU-METS/Dataset/Dataset_1/Dataset/Bus_B57",
++      "nyu_mets:Lumos5G, UCC 4G LTE, UCC 5G, NYU‑METS/NYU-METS/Dataset/Dataset_1/Dataset/Car",
++      "puffer_stanford:session_2c5bf1012a75",
++      "puffer_stanford:session_9a29089c5822",
++      "roma_4g_nbiot_5g_nsa:Speedtest_Campaign_5:Op2:OW",
++      "ucc_4g_lte_beyond_throughput:beyond_throughput_4g_lte/pedestrian",
++      "ucc_4g_lte_beyond_throughput:beyond_throughput_4g_lte/train",
++      "ucc_5g_beyond_throughput:Lumos5G, UCC 4G LTE, UCC 5G, NYU‑METS/UCC 5G Beyond Throughput, The Next Generation/5G-production-dataset/Netflix/Driving/Season3-StrangerThings"
++    ]
+   },
+   "rutas": {
+     "ruta_catalogo": "/home/daniel/TFG/catalogo_trazas.json",
+diff -ruN '--exclude=.idea' '--exclude=__pycache__' C:/Users/danie/Documents/TFG/legacy/codigo_entrega_20261014_antes_version_final/ClienteDashTFG/config/evaluacion.replica.json "C:/Users/danie/Documents/TFG Material/01_codigo/ClienteDashTFG/config/evaluacion.replica.json"
+--- C:/Users/danie/Documents/TFG/legacy/codigo_entrega_20261014_antes_version_final/ClienteDashTFG/config/evaluacion.replica.json	2026-10-13 23:29:01.077583500 +0200
++++ "C:/Users/danie/Documents/TFG Material/01_codigo/ClienteDashTFG/config/evaluacion.replica.json"	1970-01-01 01:00:00.000000000 +0100
+@@ -1,39 +0,0 @@
+-{
+-  "nombres_visibles_controladores": {
+-    "controlador_propio": "Controlador propio"
+-  },
+-  "parametros_controladores": {
+-    "controlador_propio": {
+-      "dir_bundle": "/home/daniel/TFG/modelos/modelo_propio/bundle",
+-      "id_perfil_video": "paseo_almunecar_10min_30fps_4s",
+-      "alfa_riesgo": 0.75,
+-      "solo_diagnostico": false,
+-      "controlador_respaldo": "mpc_robusto",
+-      "latencia_max_inferencia_ms": 50.0,
+-      "verificar_hashes": true
+-    }
+-  },
+-  "experimento": {
+-    "controladores": [
+-      "basado_en_tasa",
+-      "bba",
+-      "bola",
+-      "mpc_robusto",
+-      "controlador_propio"
+-    ],
+-    "motor": "simulado",
+-    "incluir_diagnostico_sintetico": true,
+-    "ids_perfiles_video": [],
+-    "preset": "tfg_final",
+-    "repeticiones": 1,
+-    "semilla": 606
+-  },
+-  "rutas": {
+-    "ruta_catalogo": "/home/daniel/TFG/replica_ventanas_nuevas/catalogo_trazas_replica.json",
+-    "raiz_salida": "/home/daniel/TFG/validacion_comparativa_replica",
+-    "raiz_repo": "/home/daniel/TFG/ClienteDashTFG",
+-    "python": "python3",
+-    "reescrituras_rutas_trazas": []
+-  },
+-  "version_esquema": "config_evaluacion_v1"
+-}
+diff -ruN '--exclude=.idea' '--exclude=__pycache__' C:/Users/danie/Documents/TFG/legacy/codigo_entrega_20261014_antes_version_final/ClienteDashTFG/config/grupos_excluidos_replica.txt "C:/Users/danie/Documents/TFG Material/01_codigo/ClienteDashTFG/config/grupos_excluidos_replica.txt"
+--- C:/Users/danie/Documents/TFG/legacy/codigo_entrega_20261014_antes_version_final/ClienteDashTFG/config/grupos_excluidos_replica.txt	2026-10-13 23:29:01.077583500 +0200
++++ "C:/Users/danie/Documents/TFG Material/01_codigo/ClienteDashTFG/config/grupos_excluidos_replica.txt"	1970-01-01 01:00:00.000000000 +0100
+@@ -1,11 +0,0 @@
+-fcc_measuring_broadband_america:unit_10678
+-fcc_measuring_broadband_america:unit_25017861
+-fcc_measuring_broadband_america:unit_32833341
+-fcc_measuring_broadband_america:unit_40518949
+-fcc_measuring_broadband_america:unit_40730021
+-fcc_measuring_broadband_america:unit_55518785
+-fcc_measuring_broadband_america:unit_999461
+-ghent_4g_lte:bus
+-lumos5g:run_12
+-norway_hsdpa_umass:car.oslo-grimstad
+-norway_hsdpa_umass:train.vestby-oslo
+diff -ruN '--exclude=.idea' '--exclude=__pycache__' C:/Users/danie/Documents/TFG/legacy/codigo_entrega_20261014_antes_version_final/ClienteDashTFG/core/controladores/constructor_entradas.py "C:/Users/danie/Documents/TFG Material/01_codigo/ClienteDashTFG/core/controladores/constructor_entradas.py"
+--- C:/Users/danie/Documents/TFG/legacy/codigo_entrega_20261014_antes_version_final/ClienteDashTFG/core/controladores/constructor_entradas.py	2026-08-07 09:27:58.004163500 +0200
++++ "C:/Users/danie/Documents/TFG Material/01_codigo/ClienteDashTFG/core/controladores/constructor_entradas.py"	2026-10-14 12:33:28.245661000 +0200
+@@ -36,6 +36,19 @@
+         self._ultima_clave_nivel = None
+         self._ultimo_nivel_observado = None
+         self._ultimo_cambio_abs = 0.0
++        self._buffer_previo_s = 0.0
++        self._rebuffering_reciente_s = 0.0
++
++    def registrar_realimentacion(self, feedback: Mapping[str, object]) -> None:
++        # Se llama con cada fila del reproductor, tambien con las que no piden decision,
++        # para que el historial y el rebuffering de la ultima descarga se calculen como
++        # en el simulador de entrenamiento: max(tiempo de descarga - buffer previo, 0).
++        if self._anadir_muestra_descarga(feedback):
++            tiempo_descarga_s = float(feedback.get("tiempo_ultima_descarga"))
++            self._rebuffering_reciente_s = max(tiempo_descarga_s - self._buffer_previo_s, 0.0)
++        tiempo_en_cola = _numero_finito(feedback.get("tiempo_en_cola"))
++        if tiempo_en_cola is not None:
++            self._buffer_previo_s = max(float(tiempo_en_cola), 0.0)
+ 
+     def construir(self, feedback: Mapping[str, object]) -> CargaEntradas:
+         self._rechazar_campos_prohibidos(feedback)
+@@ -64,7 +77,7 @@
+                 ("duracion_fragmento",),
+             )
+ 
+-        self._anadir_muestra_descarga(feedback)
++        self.registrar_realimentacion(feedback)
+         cambio_reciente_abs = self._cambio_reciente_abs(nivel_actual, feedback)
+         ultimo_bitrate_bps = float(tasas_Bps[nivel_actual]) * 8.0
+         segmentos_restantes_norm, hay_segmentos_restantes = _segmentos_restantes(feedback)
+@@ -79,7 +92,7 @@
+             "buffer_s": float(max(tiempo_en_cola, 0.0)),
+             "indice_ultima_representacion": float(nivel_actual),
+             "ultimo_bitrate_bps": float(ultimo_bitrate_bps),
+-            "rebuffering_reciente_s": 0.0,
++            "rebuffering_reciente_s": float(self._rebuffering_reciente_s),
+             "cambio_reciente_abs": float(cambio_reciente_abs),
+             "segmentos_restantes_norm": float(segmentos_restantes_norm),
+             "hay_segmentos_restantes": float(hay_segmentos_restantes),
+@@ -161,26 +174,27 @@
+             )
+         return float(valor)
+ 
+-    def _anadir_muestra_descarga(self, feedback: Mapping[str, object]) -> None:
++    def _anadir_muestra_descarga(self, feedback: Mapping[str, object]) -> bool:
+         tamano_B = _numero_finito(feedback.get("tamano_ultimo_fragmento"))
+         tiempo_descarga_s = _numero_finito(feedback.get("tiempo_ultima_descarga"))
+         if tamano_B is None or tiempo_descarga_s is None or tamano_B <= 0.0 or tiempo_descarga_s <= 0.0:
+-            return
++            return False
+         clave_muestra = (
+             _entero_o_nulo(feedback.get("indice_segmento")),
+             float(tamano_B),
+             float(tiempo_descarga_s),
+         )
+         if clave_muestra == self._ultima_clave_muestra:
+-            return
++            return False
+         throughput_bps = 8.0 * float(tamano_B) / float(tiempo_descarga_s)
+         if not math.isfinite(throughput_bps) or throughput_bps <= 0.0:
+-            return
++            return False
+         self._historial_throughput_bps.append(throughput_bps)
+         self._historial_tiempo_descarga_s.append(float(tiempo_descarga_s))
+         self._historial_throughput_bps = self._historial_throughput_bps[-self.longitud_historial :]
+         self._historial_tiempo_descarga_s = self._historial_tiempo_descarga_s[-self.longitud_historial :]
+         self._ultima_clave_muestra = clave_muestra
++        return True
+ 
+     def _cambio_reciente_abs(self, nivel_actual: int, feedback: Mapping[str, object]) -> float:
+         indice_segmento = _entero_o_nulo(feedback.get("indice_segmento"))
+@@ -230,12 +244,14 @@
+ 
+ 
+ def _segmentos_restantes(feedback: Mapping[str, object]) -> tuple[float, float]:
++    # segmentos_totales cuenta el segmento de inicializacion; la sesion tiene uno menos de video.
+     total = _entero_o_nulo(feedback.get("segmentos_totales"))
+     indice = _entero_o_nulo(feedback.get("indice_segmento"))
+-    if total is None or indice is None or total <= 0:
++    if total is None or indice is None or total <= 1:
+         return 0.0, 0.0
+-    restantes = max(total - indice - 1, 0)
+-    return float(restantes) / float(total), 1.0 if restantes > 0 else 0.0
++    segmentos_video = total - 1
++    restantes = max(segmentos_video - indice, 0)
++    return float(restantes) / float(segmentos_video), 1.0 if restantes > 0 else 0.0
+ 
+ 
+ def _rellenar_por_izquierda(valores: Sequence[float], esperado: int) -> tuple[float, ...]:
+diff -ruN '--exclude=.idea' '--exclude=__pycache__' C:/Users/danie/Documents/TFG/legacy/codigo_entrega_20261014_antes_version_final/ClienteDashTFG/core/controladores/controlador_propio.py "C:/Users/danie/Documents/TFG Material/01_codigo/ClienteDashTFG/core/controladores/controlador_propio.py"
+--- C:/Users/danie/Documents/TFG/legacy/codigo_entrega_20261014_antes_version_final/ClienteDashTFG/core/controladores/controlador_propio.py	2026-08-07 09:54:17.891724200 +0200
++++ "C:/Users/danie/Documents/TFG Material/01_codigo/ClienteDashTFG/core/controladores/controlador_propio.py"	2026-10-14 12:33:46.398136300 +0200
+@@ -94,6 +94,11 @@
+     return tuple(tasas)
+ 
+ 
++def _segmentos_video_sesion(feedback: Mapping[str, object]) -> int:
++    # segmentos_totales del reproductor incluye el segmento de inicializacion.
++    return max(_entero_positivo(feedback.get("segmentos_totales"), 31) - 1, 1)
++
++
+ def _menor_tasa_valida(carga) -> tuple[int | None, float]:
+     if carga is None:
+         return None, 0.0
+@@ -108,9 +113,13 @@
+     tasas_Bps: Sequence[float],
+     feedback: Mapping[str, object],
+ ) -> EstadoSesion:
++    # Como en el entrenamiento: el indice es el del siguiente segmento de video a descargar y la
++    # sesion tiene segmentos_totales - 1 segmentos. La ultima decision de la sesion no tiene
++    # segmento siguiente y se acota al ultimo.
++    segmentos_video = _segmentos_video_sesion(feedback)
+     indice_segmento = min(
+         max(_entero_positivo(feedback.get("indice_segmento"), 0, permitir_cero=True), 0),
+-        max(_entero_positivo(feedback.get("segmentos_totales"), 30) - 1, 0),
++        segmentos_video - 1,
+     )
+     nivel = _entero_positivo(feedback.get("nivel"), 0, permitir_cero=True)
+     indice_ultima_representacion = min(max(nivel, 0), max(len(tasas_Bps) - 1, 0))
+@@ -123,7 +132,7 @@
+         rebuffering_reciente_s=float(entradas_contexto.get("rebuffering_reciente_s", 0.0) or 0.0),
+         cambio_reciente_abs=float(entradas_contexto.get("cambio_reciente_abs", 0.0) or 0.0),
+         tiempo_red_s=0.0,
+-        segmentos_totales=_entero_positivo(feedback.get("segmentos_totales"), 30),
++        segmentos_totales=segmentos_video,
+     )
+ 
+ 
+@@ -164,6 +173,13 @@
+         self.ultimas_metricas: dict[str, object] = {}
+         self.ultima_decision = None
+ 
++    def fijarFeedbackReproductor(self, realimentacion_dict):
++        super().fijarFeedbackReproductor(realimentacion_dict)
++        try:
++            self.constructor_entradas.registrar_realimentacion(realimentacion_dict or {})
++        except Exception:
++            pass
++
+     def ampliar_realimentacion(self, feedback, contexto=None):
+         return anadir_diagnosticos_realimentacion(feedback, self._diagnosticos)
+ 
+@@ -189,7 +205,7 @@
+ 
+         try:
+             bundle = self._asegurar_bundle(diagnosticos)
+-            escalera = self._asegurar_escalera(carga.tasas_Bps)
++            escalera = self._asegurar_escalera(carga.tasas_Bps, _segmentos_video_sesion(feedback))
+         except ErrorBundle:
+             diagnosticos.esquema_bundle_ok = 0
+             self._diagnosticos = diagnosticos
+@@ -263,12 +279,16 @@
+         diagnosticos.esquema_entradas_ok = 1
+         return self._bundle
+ 
+-    def _asegurar_escalera(self, tasas_Bps: Sequence[float]):
++    def _asegurar_escalera(self, tasas_Bps: Sequence[float], segmentos_video: int):
+         if self._escalera is None:
+             perfil = PerfilTamanosSegmentos.cargar_por_id(
+                 self.id_perfil_video, dir_base=self.dir_perfiles_video
+             )
+-            self._escalera = perfil.a_escalera_fiel(buffer_maximo_s=self.buffer_maximo_s)
++            # La escalera abarca los segmentos de la sesion, como en el entrenamiento; los
++            # tamanos siguen siendo los reales del video desde su primer segmento.
++            self._escalera = perfil.a_escalera_fiel(
++                buffer_maximo_s=self.buffer_maximo_s, num_segmentos=segmentos_video
++            )
+         tasas = tuple(float(valor) for valor in tasas_Bps)
+         if self._escalera.num_representaciones != len(tasas):
+             raise ErrorBundle(
+diff -ruN '--exclude=.idea' '--exclude=__pycache__' C:/Users/danie/Documents/TFG/legacy/codigo_entrega_20261014_antes_version_final/ClienteDashTFG/core/evaluacion/configuracion.py "C:/Users/danie/Documents/TFG Material/01_codigo/ClienteDashTFG/core/evaluacion/configuracion.py"
+--- C:/Users/danie/Documents/TFG/legacy/codigo_entrega_20261014_antes_version_final/ClienteDashTFG/core/evaluacion/configuracion.py	2026-08-07 10:36:47.836640900 +0200
++++ "C:/Users/danie/Documents/TFG Material/01_codigo/ClienteDashTFG/core/evaluacion/configuracion.py"	2026-10-14 12:34:09.313717100 +0200
+@@ -26,6 +26,7 @@
+         "ids_perfiles_video": [],
+         "incluir_diagnostico_sintetico": True,
+         "repeticiones": 1,
++        "grupos_fuga_excluidos": [],
+     },
+     "reproduccion_red": {
+         "duracion_ventana_s": 300.0,
+diff -ruN '--exclude=.idea' '--exclude=__pycache__' C:/Users/danie/Documents/TFG/legacy/codigo_entrega_20261014_antes_version_final/ClienteDashTFG/core/evaluacion/seleccion.py "C:/Users/danie/Documents/TFG Material/01_codigo/ClienteDashTFG/core/evaluacion/seleccion.py"
+--- C:/Users/danie/Documents/TFG/legacy/codigo_entrega_20261014_antes_version_final/ClienteDashTFG/core/evaluacion/seleccion.py	2026-08-07 10:21:52.748243600 +0200
++++ "C:/Users/danie/Documents/TFG Material/01_codigo/ClienteDashTFG/core/evaluacion/seleccion.py"	2026-10-14 12:34:07.767014500 +0200
+@@ -35,6 +35,7 @@
+     min_max_throughput_kbps = float(cfg_red.get("min_max_throughput_kbps_for_formal", 0.0) or 0.0)
+     semilla = int(cfg_experimento.get("semilla", 606))
+     incluir_sinteticas = bool(cfg_experimento.get("incluir_diagnostico_sintetico", True))
++    grupos_excluidos = grupos_fuga_excluidos(config)
+ 
+     trazas = [item for item in manifiesto.get("trazas", []) if isinstance(item, Mapping)]
+     candidatas_eval = [
+@@ -49,6 +50,7 @@
+         item
+         for item in candidatas_eval
+         if not es_traza_sintetica(item)
++        and str(item.get("grupo_fuga", "")) not in grupos_excluidos
+         and _pasa_suelo_throughput_formal(
+             item,
+             min_media_throughput_kbps=min_media_throughput_kbps,
+@@ -80,6 +82,15 @@
+     return ventanas_reales + ventanas_sinteticas
+ 
+ 
++def grupos_fuga_excluidos(config: Mapping[str, Any]) -> set[str]:
++    # Grupos de captura que no pueden salir en el sorteo de ventanas reales (por ejemplo, los
++    # ya usados en ejecuciones de desarrollo). El resto de la seleccion no cambia.
++    bruto = _mapa(config.get("experimento")).get("grupos_fuga_excluidos") or []
++    if isinstance(bruto, str):
++        bruto = [bruto]
++    return {str(grupo).strip() for grupo in bruto if str(grupo).strip()}
++
++
+ def es_traza_sintetica(traza: Mapping[str, Any]) -> bool:
+     return (
+         bool(traza.get("sintetica"))
+diff -ruN '--exclude=.idea' '--exclude=__pycache__' C:/Users/danie/Documents/TFG/legacy/codigo_entrega_20261014_antes_version_final/ClienteDashTFG/core/modelo_propio/bundle.py "C:/Users/danie/Documents/TFG Material/01_codigo/ClienteDashTFG/core/modelo_propio/bundle.py"
+--- C:/Users/danie/Documents/TFG/legacy/codigo_entrega_20261014_antes_version_final/ClienteDashTFG/core/modelo_propio/bundle.py	2026-08-07 10:06:50.957624700 +0200
++++ "C:/Users/danie/Documents/TFG Material/01_codigo/ClienteDashTFG/core/modelo_propio/bundle.py"	2026-10-14 12:53:36.284590700 +0200
+@@ -107,6 +107,10 @@
+ 
+ class BundleModelo:
+     def __init__(self, dir_bundle: object, *, verificar_hashes: bool = True) -> None:
++        # Con un modelo tan pequeno, repartir cada inferencia entre varios hilos solo anade
++        # esperas entre ellos: con un hilo es mas rapida y su latencia no se dispara si la CPU
++        # esta ocupada.
++        torch.set_num_threads(1)
+         validacion = validar_dir_bundle(dir_bundle, verificar_hashes=verificar_hashes)
+         self.dir_bundle = Path(validacion["dir_bundle"])
+         self.manifiesto = dict(validacion["manifiesto"])
+@@ -129,8 +133,23 @@
+         self._media_escalares = [float(v) for v in self.normalizacion["media_escalares"]]
+         self._desviacion_escalares = [float(v) for v in self.normalizacion["desviacion_escalares"]]
+         self.miembros = self._cargar_miembros()
++        self._calentar()
+         self.ultima_latencia_ms = 0.0
+ 
++    def _calentar(self) -> None:
++        # La primera llamada a PyTorch inicializa sus nucleos de calculo y es mucho mas lenta;
++        # se hace aqui, al cargar, para que no cuente como latencia de una decision.
++        from core.controladores.constantes_entradas import LONGITUD_HISTORIAL_CONTEXTO
++
++        secuencia = torch.zeros(
++            (1, LONGITUD_HISTORIAL_CONTEXTO, int(self.config_modelo["features_secuencia"])), dtype=torch.float32
++        )
++        escalares = torch.zeros((1, int(self.config_modelo["dim_escalares"])), dtype=torch.float32)
++        with torch.no_grad():
++            for _ in range(3):
++                for miembro in self.miembros:
++                    miembro(secuencia, escalares)
++
+     def _cargar_miembros(self):
+         try:
+             punto_control = torch.load(
+diff -ruN '--exclude=.idea' '--exclude=__pycache__' C:/Users/danie/Documents/TFG/legacy/codigo_entrega_20261014_antes_version_final/ClienteDashTFG/core/modelo_propio/planificador.py "C:/Users/danie/Documents/TFG Material/01_codigo/ClienteDashTFG/core/modelo_propio/planificador.py"
+--- C:/Users/danie/Documents/TFG/legacy/codigo_entrega_20261014_antes_version_final/ClienteDashTFG/core/modelo_propio/planificador.py	2026-08-07 09:47:55.201817900 +0200
++++ "C:/Users/danie/Documents/TFG Material/01_codigo/ClienteDashTFG/core/modelo_propio/planificador.py"	2026-10-14 12:32:11.910961900 +0200
+@@ -3,8 +3,11 @@
+ import itertools
+ import math
+ from dataclasses import dataclass
++from functools import lru_cache
+ from typing import Sequence
+ 
++import numpy as np
++
+ from core.modelo_propio.estado_sesion import EstadoSesion
+ 
+ CLAVE_CONTROLADOR_PROPIO = "controlador_propio"
+@@ -86,89 +89,101 @@
+     restantes = max(int(escalera.num_segmentos) - int(estado.indice_segmento), 1)
+     horizonte_efectivo = min(int(horizonte_segmentos), len(prediccion), restantes)
+ 
+-    mejor_puntuacion = -math.inf
+-    mejor_secuencia: tuple[int, ...] | None = None
+-    mejor_rebuffer: tuple[float, ...] = ()
+-    for secuencia in itertools.product(acciones_validas, repeat=horizonte_efectivo):
+-        cvar, rebuffer_por_cuantil = _puntuar_secuencia_cvar(
+-            secuencia=secuencia,
+-            estado=estado,
+-            escalera=escalera,
+-            prediccion=prediccion[:horizonte_efectivo],
+-            alfa=alfa,
+-            peso_rebuffering=peso_rebuffering,
+-            peso_cambios=peso_cambios,
+-        )
+-        if cvar > mejor_puntuacion:
+-            mejor_puntuacion = cvar
+-            mejor_secuencia = tuple(int(valor) for valor in secuencia)
+-            mejor_rebuffer = rebuffer_por_cuantil
+-
+-    if mejor_secuencia is None:
+-        raise ErrorPlanificador("la enumeracion del planificador no produjo secuencia")
++    secuencias = _secuencias(acciones_validas, horizonte_efectivo)
++    puntuaciones, rebuffer = _puntuar_secuencias(
++        secuencias=secuencias,
++        estado=estado,
++        escalera=escalera,
++        prediccion=prediccion[:horizonte_efectivo],
++        peso_rebuffering=peso_rebuffering,
++        peso_cambios=peso_cambios,
++    )
++    cvar = _cvar(puntuaciones, alfa)
++    mejor = int(np.argmax(cvar))
++    mejor_secuencia = tuple(int(valor) for valor in secuencias[mejor])
+     accion = int(mejor_secuencia[0])
+     return DecisionPlanificador(
+         accion=accion,
+         bitrate_bps=float(escalera.bitrate_bps(accion)),
+         alfa_riesgo=float(alfa),
+-        cvar_puntuacion=float(mejor_puntuacion),
++        cvar_puntuacion=float(cvar[mejor]),
+         mejor_secuencia=mejor_secuencia,
+-        rebuffer_por_cuantil_s=tuple(float(valor) for valor in mejor_rebuffer),
++        rebuffer_por_cuantil_s=tuple(float(valor) for valor in rebuffer[mejor]),
+     )
+ 
+ 
+-def _puntuar_secuencia_cvar(
++@lru_cache(maxsize=64)
++def _secuencias(acciones_validas: tuple[int, ...], horizonte: int) -> np.ndarray:
++    secuencias = np.array(list(itertools.product(acciones_validas, repeat=horizonte)), dtype=np.int64)
++    secuencias.setflags(write=False)
++    return secuencias
++
++
++def _puntuar_secuencias(
+     *,
+-    secuencia: Sequence[int],
++    secuencias: np.ndarray,
+     estado: EstadoSesion,
+     escalera,
+     prediccion: Sequence[Sequence[float]],
+-    alfa: float,
+     peso_rebuffering: float,
+     peso_cambios: float,
+-) -> tuple[float, tuple[float, ...]]:
++) -> tuple[np.ndarray, np.ndarray]:
++    # Todas las secuencias a la vez, con las mismas operaciones y en el mismo
++    # orden que la simulacion secuencia a secuencia.
++    num_secuencias, horizonte = secuencias.shape
+     num_cuantiles = len(prediccion[0])
+-    puntuacion_por_cuantil = [0.0] * num_cuantiles
+-    rebuffer_por_cuantil = [0.0] * num_cuantiles
++    num_niveles = int(escalera.num_representaciones)
++    bitrates_bps = np.array([float(escalera.bitrate_bps(nivel)) for nivel in range(num_niveles)])
++    bits_por_paso = [
++        np.array(
++            [
++                8.0 * float(escalera.bytes_segmento(nivel, int(estado.indice_segmento) + paso))
++                for nivel in range(num_niveles)
++            ]
++        )
++        for paso in range(horizonte)
++    ]
++    bitrate_inicial_bps = (
++        float(escalera.bitrate_bps(int(estado.indice_ultima_representacion)))
++        if int(estado.indice_ultima_representacion) >= 0
++        else 0.0
++    )
+     duracion_segmento_s = float(escalera.duracion_segmento_s)
+     buffer_maximo_s = float(escalera.buffer_maximo_s)
++    puntuaciones = np.zeros((num_secuencias, num_cuantiles))
++    rebuffer = np.zeros((num_secuencias, num_cuantiles))
+     for k in range(num_cuantiles):
+-        buffer_s = float(estado.buffer_s)
+-        bitrate_anterior_bps = (
+-            float(escalera.bitrate_bps(int(estado.indice_ultima_representacion)))
+-            if int(estado.indice_ultima_representacion) >= 0
+-            else 0.0
+-        )
+-        for indice_horizonte, accion in enumerate(secuencia):
+-            bitrate_bps = float(escalera.bitrate_bps(int(accion)))
+-            indice_segmento = int(estado.indice_segmento) + int(indice_horizonte)
+-
+-            bits_segmento = 8.0 * float(escalera.bytes_segmento(int(accion), indice_segmento))
+-            throughput_bps = max(float(prediccion[indice_horizonte][k]), 1.0)
+-            tiempo_descarga_s = bits_segmento / throughput_bps
+-            rebuffering_s = max(tiempo_descarga_s - buffer_s, 0.0)
+-            suavidad_mbps = (
+-                abs(bitrate_bps - bitrate_anterior_bps) / 1_000_000.0 if bitrate_anterior_bps > 0.0 else 0.0
++        buffer_s = np.full(num_secuencias, float(estado.buffer_s))
++        bitrate_anterior_bps = np.full(num_secuencias, bitrate_inicial_bps)
++        for paso in range(horizonte):
++            acciones = secuencias[:, paso]
++            bitrate_bps = bitrates_bps[acciones]
++            throughput_bps = max(float(prediccion[paso][k]), 1.0)
++            tiempo_descarga_s = bits_por_paso[paso][acciones] / throughput_bps
++            rebuffering_s = np.maximum(tiempo_descarga_s - buffer_s, 0.0)
++            suavidad_mbps = np.where(
++                bitrate_anterior_bps > 0.0, np.abs(bitrate_bps - bitrate_anterior_bps) / 1_000_000.0, 0.0
+             )
+             recompensa = (
+                 bitrate_bps / 1_000_000.0
+                 - float(peso_rebuffering) * rebuffering_s
+                 - float(peso_cambios) * suavidad_mbps
+             )
+-            puntuacion_por_cuantil[k] += recompensa
+-            rebuffer_por_cuantil[k] += rebuffering_s
+-            buffer_s = min(max(buffer_s - tiempo_descarga_s, 0.0) + duracion_segmento_s, buffer_maximo_s)
++            puntuaciones[:, k] += recompensa
++            rebuffer[:, k] += rebuffering_s
++            buffer_s = np.minimum(np.maximum(buffer_s - tiempo_descarga_s, 0.0) + duracion_segmento_s, buffer_maximo_s)
+             bitrate_anterior_bps = bitrate_bps
+-    return _cvar(puntuacion_por_cuantil, alfa), tuple(rebuffer_por_cuantil)
++    return puntuaciones, rebuffer
+ 
+ 
+-def _cvar(puntuaciones: Sequence[float], alfa: float) -> float:
+-    ordenadas = sorted(float(valor) for valor in puntuaciones)
+-    n = len(ordenadas)
+-    if n == 0:
+-        return 0.0
++def _cvar(puntuaciones: np.ndarray, alfa: float) -> np.ndarray:
++    ordenadas = np.sort(puntuaciones, axis=1)
++    n = ordenadas.shape[1]
+     peor_m = max(1, int(math.ceil(max(min(float(alfa), 1.0), 0.0) * n)))
+-    return sum(ordenadas[:peor_m]) / float(peor_m)
++    suma = ordenadas[:, 0].copy()
++    for columna in range(1, peor_m):
++        suma += ordenadas[:, columna]
++    return suma / float(peor_m)
+ 
+ 
+ def _validar_prediccion(
+diff -ruN '--exclude=.idea' '--exclude=__pycache__' C:/Users/danie/Documents/TFG/legacy/codigo_entrega_20261014_antes_version_final/ClienteDashTFG/requirements.txt "C:/Users/danie/Documents/TFG Material/01_codigo/ClienteDashTFG/requirements.txt"
+--- C:/Users/danie/Documents/TFG/legacy/codigo_entrega_20261014_antes_version_final/ClienteDashTFG/requirements.txt	2026-08-06 11:24:52.226056500 +0200
++++ "C:/Users/danie/Documents/TFG Material/01_codigo/ClienteDashTFG/requirements.txt"	2026-10-14 12:34:36.892528900 +0200
+@@ -1,5 +1,7 @@
+-# Dependencias del cliente y de Phase 6.
+-# GStreamer/PyGObject (motor real) y PyTorch (controllers IA) se instalan aparte.
++# Dependencias del cliente y de la evaluacion.
++# GStreamer/PyGObject (motor real) y PyTorch (controlador propio) se instalan aparte.
+ requests>=2.31,<2.33
+-# Graficas del analisis de Phase 6:
+-matplotlib>=3.8,<4
++# Planificador del controlador propio:
++numpy>=1.24
++# Graficas del analisis de resultados:
++matplotlib>=3.7,<4
+diff -ruN '--exclude=.idea' '--exclude=__pycache__' C:/Users/danie/Documents/TFG/legacy/codigo_entrega_20261014_antes_version_final/ClienteDashTFG/scripts/3_evaluacion/ejecutar_evaluacion.py "C:/Users/danie/Documents/TFG Material/01_codigo/ClienteDashTFG/scripts/3_evaluacion/ejecutar_evaluacion.py"
+--- C:/Users/danie/Documents/TFG/legacy/codigo_entrega_20261014_antes_version_final/ClienteDashTFG/scripts/3_evaluacion/ejecutar_evaluacion.py	2026-08-07 10:38:14.523043600 +0200
++++ "C:/Users/danie/Documents/TFG Material/01_codigo/ClienteDashTFG/scripts/3_evaluacion/ejecutar_evaluacion.py"	2026-10-14 12:34:12.555053400 +0200
+@@ -26,7 +26,7 @@
+     especificacion_preset,
+ )
+ from core.evaluacion.configuracion import cargar_config_evaluacion, escribir_config_ejemplo
+-from core.evaluacion.seleccion import cargar_catalogo_trazas, seleccionar_ventanas_trazas
++from core.evaluacion.seleccion import cargar_catalogo_trazas, grupos_fuga_excluidos, seleccionar_ventanas_trazas
+ from core.evaluacion.verificacion import verificar_paquete_evaluacion
+ 
+ 
+@@ -209,6 +209,7 @@
+         "preset_efectivo": metadatos_runtime_preset(config, preset),
+         "perfiles_video": perfiles_video,
+         "controladores": controladores,
++        "grupos_fuga_excluidos": sorted(grupos_fuga_excluidos(config)),
+         "ventanas_trazas": ventanas_trazas,
+     }
+ 
+diff -ruN '--exclude=.idea' '--exclude=__pycache__' C:/Users/danie/Documents/TFG/legacy/codigo_entrega_20261014_antes_version_final/ClienteDashTFG/scripts/3_evaluacion/generar_catalogo_replica.py "C:/Users/danie/Documents/TFG Material/01_codigo/ClienteDashTFG/scripts/3_evaluacion/generar_catalogo_replica.py"
+--- C:/Users/danie/Documents/TFG/legacy/codigo_entrega_20261014_antes_version_final/ClienteDashTFG/scripts/3_evaluacion/generar_catalogo_replica.py	2026-10-13 23:29:54.035173700 +0200
++++ "C:/Users/danie/Documents/TFG Material/01_codigo/ClienteDashTFG/scripts/3_evaluacion/generar_catalogo_replica.py"	1970-01-01 01:00:00.000000000 +0100
+@@ -1,55 +0,0 @@
+-"""Genera el catalogo de la replica.
+-
+-Copia el catalogo de trazas y marca como no utilizables en evaluacion las trazas
+-reales de los grupos de captura (grupo_fuga) que ya uso la evaluacion de agosto.
+-El algoritmo de seleccion y la semilla no cambian: solo cambia el bombo del sorteo.
+-
+-Uso: python3 generar_catalogo_replica.py <codigo> <catalogo> <grupos_excluidos.txt> <salida>
+-Compatible con Python 3.8 (VM cliente).
+-"""
+-import json
+-import sys
+-
+-GRUPOS_ESPERADOS = 11
+-TRAZAS_RETIRADAS_ESPERADAS = 23
+-
+-
+-def main():
+-    if len(sys.argv) != 5:
+-        print(__doc__)
+-        return 2
+-    codigo, ruta_catalogo, ruta_grupos, ruta_salida = sys.argv[1:5]
+-    sys.dont_write_bytecode = True
+-    sys.path.insert(0, codigo)
+-    from core.evaluacion.seleccion import es_traza_sintetica
+-
+-    with open(ruta_grupos, encoding="utf-8") as fichero:
+-        grupos = sorted({linea.strip() for linea in fichero if linea.strip()})
+-    with open(ruta_catalogo, encoding="utf-8") as fichero:
+-        catalogo = json.load(fichero)
+-
+-    retiradas = 0
+-    for traza in catalogo["trazas"]:
+-        if traza.get("grupo_fuga") in grupos and not es_traza_sintetica(traza):
+-            if traza.get("particion") == "eval" and traza.get("usable_en_eval", True) is not False:
+-                retiradas += 1
+-            traza["usable_en_eval"] = False
+-
+-    catalogo["nota_replica"] = {
+-        "motivo": "replica con ventanas de evaluacion no usadas durante el desarrollo",
+-        "grupos_excluidos": grupos,
+-        "trazas_eval_retiradas": retiradas,
+-    }
+-    with open(ruta_salida, "w", encoding="utf-8") as fichero:
+-        json.dump(catalogo, fichero, ensure_ascii=False)
+-
+-    print("   grupos excluidos: {0}; trazas de evaluacion retiradas del sorteo: {1}".format(len(grupos), retiradas))
+-    if len(grupos) != GRUPOS_ESPERADOS or retiradas != TRAZAS_RETIRADAS_ESPERADAS:
+-        print("   ERROR: se esperaban {0} grupos y {1} trazas".format(GRUPOS_ESPERADOS, TRAZAS_RETIRADAS_ESPERADAS))
+-        return 1
+-    print("   OK")
+-    return 0
+-
+-
+-if __name__ == "__main__":
+-    sys.exit(main())

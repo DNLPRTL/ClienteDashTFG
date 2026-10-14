@@ -68,17 +68,13 @@ Ponte al día EN ESTE ORDEN (sin narrarme cada lectura; resumen final corto):
    decisiones `decision_mpc_prudente_*.md` como contexto del diseño del
    controlador propio (nomenclatura vieja).
 
-EVIDENCIA CANÓNICA (no se re-verifica, se usa): TODOS los números de
-resultados salen EXCLUSIVAMENTE de los DOS paquetes de
-`TFG Material\04_evidencia_final\`: `20260810_133520_tfg_final` (primera
-evaluación, gates 8/8) y `20261013_233745_tfg_final` (segunda evaluación,
-ventanas nunca ejecutadas; gates 6/8 por una única decisión delegada sin
-efecto). 300 sesiones y 5 controladores cada uno. Conclusiones SOLO con lo que
-se cumple en las dos (`docs/replica_ventanas_nuevas/RESULTADO_REPLICA.md`).
-Los números que veas en HANDOFF/plan maestro/decisiones de junio NO van a la
-memoria. Los números clave están en la memoria persistente
-(`memoria-redaccion-estado`) y en §6.6/6.7 del plan maestro (reescritos el
-14/10 con las dos evaluaciones).
+EVIDENCIA CANÓNICA: TODOS los números de resultados salen EXCLUSIVAMENTE del
+paquete del EXPERIMENTO FINAL en `TFG Material\04_evidencia_final\` (versión
+final del controlador, 300 sesiones, 5 controladores, ventanas nunca
+ejecutadas; protocolo fijado antes en `docs/evaluacion_final/`). La memoria
+presenta SOLO ese experimento: nada de "dos evaluaciones" ni "réplica". Las
+ejecuciones anteriores (junio, agosto, réplica) son desarrollo, están
+archivadas en `TFG\legacy\evidencia_desarrollo\` y NO van a la memoria.
 
 ESTADO ACTUAL (27/08): capítulo 4 COMPLETO — 8 borradores entregados y
 masticados por mí (4.1 visión global, 4.2 analizador MPD, 4.3

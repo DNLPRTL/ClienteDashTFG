@@ -123,16 +123,16 @@ def a_bps(combinadas, estado, bundle):
     )
 
 
-def puntuar(pred_bps, tamanos_B, bitrates_bps, buffer0_s, nivel_previo):
-    n = len(SECUENCIAS)
+def puntuar(pred_bps, tamanos_B, bitrates_bps, buffer0_s, nivel_previo, secuencias=SECUENCIAS):
+    n = len(secuencias)
     q = pred_bps.shape[1]
     puntos = np.zeros((n, q))
     rebuf = np.zeros((n, q))
     for k in range(q):
         buf = np.full(n, float(buffer0_s))
         previo = np.full(n, float(bitrates_bps[nivel_previo]))
-        for h in range(5):
-            a = SECUENCIAS[:, h]
+        for h in range(secuencias.shape[1]):
+            a = secuencias[:, h]
             tp = max(float(pred_bps[h, k]), 1.0)
             t = 8.0 * tamanos_B[a, h] / tp
             r = np.maximum(t - buf, 0.0)
@@ -169,9 +169,14 @@ def main(max_sesiones=None):
         with (dir_run / "telemetria_segmentos.csv").open(encoding="utf-8", newline="") as fh:
             filas = list(csv.DictReader(fh))
         decisiones = [f for f in filas if (f.get("tasa_objetivo_politica") or "").strip() != ""]
-        for i, fila in enumerate(decisiones):
-            fb = {c: parsear(fila["feedback_" + c]) for c in CLAVES_REALIMENTACION}
+        posicion = {id(f): i for i, f in enumerate(decisiones)}
+        for fila_reproductor in filas:
+            # Como el reproductor: todas las filas llegan al controlador; solo algunas piden decision.
+            fb = {c: parsear(fila_reproductor["feedback_" + c]) for c in CLAVES_REALIMENTACION}
             ctrl.fijarFeedbackReproductor(fb)
+            if id(fila_reproductor) not in posicion:
+                continue
+            i, fila = posicion[id(fila_reproductor)], fila_reproductor
             CAPTURA.clear()
             tasa = ctrl.calcularAccionControl()
             nivel = min(ctrl.cuantizarTasa(tasa), int(fb["nivel_max"]))
@@ -185,28 +190,33 @@ def main(max_sesiones=None):
             estado, escalera, bundle = CAPTURA["estado"], CAPTURA["escalera"], CAPTURA["bundle"]
             pred = np.array(CAPTURA["pred"], dtype=float)
             k = int(estado.indice_segmento)
+            # Con la escalera de la sesion (version final), el horizonte se acorta al final de la sesion.
+            horizonte = max(1, min(5, int(escalera.num_segmentos) - k))
+            secs = SECUENCIAS if horizonte == 5 else np.array(
+                list(itertools.product(range(6), repeat=horizonte)), dtype=np.int64
+            )
             bitrates = np.array(escalera.bitrates_bps, dtype=float)
-            tam_real = np.array([[escalera.bytes_segmento(a, k + h) for h in range(5)] for a in range(6)], dtype=float)
-            tam_nom = np.array([[max(1, int(round(bitrates[a] * DURACION_S / 8.0))) for h in range(5)] for a in range(6)], dtype=float)
+            tam_real = np.array([[escalera.bytes_segmento(a, k + h) for h in range(horizonte)] for a in range(6)], dtype=float)
+            tam_nom = np.array([[max(1, int(round(bitrates[a] * DURACION_S / 8.0))) for h in range(horizonte)] for a in range(6)], dtype=float)
             previo = int(estado.indice_ultima_representacion)
 
-            puntos, rebuf = puntuar(pred, tam_real, bitrates, estado.buffer_s, previo)
+            puntos, rebuf = puntuar(pred[:horizonte], tam_real, bitrates, estado.buffer_s, previo, secs)
             monotono = bool(np.all(np.diff(puntos, axis=1) >= -1e-9))
             idx_cvar = int(np.argmax(cvar(puntos)))
             idx_central = int(np.argmax(puntos[:, 2]))
             idx_peor = int(np.argmax(puntos[:, 0]))
             idx_media4 = int(np.argmax(puntos.mean(axis=1)))
-            p_nom, _ = puntuar(pred, tam_nom, bitrates, estado.buffer_s, previo)
+            p_nom, _ = puntuar(pred[:horizonte], tam_nom, bitrates, estado.buffer_s, previo, secs)
             idx_nominal = int(np.argmax(cvar(p_nom)))
 
             miembros = miembros_log_ratio(bundle, estado, escalera)
             sin_ens = a_bps(combinar_cuantiles_ensemble(miembros, bundle.cuantiles, ensanchado_cola=0.0)[0], estado, bundle)
-            idx_sin_ens = int(np.argmax(cvar(puntuar(sin_ens, tam_real, bitrates, estado.buffer_s, previo)[0])))
+            idx_sin_ens = int(np.argmax(cvar(puntuar(sin_ens[:horizonte], tam_real, bitrates, estado.buffer_s, previo, secs)[0])))
             sigma = miembros[:, 0, :, 2].std(dim=0, unbiased=False).numpy().tolist()
             vista = EscaleraProgresoSesion(escalera, int(fb["segmentos_totales"]))
             m_ses = miembros_log_ratio(bundle, estado, vista)
             pred_ses = a_bps(combinar_cuantiles_ensemble(m_ses, bundle.cuantiles, ensanchado_cola=bundle.ensanchado_cola)[0], estado, bundle)
-            idx_ses = int(np.argmax(cvar(puntuar(pred_ses, tam_real, bitrates, estado.buffer_s, previo)[0])))
+            idx_ses = int(np.argmax(cvar(puntuar(pred_ses[:horizonte], tam_real, bitrates, estado.buffer_s, previo, secs)[0])))
 
             siguiente = decisiones[i + 1] if i + 1 < len(decisiones) else None
             tp_siguiente_bps = None
@@ -233,17 +243,17 @@ def main(max_sesiones=None):
                 "accion_repro": int(dec.accion) if dec is not None else None,
                 "cvar_repro": float(dec.cvar_puntuacion) if dec is not None else None,
                 "monotono": monotono,
-                "sec_cvar": SECUENCIAS[idx_cvar].tolist(),
-                "sec_central": SECUENCIAS[idx_central].tolist(),
-                "sec_peor": SECUENCIAS[idx_peor].tolist(),
+                "sec_cvar": secs[idx_cvar].tolist(),
+                "sec_central": secs[idx_central].tolist(),
+                "sec_peor": secs[idx_peor].tolist(),
                 "primera": {
-                    "cvar": int(SECUENCIAS[idx_cvar, 0]),
-                    "central": int(SECUENCIAS[idx_central, 0]),
-                    "peor": int(SECUENCIAS[idx_peor, 0]),
-                    "media4": int(SECUENCIAS[idx_media4, 0]),
-                    "nominal": int(SECUENCIAS[idx_nominal, 0]),
-                    "sin_ensanchado": int(SECUENCIAS[idx_sin_ens, 0]),
-                    "progreso_sesion": int(SECUENCIAS[idx_ses, 0]),
+                    "cvar": int(secs[idx_cvar, 0]),
+                    "central": int(secs[idx_central, 0]),
+                    "peor": int(secs[idx_peor, 0]),
+                    "media4": int(secs[idx_media4, 0]),
+                    "nominal": int(secs[idx_nominal, 0]),
+                    "sin_ensanchado": int(secs[idx_sin_ens, 0]),
+                    "progreso_sesion": int(secs[idx_ses, 0]),
                 },
                 "puntos_cvar_sec": puntos[idx_cvar].tolist(),
                 "puntos_central_sec": puntos[idx_central].tolist(),
