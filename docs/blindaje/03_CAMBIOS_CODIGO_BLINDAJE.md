@@ -228,3 +228,30 @@ Verificación:
 - **análisis completo** sobre una copia del paquete de octubre;
 - **`kit_vm/comprobar_controladores.py`:** los 8 controladores deciden con los
   vídeos vistos.
+
+## C7. Vídeo nuevo (Tears of Steel), 15/10
+
+- **En el servidor**, con `kit_servidor/preparar_video_nuevo.sh`, salida
+  correcta:
+  - zip oficial con SHA-256 `d87a41de…57a5`;
+  - original 1920×800 a 24 fps;
+  - master de los primeros 600 s a 30 fps;
+  - empaquetado con GPAC 2.5-DEV, la misma versión que los otros MPD;
+  - 150 segmentos de 4 s en cada uno de los 6 niveles.
+- **`perfiles_video/tamanos_segmentos/tears_of_steel_10min_30fps_4s.json`**,
+  extraído desde Windows con el script del material. En los 30 segmentos de una
+  sesión, el coeficiente de variación es 0,28–0,31, frente a 0,05 en Paseo y
+  0,13–0,19 en Blender. Los dos primeros segmentos son casi negros: 2 % del
+  tamaño nominal.
+- **`core/modelo_propio/perfil_video.py`:** se añade `tears_10min_30fps_4s` al
+  mapa de descriptores.
+- **`scripts/1_contenido/extraer_tamanos_reales_segmentos.py`:** la carpeta de
+  salida por defecto subía un nivel menos de la cuenta, tras moverse el script
+  a `scripts/1_contenido`, y escribía en `scripts/perfiles_video`. Corregido.
+
+Verificación:
+- los 8 controladores deciden con los 5 vídeos (`kit_vm/comprobar_controladores.py`);
+- 3 sesiones reales en Windows contra el servidor con Tears of Steel, con 0
+  respaldos; la trayectoria del propio es idéntica a la del simulador;
+- simulador sobre las 100 ventanas de validación: propio − MPC = −0,017
+  [−0,045; +0,013], con 0,01 frente a 0,12 paradas por sesión.
