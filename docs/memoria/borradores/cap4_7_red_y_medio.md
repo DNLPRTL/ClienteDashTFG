@@ -123,9 +123,9 @@ comparativa en una entre variantes propias sin respaldo bibliográfico. El
 efecto de la diferencia está además acotado: la media real por
 representación coincide con la nominal (desviación del 0,4%), de modo que el
 supuesto nominal no está sesgado, solo ignora la varianza entre segmentos; y
-los resultados del capítulo 6, donde la variante robusta del MPC empata en
-calidad media con el controlador propio en las dos evaluaciones, confirman
-que la comparativa no deja indefensos a los clásicos.
+el resultado del capítulo 6, donde la variante robusta del MPC empata en
+calidad media con el controlador propio, confirma que la comparativa no deja
+indefensos a los clásicos.
 
 La Figura 4.6 resume los dos planos y su independencia.
 
@@ -191,16 +191,12 @@ evaluación.)*
   descriptor por el planificador se desarrolla en 5.6/5.7.
 - Longitud: ~950 palabras (apartado denso; es la aportación metodológica).
 
-**Cambios del 14/10 (segunda evaluación), para pasarlos a Word**
+**Cambio del 14/10, para pasarlo a Word**
 
 1. Primer párrafo de "La red": "(entrenamiento, prueba o evaluación)" pasa a
    "(entrenamiento, validación o evaluación)". En el catálogo la segunda
-   partición se llama `test`, pero en el entrenamiento hace de validación
-   (rol "validacion" en `entrenamiento/corpus_trazas/muestreo.py`), y así la
-   llaman el 5.6 y el 5.7. Un solo nombre en toda la memoria.
-2. Final del párrafo de la asimetría informativa: "el resultado del capítulo
-   6, donde la variante robusta del MPC empata en calidad media con el
-   controlador propio, confirma" pasa a "los resultados del capítulo 6, donde
-   la variante robusta del MPC empata en calidad media con el controlador
-   propio en las dos evaluaciones, confirman". El empate se cumple en las
-   dos (Δ +0,063, p = 0,15; Δ −0,009, p = 0,064).
+   partición se llama `test`, pero en el entrenamiento hace de validación, y
+   así la llaman el 5.6 y el 5.7: un solo nombre en toda la memoria.
+2. PENDIENTE del experimento final: la frase "el resultado del capítulo 6,
+   donde la variante robusta del MPC empata en calidad media con el
+   controlador propio" se revisa con sus resultados.

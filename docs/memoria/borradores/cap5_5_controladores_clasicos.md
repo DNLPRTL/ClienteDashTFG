@@ -49,8 +49,8 @@ decisión deja un registro diagnóstico local (motivo, señales y valores
 intermedios) que sirve para depurar y para las pruebas, pero que no forma
 parte de la telemetría. Ningún controlador clásico usa aleatoriedad: ante la
 misma realimentación y el mismo estado interno, la decisión es siempre la
-misma. En las dos evaluaciones del capítulo 6, los cuatro comparados se
-ejecutaron con sus parámetros por defecto, sin ajuste alguno.
+misma. En la evaluación del capítulo 6 los cuatro comparados se ejecutaron
+con sus parámetros por defecto, sin ajuste alguno.
 
 **Controlador basado en tasa.** Reproduce la adaptación dirigida por el
 receptor de Liu et al. \cite{liu2011rateAdaptation}: medir el throughput de
@@ -264,17 +264,13 @@ información del contrato que utiliza cada uno.*
   es el párrafo de estructura común (fúndelo con la intro); no recortes las
   desviaciones declaradas.
 
-**Cambios del 14/10 (segunda evaluación), para pasarlos a Word**
+**Cambio del 14/10, para pasarlo a Word**
 
-1. Estructura común, última frase: "En la evaluación del capítulo 6 los
-   cuatro comparados..." pasa a "En las dos evaluaciones del capítulo 6, los
-   cuatro comparados...".
-2. MPC robusto, última frase: "Este controlador es la referencia de la
+1. MPC robusto, última frase: "Este controlador es la referencia de la
    comparativa del capítulo 6 por ser el comparador clásico más exigente"
    pasa a "Este controlador es la referencia de la comparativa del capítulo
-   6, fijada antes de evaluar, por ser el más elaborado de los clásicos: es
-   el único que corrige su predicción con sus propios errores". Motivo: "más
-   exigente" se lee como "el que mejor resultado da", y en la primera
-   evaluación el basado en tasa tuvo más QoE media que el MPC robusto (1,970
-   frente a 1,947). La referencia se fijó por diseño (está fijada en el
-   código del análisis), no por resultado.
+   6, fijada antes de evaluar, por ser el más elaborado de los clásicos: es el
+   único que corrige su predicción con sus propios errores". Motivo: "más
+   exigente" se lee como "el que mejor resultado da", algo que depende de las
+   ventanas; la referencia se fijó por diseño (está fijada en el código del
+   análisis), no por resultado.

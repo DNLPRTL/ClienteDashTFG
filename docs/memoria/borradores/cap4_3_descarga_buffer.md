@@ -64,8 +64,8 @@ descargados y el motor de reproducción los consume a velocidad real. Sobre ese
 esquema se imponen dos reglas:
 
 - **Tope de ocupación (60 s):** antes de descargar cada segmento, el cliente
-  consulta la ocupación del buffer; si supera el máximo, espera en pasos de
-  0,5 segundos hasta bajar del umbral. El tope acota el consumo de memoria y
+  consulta la ocupación del buffer; si supera el máximo, espera en pasos
+  cortos (0,5 s por defecto, 0,01 s en la evaluación) hasta bajar del umbral. El tope acota el consumo de memoria y
   de red, y evita que un controlador conservador "resuelva" la sesión
   descargándolo todo por adelantado: con el buffer limitado, todos los
   controladores se enfrentan al mismo compromiso entre calidad y riesgo de
@@ -89,7 +89,7 @@ del buffer con sus umbrales.
 | Parámetro | Valor por defecto usado en el capítulo 6 | Función que desempeña |
 |---|---|---|
 | Límite del buffer | 60 s | Máxima ocupación posible, si se supera se pausa la descarga |
-| Paso de espera | 0,5 s | Tiempo de espera cuando el buffer se llena |
+| Paso de espera | 0,5 s (0,01 s en la evaluación) | Tiempo de espera cuando el buffer se llena |
 | Tiempo máximo por petición | 10 s | Tiempo para las peticiones colgadas |
 | Reintentos de transporte | 3 | Reintento inmediato en una misma petición |
 | Intentos por segmento | 6 | Si se agotan, se baja la calidad |
@@ -131,3 +131,11 @@ superar el límite de 60 segundos).*
   espera min(0.5·2^n, 10). Los tres primeros vienen de config.reproduccion /
   config.descargador (configurables por sesión).
 - Longitud: ~800 palabras.
+
+**Cambio del 14/10 (errata ya avisada en el 5.4), para pasarlo a Word**
+
+1. El lanzador de la evaluación fija el paso de espera en 0,01 s (en todas
+   las sesiones), no en el 0,5 s por defecto del cliente. Texto: "espera en
+   pasos de 0,5 segundos" pasa a "espera en pasos cortos (0,5 s por defecto,
+   0,01 s en la evaluación)"; Tabla 4.3, fila "Paso de espera": "0,5 s" pasa
+   a "0,5 s (0,01 s en la evaluación)".

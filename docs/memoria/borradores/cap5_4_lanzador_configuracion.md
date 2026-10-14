@@ -18,8 +18,8 @@
 El apartado 4.8 definió el plan de experimento y la separación entre ejecutar
 sesiones y evaluarlas. Este apartado describe el software que lo lleva a la
 práctica: la capa de configuración, con sus dos niveles; el lanzador, que
-convierte un experimento declarado en un paquete de evidencia; y su interfaz
-gráfica.
+convierte un experimento declarado en un paquete de evidencia; y la interfaz
+gráfica desde la que se lanzó la evaluación final.
 
 **Dos niveles de configuración.** El sistema distingue la configuración de
 una sesión de la configuración de un experimento. La primera es la que
@@ -42,15 +42,14 @@ mediante una mezcla profunda, clave a clave. Sus secciones fijan las rutas
 (catálogo de trazas, raíz de salida, repositorio e intérprete, y una lista de
 reescrituras de rutas para mover el corpus entre máquinas), el experimento
 (preset, semilla, motor, controladores, perfiles de vídeo, inclusión de
-ventanas sintéticas y repeticiones), los parámetros de reproducción y de
+ventanas sintéticas, repeticiones y grupos de captura excluidos del sorteo),
+los parámetros de reproducción y de
 emulación que recibirán todas las sesiones, las opciones de ejecución (tiempo
 límite por sesión, reanudación, si se ejecutan sesiones y análisis) y los
-parámetros específicos de cada controlador. El fichero real de la primera
-evaluación del capítulo 6 ocupa 39 líneas: declara los cinco controladores,
-el preset, las rutas y los parámetros del controlador propio; todo lo demás
-son valores por defecto documentados en el código. La segunda evaluación usa
-el mismo fichero con dos rutas cambiadas: la del catálogo de trazas y la de
-salida.
+parámetros específicos de cada controlador. El fichero real de la evaluación
+final declara los cinco controladores, el preset, la semilla, las rutas, los
+parámetros del controlador propio y la lista de grupos de captura excluidos
+del sorteo; todo lo demás son valores por defecto documentados en el código.
 
 **Presets: el tamaño del experimento en una palabra.** Un preset es una
 especificación cerrada del tamaño y las condiciones de un experimento
@@ -62,9 +61,9 @@ escalera: los tres primeros son pruebas de humo y diagnóstico y no habilitan
 comparación alguna; los tres últimos sí, y solo con el motor simulado. El
 preset sobrescribe los parámetros de reproducción y emulación que le
 corresponden, y su especificación efectiva queda escrita en el protocolo del
-paquete. Las dos evaluaciones del capítulo 6 emplearon el preset final de la
-tabla, cuyo producto (15 ventanas, cuatro vídeos y cinco controladores) da
-300 sesiones en cada una.
+paquete. La evaluación del capítulo 6 empleó el preset final de la tabla,
+cuyo producto (15 ventanas, cuatro vídeos y cinco controladores) da las 300
+sesiones de su paquete.
 
 **[TABLA 5.4 — Presets de evaluación]**
 
@@ -74,7 +73,7 @@ tabla, cuyo producto (15 ventanas, cuatro vídeos y cinco controladores) da
 | `rapido` | 8 | 2 | 1 | 30 | 300 s | No |
 | `comparativa` | 12 | 3 | 1 | 30 | 300 s | Sí |
 | `equilibrado` | 24 | 4 | 2 | 30 | 300 s | Sí |
-| `tfg_final` (evaluaciones del capítulo 6) | 12 | 3 | 4 | 30 | 300 s | Sí |
+| `tfg_final` (evaluación final) | 12 | 3 | 4 | 30 | 300 s | Sí |
 | `extendido` | 48 | 8 | 4 | 30 | 300 s | Sí |
 
 *Pie: Tabla 5.4: Presets de evaluación definidos en el sistema. El tiempo
@@ -129,7 +128,8 @@ analizar o verificar un paquete existente sin ejecutar nada.
 **Selección de ventanas de red.** La selección determinista descrita en el
 apartado 4.8 se implementa en tres pasos. Se filtran las trazas candidatas:
 partición de evaluación, marcadas como utilizables y con duración suficiente
-para la ventana; las reales deben superar además un suelo mínimo de
+para la ventana; las reales deben pertenecer a un grupo de captura no
+excluido por la configuración y superar además un suelo mínimo de
 throughput medio y máximo, para que la sesión tenga sentido frente a la
 escalera de calidades. Se agrupan por procedencia y carácter (conjunto de
 datos, semántica, condición de red y un tramo de dificultad derivado del
@@ -141,11 +141,10 @@ procedencia. El instante inicial de cada ventana dentro de su traza también
 se deriva de la semilla, en múltiplos del intervalo de decisión, de modo que
 dos ejecuciones con la misma semilla y el mismo catálogo producen exactamente
 las mismas ventanas. Las sintéticas se seleccionan aparte, con una semilla
-derivada, y quedan etiquetadas como diagnóstico. Esta construcción permite
-obtener ventanas nuevas sin tocar el código: basta una copia del catálogo en
-la que los grupos de captura ya evaluados quedan marcados como no
-utilizables. Así se obtuvieron las ventanas de la segunda evaluación del
-capítulo 6.
+derivada, y quedan etiquetadas como diagnóstico. La evaluación final excluyó
+del sorteo todos los grupos de captura usados durante el desarrollo, de modo
+que ninguna de sus 12 ventanas reales se había ejecutado antes; la lista de
+grupos excluidos queda escrita en el protocolo del paquete.
 
 **Inyección del vídeo por sesión.** El catálogo de perfiles de vídeo asocia
 a cada identificador la URL de su manifiesto, la duración de segmento y su
@@ -156,7 +155,7 @@ modelo sirve a los cuatro vídeos del experimento: cambia el dato que
 describe el contenido, no el modelo (apartado 5.6).
 
 **La interfaz gráfica.** El lanzador tiene una interfaz gráfica mínima,
-construida con `tkinter`. Ofrece el
+construida con `tkinter`, con la que se lanzó la evaluación final. Ofrece el
 preset, una casilla por controlador registrado, los botones de ejecutar y
 detener y una barra de progreso. Muestra en todo momento la orden exacta que
 va a ejecutar: la interfaz no hace nada que no pueda hacerse desde la línea
@@ -246,22 +245,23 @@ clásicos.)*
 - Longitud: ~1250 palabras. Recortables al masticar: el párrafo de la
   interfaz gráfica (a tres frases) y los modos auxiliares del lanzador.
 
-**Cambios del 14/10 (segunda evaluación), para pasarlos a Word**
+**Cambios del 14/10 (versión final del código), para pasarlos a Word**
 
-1. Introducción: "y la interfaz gráfica desde la que se lanzó la evaluación
-   final" pasa a "y su interfaz gráfica". La segunda evaluación se lanzó
-   desde la línea de órdenes, así que la interfaz no se asocia a ninguna.
-2. Configuración de la evaluación: "El fichero real de la evaluación final
-   ocupa cuarenta líneas" pasa a "El fichero real de la primera evaluación
-   del capítulo 6 ocupa 39 líneas" (contadas: 39), y se añade al final del
-   párrafo: "La segunda evaluación usa el mismo fichero con dos rutas
-   cambiadas: la del catálogo de trazas y la de salida."
-3. Presets: "La evaluación del capítulo 6 empleó el preset final de la
-   tabla, cuyo producto (...) da las 300 sesiones del paquete canónico" pasa
-   a "Las dos evaluaciones del capítulo 6 emplearon el preset final de la
-   tabla, cuyo producto (...) da 300 sesiones en cada una". En la T5.4, la
-   fila pasa a "`tfg_final` (evaluaciones del capítulo 6)".
-4. Selección de ventanas: se añaden al final dos frases sobre cómo se
-   obtuvieron las ventanas nuevas (copia del catálogo con los grupos ya
-   evaluados marcados como no utilizables).
-5. Interfaz gráfica: se quita "con la que se lanzó la evaluación final".
+1. Configuración de la evaluación: en la lista del experimento se añaden "los
+   grupos de captura excluidos del sorteo"; y "El fichero real de la
+   evaluación final ocupa cuarenta líneas: declara los cinco controladores,
+   el preset, las rutas y los parámetros del controlador propio" pasa a "El
+   fichero real de la evaluación final declara los cinco controladores, el
+   preset, la semilla, las rutas, los parámetros del controlador propio y la
+   lista de grupos de captura excluidos del sorteo" (ya no ocupa cuarenta
+   líneas: la lista añade 27 grupos).
+2. Presets: "las 300 sesiones del paquete canónico" pasa a "las 300 sesiones
+   de su paquete".
+3. Selección de ventanas: el filtro añade "las reales deben pertenecer a un
+   grupo de captura no excluido por la configuración", y al final del párrafo
+   va la frase metodológica: la evaluación final excluyó del sorteo todos los
+   grupos usados durante el desarrollo, de modo que ninguna de sus 12
+   ventanas reales se había ejecutado antes, y la lista queda en el
+   protocolo del paquete.
+4. La interfaz gráfica: sin cambios; el experimento final se lanzó desde
+   ella.
