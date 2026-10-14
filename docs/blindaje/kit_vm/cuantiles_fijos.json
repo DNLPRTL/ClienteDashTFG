@@ -1,0 +1,48 @@
+{
+  "cuantiles": [
+    0.1,
+    0.25,
+    0.5,
+    0.75
+  ],
+  "dataset": "datos_entrenamiento.jsonl",
+  "descripcion": "cuantil empirico de log(throughput futuro / media armonica) por horizonte",
+  "generado": "2026-10-14T17:00:52.626360+00:00",
+  "horizonte_segmentos": 5,
+  "id_esquema": "cuantiles_fijos_log_ratio_v1",
+  "num_muestras": 474150,
+  "num_muestras_sin_historial_descartadas": 16350,
+  "sha256_dataset": "eccc5f0c692644a5a6ca62583d53a73c1478d57c2a9155a90d5cb1b66dbeb1bb",
+  "valores_log_ratio_por_horizonte_y_cuantil": [
+    [
+      -0.3046637653,
+      -0.039807507,
+      -0.0,
+      0.09205113949999999
+    ],
+    [
+      -0.608978176,
+      -0.11476961399999999,
+      0.0,
+      0.082575176
+    ],
+    [
+      -0.7980057344999999,
+      -0.16247980350000002,
+      0.0,
+      0.0866067285
+    ],
+    [
+      -0.8975471750999999,
+      -0.188337039,
+      0.0,
+      0.086557141
+    ],
+    [
+      -0.9745915111,
+      -0.207813815,
+      0.0,
+      0.08360829875
+    ]
+  ]
+}

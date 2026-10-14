@@ -164,3 +164,67 @@ Verificación:
 - `core/evaluacion/analisis.py`: la compuerta de inferencia auditada solo
   exige inferencia a las variantes con red (`controlador_propio`,
   `propio_mediana`). La de respaldo sigue para todas.
+
+## C6. Selección, plan, ejecución y análisis del experimento final, 14/10 noche
+
+- **`core/evaluacion/catalogo.py`:**
+  - vídeo nuevo `tears_10min_30fps_4s` (Tears of Steel, CC-BY 3.0);
+  - presets `previa_vm` y `final_blindaje`. La prueba corta usa 10 ventanas de
+    validación. El final usa todas las ventanas relevantes de eval, más 3
+    sintéticas.
+
+  En los dos:
+  - ventanas de 160 s con bucle de seguridad (`politica_fin = loop`,
+    `max_bucles = 1`);
+  - filtro de Pensieve sobre la ventana;
+  - un vídeo visto en rotación más el nuevo en cada ventana;
+  - orden de los controladores sorteado en cada escenario.
+- **`core/evaluacion/seleccion.py`:**
+  - partición configurable por preset;
+  - filtro de Pensieve calculado sobre la ventana (media < 6 Mbit/s y mínimo
+    > 0,2 Mbit/s), con las mismas funciones de carga que la emulación;
+  - opción "todas";
+  - estadísticas de cada ventana en el protocolo;
+  - las exclusiones también se aplican a las sintéticas.
+
+  Los presets antiguos no cambian.
+- **`scripts/3_evaluacion/ejecutar_evaluacion.py`:**
+  - política de fin del preset;
+  - asignación de vídeos por ventana;
+  - orden sorteado con semilla;
+  - hipótesis copiadas al protocolo antes de ejecutar;
+  - opción `--paralelo` / `sesiones_en_paralelo`. Por defecto 1, como siempre;
+    **no se usa**, porque el final va en serie.
+- **`core/evaluacion/contrastes.py`, nuevo.** Contrastes prerregistrados:
+  - **P1:** QoE equivalente al MPC robusto, TOST con margen ±0,15;
+  - **P2:** menos paradas que el MPC;
+  - **P3:** menos paradas que los cuantiles recientes;
+  - **P4:** más QoE que los cuantiles fijos;
+  - **P5:** menos paradas que la mediana.
+
+  Métodos:
+  - prueba del signo exacta sobre las medias por ventana;
+  - IC por bootstrap de ventanas (10 000 remuestreos);
+  - Holm sobre P1–P5.
+
+  Secundarias:
+  - todas las métricas frente a cada rival;
+  - estratos Oboe/FCC y visto/nuevo;
+  - interacción de contenido.
+
+  `analisis.py` escribe `contrastes_prerregistrados.json` y `.md`.
+- **`config/evaluacion.local.json`:**
+  - los 8 controladores, con los parámetros de las variantes;
+  - preset `final_blindaje`;
+  - los 42 grupos ya usados en desarrollo, excluidos: 39 reales y las 3
+    sintéticas.
+
+Verificación:
+- **planes en seco:**
+  - `previa_vm` da 10 ventanas: FCC 5, Oboe 4, NYU 1;
+  - `final_blindaje` da 74 + 3 ventanas y 1208 sesiones;
+- **tests:** `pruebas/test_contrastes.py`, con datos sintéticos de resultado
+  conocido;
+- **análisis completo** sobre una copia del paquete de octubre;
+- **`kit_vm/comprobar_controladores.py`:** los 8 controladores deciden con los
+  vídeos vistos.

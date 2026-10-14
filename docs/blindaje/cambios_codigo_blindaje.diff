@@ -1,3 +1,182 @@
+diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/config/evaluacion.local.json "TFG Material/01_codigo/ClienteDashTFG/config/evaluacion.local.json"
+--- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/config/evaluacion.local.json	2026-10-14 12:34:30.845993800 +0200
++++ "TFG Material/01_codigo/ClienteDashTFG/config/evaluacion.local.json"	2026-10-14 19:36:08.433975000 +0200
+@@ -1,68 +1,107 @@
+-{
+-  "nombres_visibles_controladores": {
+-    "controlador_propio": "Controlador propio"
+-  },
+-  "parametros_controladores": {
+-    "controlador_propio": {
+-      "dir_bundle": "/home/daniel/TFG/modelos/modelo_propio/bundle",
+-      "id_perfil_video": "paseo_almunecar_10min_30fps_4s",
+-      "alfa_riesgo": 0.75,
+-      "solo_diagnostico": false,
+-      "controlador_respaldo": "mpc_robusto",
+-      "latencia_max_inferencia_ms": 50.0,
+-      "verificar_hashes": true
+-    }
+-  },
+-  "experimento": {
+-    "controladores": [
+-      "basado_en_tasa",
+-      "bba",
+-      "bola",
+-      "mpc_robusto",
+-      "controlador_propio"
+-    ],
+-    "motor": "simulado",
+-    "incluir_diagnostico_sintetico": true,
+-    "ids_perfiles_video": [],
+-    "preset": "tfg_final",
+-    "repeticiones": 1,
+-    "semilla": 606,
+-    "grupos_fuga_excluidos": [
+-      "fcc_measuring_broadband_america:unit_10678",
+-      "fcc_measuring_broadband_america:unit_25017861",
+-      "fcc_measuring_broadband_america:unit_32833341",
+-      "fcc_measuring_broadband_america:unit_38713769",
+-      "fcc_measuring_broadband_america:unit_3894081",
+-      "fcc_measuring_broadband_america:unit_40518949",
+-      "fcc_measuring_broadband_america:unit_40730021",
+-      "fcc_measuring_broadband_america:unit_55518785",
+-      "fcc_measuring_broadband_america:unit_626768",
+-      "fcc_measuring_broadband_america:unit_80213901",
+-      "fcc_measuring_broadband_america:unit_806200",
+-      "fcc_measuring_broadband_america:unit_82066621",
+-      "fcc_measuring_broadband_america:unit_82067161",
+-      "fcc_measuring_broadband_america:unit_999461",
+-      "ghent_4g_lte:bus",
+-      "lumos5g:run_110",
+-      "lumos5g:run_12",
+-      "norway_hsdpa_umass:car.oslo-grimstad",
+-      "norway_hsdpa_umass:train.vestby-oslo",
+-      "nyu_mets:Lumos5G, UCC 4G LTE, UCC 5G, NYU‑METS/NYU-METS/Dataset/Dataset_1/Dataset/Bus_B57",
+-      "nyu_mets:Lumos5G, UCC 4G LTE, UCC 5G, NYU‑METS/NYU-METS/Dataset/Dataset_1/Dataset/Car",
+-      "puffer_stanford:session_2c5bf1012a75",
+-      "puffer_stanford:session_9a29089c5822",
+-      "roma_4g_nbiot_5g_nsa:Speedtest_Campaign_5:Op2:OW",
+-      "ucc_4g_lte_beyond_throughput:beyond_throughput_4g_lte/pedestrian",
+-      "ucc_4g_lte_beyond_throughput:beyond_throughput_4g_lte/train",
+-      "ucc_5g_beyond_throughput:Lumos5G, UCC 4G LTE, UCC 5G, NYU‑METS/UCC 5G Beyond Throughput, The Next Generation/5G-production-dataset/Netflix/Driving/Season3-StrangerThings"
+-    ]
+-  },
+-  "rutas": {
+-    "ruta_catalogo": "/home/daniel/TFG/catalogo_trazas.json",
+-    "raiz_salida": "/home/daniel/TFG/validacion_comparativa",
+-    "raiz_repo": "/home/daniel/TFG/ClienteDashTFG",
+-    "python": "python3",
+-    "reescrituras_rutas_trazas": []
+-  },
+-  "version_esquema": "config_evaluacion_v1"
+-}
++{
++  "parametros_controladores": {
++    "controlador_propio": {
++      "dir_bundle": "/home/daniel/TFG/modelos/modelo_propio/bundle",
++      "alfa_riesgo": 0.75,
++      "solo_diagnostico": false,
++      "controlador_respaldo": "mpc_robusto",
++      "latencia_max_inferencia_ms": 50.0,
++      "verificar_hashes": true
++    },
++    "propio_mediana": {
++      "dir_bundle": "/home/daniel/TFG/modelos/modelo_propio/bundle",
++      "alfa_riesgo": 0.75,
++      "solo_diagnostico": false,
++      "controlador_respaldo": "mpc_robusto",
++      "latencia_max_inferencia_ms": 50.0,
++      "verificar_hashes": true
++    },
++    "propio_cuantiles_recientes": {
++      "dir_bundle": "/home/daniel/TFG/modelos/modelo_propio/bundle",
++      "alfa_riesgo": 0.75,
++      "solo_diagnostico": false,
++      "controlador_respaldo": "mpc_robusto",
++      "latencia_max_inferencia_ms": 50.0,
++      "verificar_hashes": true
++    },
++    "propio_cuantiles_fijos": {
++      "dir_bundle": "/home/daniel/TFG/modelos/modelo_propio/bundle",
++      "alfa_riesgo": 0.75,
++      "solo_diagnostico": false,
++      "controlador_respaldo": "mpc_robusto",
++      "latencia_max_inferencia_ms": 50.0,
++      "verificar_hashes": true,
++      "ruta_cuantiles_fijos": "/home/daniel/TFG/modelos/cuantiles_fijos/cuantiles_fijos.json"
++    }
++  },
++  "experimento": {
++    "controladores": [
++      "basado_en_tasa",
++      "bba",
++      "bola",
++      "mpc_robusto",
++      "controlador_propio",
++      "propio_mediana",
++      "propio_cuantiles_recientes",
++      "propio_cuantiles_fijos"
++    ],
++    "motor": "simulado",
++    "incluir_diagnostico_sintetico": true,
++    "ids_perfiles_video": [],
++    "preset": "final_blindaje",
++    "repeticiones": 1,
++    "semilla": 606,
++    "grupos_fuga_excluidos": [
++      "fcc_measuring_broadband_america:unit_1009534",
++      "fcc_measuring_broadband_america:unit_10678",
++      "fcc_measuring_broadband_america:unit_25017861",
++      "fcc_measuring_broadband_america:unit_32833341",
++      "fcc_measuring_broadband_america:unit_3708505",
++      "fcc_measuring_broadband_america:unit_37782773",
++      "fcc_measuring_broadband_america:unit_38713769",
++      "fcc_measuring_broadband_america:unit_3880549",
++      "fcc_measuring_broadband_america:unit_3894081",
++      "fcc_measuring_broadband_america:unit_39536189",
++      "fcc_measuring_broadband_america:unit_40518949",
++      "fcc_measuring_broadband_america:unit_40730021",
++      "fcc_measuring_broadband_america:unit_55458445",
++      "fcc_measuring_broadband_america:unit_55518785",
++      "fcc_measuring_broadband_america:unit_55789709",
++      "fcc_measuring_broadband_america:unit_626768",
++      "fcc_measuring_broadband_america:unit_80213901",
++      "fcc_measuring_broadband_america:unit_80214061",
++      "fcc_measuring_broadband_america:unit_806200",
++      "fcc_measuring_broadband_america:unit_82066621",
++      "fcc_measuring_broadband_america:unit_82067161",
++      "fcc_measuring_broadband_america:unit_999461",
++      "ghent_4g_lte:bus",
++      "lumos5g:run_110",
++      "lumos5g:run_12",
++      "lumos5g:run_89",
++      "norway_hsdpa_umass:car.oslo-grimstad",
++      "norway_hsdpa_umass:train.vestby-oslo",
++      "nyu_mets:Lumos5G, UCC 4G LTE, UCC 5G, NYU‑METS/NYU-METS/Dataset/Dataset_1/Dataset/Bus_B57",
++      "nyu_mets:Lumos5G, UCC 4G LTE, UCC 5G, NYU‑METS/NYU-METS/Dataset/Dataset_1/Dataset/Car",
++      "nyu_mets:Lumos5G, UCC 4G LTE, UCC 5G, NYU‑METS/NYU-METS/Sample_Traces",
++      "puffer_stanford:session_2c5bf1012a75",
++      "puffer_stanford:session_9a29089c5822",
++      "puffer_stanford:session_be541e3f9ea3",
++      "roma_4g_nbiot_5g_nsa:Speedtest_Campaign_5:Op2:OW",
++      "synthetic_controlled_network:synthetic_high_jitter:0028",
++      "synthetic_controlled_network:synthetic_periodic_oscillation:0010",
++      "synthetic_controlled_network:synthetic_stable_low:0063",
++      "ucc_4g_lte_beyond_throughput:beyond_throughput_4g_lte/pedestrian",
++      "ucc_4g_lte_beyond_throughput:beyond_throughput_4g_lte/train",
++      "ucc_5g_beyond_throughput:Lumos5G, UCC 4G LTE, UCC 5G, NYU‑METS/UCC 5G Beyond Throughput, The Next Generation/5G-production-dataset/Netflix/Driving/Season3-StrangerThings",
++      "ucc_5g_beyond_throughput:Lumos5G, UCC 4G LTE, UCC 5G, NYU‑METS/UCC 5G Beyond Throughput, The Next Generation/5G-production-dataset/Netflix/Driving/animated-RickandMorty"
++    ]
++  },
++  "rutas": {
++    "ruta_catalogo": "/home/daniel/TFG/catalogo_trazas.json",
++    "raiz_salida": "/home/daniel/TFG/validacion_comparativa",
++    "raiz_repo": "/home/daniel/TFG/ClienteDashTFG",
++    "python": "python3",
++    "reescrituras_rutas_trazas": []
++  },
++  "version_esquema": "config_evaluacion_v1"
++}
 diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/controladores/constructor_entradas.py "TFG Material/01_codigo/ClienteDashTFG/core/controladores/constructor_entradas.py"
 --- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/controladores/constructor_entradas.py	2026-10-14 12:33:28.245661000 +0200
 +++ "TFG Material/01_codigo/ClienteDashTFG/core/controladores/constructor_entradas.py"	2026-10-14 19:01:22.743633100 +0200
@@ -1342,9 +1521,13 @@ diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20
 +        return tasa
 diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/evaluacion/analisis.py "TFG Material/01_codigo/ClienteDashTFG/core/evaluacion/analisis.py"
 --- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/evaluacion/analisis.py	2026-08-07 10:23:10.550727500 +0200
-+++ "TFG Material/01_codigo/ClienteDashTFG/core/evaluacion/analisis.py"	2026-10-14 19:12:26.972637600 +0200
-@@ -18,6 +18,9 @@
++++ "TFG Material/01_codigo/ClienteDashTFG/core/evaluacion/analisis.py"	2026-10-14 19:39:03.448473400 +0200
+@@ -16,8 +16,13 @@
+     FICHERO_TELEMETRIA_SEGMENTOS,
+ )
  
++from core.evaluacion.contrastes import contrastes_prerregistrados  # noqa: E402
++
  ALIAS_REFERENCIA_CANDIDATOS = ("mpc_robusto", "base_mpc_robusto")
  PREFIJOS_PROPIOS = ("controlador_propio", "propio")
 +# Variantes del propio que infieren con la red en cada decision; las "sin red" no tienen
@@ -1353,7 +1536,21 @@ diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20
  FICHERO_MANIFIESTO_GRAFICAS = "graficas.json"
  
  
-@@ -189,7 +192,11 @@
+@@ -49,6 +54,13 @@
+     estadistica = estadistica_pareada(resumenes)
+     gates = evaluar_gates(protocolo, sesiones, resumenes)
+     ranking = construir_ranking(agregados, estadistica, gates)
++    contrastes = contrastes_prerregistrados(resumenes, protocolo.get("hipotesis"))
++    (dir_resultados / "contrastes_prerregistrados.json").write_text(
++        json.dumps(contrastes, indent=2, sort_keys=True), encoding="utf-8"
++    )
++    (dir_resultados / "contrastes_prerregistrados.md").write_text(
++        render_markdown_contrastes(contrastes), encoding="utf-8"
++    )
+ 
+     paquete = {
+         "version_esquema": "resultados_evaluacion_v1",
+@@ -189,7 +201,11 @@
      diagnostic_rows = sum(
          1 for fila in filas_evaluables if _int(fila.get("feedback_red_solo_diagnostico")) > 0
      )
@@ -1366,7 +1563,7 @@ diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20
      transiciones = max(1, int(qoe_lineal.num_segmentos) - 1)
  
      resumen.update(
-@@ -527,7 +534,10 @@
+@@ -527,7 +543,10 @@
              _int(fila.get("num_segmentos")) <= 0
              or _int(fila.get("num_filas_sin_auditoria_red")) > 0
              or _int(fila.get("num_filas_exito_red")) != _int(fila.get("num_segmentos"))
@@ -1378,7 +1575,56 @@ diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20
          )
      ]
      violaciones_antiguas = [
-@@ -1242,7 +1252,7 @@
+@@ -1016,6 +1035,48 @@
+     return "\n".join(lineas) + "\n"
+ 
+ 
++def render_markdown_contrastes(contrastes: Mapping[str, Any]) -> str:
++    lineas = ["# Contrastes prerregistrados", ""]
++    hip = _mapa(contrastes.get("hipotesis"))
++    lineas.append(
++        "Referencia: `{0}`. Unidad: {1}. Intervalos: {2}. Multiplicidad: {3}.".format(
++            hip.get("referencia", ""), hip.get("unidad", ""), hip.get("intervalos", ""), hip.get("multiplicidad", "")
++        )
++    )
++    lineas += ["", "## Hipotesis principales", "",
++               "| Id | Hipotesis | Media dif. | IC95 | IC90 | Ventanas +/-/= | p | p Holm | Se acepta |",
++               "|---|---|---|---|---|---|---|---|---|"]
++    for clave, h in sorted(_mapa(contrastes.get("principales")).items()):
++        aceptada = bool(h.get("rechazada_nula"))
++        if h.get("tipo") == "equivalencia":
++            aceptada = aceptada and bool(h.get("equivalente_ic90"))
++        lineas.append(
++            "| {0} | {1} | {2:+.3f} | [{3:+.3f}; {4:+.3f}] | [{5:+.3f}; {6:+.3f}] | {7}/{8}/{9} | {10:.4f} | {11:.4f} | {12} |".format(
++                clave, h.get("texto", ""), _float(h.get("media_diferencia")), _float(h["ic95"][0]), _float(h["ic95"][1]),
++                _float(h["ic90"][0]), _float(h["ic90"][1]), h.get("ventanas_positivas", 0), h.get("ventanas_negativas", 0),
++                h.get("ventanas_empate", 0), _float(h.get("p_valor"), 1.0), _float(h.get("p_holm"), 1.0),
++                "si" if aceptada else "no",
++            )
++        )
++    lineas += ["", "## Secundarias (propio - rival; IC95 por bootstrap de ventanas)", "",
++               "| Rival | Metrica | Media dif. | IC95 | p signo bilateral |", "|---|---|---|---|---|"]
++    for rival, metricas in sorted(_mapa(contrastes.get("secundarias")).items()):
++        for metrica, c in metricas.items():
++            if not c.get("n_ventanas"):
++                continue
++            lineas.append("| {0} | {1} | {2:+.3f} | [{3:+.3f}; {4:+.3f}] | {5:.4f} |".format(
++                rival, metrica, _float(c.get("media_diferencia")), _float(c["ic95"][0]), _float(c["ic95"][1]),
++                _float(c.get("p_valor_bilateral"), 1.0)))
++    inter = _mapa(contrastes.get("contenido_nuevo_frente_a_visto"))
++    if inter.get("n_ventanas"):
++        lineas += ["", "## Contenido nuevo frente a visto",
++                   "", "(propio - MPC robusto) con el video nuevo menos con el visto, por ventana: "
++                   "{0:+.3f}, IC95 [{1:+.3f}; {2:+.3f}], {3} ventanas.".format(
++                       _float(inter.get("media_diferencia")), _float(inter["ic95"][0]), _float(inter["ic95"][1]),
++                       inter.get("n_ventanas"))]
++    return "\n".join(lineas) + "\n"
++
++
+ def render_conclusiones_tecnicas(paquete: Mapping[str, Any]) -> str:
+     ranking = paquete["ranking"]
+     lineas = [
+@@ -1242,7 +1303,7 @@
      return positive, negative
  
  
@@ -1387,7 +1633,7 @@ diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20
      conteos = {
          "activada": 0,
          "bundle_cargado": 0,
-@@ -1277,7 +1287,7 @@
+@@ -1277,7 +1338,7 @@
              and accion_valida
              and no_respaldo
              and not_diagnostic
@@ -1398,7 +1644,7 @@ diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20
  
 diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/evaluacion/catalogo.py "TFG Material/01_codigo/ClienteDashTFG/core/evaluacion/catalogo.py"
 --- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/evaluacion/catalogo.py	2026-08-07 10:18:15.219006500 +0200
-+++ "TFG Material/01_codigo/ClienteDashTFG/core/evaluacion/catalogo.py"	2026-10-14 19:12:03.901278200 +0200
++++ "TFG Material/01_codigo/ClienteDashTFG/core/evaluacion/catalogo.py"	2026-10-14 19:35:08.878278500 +0200
 @@ -23,6 +23,9 @@
      "mpc": "mpc",
      "mpc_robusto": "mpc_robusto",
@@ -1419,6 +1665,458 @@ diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20
  }
  
  PERFILES_VIDEO = {
+@@ -90,8 +96,30 @@
+         "clase_duracion": "10min",
+         "solo_diagnostico": False,
+     },
++    # Contenido que no se vio en el entrenamiento: Tears of Steel, (CC) Blender Foundation |
++    # mango.blender.org, CC-BY 3.0; primeros 10 minutos a 30 fps, codificado con los mismos scripts.
++    "tears_10min_30fps_4s": {
++        "id_perfil_video": "tears_10min_30fps_4s",
++        "nombre_visible": "Tears of Steel 10 min 30 fps",
++        "mpd_url": (
++            "http://192.168.1.132/dash/Tears_of_Steel_10min_30fps/4sec/"
++            "Tears_of_Steel_10min_30fps_simple_4s.mpd"
++        ),
++        "duracion_segmento_s": 4.0,
++        "clase_duracion": "10min",
++        "solo_diagnostico": False,
++        "contenido_nuevo": True,
++    },
+ }
+ 
++IDS_VIDEOS_VISTOS = (
++    "paseo_10min_30fps_4s",
++    "blender_10min_30fps_4s",
++    "paseo_10min_60fps_4s",
++    "blender_10min_60fps_4s",
++)
++ID_VIDEO_NUEVO = "tears_10min_30fps_4s"
++
+ ESPECIFICACIONES_PRESET = {
+     "diagnostico": {
+         "preset": "diagnostico",
+@@ -175,6 +203,45 @@
+         "tiempo_limite_s": 900.0,
+         "duracion_estimada_sesion_s": 125.0,
+     },
++    # Fase de blindaje. Ventanas relevantes (filtro de Pensieve sobre la ventana de 160 s, con un
++    # bucle de seguridad), cada ventana con un video visto (en rotacion) y el video nuevo, y el
++    # orden de los controladores sorteado en cada escenario.
++    "previa_vm": {
++        "preset": "previa_vm",
++        "particion": "test",
++        "ventanas_reales": 10,
++        "ventanas_sinteticas": 0,
++        "ids_perfiles_video": list(IDS_VIDEOS_VISTOS) + [ID_VIDEO_NUEVO],
++        "asignacion_videos": "visto_rotado_mas_nuevo",
++        "filtro_ventanas": "pensieve",
++        "orden_controladores": "aleatorio",
++        "apto_benchmark": False,
++        "apto_ranking": False,
++        "max_segmentos_video": 30,
++        "duracion_ventana_red_s": 160.0,
++        "politica_fin": "loop",
++        "max_bucles": 1,
++        "tiempo_limite_s": 900.0,
++        "duracion_estimada_sesion_s": 144.0,
++    },
++    "final_blindaje": {
++        "preset": "final_blindaje",
++        "particion": "eval",
++        "ventanas_reales": "todas",
++        "ventanas_sinteticas": 3,
++        "ids_perfiles_video": list(IDS_VIDEOS_VISTOS) + [ID_VIDEO_NUEVO],
++        "asignacion_videos": "visto_rotado_mas_nuevo",
++        "filtro_ventanas": "pensieve",
++        "orden_controladores": "aleatorio",
++        "apto_benchmark": True,
++        "apto_ranking": True,
++        "max_segmentos_video": 30,
++        "duracion_ventana_red_s": 160.0,
++        "politica_fin": "loop",
++        "max_bucles": 1,
++        "tiempo_limite_s": 900.0,
++        "duracion_estimada_sesion_s": 144.0,
++    },
+ }
+ 
+ NOMBRES_PRESET = tuple(ESPECIFICACIONES_PRESET.keys())
+diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/evaluacion/contrastes.py "TFG Material/01_codigo/ClienteDashTFG/core/evaluacion/contrastes.py"
+--- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/evaluacion/contrastes.py	1970-01-01 01:00:00.000000000 +0100
++++ "TFG Material/01_codigo/ClienteDashTFG/core/evaluacion/contrastes.py"	2026-10-14 19:38:39.881577500 +0200
+@@ -0,0 +1,228 @@
++from __future__ import annotations
++
++import math
++import random
++from collections import defaultdict
++from typing import Any, Dict, List, Mapping, Optional, Sequence
++
++# Contrastes prerregistrados de la evaluacion final (fase de blindaje). La unidad de analisis es el
++# escenario (ventana x video) y el bloque es la ventana: las dos sesiones de una ventana comparten
++# red, asi que los intervalos remuestrean ventanas (bootstrap por bloques) y la prueba del signo usa
++# la diferencia media de cada ventana. Las hipotesis principales llevan correccion de Holm.
++
++VERSION_HIPOTESIS = "hipotesis_blindaje_v1"
++MARGEN_EQUIVALENCIA_QOE = 0.15  # 1 s de rebuffering en una sesion de 29 segmentos: 4,3 / 29
++REFERENCIA = "controlador_propio"
++REMUESTREOS_BOOTSTRAP = 10000
++SEMILLA_BOOTSTRAP = 2026
++
++HIPOTESIS_PRINCIPALES = (
++    {"id": "P1", "rival": "mpc_robusto", "metrica": "qoe_lineal_media", "tipo": "equivalencia",
++     "texto": "QoE equivalente a la del MPC robusto (margen +-0,15)"},
++    {"id": "P2", "rival": "mpc_robusto", "metrica": "num_stalls", "tipo": "menor",
++     "texto": "menos paradas por sesion que el MPC robusto"},
++    {"id": "P3", "rival": "propio_cuantiles_recientes", "metrica": "num_stalls", "tipo": "menor",
++     "texto": "menos paradas que la variante sin red con cuantiles de las ultimas descargas"},
++    {"id": "P4", "rival": "propio_cuantiles_fijos", "metrica": "qoe_lineal_media", "tipo": "mayor",
++     "texto": "mas QoE que la variante sin red con cuantiles fijos"},
++    {"id": "P5", "rival": "propio_mediana", "metrica": "num_stalls", "tipo": "menor",
++     "texto": "menos paradas que la variante sin CVaR (solo la mediana)"},
++)
++METRICAS_SECUNDARIAS = (
++    "qoe_lineal_media",
++    "num_stalls",
++    "rebuffering_total_s",
++    "bitrate_medio_kbps",
++    "num_cambios_calidad",
++    "qoe_log_media",
++)
++
++
++def definicion_hipotesis() -> Dict[str, Any]:
++    # Se copia al protocolo del paquete al planificar, antes de ejecutar ninguna sesion.
++    return {
++        "version": VERSION_HIPOTESIS,
++        "referencia": REFERENCIA,
++        "margen_equivalencia_qoe": MARGEN_EQUIVALENCIA_QOE,
++        "alfa": 0.05,
++        "principales": [dict(h) for h in HIPOTESIS_PRINCIPALES],
++        "metricas_secundarias": list(METRICAS_SECUNDARIAS),
++        "unidad": "escenario (ventana x video); bloque: ventana",
++        "intervalos": "bootstrap por ventanas, {0} remuestreos, semilla {1}".format(REMUESTREOS_BOOTSTRAP, SEMILLA_BOOTSTRAP),
++        "pruebas": "signo exacta sobre las diferencias medias por ventana (unilateral en 'menor'/'mayor'); "
++        "equivalencia por TOST: IC90 dentro de +-margen y p = max de los dos unilaterales (aprox. normal)",
++        "multiplicidad": "Holm sobre las hipotesis principales",
++    }
++
++
++def diferencias_por_ventana(
++    resumenes: Sequence[Mapping[str, Any]], a: str, b: str, metrica: str, filtro=None
++) -> Dict[str, List[float]]:
++    # Diferencia a - b en cada escenario con los dos controladores, agrupada por ventana.
++    por_escenario: Dict[tuple, Dict[str, float]] = defaultdict(dict)
++    for fila in resumenes:
++        if _bool(fila.get("sintetica")) or not _int(fila.get("evaluables")):
++            continue
++        if filtro is not None and not filtro(fila):
++            continue
++        clave = (str(fila.get("id_ventana_traza")), str(fila.get("id_perfil_video")), str(fila.get("repeticion")))
++        por_escenario[clave][str(fila.get("alias_controlador"))] = _float(fila.get(metrica))
++    por_ventana: Dict[str, List[float]] = defaultdict(list)
++    for (ventana, _video, _rep), valores in por_escenario.items():
++        if a in valores and b in valores:
++            por_ventana[ventana].append(valores[a] - valores[b])
++    return dict(por_ventana)
++
++
++def bootstrap_por_ventanas(por_ventana: Mapping[str, Sequence[float]], semilla: int = SEMILLA_BOOTSTRAP) -> List[float]:
++    rng = random.Random(semilla)
++    ventanas = sorted(por_ventana)
++    medias = []
++    for _ in range(REMUESTREOS_BOOTSTRAP):
++        suma, cuenta = 0.0, 0
++        for _ in ventanas:
++            valores = por_ventana[ventanas[rng.randrange(len(ventanas))]]
++            suma += sum(valores)
++            cuenta += len(valores)
++        medias.append(suma / cuenta)
++    medias.sort()
++    return medias
++
++
++def contraste(por_ventana: Mapping[str, Sequence[float]], tipo: str, margen: float = MARGEN_EQUIVALENCIA_QOE) -> Dict[str, Any]:
++    valores = [v for grupo in por_ventana.values() for v in grupo]
++    if not valores:
++        return {"n_escenarios": 0, "n_ventanas": 0}
++    medias_ventana = [sum(g) / len(g) for g in por_ventana.values()]
++    media = sum(valores) / len(valores)
++    boot = bootstrap_por_ventanas(por_ventana)
++    n = len(boot)
++    resultado: Dict[str, Any] = {
++        "n_escenarios": len(valores),
++        "n_ventanas": len(por_ventana),
++        "media_diferencia": media,
++        "ic95": [boot[int(0.025 * n)], boot[int(0.975 * n) - 1]],
++        "ic90": [boot[int(0.05 * n)], boot[int(0.95 * n) - 1]],
++        "ventanas_positivas": sum(1 for m in medias_ventana if m > 1e-12),
++        "ventanas_negativas": sum(1 for m in medias_ventana if m < -1e-12),
++        "ventanas_empate": sum(1 for m in medias_ventana if abs(m) <= 1e-12),
++        "escenarios_empate": sum(1 for v in valores if abs(v) <= 1e-12),
++    }
++    positivas, negativas = resultado["ventanas_positivas"], resultado["ventanas_negativas"]
++    if tipo == "menor":
++        resultado["p_valor"] = _cola_binomial(positivas + negativas, positivas)  # pocas ventanas con mas en el propio
++    elif tipo == "mayor":
++        resultado["p_valor"] = _cola_binomial(positivas + negativas, negativas)
++    elif tipo == "equivalencia":
++        if len(medias_ventana) > 1:
++            de = math.sqrt(sum((m - sum(medias_ventana) / len(medias_ventana)) ** 2 for m in medias_ventana)
++                           / (len(medias_ventana) - 1))
++            ee = de / math.sqrt(len(medias_ventana)) if de > 0 else 1e-12
++            centro = sum(medias_ventana) / len(medias_ventana)
++            p_inferior = 1.0 - _normal((centro + margen) / ee)
++            p_superior = _normal((centro - margen) / ee)
++            resultado["p_valor"] = max(p_inferior, p_superior)
++        else:
++            resultado["p_valor"] = 1.0
++        resultado["margen"] = margen
++        resultado["equivalente_ic90"] = bool(-margen < resultado["ic90"][0] and resultado["ic90"][1] < margen)
++    else:
++        resultado["p_valor_bilateral"] = min(1.0, 2.0 * _cola_binomial(positivas + negativas, min(positivas, negativas)))
++    return resultado
++
++
++def holm(p_valores: Mapping[str, float], alfa: float = 0.05) -> Dict[str, Dict[str, Any]]:
++    ordenados = sorted(p_valores.items(), key=lambda kv: kv[1])
++    m = len(ordenados)
++    salida, rechazando, maximo = {}, True, 0.0
++    for i, (clave, p) in enumerate(ordenados):
++        ajustado = min(1.0, max(maximo, (m - i) * p))
++        maximo = ajustado
++        rechazando = rechazando and p <= alfa / (m - i)
++        salida[clave] = {"p": p, "p_holm": ajustado, "rechazada_nula": bool(rechazando)}
++    return salida
++
++
++def contrastes_prerregistrados(
++    resumenes: Sequence[Mapping[str, Any]], hipotesis: Optional[Mapping[str, Any]] = None
++) -> Dict[str, Any]:
++    hipotesis = dict(hipotesis or definicion_hipotesis())
++    referencia = str(hipotesis.get("referencia", REFERENCIA))
++    margen = float(hipotesis.get("margen_equivalencia_qoe", MARGEN_EQUIVALENCIA_QOE))
++    alias = sorted({str(f.get("alias_controlador")) for f in resumenes if not _bool(f.get("sintetica"))})
++    principales = {}
++    for h in hipotesis.get("principales", []):
++        if h["rival"] not in alias or referencia not in alias:
++            continue
++        por_ventana = diferencias_por_ventana(resumenes, referencia, h["rival"], h["metrica"])
++        principales[h["id"]] = dict(h, **contraste(por_ventana, h["tipo"], margen))
++    ajuste = holm({k: v["p_valor"] for k, v in principales.items()}, float(hipotesis.get("alfa", 0.05)))
++    for clave, valores in ajuste.items():
++        principales[clave].update(valores)
++
++    secundarias: Dict[str, Dict[str, Any]] = {}
++    for rival in alias:
++        if rival == referencia:
++            continue
++        secundarias[rival] = {
++            metrica: contraste(diferencias_por_ventana(resumenes, referencia, rival, metrica), "bilateral")
++            for metrica in hipotesis.get("metricas_secundarias", METRICAS_SECUNDARIAS)
++        }
++    estratos = {}
++    for nombre, filtro in (
++        ("video_nuevo", lambda f: "tears" in str(f.get("id_perfil_video", ""))),
++        ("videos_vistos", lambda f: "tears" not in str(f.get("id_perfil_video", ""))),
++        ("oboe", lambda f: str(f.get("id_dataset", "")).startswith("oboe")),
++        ("fcc", lambda f: str(f.get("id_dataset", "")).startswith("fcc")),
++    ):
++        estratos[nombre] = {
++            rival: {
++                metrica: contraste(diferencias_por_ventana(resumenes, referencia, rival, metrica, filtro), "bilateral")
++                for metrica in ("qoe_lineal_media", "num_stalls")
++            }
++            for rival in ("mpc_robusto", "propio_cuantiles_recientes")
++            if rival in alias
++        }
++    return {"hipotesis": hipotesis, "principales": principales, "secundarias": secundarias, "estratos": estratos,
++            "contenido_nuevo_frente_a_visto": _interaccion_contenido(resumenes, referencia)}
++
++
++def _interaccion_contenido(resumenes: Sequence[Mapping[str, Any]], referencia: str) -> Dict[str, Any]:
++    # En cada ventana: (propio - MPC) con el video nuevo menos (propio - MPC) con el visto.
++    nuevo = diferencias_por_ventana(resumenes, referencia, "mpc_robusto", "qoe_lineal_media",
++                                    lambda f: "tears" in str(f.get("id_perfil_video", "")))
++    visto = diferencias_por_ventana(resumenes, referencia, "mpc_robusto", "qoe_lineal_media",
++                                    lambda f: "tears" not in str(f.get("id_perfil_video", "")))
++    pares = {v: [nuevo[v][0] - visto[v][0]] for v in nuevo if v in visto and nuevo[v] and visto[v]}
++    return contraste(pares, "bilateral") if pares else {"n_ventanas": 0}
++
++
++def _cola_binomial(n: int, k: int) -> float:
++    # P(X <= k) con X ~ Binomial(n, 1/2): prueba del signo exacta unilateral.
++    if n <= 0:
++        return 1.0
++    return min(1.0, sum(math.comb(n, i) for i in range(0, k + 1)) / float(2 ** n))
++
++
++def _normal(x: float) -> float:
++    return 0.5 * (1.0 + math.erf(x / math.sqrt(2.0)))
++
++
++def _float(valor: Any) -> float:
++    try:
++        return float(valor)
++    except (TypeError, ValueError):
++        return 0.0
++
++
++def _int(valor: Any) -> int:
++    try:
++        return int(float(valor))
++    except (TypeError, ValueError):
++        return 0
++
++
++def _bool(valor: Any) -> bool:
++    if isinstance(valor, bool):
++        return valor
++    return str(valor).strip().lower() in {"1", "true", "si", "yes"}
+diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/evaluacion/seleccion.py "TFG Material/01_codigo/ClienteDashTFG/core/evaluacion/seleccion.py"
+--- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/evaluacion/seleccion.py	2026-10-14 12:34:07.767014500 +0200
++++ "TFG Material/01_codigo/ClienteDashTFG/core/evaluacion/seleccion.py"	2026-10-14 19:33:13.763189700 +0200
+@@ -7,10 +7,18 @@
+ from typing import Any, Deque, Dict, List, Mapping, Sequence
+ 
+ from core.evaluacion.catalogo import especificacion_preset
++from core.reproduccion_trazas.cargador import cargar_traza_normalizada
++from core.reproduccion_trazas.descargador_controlado import compactar_tiempos_traza, recortar_ventana_traza
+ 
+ DATASET_ID_SINTETICO = "controlled_sintetico_network"
+ SEMANTICA_SINTETICA = "ancho_banda_disponible_sinteticas"
+ 
++# Filtro de ventanas relevantes de Pensieve (Mao et al., 2017, sec. 5.1), calculado sobre la propia
++# ventana: throughput medio < 6 Mbit/s y minimo > 0,2 Mbit/s. Deja fuera las ventanas donde elegir
++# siempre el nivel maximo es lo optimo y aquellas donde la red no sostiene ningun nivel.
++FILTRO_PENSIEVE_MEDIA_MAX_KBPS = 6000.0
++FILTRO_PENSIEVE_MINIMO_MIN_KBPS = 200.0
++
+ 
+ def cargar_catalogo_trazas(path: str | Path) -> Dict[str, Any]:
+     ruta_manifiesto = Path(path)
+@@ -36,38 +44,70 @@
+     semilla = int(cfg_experimento.get("semilla", 606))
+     incluir_sinteticas = bool(cfg_experimento.get("incluir_diagnostico_sintetico", True))
+     grupos_excluidos = grupos_fuga_excluidos(config)
++    particion = str(especificacion.get("particion", "eval"))
++    filtro_pensieve = especificacion.get("filtro_ventanas") == "pensieve"
++    reglas_rutas = _reescrituras_rutas(config)
+ 
+     trazas = [item for item in manifiesto.get("trazas", []) if isinstance(item, Mapping)]
+     candidatas_eval = [
+         item
+         for item in trazas
+-        if item.get("particion") == "eval"
++        if item.get("particion") == particion
+         and item.get("usable_en_eval", True) is not False
+         and float(item.get("duracion_s", 0.0) or 0.0) >= duracion_ventana_s
+     ]
+ 
++    # Con el filtro de Pensieve, la relevancia se mide en la ventana y sustituye al suelo de
++    # throughput de la traza entera.
+     candidatas_reales = [
+         item
+         for item in candidatas_eval
+         if not es_traza_sintetica(item)
+         and str(item.get("grupo_fuga", "")) not in grupos_excluidos
+-        and _pasa_suelo_throughput_formal(
+-            item,
+-            min_media_throughput_kbps=min_media_throughput_kbps,
+-            min_max_throughput_kbps=min_max_throughput_kbps,
++        and (
++            filtro_pensieve
++            or _pasa_suelo_throughput_formal(
++                item,
++                min_media_throughput_kbps=min_media_throughput_kbps,
++                min_max_throughput_kbps=min_max_throughput_kbps,
++            )
+         )
+     ]
+-    candidatas_sinteticas = [item for item in candidatas_eval if es_traza_sintetica(item)]
++    if filtro_pensieve:
++        candidatas_reales = [
++            item
++            for item in candidatas_reales
++            if _ventana_relevante_pensieve(
++                item,
++                semilla=semilla,
++                duracion_ventana_s=duracion_ventana_s,
++                decision_interval_s=decision_interval_s,
++                reglas_rutas=reglas_rutas,
++            )
++        ]
++    candidatas_sinteticas = [
++        item
++        for item in candidatas_eval
++        if es_traza_sintetica(item) and str(item.get("grupo_fuga", "")) not in grupos_excluidos
++    ]
+ 
++    num_reales = especificacion["ventanas_reales"]
+     ventanas_reales = _seleccion_balanceada(
+         candidatas_reales,
+-        num_objetivos=int(especificacion["ventanas_reales"]),
++        num_objetivos=len(candidatas_reales) if num_reales == "todas" else int(num_reales),
+         semilla=semilla,
+         duracion_ventana_s=duracion_ventana_s,
+         decision_interval_s=decision_interval_s,
+         sintetica=False,
+-        reglas_rutas=_reescrituras_rutas(config),
++        reglas_rutas=reglas_rutas,
+     )
++    if filtro_pensieve:
++        for ventana in ventanas_reales:
++            ventana.update(
++                estadisticas_ventana(
++                    ventana["ruta_traza_normalizada"], ventana["inicio_ventana_s"], ventana["duracion_ventana_s"]
++                )
++            )
+     ventanas_sinteticas: List[Dict[str, Any]] = []
+     if incluir_sinteticas:
+         ventanas_sinteticas = _seleccion_balanceada(
+@@ -91,6 +131,41 @@
+     return {str(grupo).strip() for grupo in bruto if str(grupo).strip()}
+ 
+ 
++def estadisticas_ventana(ruta_traza: str, inicio_s: float, duracion_s: float) -> Dict[str, float]:
++    # Throughput medio (ponderado por tiempo) y minimo de la ventana, tal como la reproduce la
++    # emulacion: muestras compactadas y recortadas a [inicio, inicio + duracion].
++    traza = recortar_ventana_traza(
++        compactar_tiempos_traza(cargar_traza_normalizada(ruta_traza)),
++        inicio_ventana_s=float(inicio_s),
++        duracion_ventana_s=float(duracion_s),
++    )
++    total_s = sum(muestra.duracion_s for muestra in traza.muestras)
++    media = sum(muestra.throughput_kbps * muestra.duracion_s for muestra in traza.muestras) / total_s
++    return {
++        "throughput_medio_ventana_kbps": round(float(media), 3),
++        "throughput_min_ventana_kbps": round(float(min(m.throughput_kbps for m in traza.muestras)), 3),
++    }
++
++
++def _ventana_relevante_pensieve(
++    traza: Mapping[str, Any],
++    *,
++    semilla: int,
++    duracion_ventana_s: float,
++    decision_interval_s: float,
++    reglas_rutas: Sequence[Mapping[str, str]],
++) -> bool:
++    inicio_s = _inicio_ventana_para_traza(
++        traza, semilla=semilla, duracion_ventana_s=duracion_ventana_s, decision_interval_s=decision_interval_s
++    )
++    ruta = _reescribir_ruta(str(traza.get("ruta_traza_normalizada", "")), reglas_rutas)
++    est = estadisticas_ventana(ruta, inicio_s, duracion_ventana_s)
++    return (
++        est["throughput_medio_ventana_kbps"] < FILTRO_PENSIEVE_MEDIA_MAX_KBPS
++        and est["throughput_min_ventana_kbps"] > FILTRO_PENSIEVE_MINIMO_MIN_KBPS
++    )
++
++
+ def es_traza_sintetica(traza: Mapping[str, Any]) -> bool:
+     return (
+         bool(traza.get("sintetica"))
 diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/modelo_propio/bundle.py "TFG Material/01_codigo/ClienteDashTFG/core/modelo_propio/bundle.py"
 --- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/core/modelo_propio/bundle.py	2026-10-14 12:53:36.284590700 +0200
 +++ "TFG Material/01_codigo/ClienteDashTFG/core/modelo_propio/bundle.py"	2026-10-14 19:08:29.649249900 +0200
@@ -1681,8 +2379,175 @@ diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20
 +    raise SystemExit(main())
 diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/scripts/3_evaluacion/ejecutar_evaluacion.py "TFG Material/01_codigo/ClienteDashTFG/scripts/3_evaluacion/ejecutar_evaluacion.py"
 --- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/scripts/3_evaluacion/ejecutar_evaluacion.py	2026-10-14 12:34:12.555053400 +0200
-+++ "TFG Material/01_codigo/ClienteDashTFG/scripts/3_evaluacion/ejecutar_evaluacion.py"	2026-10-14 19:11:58.687748300 +0200
-@@ -393,11 +393,10 @@
++++ "TFG Material/01_codigo/ClienteDashTFG/scripts/3_evaluacion/ejecutar_evaluacion.py"	2026-10-14 19:39:06.937281000 +0200
+@@ -3,8 +3,10 @@
+ import argparse
+ import csv
+ import json
++import random
+ import subprocess
+ import sys
++import threading
+ import time
+ from copy import deepcopy
+ from datetime import datetime
+@@ -26,6 +28,7 @@
+     especificacion_preset,
+ )
+ from core.evaluacion.configuracion import cargar_config_evaluacion, escribir_config_ejemplo
++from core.evaluacion.contrastes import definicion_hipotesis
+ from core.evaluacion.seleccion import cargar_catalogo_trazas, grupos_fuga_excluidos, seleccionar_ventanas_trazas
+ from core.evaluacion.verificacion import verificar_paquete_evaluacion
+ 
+@@ -59,6 +62,9 @@
+         "--max-sesiones", type=int, default=None, help="Limite tecnico para pruebas del runner."
+     )
+     analizador_args.add_argument(
++        "--paralelo", type=int, default=None, help="Sesiones a la vez (por defecto, la config: 1)."
++    )
++    analizador_args.add_argument(
+         "--escribir-config-ejemplo",
+         action="store_true",
+         help="Escribe config/evaluacion.local.example.json y termina.",
+@@ -81,6 +87,8 @@
+         config.setdefault("ejecucion", {})["reanudar"] = bool(args.reanudar)
+     if args.max_sesiones is not None:
+         config.setdefault("ejecucion", {})["max_sesiones"] = int(args.max_sesiones)
++    if args.paralelo is not None:
++        config.setdefault("ejecucion", {})["sesiones_en_paralelo"] = int(args.paralelo)
+ 
+     resultado = ejecutar_evaluacion(
+         config,
+@@ -115,34 +123,49 @@
+     else:
+         protocolo, sesiones = existente
+ 
+-    num_ejecutadas = 0
+-    num_fallidas = 0
+-    num_omitidas = 0
++    contadores = {"procesadas": 0, "ejecutadas": 0, "fallidas": 0, "omitidas": 0}
+     if not ensayo and not solo_plan and _bool(_mapa(config.get("ejecucion")).get("ejecutar_sesiones", True)):
+         total_sesiones = len(sesiones)
+         inicio_ejecucion_s = time.perf_counter()
+-        for num_procesadas, sesion in enumerate(sesiones, start=1):
++        cerrojo = threading.Lock()
++
++        def procesar(sesion: Mapping[str, Any]) -> None:
+             inicio_sesion_s = time.perf_counter()
+             resultado = ejecutar_sesion(config, sesion)
+             duracion_sesion_s = time.perf_counter() - inicio_sesion_s
+-            num_ejecutadas += int(resultado["ejecutada"])
+-            num_fallidas += int(resultado["fallida"])
+-            num_omitidas += int(resultado.get("omitida", 0))
+-            transcurrido_s = time.perf_counter() - inicio_ejecucion_s
+-            media_sesion_s = transcurrido_s / float(num_procesadas) if num_procesadas else 0.0
+-            eta_s = media_sesion_s * float(max(0, total_sesiones - num_procesadas))
+-            _imprimir_progreso(
+-                num_procesadas=num_procesadas,
+-                total_sesiones=total_sesiones,
+-                num_ejecutadas=num_ejecutadas,
+-                num_fallidas=num_fallidas,
+-                num_omitidas=num_omitidas,
+-                id_sesion=str(sesion.get("id_sesion", "")),
+-                transcurrido_s=transcurrido_s,
+-                ultima_sesion_s=duracion_sesion_s,
+-                media_sesion_s=media_sesion_s,
+-                eta_s=eta_s,
+-            )
++            with cerrojo:
++                contadores["procesadas"] += 1
++                contadores["ejecutadas"] += int(resultado["ejecutada"])
++                contadores["fallidas"] += int(resultado["fallida"])
++                contadores["omitidas"] += int(resultado.get("omitida", 0))
++                transcurrido_s = time.perf_counter() - inicio_ejecucion_s
++                media_sesion_s = transcurrido_s / float(contadores["procesadas"])
++                _imprimir_progreso(
++                    num_procesadas=contadores["procesadas"],
++                    total_sesiones=total_sesiones,
++                    num_ejecutadas=contadores["ejecutadas"],
++                    num_fallidas=contadores["fallidas"],
++                    num_omitidas=contadores["omitidas"],
++                    id_sesion=str(sesion.get("id_sesion", "")),
++                    transcurrido_s=transcurrido_s,
++                    ultima_sesion_s=duracion_sesion_s,
++                    media_sesion_s=media_sesion_s,
++                    eta_s=media_sesion_s * float(max(0, total_sesiones - contadores["procesadas"])),
++                )
++
++        # Por defecto, una sesion detras de otra. Con sesiones_en_paralelo = 2, dos a la vez: cada
++        # una es un proceso propio con su propia emulacion de la traza.
++        en_paralelo = max(1, int(_mapa(config.get("ejecucion")).get("sesiones_en_paralelo", 1) or 1))
++        if en_paralelo == 1:
++            for sesion in sesiones:
++                procesar(sesion)
++        else:
++            from concurrent.futures import ThreadPoolExecutor
++
++            with ThreadPoolExecutor(max_workers=en_paralelo) as ejecutor:
++                list(ejecutor.map(procesar, sesiones))
++    num_ejecutadas = contadores["ejecutadas"]
++    num_fallidas = contadores["fallidas"]
+ 
+     ruta_analisis = ""
+     ruta_verificacion = ""
+@@ -213,12 +236,28 @@
+         "ventanas_trazas": ventanas_trazas,
+     }
+ 
++    asignacion = str(especificacion.get("asignacion_videos", "") or "")
++    orden_aleatorio = especificacion.get("orden_controladores") == "aleatorio"
++    semilla = int(experimento.get("semilla", 606))
++    protocolo["asignacion_videos"] = asignacion or "todos_los_videos_en_cada_ventana"
++    protocolo["orden_controladores"] = "aleatorio_por_escenario" if orden_aleatorio else "fijo"
++    protocolo["particion"] = str(especificacion.get("particion", "eval"))
++    protocolo["filtro_ventanas"] = str(especificacion.get("filtro_ventanas", "") or "suelo_de_la_traza")
++    protocolo["hipotesis"] = definicion_hipotesis()
++
+     sesiones: List[Dict[str, Any]] = []
+     indice = 0
+     for repeticion in range(1, repeticiones + 1):
+-        for ventana_traza in ventanas_trazas:
+-            for perfil_video in perfiles_video:
+-                for controlador in controladores:
++        for numero_ventana, ventana_traza in enumerate(ventanas_trazas):
++            for perfil_video in videos_de_la_ventana(perfiles_video, asignacion, numero_ventana, ventana_traza):
++                orden = list(controladores)
++                if orden_aleatorio:
++                    random.Random(
++                        "{0}|{1}|{2}|{3}".format(
++                            semilla, ventana_traza["id_ventana_traza"], perfil_video["id_perfil_video"], repeticion
++                        )
++                    ).shuffle(orden)
++                for controlador in orden:
+                     indice += 1
+                     sesion = construir_sesion(
+                         indice=indice,
+@@ -248,6 +287,24 @@
+     return protocolo, sesiones
+ 
+ 
++def videos_de_la_ventana(
++    perfiles_video: Sequence[Mapping[str, Any]],
++    asignacion: str,
++    numero_ventana: int,
++    ventana_traza: Mapping[str, Any],
++) -> List[Mapping[str, Any]]:
++    # "visto_rotado_mas_nuevo": cada ventana real con un video visto en el entrenamiento, en
++    # rotacion, y el video nuevo; las sinteticas, solo con el visto. Sin asignacion, todos.
++    if asignacion != "visto_rotado_mas_nuevo":
++        return list(perfiles_video)
++    vistos = [p for p in perfiles_video if not p.get("contenido_nuevo")]
++    nuevos = [p for p in perfiles_video if p.get("contenido_nuevo")]
++    elegidos = [vistos[numero_ventana % len(vistos)]]
++    if not ventana_traza.get("sintetica"):
++        elegidos.extend(nuevos)
++    return elegidos
++
++
+ def construir_sesion(
+     *,
+     indice: int,
+@@ -393,11 +450,10 @@
  def _parametros_controlador_para_sesion(
      config: Mapping[str, Any], sesion: Mapping[str, Any]
  ) -> Dict[str, Any]:
@@ -1696,4 +2561,14 @@ diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20
 +    parametros["id_perfil_video"] = str(sesion.get("id_perfil_video", parametros.get("id_perfil_video", "")))
      return parametros
  
+ 
+@@ -510,6 +566,9 @@
+         reproduccion["max_segmentos_video"] = int(especificacion["max_segmentos_video"])
+     if especificacion.get("duracion_ventana_red_s") is not None:
+         red["duracion_ventana_s"] = float(especificacion["duracion_ventana_red_s"])
++    if especificacion.get("politica_fin") is not None:
++        red["politica_fin"] = str(especificacion["politica_fin"])
++        red["max_bucles"] = int(especificacion.get("max_bucles", 0) or 0)
+     if especificacion.get("tiempo_limite_s") is not None:
+         ejecucion["tiempo_limite_s"] = float(especificacion["tiempo_limite_s"])
  
