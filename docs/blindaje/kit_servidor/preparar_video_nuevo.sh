@@ -80,8 +80,9 @@ ffprobe -v error -select_streams v:0 -show_entries stream=width,height,r_frame_r
 
 paso "4/6 Representaciones y MPD con generar_dash_lote.sh (la parte larga, unos 30-60 min)"
 # Copia del generador sin la linea "docker pull": se empaqueta con la version de GPAC ya
-# instalada, la misma con la que se empaquetaron los cuatro videos del experimento.
-sed '/docker pull/d' "$GENERADOR_ORIGINAL" > "$TRABAJO/generar_dash_lote_sin_pull.sh"
+# instalada, la misma con la que se empaquetaron los cuatro videos del experimento. Tambien
+# se quitan los finales de linea de Windows (la copia del material los tiene).
+sed -e 's/\r$//' -e '/docker pull/d' "$GENERADOR_ORIGINAL" > "$TRABAJO/generar_dash_lote_sin_pull.sh"
 echo "   GPAC: $(sudo docker run --rm "$IMAGEN_GPAC" MP4Box -version 2>&1 | head -1)"
 echo "   imagen: $(sudo docker image inspect --format '{{.Id}}' "$IMAGEN_GPAC")"
 if [ ! -f "$LOTE/$NOMBRE/4sec/${NOMBRE}_simple_4s.mpd" ]; then
