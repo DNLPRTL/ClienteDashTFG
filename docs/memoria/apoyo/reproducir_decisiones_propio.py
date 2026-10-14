@@ -1,4 +1,4 @@
-"""Reproduce fuera de linea las decisiones del controlador propio del paquete canonico.
+"""Reproduce fuera de linea las decisiones del controlador propio de un paquete de evaluacion.
 
 Para cada sesion del controlador propio: reinyecta, fila a fila, la realimentacion
 registrada en la telemetria en un ControladorPropio nuevo (mismo bundle, mismo
@@ -6,9 +6,13 @@ descriptor de video), compara la accion con la registrada y evalua criterios
 alternativos sobre el mismo estado (escenario central, peor caso, media de los 4,
 tamanos nominales, sin ensanchado epistemico, progreso medido como en el
 entrenamiento). Escribe un JSONL por decision y un resumen.
+
+Uso: python reproducir_decisiones_propio.py [--paquete DIR] [--salida DIR] [max_sesiones]
+(por defecto, el paquete de agosto y la carpeta apoyo_memoria).
 """
 from __future__ import annotations
 
+import argparse
 import ast
 import csv
 import itertools
@@ -24,7 +28,6 @@ CODE = Path(r"C:\Users\danie\Documents\TFG Material\01_codigo\ClienteDashTFG")
 BUNDLE = Path(r"C:\Users\danie\Documents\TFG Material\03_modelos\modelo_propio\bundle")
 PKG = Path(r"C:\Users\danie\Documents\TFG Material\04_evidencia_final\20260810_133520_tfg_final")
 OUT = Path(r"C:\Users\danie\Documents\TFG\apoyo_memoria")
-OUT.mkdir(parents=True, exist_ok=True)
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(CODE))
@@ -268,4 +271,11 @@ def main(max_sesiones=None):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else None)
+    argumentos = argparse.ArgumentParser()
+    argumentos.add_argument("--paquete", type=Path, default=PKG)
+    argumentos.add_argument("--salida", type=Path, default=OUT)
+    argumentos.add_argument("max_sesiones", nargs="?", default=None)
+    opciones = argumentos.parse_args()
+    PKG, OUT = opciones.paquete, opciones.salida
+    OUT.mkdir(parents=True, exist_ok=True)
+    main(opciones.max_sesiones)

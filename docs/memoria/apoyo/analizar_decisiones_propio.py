@@ -10,7 +10,11 @@ Regla del ejemplo, fijada antes de mirar el desenlace: primera decision, en el
 orden del experimento, de una sesion con traza REAL, buffer entre 8 y 30 s, en la
 que el criterio CVaR y el escenario central eligen primeras acciones distintas,
 ambas dentro de la mitad alta de la escalera (nivel >= 3, es decir >= 1850 kbit/s).
+
+Uso: python analizar_decisiones_propio.py [--datos DIR] [--salida FICHERO] [--fuente TEXTO]
+(por defecto, las decisiones del paquete de agosto).
 """
+import argparse
 import json
 import math
 from collections import Counter
@@ -20,6 +24,15 @@ import numpy as np
 
 DATOS = Path(r"C:\Users\danie\Documents\TFG\apoyo_memoria")
 AQUI = Path(__file__).resolve().parent
+
+_argumentos = argparse.ArgumentParser()
+_argumentos.add_argument("--datos", type=Path, default=DATOS)
+_argumentos.add_argument("--salida", type=Path, default=AQUI / "resumen_decisiones_propio.json")
+_argumentos.add_argument(
+    "--fuente", default="telemetria del paquete 20260810_133520_tfg_final reproducida con el bundle de 03_modelos"
+)
+_opciones = _argumentos.parse_args()
+DATOS = _opciones.datos
 
 filas = [json.loads(linea) for linea in (DATOS / "decisiones_propio.jsonl").open(encoding="utf-8")]
 VARIANTES = ("central", "peor", "media4", "nominal", "sin_ensanchado", "progreso_sesion")
@@ -72,7 +85,7 @@ ejemplo = candidatas[0]
 (DATOS / "ejemplo_decision.json").write_text(json.dumps(ejemplo, indent=2), encoding="utf-8")
 
 resumen = {
-    "fuente": "telemetria del paquete 20260810_133520_tfg_final reproducida con el bundle de 03_modelos",
+    "fuente": _opciones.fuente,
     "reales": resumir(reales),
     "sinteticas": resumir(sinteticas),
     "ejemplo": {
@@ -98,5 +111,5 @@ resumen = {
         "throughput_medido_despues_mbps": ejemplo["tp_siguiente_bps"] / 1e6,
     },
 }
-(AQUI / "resumen_decisiones_propio.json").write_text(json.dumps(resumen, indent=2, ensure_ascii=False), encoding="utf-8")
+_opciones.salida.write_text(json.dumps(resumen, indent=2, ensure_ascii=False), encoding="utf-8")
 print(json.dumps({"reales": resumen["reales"]["variantes"], "ejemplo": resumen["ejemplo"]["sesion"], "k": resumen["ejemplo"]["k"]}, indent=1))

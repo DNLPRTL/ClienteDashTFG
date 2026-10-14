@@ -20,3 +20,12 @@ python docs/memoria/apoyo/generar_fig_5_3.py
 Resultado de referencia (13/10/2026, torch 2.6.0 CPU en Windows; el experimento
 corrió con torch 2.4.1 en la VM): 1740/1740 decisiones reproducidas exactamente.
 Los datos pesados (JSONL de 3,6 MB) viven fuera del repo, en `TFG\apoyo_memoria\`.
+
+**Segunda evaluación (réplica con ventanas nuevas, 14/10/2026).** Los dos
+primeros scripts aceptan otro paquete y otra carpeta, sin tocar los datos de
+agosto:
+
+```bash
+python docs/memoria/apoyo/reproducir_decisiones_propio.py --paquete "<TFG>\validacion_comparativa_replica\20261013_233745_tfg_final" --salida "<TFG>\apoyo_memoria\replica"
+python docs/memoria/apoyo/analizar_decisiones_propio.py --datos "<TFG>\apoyo_memoria\replica" --salida docs/memoria/apoyo/resumen_decisiones_propio_replica.json --fuente "telemetria del paquete 20261013_233745_tfg_final reproducida con el bundle de 03_modelos"
+```
