@@ -1,0 +1,111 @@
+diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/entrenamiento/dataset_cuantiles.py "TFG Material/01_codigo/ClienteDashTFG/entrenamiento/dataset_cuantiles.py"
+--- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/entrenamiento/dataset_cuantiles.py	2026-08-07 10:34:13.695595400 +0200
++++ "TFG Material/01_codigo/ClienteDashTFG/entrenamiento/dataset_cuantiles.py"	2026-10-14 18:37:40.424579800 +0200
+@@ -219,7 +219,7 @@
+     escribir_json(ruta_salida / FICHERO_AUDITORIA_MUESTREO, _carga_plan_muestreo(datos_auditoria_muestreo))
+     escribir_json(
+         ruta_salida / FICHERO_ESQUEMA_OBJETIVOS,
+-        _construir_esquema_objetivos(int(horizonte_segmentos), limpio_quantiles),
++        _construir_esquema_objetivos(int(horizonte_segmentos), cuantiles_limpios),
+     )
+     escribir_json(ruta_salida / FICHERO_AUDITORIA_CONTAMINACION, auditoria_fuga)
+ 
+diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/entrenamiento/dataset_fiel.py "TFG Material/01_codigo/ClienteDashTFG/entrenamiento/dataset_fiel.py"
+--- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/entrenamiento/dataset_fiel.py	2026-08-07 10:27:00.882226500 +0200
++++ "TFG Material/01_codigo/ClienteDashTFG/entrenamiento/dataset_fiel.py"	2026-10-14 18:37:39.544149100 +0200
+@@ -105,4 +105,4 @@
+         cuantiles=cuantiles,
+         fabrica_escaleras=fabrica_escaleras,
+     )
+-    return {**resultado, "ids_perfiles_video": [str(mid) for id_perfil in ids_perfiles_video]}
++    return {**resultado, "ids_perfiles_video": [str(id_perfil) for id_perfil in ids_perfiles_video]}
+diff -ruN '--exclude=__pycache__' '--exclude=.idea' TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/scripts/1_contenido/extraer_tamanos_reales_segmentos.py "TFG Material/01_codigo/ClienteDashTFG/scripts/1_contenido/extraer_tamanos_reales_segmentos.py"
+--- TFG/legacy/codigo_entrega_20261014_antes_blindaje/ClienteDashTFG/scripts/1_contenido/extraer_tamanos_reales_segmentos.py	2026-08-07 10:40:56.064243700 +0200
++++ "TFG Material/01_codigo/ClienteDashTFG/scripts/1_contenido/extraer_tamanos_reales_segmentos.py"	2026-10-14 18:39:06.148787200 +0200
+@@ -174,8 +174,8 @@
+                 "bandwidth_bps": bandwidth,
+                 "width": int(anchura) if anchura else None,
+                 "height": int(height) if height else None,
+-                "frame_tasa": fps_texto,
+-                "frame_tasa_num": fps_num,
++                "frame_rate": fps_texto,
++                "frame_rate_num": fps_num,
+                 "codecs": rep.get("codecs") or "",
+             }
+         )
+@@ -191,7 +191,7 @@
+ 
+         segmento_bytes: list[int] = []
+         numero = numero_inicial
+-        while number < start_numero + hard_tope:
++        while numero < numero_inicial + tope_duro:
+             seg_url = mpd_dir + plantilla_media.replace("$Bandwidth$", str(bandwidth)).replace(
+                 "$Number$", str(numero)
+             )
+@@ -211,34 +211,36 @@
+                 "bandwidth_bps": bandwidth,
+                 "width": rep["width"],
+                 "height": rep["height"],
+-                "frame_tasa": rep["frame_tasa"],
+-                "frame_tasa_num": rep["frame_tasa_num"],
++                "frame_rate": rep["frame_rate"],
++                "frame_rate_num": rep["frame_rate_num"],
+                 "codecs": rep["codecs"],
+                 "init_bytes": init_bytes,
+                 "num_segmentos": len(segmento_bytes),
+                 "segment_bytes": segmento_bytes,
+-                "segmento_bytes_media": estadisticas["mean"],
+-                "segmento_bytes_min": estadisticas["min"],
+-                "segmento_bytes_max": estadisticas["max"],
+-                "segmento_bytes_cv": estadisticas["cv"],
++                "segment_bytes_mean": estadisticas["mean"],
++                "segment_bytes_min": estadisticas["min"],
++                "segment_bytes_max": estadisticas["max"],
++                "segment_bytes_cv": estadisticas["cv"],
+                 "cbr_nominal_bytes": cbr_nominal_bytes,
+-                "real_media_vs_cbr_ratio": real_vs_cbr,
++                "real_mean_vs_cbr_ratio": real_vs_cbr,
+             }
+         )
+ 
+     conteos_segmentos = {r["num_segmentos"] for r in representations}
+     num_segmentos = max((r["num_segmentos"] for r in representations), default=0)
+-    vbr_cv_max = max((r["segmento_bytes_cv"] for r in representations), default=0.0)
++    vbr_cv_max = max((r["segment_bytes_cv"] for r in representations), default=0.0)
+ 
++    # Las claves del descriptor son las del esquema v1 con el que se generaron los 8 descriptores
++    # guardados; no se traducen para que todos los descriptores compartan formato.
+     return {
+         "id_esquema": SCHEMA_ID,
+         "id_perfil_video": id_perfil_desde_ruta_mpd(mpd_url),
+         "mpd_url": mpd_url,
+         "generado": datetime.now(timezone.utc).isoformat(),
+-        "media_duracion_presentacion_s": duracion_presentacion_s,
++        "media_presentation_duration_s": duracion_presentacion_s,
+         "duracion_segmento_s": duracion_segmento_s,
+-        "start_numero": numero_inicial,
+-        "segmento_esperado_count": num_esperado,
++        "start_number": numero_inicial,
++        "expected_segment_count": num_esperado,
+         "num_segmentos": num_segmentos,
+         "representation_count": len(representations),
+         "vbr_cv_max": vbr_cv_max,
+@@ -288,7 +290,8 @@
+             continue
+         ruta_salida = os.path.join(dir_salida, perfil["id_perfil_video"] + ".json")
+         with open(ruta_salida, "w", encoding="utf-8") as handle:
+-            json.dump(perfil, handle, ensure_ascii=False, indent=2)
++            json.dump(perfil, handle, ensure_ascii=False, indent=2, sort_keys=True)
++            handle.write("\n")
+         ok += 1
+         total_sondeados += perfil["_total_segments_probed"]
+         rep_superior = perfil["representations"][-1]
+@@ -300,7 +303,7 @@
+                 s=perfil["num_segmentos"],
+                 d=perfil["duracion_segmento_s"],
+                 cv=perfil["vbr_cv_max"],
+-                rc=rep_superior["real_media_vs_cbr_ratio"],
++                rc=rep_superior["real_mean_vs_cbr_ratio"],
+                 c=perfil["_segment_count_consistent"],
+             ),
+             flush=True,
