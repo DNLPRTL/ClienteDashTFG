@@ -1,5 +1,11 @@
 # Evaluación final: paso a paso
 
+> **SUPERADO (14/10/2026 por la noche).** El experimento lanzado con este kit se
+> detuvo antes de terminar y no se analizó: es desarrollo. Este kit y los dos
+> protocolos de esta carpeta sirven de base para la fase de blindaje
+> (`docs/blindaje/00_HANDOFF_FASE_BLINDAJE.md`). El experimento final nuevo
+> tendrá su propio protocolo y su propio kit, fijados antes de ejecutarlo.
+
 La evaluación que presenta la memoria, con la versión final del controlador
 propio. Qué se evalúa, qué cambió y cómo se analizará:
 `PROTOCOLO_EVALUACION_FINAL.md` (fijado antes de ejecutar).

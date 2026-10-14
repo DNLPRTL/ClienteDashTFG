@@ -12,17 +12,29 @@
 | Fecha | 2026-06-25 (actualizado 2026-08-12) |
 | Autor | Daniel Pretel |
 | Centro | Universidad de Granada (UGR) — plantilla LaTeX oficial |
-| Estado proyecto | Parte técnica TERMINADA. Esta fase = redacción de la memoria (Fase 7). |
+| Estado proyecto | FASE DE BLINDAJE (desde el 14/10/2026 por la noche): redacción pausada hasta cerrar la parte técnica |
 | Estructura | Fijada por el profesor: Cap 1–7 + Bibliografía + Anexos (no se cambia el macro) |
 
-> **ACTUALIZACIÓN 2026-08-12 (vigente):** (1) De cara a la memoria SOLO existe
+> **ACTUALIZACIÓN 2026-10-14, noche (VIGENTE; manda sobre todo lo de abajo):**
+> 1. Daniel detuvo el experimento final del 14/10. Se abre la fase de blindaje
+>    (`docs/blindaje/00_HANDOFF_FASE_BLINDAJE.md`): mejoras, prueba previa sobre
+>    validación y UN experimento final nuevo, con protocolo propio. Los §6.1–6.7
+>    de abajo (ventanas, controladores, tamaño, limitaciones) se rehacen con
+>    ese diseño.
+> 2. La memoria presenta SOLO ese experimento. Las ejecuciones de junio, agosto,
+>    la réplica y la del 14/10 son desarrollo; ninguna de sus cifras se cita.
+> 3. Borradores: el capítulo 4 y el 5.1–5.3 los tiene Daniel en Word y su
+>    versión manda. Al cerrar lo técnico, los pasa y Claude indica qué cambia.
+>    Desde el 5.4, Claude rehace los borradores enteros. Mientras dura el
+>    blindaje no se redacta.
+>
+> **ACTUALIZACIÓN 2026-08-12:** (1) De cara a la memoria SOLO existe
 > `C:\Users\danie\Documents\TFG Material\` (regla cero; el repo es bruto para
 > contexto/planes/bibliografía). (2) La nomenclatura de este plan es la vieja de
 > junio: se traduce SIEMPRE con `04_CORRESPONDENCIAS_NOMENCLATURA.md`. (3) Los
-> números de resultados citados en este plan eran de junio: los CANÓNICOS son los
-> de las DOS evaluaciones, `20260810_133520_tfg_final` y `20261013_233745_tfg_final`
-> (300 sesiones y **5 controladores** cada una, sin v1); conclusiones solo con lo
-> que se cumple en las dos (§6.6/6.7 de abajo, reescritos el 14/10). (4) Citas: SOLO claves de
+> números de resultados citados en este plan son de ejecuciones de DESARROLLO
+> (junio, agosto, réplica): ninguno es canónico; los únicos válidos serán los
+> del experimento final del blindaje. (4) Citas: SOLO claves de
 > `bibliografia.bib` (ver `02_BIBLIOGRAFIA_DEFINITIVA.md`); las claves [B] de este
 > plan son etiquetas provisionales de junio, mapear a las del .bib. (5) Tutor:
 > Juan José Ramos Muñoz (portada `\myProf`); plantilla en Prism con `unsrt`.
@@ -563,9 +575,9 @@ pide cifras, están en el histórico).
 | Cap 1 Introducción | TODO | |
 | Cap 2 Estado del arte | TODO | NotebookLM (listas de fuentes fijadas 12/08) |
 | Cap 3 Planificación/costes | TODO | sacar Gantt del git log |
-| Cap 4 Diseño | BORRADORES COMPLETOS | 4.1–4.7 redactados por Daniel; 4.8 BORRADOR entregado 27/08 (cap4_8_separacion_evaluacion.md + T4.7 gates + resumen del capítulo). Al masticar 4.8: pasada de coherencia del capítulo entero. 14/10 (cc38089): borradores devueltos al estado del remake del 5.6; solo se añaden "validación" (4.7 y T4.7) y el paso de espera de 0,01 s en la evaluación (4.3/T4.3). La frase del empate del 4.7 se revisa con el experimento final |
-| Cap 5 Implementación | EN CURSO | 5.1–5.5 masticados por Daniel. 5.6 VERSIÓN 2 entregada 13/10 (cap5_6_controlador_propio.md rehecho: 6 subapartados, 8 ecuaciones, decisión real reproducida, T5.6 comparativa MPC/robusto/propio, T5.7 efecto de cada componente, ficha al Anexo A; F5.2 rehecha + F5.3 nueva `fig_5_3_decision_real.svg` generada por script; reproducción 1740/1740 en `docs/memoria/apoyo/`). 14/10 (cc38089): borradores devueltos al estado del remake del 5.6; correcciones válidas: 5.1 (requests 2.32.4, matplotlib 3.7.5, NumPy como dependencia del planificador), 5.4 (configuración final con grupos de captura excluidos y la frase metodológica de las ventanas) y 5.5 (referencia "fijada antes de evaluar, por diseño"). El 5.6 se actualiza en UNA pasada con el paquete final (lista en sus notas). cap5_1 queda SIN commitear porque lleva cambios de Daniel pendientes. Siguiente: 5.7 entorno de entrenamiento fiel. PENDIENTE EN CAP 4: corregir T4.3 "paso de espera 0,5 s" → "0,5 s (0,01 s en la evaluación)" |
-| Cap 6 Evaluación | TODO (pendiente del experimento final) | EXPERIMENTO FINAL ÚNICO con la versión final del controlador (planificador vectorizado, inferencia de un hilo, calentamiento, entradas como en el entrenamiento) y 12 ventanas nunca ejecutadas; protocolo y kit en `docs/evaluacion_final/`. Las ejecuciones de agosto y de la réplica son desarrollo (archivadas en `TFG\legacy\evidencia_desarrollo\`) y no van a la memoria |
+| Cap 4 Diseño | REDACTADO POR DANIEL EN WORD (14/10) | Su Word manda; no tocar los borradores del repo. Al cerrar el blindaje, Daniel pasa el Word y Claude indica cambios de texto y figuras (lista orientativa en §8 del traspaso de `docs/blindaje/`). Historial: 4.1–4.7 redactados por Daniel; 4.8 BORRADOR entregado 27/08 (cap4_8_separacion_evaluacion.md + T4.7 gates + resumen del capítulo). Al masticar 4.8: pasada de coherencia del capítulo entero. 14/10 (cc38089): borradores devueltos al estado del remake del 5.6; solo se añaden "validación" (4.7 y T4.7) y el paso de espera de 0,01 s en la evaluación (4.3/T4.3). La frase del empate del 4.7 se revisa con el experimento final |
+| Cap 5 Implementación | 5.1–5.3 EN WORD DE DANIEL; DESDE 5.4 REMAKE TRAS EL BLINDAJE | 5.1–5.3: igual que el cap 4 (Word de Daniel; Claude indica cambios al cerrar lo técnico). 5.4–5.7: Claude rehace los borradores ENTEROS con el experimento final del blindaje; los actuales del repo son base. Historial: 5.1–5.5 masticados por Daniel. 5.6 VERSIÓN 2 entregada 13/10 (cap5_6_controlador_propio.md rehecho: 6 subapartados, 8 ecuaciones, decisión real reproducida, T5.6 comparativa MPC/robusto/propio, T5.7 efecto de cada componente, ficha al Anexo A; F5.2 rehecha + F5.3 nueva `fig_5_3_decision_real.svg` generada por script; reproducción 1740/1740 en `docs/memoria/apoyo/`). 14/10 (cc38089): borradores devueltos al estado del remake del 5.6; correcciones válidas: 5.1 (requests 2.32.4, matplotlib 3.7.5, NumPy como dependencia del planificador), 5.4 (configuración final con grupos de captura excluidos y la frase metodológica de las ventanas) y 5.5 (referencia "fijada antes de evaluar, por diseño"). El 5.6 se actualiza en UNA pasada con el paquete final (lista en sus notas). cap5_1 queda SIN commitear porque lleva cambios de Daniel pendientes. Siguiente: 5.7 entorno de entrenamiento fiel. PENDIENTE EN CAP 4: corregir T4.3 "paso de espera 0,5 s" → "0,5 s (0,01 s en la evaluación)" |
+| Cap 6 Evaluación | TODO (pendiente del experimento final del blindaje) | 14/10 noche: el experimento con el kit de `docs/evaluacion_final/` se detuvo (desarrollo, no se analiza). El diseño nuevo (controladores, ventanas, vídeos, estadística) sale de la fase de blindaje (`docs/blindaje/`). Historial: EXPERIMENTO FINAL ÚNICO con la versión final del controlador (planificador vectorizado, inferencia de un hilo, calentamiento, entradas como en el entrenamiento) y 12 ventanas nunca ejecutadas; protocolo y kit en `docs/evaluacion_final/`. Las ejecuciones de agosto y de la réplica son desarrollo (archivadas en `TFG\legacy\evidencia_desarrollo\`) y no van a la memoria |
 | Cap 7 Conclusiones | TODO | al final |
 | Bibliografía (BibTeX) | HECHA (92 entradas) | `bibliografia.bib` cerrado 10/08; solo se imprime lo citado |
 | Anexos | TODO | |

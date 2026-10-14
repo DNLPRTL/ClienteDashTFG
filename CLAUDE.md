@@ -26,11 +26,10 @@ los mismos documentos canónicos** para no divergir.
     git pull
     source ~/venvs/rocm721/bin/activate
     ```
-  - Ubuntu cliente validación:
-    ```bash
-    cd ~/TFG/ClienteDashTFG
-    git pull
-    ```
+  - Ubuntu cliente (VM 192.168.1.160): **sin git**. El código que corre es el
+    de `C:\Users\danie\Documents\TFG Material\01_codigo\ClienteDashTFG` y se
+    copia con `scp` (ver `docs/evaluacion_final/LEEME.md`). Los kits de
+    comprobación viven en `docs/` y también se copian con `scp`.
 - **Sincronía con Codex:** cada cambio relevante se acompaña de un `.md` de
   contexto/decisión commiteado junto al código (estilo `decision_*.md`), para que
   si Daniel trabaja con Codex y hace `git pull`, sepa exactamente qué se hizo.
@@ -40,7 +39,8 @@ los mismos documentos canónicos** para no divergir.
 Antes de proponer cambios técnicos, leer/recordar:
 
 ```text
-docs/contexto rama nueva/fase_4_5_v1/HANDOFF_mpc_prudente_estado_completo_20260624.md  <- LÉEME 1º (estado completo + resultado final)
+docs/blindaje/00_HANDOFF_FASE_BLINDAJE.md  <- LÉEME 1º (VIGENTE desde 14/10/2026: fase de blindaje)
+docs/contexto rama nueva/fase_4_5_v1/HANDOFF_mpc_prudente_estado_completo_20260624.md  <- histórico (junio; nombres viejos)
 AGENTS.md
 docs/arquitectura y procedimientos estandar tfg dash/arquitectura_y_procedimientos_estandar_tfg_dash.md
 docs/arquitectura y procedimientos estandar tfg dash/TFG_PLAN_GENERICO.md
@@ -94,6 +94,22 @@ bajo `~/TFG/...` (Linux) o `C:\Users\danie\Documents\TFG\...`.
   `python scripts/comprobar_cliente.py --strict`.
 
 ## 5. Estado y línea activa (resumen; detalle en el PLAN ACTIVO)
+
+> **VIGENTE (14/10/2026, noche) — manda sobre todo lo de abajo.**
+> - Daniel detuvo el experimento final del 14/10.
+> - Fase actual: **BLINDAJE**. Consiste en aplicar todas las mejoras que
+>   eliminen o acoten las deficiencias, hacer una prueba previa rápida sobre
+>   validación y lanzar UN único experimento final, que es lo único que irá a la
+>   memoria.
+> - Traspaso completo y prompt del hilo: `docs/blindaje/`.
+> - El código real que se entrega y que corre en la VM es el de
+>   `TFG Material\01_codigo\ClienteDashTFG`, en castellano. El código de este
+>   repo es el antiguo, en inglés.
+> - La redacción de la memoria está pausada:
+>   - el capítulo 4 y el 5.1–5.3 son de Daniel, en Word, y no se tocan;
+>   - desde el 5.4, Claude hará el remake al cerrar lo técnico.
+>
+> Lo que sigue es el estado histórico de junio y agosto.
 
 - Rama: `rebuild/phase3-from-phase2`. Cliente terminado y ABR-neutral.
 - Baselines clásicos cerrados: `rate_based, bba, bola, mpc, robust_mpc`.
