@@ -69,12 +69,16 @@ Ponte al día EN ESTE ORDEN (sin narrarme cada lectura; resumen final corto):
    controlador propio (nomenclatura vieja).
 
 EVIDENCIA CANÓNICA (no se re-verifica, se usa): TODOS los números de
-resultados salen EXCLUSIVAMENTE del paquete
-`TFG Material\04_evidencia_final\20260810_133520_tfg_final` (300 sesiones,
-5 controladores, gates 8/8). Los números que veas en HANDOFF/plan
-maestro/decisiones de junio NO van a la memoria. Los números clave ya están
-resumidos en la memoria persistente (`memoria-redaccion-estado`) y en el §5
-cap 6 del plan maestro (reescrito con el paquete canónico).
+resultados salen EXCLUSIVAMENTE de los DOS paquetes de
+`TFG Material\04_evidencia_final\`: `20260810_133520_tfg_final` (primera
+evaluación, gates 8/8) y `20261013_233745_tfg_final` (segunda evaluación,
+ventanas nunca ejecutadas; gates 6/8 por una única decisión delegada sin
+efecto). 300 sesiones y 5 controladores cada uno. Conclusiones SOLO con lo que
+se cumple en las dos (`docs/replica_ventanas_nuevas/RESULTADO_REPLICA.md`).
+Los números que veas en HANDOFF/plan maestro/decisiones de junio NO van a la
+memoria. Los números clave están en la memoria persistente
+(`memoria-redaccion-estado`) y en §6.6/6.7 del plan maestro (reescritos el
+14/10 con las dos evaluaciones).
 
 ESTADO ACTUAL (27/08): capítulo 4 COMPLETO — 8 borradores entregados y
 masticados por mí (4.1 visión global, 4.2 analizador MPD, 4.3

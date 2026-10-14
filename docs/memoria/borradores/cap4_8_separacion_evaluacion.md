@@ -50,20 +50,28 @@ y su cálculo no comparte código con ningún controlador.
 **Las compuertas de validez.** Antes de autorizar cualquier comparación, el
 análisis evalúa un conjunto de condiciones objetivas sobre el paquete de
 resultados, las compuertas de validez (Tabla 4.7). Si todas se superan, el
-paquete queda habilitado para comparar y ordenar controladores; si alguna
-falla, el paquete se degrada a material de diagnóstico y sus números no
-sustentan conclusiones. La decisión, por tanto, no la toma el autor caso a
-caso: la toma una regla fijada de antemano, y el resultado queda escrito en
-el propio paquete. Este mecanismo demostró su utilidad durante el proyecto:
-ejecuciones técnicamente completas quedaron descartadas como evidencia por
-una compuerta caída, y se repitieron tras corregir la causa.
+paquete queda habilitado para comparar y ordenar controladores. Si alguna
+falla, el paquete no queda habilitado y sus números no sustentan
+conclusiones mientras no se diagnostique la causa. Un defecto del banco de
+pruebas ajeno a las decisiones, como un fallo de registro, se corrige y la
+ejecución se repite. Un comportamiento del propio sistema evaluado, como una
+salvaguarda que delega una decisión, es un resultado y se informa; el paquete
+solo puede usarse, declarando la salvedad, si se demuestra antes de mirar las
+métricas de calidad que no alteró ninguna decisión. La decisión, por tanto,
+nunca se toma a la vista de los resultados: el veredicto lo emite una regla
+automática y queda escrito en el propio paquete sin modificarse. Este
+mecanismo actuó dos veces durante el proyecto. Una ejecución técnicamente
+completa quedó descartada por un fallo de registro y se repitió tras
+corregirlo; y en la segunda evaluación del capítulo 6, una compuerta señaló
+una única decisión delegada en el respaldo, que se examinó antes de abrir los
+resultados.
 
 **[TABLA 4.7 — Compuertas de validez del experimento]**
 
 | Compuerta | Qué garantiza |
 |---|---|
 | Sesiones reales completadas | Ninguna sesión real quedó a medias o fallida |
-| Solo partición de evaluación | Ninguna traza de entrenamiento o prueba contaminó el experimento |
+| Solo partición de evaluación | Ninguna traza de entrenamiento o validación contaminó el experimento |
 | Solo perfiles congelados (4 s) | Todo el contenido pertenece al formato experimental fijado |
 | Sin respaldo en sesiones evaluables | El controlador con modelo decidió siempre por sí mismo |
 | Inferencia verificada | Cada decisión del modelo dejó su rastro de auditoría completo |
@@ -138,3 +146,24 @@ la implementación de estas piezas.
   Cuando pases el capítulo a limpio, revisa que cada apartado tenga su
   referencia de figura/tabla correcta con la numeración final de LaTeX.
 - Longitud: ~950 palabras con el resumen del capítulo incluido.
+
+**Cambios del 14/10 (segunda evaluación), para pasarlos a Word**
+
+1. Párrafo de las compuertas: se sustituye desde "Si todas se superan..."
+   hasta "...tras corregir la causa" por el texto nuevo. Antes decía que un
+   paquete con una compuerta caída se degrada a diagnóstico sin más; ahora
+   distingue los dos casos que fija la regla
+   (`docs/replica_ventanas_nuevas/AFIRMACIONES_A_COMPROBAR.md`, escrita antes
+   de abrir los resultados de la segunda evaluación): un defecto del banco de
+   pruebas ajeno a las decisiones se corrige y se repite (el 06/08); un
+   comportamiento del sistema es un resultado y el paquete solo se usa si se
+   demuestra, antes de mirar las métricas, que no alteró ninguna decisión (la
+   segunda evaluación: 1 decisión delegada, reproducción 1740/1740). Sin este
+   cambio, el 4.8 contradiría al capítulo 6.
+2. Tabla 4.7, fila "Solo partición de evaluación": "entrenamiento o prueba"
+   pasa a "entrenamiento o validación" (mismo nombre que en 4.7, 5.6 y 5.7).
+- Pregunta probable: *¿Te saltaste tus propias compuertas?* No: el
+  veredicto automático sigue escrito en el paquete ("no superadas"). Lo que
+  hice fue aplicar la regla de diagnóstico que fijé antes de mirar ningún
+  resultado: la única decisión delegada coincide con la del modelo, y las
+  conclusiones no cambian si quito ese escenario.

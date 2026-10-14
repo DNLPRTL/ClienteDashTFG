@@ -7,9 +7,11 @@
 > Fuente técnica: entregable `core/controladores/{controlador_propio,
 > constructor_entradas,entradas_contexto,constantes_entradas,diagnosticos_red,
 > seguridad_red,mascara_acciones}.py` y `core/modelo_propio/*.py` (sin cambios
-> desde el 07/08), bundle de `03_modelos`, paquete canónico
-> `20260810_133520_tfg_final` y reproducción fuera de línea de sus 1740
-> decisiones (`docs/memoria/apoyo/`). Decisiones de diseño: `decision_mpc_prudente_*.md`.
+> desde el 07/08), bundle de `03_modelos`, paquetes de las dos evaluaciones
+> (`20260810_133520_tfg_final` y `20261013_233745_tfg_final`) y reproducción
+> fuera de línea de sus 3480 decisiones (`docs/memoria/apoyo/`). Decisiones de
+> diseño: `decision_mpc_prudente_*.md`. Versión 2.1 (14/10): ajustada a las dos
+> evaluaciones (lista de cambios al final de las notas).
 
 ---
 
@@ -106,8 +108,10 @@ entrenamiento. El rebuffering reciente no forma parte del contrato del cliente
 y se entrega siempre a cero. Los indicadores de progreso se calculan sobre la
 duración completa del vídeo, mientras que el entrenamiento los calculaba
 sobre ventanas de 30 segmentos. Ambas discrepancias se detectaron en la
-revisión final del sistema, después del experimento; su efecto sobre las
-decisiones se cuantifica en el apartado 6.7.
+revisión final del sistema, después de la primera evaluación del capítulo 6,
+y no se corrigieron antes de la segunda para que las dos evaluaran
+exactamente el mismo sistema. Su efecto sobre las decisiones se cuantifica en
+el apartado 6.7.
 
 #### 5.6.2. Predictor de cuantiles del throughput
 
@@ -192,16 +196,17 @@ lo que equivale a multiplicar el throughput correspondiente por
 $e^{-0{,}8\sigma}$ y $e^{-0{,}5\sigma}$. Los cuantiles superiores no se tocan.
 La razón de la asimetría es que solo la cola inferior provoca paradas: cuando
 el modelo no sabe, los escenarios pesimistas se vuelven más pesimistas, y los
-optimistas no se inflan. En el experimento del capítulo 6 los cinco miembros
-coincidieron en la mayoría de las decisiones (en la decisión mediana, el
-ensanchado rebajó el cuantil 0,10 un 2 %) y discreparon en una minoría: en el
-10 % de las decisiones con más desacuerdo el descenso superó el 7 %, y en el
-caso extremo alcanzó el 32 %.
+optimistas no se inflan. En las dos evaluaciones del capítulo 6 los cinco
+miembros coincidieron en la mayoría de las decisiones (en la decisión
+mediana, el ensanchado rebajó el cuantil 0,10 un 2 %) y discreparon en una
+minoría: en el 10 % de las decisiones con más desacuerdo el descenso superó
+el 7 %, y en el caso extremo alcanzó el 32 % y el 33 %.
 
 **Tamaño y coste.** El modelo es pequeño a propósito: 46 292 parámetros por
 miembro, 231 460 en el conjunto y menos de un megabyte de pesos. En la máquina
-de validación, sin aceleración gráfica, los cinco miembros se evalúan en
-1,25 ms de media por decisión (capítulo 6), muy por debajo del límite de
+de validación, sin aceleración gráfica, los cinco miembros se evaluaron en
+1,25 ms de media por decisión en la primera evaluación y en 2,18 ms en la
+segunda, con la máquina más lenta (capítulo 6), muy por debajo del límite de
 50 ms que vigilan las salvaguardas.
 
 #### 5.6.3. Planificador con valor en riesgo condicional
@@ -264,7 +269,8 @@ dependen del escenario: solo el rebuffering depende de la red. Además, como
 los cuantiles están ordenados en cada horizonte y una red más rápida nunca
 produce más rebuffering, las puntuaciones quedan ordenadas igual que los
 escenarios, y las tres peores son siempre las de $\tau = 0{,}10$, 0,25 y 0,50
-(propiedad comprobada en todas las decisiones del experimento). Por tanto,
+(propiedad comprobada en todas las decisiones de las dos evaluaciones). Por
+tanto,
 
 $$ \mathrm{CVaR}_{0{,}75}(\mathbf{a}) = \sum_{t} R(a_t) - \sum_{t} \big| R(a_t) - R(a_{t-1}) \big| - 4{,}3 \cdot \frac{1}{3} \sum_{\tau \in \{0{,}10;\, 0{,}25;\, 0{,}50\}} \; \sum_{t} r^{(\tau)}_t . \tag{5.8} $$
 
@@ -292,25 +298,27 @@ $\alpha$ con las decisiones del propio experimento.
 
 **Coste.** Las 7776 secuencias por cuatro escenarios y cinco pasos suman
 155 520 pasos simulados por decisión, en Python. En la máquina de validación
-supusieron 174 ms de media por decisión (capítulo 6), de los que la inferencia
-neuronal es menos del 1 %. Ese tiempo transcurre dentro de la sesión y
-consume buffer, igual que en un despliegue real, y queda registrado en la
-telemetría decisión a decisión.
+supusieron 174 ms de media por decisión en la primera evaluación y 317 ms en
+la segunda, en la que la máquina virtual fue más lenta durante toda la
+ejecución (capítulo 6); la inferencia neuronal es menos del 1 % de ese
+tiempo. Ese tiempo transcurre dentro de la sesión y consume buffer, igual que
+en un despliegue real, y queda registrado en la telemetría decisión a
+decisión.
 
 #### 5.6.4. El controlador en el experimento
 
-Las decisiones del controlador propio en el experimento del capítulo 6 pueden
-reproducirse fuera de línea. Basta con reinyectar, en orden, la realimentación
-registrada en la telemetría de cada sesión en un controlador nuevo, con el
-mismo paquete del modelo y la misma tabla de tamaños. La reproducción de las
-1740 decisiones del experimento, en otra máquina y con otra versión de
-PyTorch, devuelve exactamente las acciones registradas. Esta reproducibilidad
-permite examinar cualquier decisión con detalle y medir qué aporta cada
-componente.
+Las decisiones del controlador propio en las dos evaluaciones del capítulo 6
+pueden reproducirse fuera de línea. Basta con reinyectar, en orden, la
+realimentación registrada en la telemetría de cada sesión en un controlador
+nuevo, con el mismo paquete del modelo y la misma tabla de tamaños. La
+reproducción de las 3480 decisiones de las dos evaluaciones (1740 en cada
+una), en otra máquina y con otra versión de PyTorch, devuelve exactamente las
+acciones registradas. Esta reproducibilidad permite examinar cualquier
+decisión con detalle y medir qué aporta cada componente.
 
 **Una decisión real.** La Figura 5.3 reconstruye una decisión elegida con una
-regla fijada antes de mirar su desenlace: la primera del experimento, en una
-sesión con traza real y buffer entre 8 y 30 s, en la que el criterio de riesgo
+regla fijada antes de mirar su desenlace: la primera de la primera
+evaluación, en una sesión con traza real y buffer entre 8 y 30 s, en la que el criterio de riesgo
 y el escenario central eligen niveles distintos dentro de la mitad alta de la
 escalera. Se reproduce el vídeo Paseo a 30 fps sobre una traza de banda ancha
 fija, con 16,6 s de buffer y el nivel de 1850 kbit/s en curso. Cuatro de las
@@ -332,9 +340,9 @@ mantiene 1850 kbit/s, mientras que un planificador guiado solo por la mediana
 habría subido. La descarga siguiente midió 1,56 Mbit/s, entre los cuantiles
 0,10 y 0,25 predichos.
 
-**[FIGURA 5.3 — Una decisión real del experimento. Fichero:
+**[FIGURA 5.3 — Una decisión real de la primera evaluación. Fichero:
 `figuras/fig_5_3_decision_real.svg`]**
-*Pie: Figura 5.3: Una decisión real del experimento (vídeo Paseo a 30 fps,
+*Pie: Figura 5.3: Una decisión real de la primera evaluación (vídeo Paseo a 30 fps,
 traza de banda ancha fija, decisión tras el décimo segmento). (a) Cuantiles
 predichos del throughput para los cinco segmentos siguientes, niveles de la
 escalera y throughput medido después. (b) Puntuación de las dos secuencias
@@ -345,39 +353,44 @@ CVaR, que promedia los tres escenarios no optimistas, mantiene 1850 kbit/s.*
 del controlador determina las decisiones. Para cada decisión de las sesiones
 con trazas reales se recalculó, sobre exactamente el mismo estado, la acción
 que habría elegido el planificador con una pieza cambiada. La Tabla 5.7 recoge
-el resultado, que admite tres lecturas.
+el resultado en las dos evaluaciones, que admite tres lecturas válidas en
+ambas.
 
 - La pieza que más pesa es el propio criterio de riesgo. Planificar solo con
-  la mediana habría cambiado una de cada cuatro decisiones, y en el 93 % de
-  esos casos hacia un nivel más alto.
+  la mediana habría cambiado entre una de cada seis y una de cada cuatro
+  decisiones, y en más del 90 % de esos casos hacia un nivel más alto.
 - El valor exacto de $\alpha$ apenas importa. Sustituir el CVaR por el peor
-  escenario o por la media de los cuatro cambia alrededor del 1 % de las
-  decisiones. La explicación está en (5.8): el rebuffering de una secuencia
-  arriesgada aparece de golpe en los escenarios pesimistas, y cualquier
-  criterio que los tenga en cuenta la descarta. Lo determinante es mirar la
-  cola de la distribución, no cuánto peso se le da.
-- El tamaño real de los segmentos y el ensanchado epistémico actúan en torno a
-  una de cada veinte decisiones. El tamaño real lo hace en los dos sentidos:
-  unas veces evita un segmento más pesado de lo nominal y otras aprovecha uno
-  más ligero. El ensanchado actúa sobre todo hacia la prudencia.
+  escenario o por la media de los cuatro cambia entre el 0,6 % y el 1,6 % de
+  las decisiones. La explicación está en (5.8): el rebuffering de una
+  secuencia arriesgada aparece de golpe en los escenarios pesimistas, y
+  cualquier criterio que los tenga en cuenta la descarta. Lo determinante es
+  mirar la cola de la distribución, no cuánto peso se le da.
+- El tamaño real de los segmentos y el ensanchado epistémico actúan en una
+  fracción pequeña de las decisiones, entre el 3 % y el 5 %. El tamaño real
+  lo hace en los dos sentidos: unas veces evita un segmento más pesado de lo
+  nominal y otras aprovecha uno más ligero. El ensanchado actúa sobre todo
+  hacia la prudencia.
 
-Estos porcentajes miden el cambio en la decisión inmediata, no su efecto sobre
-la calidad de experiencia, que exigiría ejecutar las sesiones completas con
-cada variante (apartado 7.4).
+Los porcentajes de la segunda evaluación son menores porque sus ventanas
+fueron más fáciles: el controlador eligió el nivel más alto en el 63 % de sus
+decisiones, frente al 52 % de la primera, y en ese nivel apenas queda margen
+para que otro criterio decida distinto. Estos porcentajes miden el cambio en la decisión inmediata, no su
+efecto sobre la calidad de experiencia, que exigiría ejecutar las sesiones
+completas con cada variante (apartado 7.4).
 
-**[TABLA 5.7 — Efecto de cada componente sobre las decisiones del experimento]**
+**[TABLA 5.7 — Efecto de cada componente sobre las decisiones del controlador]**
 
-| Variante evaluada sobre el mismo estado | Decisiones con otra acción (de 1392) | Sentido del cambio |
-|---|---|---|
-| Solo el escenario central (mediana) | 329 (23,6 %) | El CVaR elige un nivel más bajo en 307 (93 %) |
-| Solo el escenario pesimista (cuantil 0,10) | 20 (1,4 %) | El peor caso elige más bajo en 19 |
-| Media de los cuatro escenarios ($\alpha = 1$) | 16 (1,1 %) | El CVaR elige más bajo en 12 |
-| Tamaños nominales en lugar de reales | 68 (4,9 %) | En ambos sentidos: más bajo con tamaños reales en 32, más alto en 36 |
-| Sin ensanchado epistémico | 61 (4,4 %) | Con ensanchado se elige más bajo en 43 (70 %) |
+| Variante evaluada sobre el mismo estado | Primera evaluación | Segunda evaluación | Sentido del cambio |
+|---|---|---|---|
+| Solo el escenario central (mediana) | 329 (23,6 %) | 233 (16,7 %) | El CVaR elige un nivel más bajo en el 93 % y el 91 % de los casos |
+| Solo el escenario pesimista (cuantil 0,10) | 20 (1,4 %) | 22 (1,6 %) | El peor caso elige más bajo en 19 y 21 |
+| Media de los cuatro escenarios ($\alpha = 1$) | 16 (1,1 %) | 8 (0,6 %) | El CVaR elige más bajo en 12 y 6 |
+| Tamaños nominales en lugar de reales | 68 (4,9 %) | 41 (2,9 %) | En ambos sentidos: más bajo con tamaños reales en 32 y 21, más alto en 36 y 20 |
+| Sin ensanchado epistémico | 61 (4,4 %) | 37 (2,7 %) | Con ensanchado se elige más bajo en el 70 % y el 65 % |
 
-*Pie: Tabla 5.7: Número de decisiones del experimento (sesiones con trazas
-reales) en las que la variante indicada habría elegido otra acción que el
-controlador propio, partiendo del mismo estado.*
+*Pie: Tabla 5.7: Número de decisiones (de 1392 por evaluación, sesiones con
+trazas reales) en las que la variante indicada habría elegido otra acción que
+el controlador propio, partiendo del mismo estado.*
 
 #### 5.6.5. El vídeo como dato: generalización sin reentrenamiento
 
@@ -393,10 +406,10 @@ coincide con la que el reproductor extrajo del manifiesto, con el mismo número
 de representaciones y las mismas tasas nominales. Si no coinciden, no
 planifica con una tabla equivocada: delega en el respaldo y lo registra.
 
-El experimento del capítulo 6 lo pone en práctica. Las configuraciones de las
-60 sesiones del controlador propio apuntan a un único paquete de modelo,
-entrenado una sola vez, y lo único que cambia entre los cuatro vídeos es el
-identificador de la tabla. Un vídeo nuevo requiere una tabla nueva, que es un
+Las dos evaluaciones del capítulo 6 lo ponen en práctica. En cada una, las
+configuraciones de las 60 sesiones del controlador propio apuntan al mismo
+paquete de modelo, entrenado una sola vez, y lo único que cambia entre los
+cuatro vídeos es el identificador de la tabla. Un vídeo nuevo requiere una tabla nueva, que es un
 subproducto del empaquetado y cualquier servidor puede generar al publicar el
 contenido, pero ningún reentrenamiento.
 
@@ -433,9 +446,12 @@ Cada decisión deja en la telemetría 25 campos de diagnóstico: si el paquete
 se cargó y se verificó, si las entradas eran válidas, la acción bruta del
 planificador y la acción final, la latencia de inferencia y, en su caso, el
 uso del respaldo y su motivo, tomado de un vocabulario cerrado. Con ellos la
-evaluación audita el controlador decisión a decisión: en el experimento del
-capítulo 6, las 1740 decisiones quedaron auditadas y ninguna recurrió al
-respaldo.
+evaluación audita el controlador decisión a decisión. En la primera
+evaluación del capítulo 6, ninguna de las 1740 decisiones recurrió al
+respaldo. En la segunda recurrió una: la primera decisión de una sesión, cuya
+inferencia tardó 149,6 ms por una ralentización pasajera de la máquina
+virtual. La salvaguarda delegó la decisión, como prevé su diseño, y el
+respaldo eligió el mismo nivel que había planificado el modelo.
 
 **El paquete del modelo.** Todo lo que el controlador necesita del
 entrenamiento viaja en un directorio de cinco ficheros: los pesos de los cinco
@@ -451,8 +467,8 @@ apartado 5.1 y reconstruye cada miembro a partir de la definición de la red
 que contiene el código. El paquete es la frontera entre la fabricación del
 modelo (apartado 5.7) y su ejecución: cualquier alteración posterior lo haría
 inservible en lugar de silenciosamente distinto, y la reproducción exacta de
-las 1740 decisiones con el paquete archivado confirma que es el mismo que
-decidió en el experimento. La Tabla A.1 del Anexo A reúne todos los
+las decisiones de las dos evaluaciones con el paquete archivado confirma que
+es el mismo que decidió en ambas. La Tabla A.1 del Anexo A reúne todos los
 parámetros del controlador.
 
 **[TABLA A.1 — Para el Anexo A: parámetros del controlador propio]**
@@ -474,7 +490,7 @@ parámetros del controlador.
 | | Integridad | SHA-256 de los 4 ficheros del paquete, verificación activada |
 
 *Pie: Tabla A.1: Parámetros del controlador propio con los valores empleados
-en la evaluación del capítulo 6.*
+en las dos evaluaciones del capítulo 6.*
 
 *(El apartado 5.7 describe el entorno con el que se fabrica el paquete del
 modelo.)*
@@ -537,33 +553,33 @@ atribuirles frases).
   fija, capacidad media), decisión con k = 10; es la primera de 74 que cumplen
   la regla. El throughput medido después NO se usó para elegirla.
 - Barrido de α y criterio LCB: `decision_mpc_prudente_frontera_riesgo_20260619.md`
-  (sobre ventanas de validación, con el predictor MLP anterior). Sus números
-  son de junio y no van a la memoria.
+  (sobre 27 ventanas de VALIDACIÓN, confirmado en
+  `decision_mpc_prudente_diagnostico_estratificado_20260619.md`, con el
+  predictor MLP anterior). Sus números son de junio y no van a la memoria.
+- **Segunda evaluación (14/10):** 2,18 ms de inferencia y 317 ms de decisión
+  (VM ≈1,8 veces más lenta toda la noche; agosto 174 ms estable);
+  reproducción 1740/1740; ordenación 100 %; Tabla 5.7 y σ en
+  `resumen_decisiones_propio_replica.json`; nivel más alto elegido en 872 de
+  1392 decisiones (63 %) frente a 728 (52 %) en agosto; respaldo en 1 decisión
+  (`s00005`, k = 2, 149,6 ms, nivel 0 = acción del planificador). Detalle en
+  `docs/replica_ventanas_nuevas/RESULTADO_REPLICA.md`.
 
 **AVISOS (importantes para la defensa)**
 
-- **A. Reutilización de las ventanas de evaluación durante el desarrollo.**
-  Las 12 ventanas reales del paquete canónico son exactamente las mismas
-  (mismos identificadores y trazas) que las de las comparativas de junio. El
-  paso del predictor MLP al conjunto de GRU se decidió tras ver fallos en dos
-  de ellas (`real_011` y `real_012`, documento
-  `decision_mpc_prudente_predictor_temporal_opcionB_20260623.md`). El modelo
-  nunca se entrenó ni se calibró con ellas y α se fijó en validación, pero la
-  arquitectura sí se eligió viendo su resultado. No invalida el experimento,
-  aunque un tribunal atento puede preguntarlo y la respuesta preparada actual
-  ("eval nunca se usó") es incompleta. Propuesta para el 6.7: "Las ventanas de
-  evaluación se usaron también durante el desarrollo para diagnosticar fallos
-  de versiones anteriores del controlador propio; el modelo nunca se entrenó
-  ni se calibró con ellas, pero la elección de su arquitectura estuvo
-  informada por su comportamiento. Una replicación con ventanas nuevas,
-  seleccionadas con otra semilla, eliminaría esta reserva." Opción fuerte: si
-  te da tiempo, una ejecución con otra semilla de selección (unas 10 h de VM)
-  convierte la reserva en una réplica limpia. Decides tú.
+- **A. Reutilización de las ventanas de evaluación durante el desarrollo:
+  RESUELTO con la segunda evaluación (14/10).** Las 12 ventanas reales de la
+  primera evaluación eran las mismas que las de junio, y dos decisiones de
+  diseño se tomaron viendo fallos en ellas: el planificador prudente (fallo de
+  `real_006`, 15/06) y el predictor temporal (`real_011` y `real_012`, 23/06).
+  La segunda evaluación usa 12 ventanas que ninguna ejecución anterior había
+  ejecutado, con el sistema congelado y la regla de uso fijada antes. El 6.7
+  lo cuenta así, sin esconder la primera.
 - **B. Progreso entre entrenamiento y ejecución.** Con los indicadores de
-  progreso calculados como en el entrenamiento, el 6,8 % de las decisiones
-  reales cambiaría, y en 73 de esos 95 casos hacia un nivel más bajo: en
-  ejecución el controlador fue algo menos prudente de lo que el modelo
-  aprendió. Va al 6.7 con este número.
+  progreso calculados como en el entrenamiento cambiaría el 6,8 % de las
+  decisiones reales en la primera evaluación (73 de 95 hacia un nivel más
+  bajo) y el 3,4 % en la segunda (35 de 48): en ejecución el controlador fue
+  algo menos prudente de lo que el modelo aprendió. Va al 6.7 con estos
+  números.
 - **C. Rebuffering reciente a cero.** Su efecto está acotado: solo hay unas 16
   paradas en las 48 sesiones reales del propio (0,33 por sesión), así que el
   valor real habría sido distinto de cero en torno al 1 % de las decisiones.
@@ -588,18 +604,70 @@ atribuirles frases).
    mismo peso concentra los puntos en la parte baja de la cola: es una
    aproximación prudente y está declarada.
 4. *¿Para qué sirve el conjunto de cinco redes?* Mide la desconfianza del
-   modelo; actúa en una de cada veinte decisiones, casi siempre hacia la
-   prudencia, y solo cuando los miembros discrepan.
-5. *¿El tamaño real cambia algo?* Una de cada veinte decisiones, en los dos
-   sentidos; no hace al controlador más conservador sino más preciso.
-6. *¿Cómo sé que decidió tu modelo y no el respaldo?* 1740 decisiones
-   auditadas sin respaldo y, además, reproducidas fuera de línea con el paquete
-   archivado.
+   modelo; cambia entre el 2,7 % y el 4,4 % de las decisiones, casi siempre
+   hacia la prudencia, y solo cuando los miembros discrepan.
+5. *¿El tamaño real cambia algo?* Entre el 3 % y el 5 % de las decisiones, en
+   los dos sentidos; no hace al controlador más conservador sino más preciso.
+6. *¿Cómo sé que decidió tu modelo y no el respaldo?* Todas las decisiones
+   quedan auditadas y además se reproducen fuera de línea con el paquete
+   archivado: 3480 de 3480. El respaldo actuó una sola vez, en la segunda
+   evaluación, y eligió lo mismo que el modelo.
 7. *¿Elegiste el ejemplo que mejor queda?* No: regla fija (primera decisión que
    cumple tres condiciones sobre la situación), declarada en el texto, sin
    mirar el desenlace.
-8. *¿Usaste las ventanas de evaluación para diseñar?* Ver aviso A: respuesta
-   honesta y propuesta de réplica.
+8. *¿Usaste las ventanas de evaluación para diseñar?* Las de la primera
+   evaluación, sí: sirvieron para diagnosticar versiones anteriores. Por eso
+   repetí la evaluación con ventanas que nunca se habían ejecutado, con el
+   sistema congelado y la regla escrita antes, y solo doy por confirmado lo
+   que se cumple en las dos.
+9. *¿Por qué en la segunda evaluación el controlador tardaba 317 ms y no
+   174?* La VM fue más lenta toda esa noche; el código y el modelo son los
+   mismos. Solo me perjudica a mí, porque soy el único que tarda en decidir:
+   en las sesiones sintéticas, idénticas en las dos evaluaciones, el MPC
+   robusto y BBA repiten casi exactamente y el propio pierde 0,06 de QoE.
+
+**Cambios de la versión 2.1 (14/10), para pasarlos a Word**
+
+1. 5.6.1, final: "después del experimento" pasa a "después de la primera
+   evaluación del capítulo 6, y no se corrigieron antes de la segunda para que
+   las dos evaluaran exactamente el mismo sistema".
+2. 5.6.2, "Dos tipos de incertidumbre", final: "En el experimento del
+   capítulo 6" pasa a "En las dos evaluaciones del capítulo 6", y "alcanzó el
+   32 %" pasa a "alcanzó el 32 % y el 33 %".
+3. 5.6.2, "Tamaño y coste": "se evalúan en 1,25 ms de media por decisión
+   (capítulo 6)" pasa a "se evaluaron en 1,25 ms de media por decisión en la
+   primera evaluación y en 2,18 ms en la segunda, con la máquina más lenta
+   (capítulo 6)".
+4. 5.6.3, "Lo que significa el criterio": "todas las decisiones del
+   experimento" pasa a "todas las decisiones de las dos evaluaciones".
+5. 5.6.3, "Coste": "174 ms de media por decisión (capítulo 6), de los que la
+   inferencia neuronal es menos del 1 %" pasa a "174 ms de media por decisión
+   en la primera evaluación y 317 ms en la segunda, en la que la máquina
+   virtual fue más lenta durante toda la ejecución (capítulo 6); la
+   inferencia neuronal es menos del 1 % de ese tiempo".
+6. 5.6.4, primer párrafo: "en el experimento del capítulo 6" pasa a "en las
+   dos evaluaciones del capítulo 6", y "La reproducción de las 1740
+   decisiones del experimento" pasa a "La reproducción de las 3480 decisiones
+   de las dos evaluaciones (1740 en cada una)".
+7. 5.6.4, "Una decisión real": "la primera del experimento" pasa a "la
+   primera de la primera evaluación"; en el título y el pie de la F5.3, "del
+   experimento" pasa a "de la primera evaluación". El ejemplo y la figura no
+   cambian.
+8. 5.6.4, "El peso de cada componente": nueva Tabla 5.7 con dos columnas;
+   lecturas reescritas con rangos ("entre una de cada seis y una de cada
+   cuatro", "más del 90 %", "entre el 0,6 % y el 1,6 %", "entre el 3 % y el
+   5 %") y un párrafo nuevo: por qué los porcentajes de la segunda son
+   menores (ventanas más fáciles, nivel más alto en el 63 % frente al 52 %).
+9. 5.6.5, segundo párrafo: "El experimento del capítulo 6 lo pone en
+   práctica. Las configuraciones de las 60 sesiones..." pasa a "Las dos
+   evaluaciones del capítulo 6 lo ponen en práctica. En cada una, las
+   configuraciones de las 60 sesiones...".
+10. 5.6.6, "Salvaguardas", final: la frase de las 1740 decisiones sin
+    respaldo pasa a contar las dos evaluaciones, con la única delegación de
+    la segunda (149,6 ms; el respaldo eligió el mismo nivel que el modelo).
+11. 5.6.6, "El paquete del modelo": "las 1740 decisiones... que decidió en el
+    experimento" pasa a "las decisiones de las dos evaluaciones... que
+    decidió en ambas"; pie de la Tabla A.1: "en las dos evaluaciones".
 
 **Longitud y recortes posibles.** Texto ≈ 3900 palabras (≈ 8 páginas) + 8
 ecuaciones + 2 figuras + 2 tablas en el capítulo (la ficha va al anexo); la v1

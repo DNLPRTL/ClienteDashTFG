@@ -68,7 +68,7 @@
 | bundle v1 MLP (`runtime_bundle_v1`) | eliminado → `legacy/` (no se describe) |
 | `throughput_quantile_full_v1_multimedia` | `datasets_normalizados/modelo_propio/dataset_entrenamiento` (`datos_entrenamiento.jsonl`, `datos_validacion.jsonl`, `resumen_dataset.json`; en `06_dataset_entrenamiento`) |
 | salida `~/TFG/runs_trazas/phase6/validacion_comparativa/` | `~/TFG/validacion_comparativa/` |
-| paquete `20260624_182747_tfg_final` (360 sesiones, 6 ctrl) | **`20260810_133520_tfg_final` (300 sesiones, 5 ctrl)** — ÚNICA fuente de números |
+| paquete `20260624_182747_tfg_final` (360 sesiones, 6 ctrl) | **`20260810_133520_tfg_final` (primera evaluación) y `20261013_233745_tfg_final` (segunda evaluación, ventanas nunca ejecutadas; 14/10)**, 300 sesiones y 5 ctrl cada uno — ÚNICAS fuentes de números; conclusiones solo con lo que se cumple en las dos (`docs/replica_ventanas_nuevas/RESULTADO_REPLICA.md`) |
 | ficheros del paquete: `session_summary.csv` / `raw_chunks.csv` / `aggregates_by_controller.json` / `statistics.json` / `plot_manifest.json` / `resultados_para_validar.md` | `sesiones.csv` / `segmentos.csv` / `agregados_por_controlador.json` / `estadistica.json` / `graficas.json` / `resumen_resultados.md` |
 | telemetría `segment_telemetry.csv` | `telemetria_segmentos.csv` (por ejecución: `manifiesto_ejecucion.json`, `config_resuelta.json`, `entorno.json`, `ejecucion.log`) |
 | columnas `timestamp_s,duration_s,throughput_kbps` | `tiempo_s,duracion_s,throughput_kbps` |

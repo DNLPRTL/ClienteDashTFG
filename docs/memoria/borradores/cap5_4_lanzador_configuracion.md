@@ -18,8 +18,8 @@
 El apartado 4.8 definió el plan de experimento y la separación entre ejecutar
 sesiones y evaluarlas. Este apartado describe el software que lo lleva a la
 práctica: la capa de configuración, con sus dos niveles; el lanzador, que
-convierte un experimento declarado en un paquete de evidencia; y la interfaz
-gráfica desde la que se lanzó la evaluación final.
+convierte un experimento declarado en un paquete de evidencia; y su interfaz
+gráfica.
 
 **Dos niveles de configuración.** El sistema distingue la configuración de
 una sesión de la configuración de un experimento. La primera es la que
@@ -45,10 +45,12 @@ reescrituras de rutas para mover el corpus entre máquinas), el experimento
 ventanas sintéticas y repeticiones), los parámetros de reproducción y de
 emulación que recibirán todas las sesiones, las opciones de ejecución (tiempo
 límite por sesión, reanudación, si se ejecutan sesiones y análisis) y los
-parámetros específicos de cada controlador. El fichero real de la evaluación
-final ocupa cuarenta líneas: declara los cinco controladores, el preset, las
-rutas y los parámetros del controlador propio; todo lo demás son valores por
-defecto documentados en el código.
+parámetros específicos de cada controlador. El fichero real de la primera
+evaluación del capítulo 6 ocupa 39 líneas: declara los cinco controladores,
+el preset, las rutas y los parámetros del controlador propio; todo lo demás
+son valores por defecto documentados en el código. La segunda evaluación usa
+el mismo fichero con dos rutas cambiadas: la del catálogo de trazas y la de
+salida.
 
 **Presets: el tamaño del experimento en una palabra.** Un preset es una
 especificación cerrada del tamaño y las condiciones de un experimento
@@ -60,9 +62,9 @@ escalera: los tres primeros son pruebas de humo y diagnóstico y no habilitan
 comparación alguna; los tres últimos sí, y solo con el motor simulado. El
 preset sobrescribe los parámetros de reproducción y emulación que le
 corresponden, y su especificación efectiva queda escrita en el protocolo del
-paquete. La evaluación del capítulo 6 empleó el preset final de la tabla,
-cuyo producto (15 ventanas, cuatro vídeos y cinco controladores) da las 300
-sesiones del paquete canónico.
+paquete. Las dos evaluaciones del capítulo 6 emplearon el preset final de la
+tabla, cuyo producto (15 ventanas, cuatro vídeos y cinco controladores) da
+300 sesiones en cada una.
 
 **[TABLA 5.4 — Presets de evaluación]**
 
@@ -72,7 +74,7 @@ sesiones del paquete canónico.
 | `rapido` | 8 | 2 | 1 | 30 | 300 s | No |
 | `comparativa` | 12 | 3 | 1 | 30 | 300 s | Sí |
 | `equilibrado` | 24 | 4 | 2 | 30 | 300 s | Sí |
-| `tfg_final` (evaluación final) | 12 | 3 | 4 | 30 | 300 s | Sí |
+| `tfg_final` (evaluaciones del capítulo 6) | 12 | 3 | 4 | 30 | 300 s | Sí |
 | `extendido` | 48 | 8 | 4 | 30 | 300 s | Sí |
 
 *Pie: Tabla 5.4: Presets de evaluación definidos en el sistema. El tiempo
@@ -139,7 +141,11 @@ procedencia. El instante inicial de cada ventana dentro de su traza también
 se deriva de la semilla, en múltiplos del intervalo de decisión, de modo que
 dos ejecuciones con la misma semilla y el mismo catálogo producen exactamente
 las mismas ventanas. Las sintéticas se seleccionan aparte, con una semilla
-derivada, y quedan etiquetadas como diagnóstico.
+derivada, y quedan etiquetadas como diagnóstico. Esta construcción permite
+obtener ventanas nuevas sin tocar el código: basta una copia del catálogo en
+la que los grupos de captura ya evaluados quedan marcados como no
+utilizables. Así se obtuvieron las ventanas de la segunda evaluación del
+capítulo 6.
 
 **Inyección del vídeo por sesión.** El catálogo de perfiles de vídeo asocia
 a cada identificador la URL de su manifiesto, la duración de segmento y su
@@ -150,7 +156,7 @@ modelo sirve a los cuatro vídeos del experimento: cambia el dato que
 describe el contenido, no el modelo (apartado 5.6).
 
 **La interfaz gráfica.** El lanzador tiene una interfaz gráfica mínima,
-construida con `tkinter`, con la que se lanzó la evaluación final. Ofrece el
+construida con `tkinter`. Ofrece el
 preset, una casilla por controlador registrado, los botones de ejecutar y
 detener y una barra de progreso. Muestra en todo momento la orden exacta que
 va a ejecutar: la interfaz no hace nada que no pueda hacerse desde la línea
@@ -239,3 +245,23 @@ clásicos.)*
   respaldo, latencia máxima, hashes — →5.6).
 - Longitud: ~1250 palabras. Recortables al masticar: el párrafo de la
   interfaz gráfica (a tres frases) y los modos auxiliares del lanzador.
+
+**Cambios del 14/10 (segunda evaluación), para pasarlos a Word**
+
+1. Introducción: "y la interfaz gráfica desde la que se lanzó la evaluación
+   final" pasa a "y su interfaz gráfica". La segunda evaluación se lanzó
+   desde la línea de órdenes, así que la interfaz no se asocia a ninguna.
+2. Configuración de la evaluación: "El fichero real de la evaluación final
+   ocupa cuarenta líneas" pasa a "El fichero real de la primera evaluación
+   del capítulo 6 ocupa 39 líneas" (contadas: 39), y se añade al final del
+   párrafo: "La segunda evaluación usa el mismo fichero con dos rutas
+   cambiadas: la del catálogo de trazas y la de salida."
+3. Presets: "La evaluación del capítulo 6 empleó el preset final de la
+   tabla, cuyo producto (...) da las 300 sesiones del paquete canónico" pasa
+   a "Las dos evaluaciones del capítulo 6 emplearon el preset final de la
+   tabla, cuyo producto (...) da 300 sesiones en cada una". En la T5.4, la
+   fila pasa a "`tfg_final` (evaluaciones del capítulo 6)".
+4. Selección de ventanas: se añaden al final dos frases sobre cómo se
+   obtuvieron las ventanas nuevas (copia del catálogo con los grupos ya
+   evaluados marcados como no utilizables).
+5. Interfaz gráfica: se quita "con la que se lanzó la evaluación final".
