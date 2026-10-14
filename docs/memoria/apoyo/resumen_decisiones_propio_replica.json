@@ -1,0 +1,211 @@
+{
+  "fuente": "telemetria del paquete 20261013_233745_tfg_final reproducida con el bundle de 03_modelos",
+  "reales": {
+    "decisiones": 1392,
+    "reproduccion_exacta": 1392,
+    "puntuaciones_ordenadas_por_cuantil": 1392,
+    "variantes": {
+      "central": {
+        "decisiones_con_otra_accion": 233,
+        "porcentaje": 16.74,
+        "cvar_mas_bajo": 212,
+        "cvar_mas_alto": 21
+      },
+      "peor": {
+        "decisiones_con_otra_accion": 22,
+        "porcentaje": 1.58,
+        "cvar_mas_bajo": 1,
+        "cvar_mas_alto": 21
+      },
+      "media4": {
+        "decisiones_con_otra_accion": 8,
+        "porcentaje": 0.57,
+        "cvar_mas_bajo": 6,
+        "cvar_mas_alto": 2
+      },
+      "nominal": {
+        "decisiones_con_otra_accion": 41,
+        "porcentaje": 2.95,
+        "cvar_mas_bajo": 21,
+        "cvar_mas_alto": 20
+      },
+      "sin_ensanchado": {
+        "decisiones_con_otra_accion": 37,
+        "porcentaje": 2.66,
+        "cvar_mas_bajo": 24,
+        "cvar_mas_alto": 13
+      },
+      "progreso_sesion": {
+        "decisiones_con_otra_accion": 48,
+        "porcentaje": 3.45,
+        "cvar_mas_bajo": 13,
+        "cvar_mas_alto": 35
+      }
+    },
+    "sigma_epistemica": {
+      "mediana": 0.027491983212530612,
+      "p90": 0.09528060138225555,
+      "maximo": 0.5000992238521575,
+      "factor_q10_mediana": 0.9782465089465754,
+      "factor_q10_p90": 0.9266081771826622,
+      "factor_q10_maximo": 0.6702668387577227
+    },
+    "tamano_real_sobre_nominal_siguiente": {
+      "minimo": 0.6507129824561404,
+      "mediana": 1.002513953488372,
+      "maximo": 1.24782
+    },
+    "niveles_elegidos": {
+      "0": 95,
+      "1": 94,
+      "2": 135,
+      "3": 128,
+      "4": 68,
+      "5": 872
+    }
+  },
+  "sinteticas": {
+    "decisiones": 348,
+    "reproduccion_exacta": 348,
+    "puntuaciones_ordenadas_por_cuantil": 348,
+    "variantes": {
+      "central": {
+        "decisiones_con_otra_accion": 74,
+        "porcentaje": 21.26,
+        "cvar_mas_bajo": 66,
+        "cvar_mas_alto": 8
+      },
+      "peor": {
+        "decisiones_con_otra_accion": 5,
+        "porcentaje": 1.44,
+        "cvar_mas_bajo": 1,
+        "cvar_mas_alto": 4
+      },
+      "media4": {
+        "decisiones_con_otra_accion": 2,
+        "porcentaje": 0.57,
+        "cvar_mas_bajo": 2,
+        "cvar_mas_alto": 0
+      },
+      "nominal": {
+        "decisiones_con_otra_accion": 16,
+        "porcentaje": 4.6,
+        "cvar_mas_bajo": 9,
+        "cvar_mas_alto": 7
+      },
+      "sin_ensanchado": {
+        "decisiones_con_otra_accion": 21,
+        "porcentaje": 6.03,
+        "cvar_mas_bajo": 16,
+        "cvar_mas_alto": 5
+      },
+      "progreso_sesion": {
+        "decisiones_con_otra_accion": 38,
+        "porcentaje": 10.92,
+        "cvar_mas_bajo": 10,
+        "cvar_mas_alto": 28
+      }
+    },
+    "sigma_epistemica": {
+      "mediana": 0.02789290565997362,
+      "p90": 0.0716100150346756,
+      "maximo": 0.1746296763420105,
+      "factor_q10_mediana": 0.9779327984710378,
+      "factor_q10_p90": 0.9443220540869299,
+      "factor_q10_maximo": 0.8696158286915469
+    },
+    "tamano_real_sobre_nominal_siguiente": {
+      "minimo": 0.68174,
+      "mediana": 1.0061957894736842,
+      "maximo": 1.24782
+    },
+    "niveles_elegidos": {
+      "0": 85,
+      "1": 32,
+      "2": 5,
+      "3": 16,
+      "4": 14,
+      "5": 196
+    }
+  },
+  "ejemplo": {
+    "regla": "primera decision real, buffer 8-30 s, CVaR y central distintos, ambos nivel >= 3",
+    "candidatas_que_cumplen_la_regla": 54,
+    "sesion": "s00045_controlador_propio_paseo_10min_30fps_4s_real_003_770ddb5576_r1",
+    "k": 8,
+    "buffer_s": 17.52251640600025,
+    "nivel_previo": 5,
+    "historial_tp_mbps": [
+      27.789744000000017,
+      27.78974400000001,
+      27.789744000000017,
+      6.961428817287602,
+      2.6878319999999993
+    ],
+    "base_mbps": 8.017327315464719,
+    "pred_mbps_h1": [
+      1.2025990973197078,
+      3.8016461712466985,
+      10.274766294294897,
+      25.202950065747867
+    ],
+    "pred_sin_ensanchado_mbps_h1": [
+      1.2025990973197078,
+      4.174112783126309,
+      10.274766294294897,
+      25.202950065747867
+    ],
+    "secuencia_cvar": [
+      4,
+      3,
+      3,
+      3,
+      3
+    ],
+    "secuencia_central": [
+      5,
+      5,
+      5,
+      5,
+      5
+    ],
+    "puntos_secuencia_cvar": [
+      5.629317071722581,
+      7.799999999999999,
+      7.799999999999999,
+      7.799999999999999
+    ],
+    "puntos_secuencia_central": [
+      -139.673574936241,
+      21.5,
+      21.5,
+      21.5
+    ],
+    "rebuffer_secuencia_central_s": [
+      37.48222672935837,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "cvar_secuencia_cvar": 7.076439023907525,
+    "cvar_secuencia_central": -32.224524978747006,
+    "tam_real_sobre_nominal_siguiente": [
+      1.0535266666666667,
+      1.0197306666666666,
+      0.99159,
+      0.9886097297297297,
+      0.9876856140350877,
+      1.0076669767441861
+    ],
+    "primera_accion_por_criterio": {
+      "cvar": 4,
+      "central": 5,
+      "peor": 4,
+      "media4": 4,
+      "nominal": 4,
+      "sin_ensanchado": 4,
+      "progreso_sesion": 4
+    },
+    "throughput_medido_despues_mbps": 1.280730968920218
+  }
+}

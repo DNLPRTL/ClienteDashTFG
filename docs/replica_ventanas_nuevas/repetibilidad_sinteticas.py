@@ -35,13 +35,15 @@ def main():
         iguales = niveles(p1, a["id_sesion"]) == niveles(p2, b["id_sesion"])
         dq = float(b["qoe_lineal_media"]) - float(a["qoe_lineal_media"])
         por_controlador.setdefault(clave[0], []).append((iguales, dq))
-    print("{:<20} {:>9} {:>14} {:>14}".format("controlador", "identicas", "|dQoE| medio", "|dQoE| max"))
+    print("{:<20} {:>9} {:>14} {:>14} {:>16}".format(
+        "controlador", "identicas", "|dQoE| medio", "|dQoE| max", "dQoE medio (2-1)"))
     todas = []
     for alias, datos in sorted(por_controlador.items()):
         dif = [abs(dq) for _, dq in datos]
         todas.extend(dif)
-        print("{:<20} {:>5}/{:<3} {:>14.4f} {:>14.4f}".format(
-            alias, sum(1 for iguales, _ in datos if iguales), len(datos), statistics.mean(dif), max(dif)))
+        print("{:<20} {:>5}/{:<3} {:>14.4f} {:>14.4f} {:>+16.4f}".format(
+            alias, sum(1 for iguales, _ in datos if iguales), len(datos), statistics.mean(dif), max(dif),
+            statistics.mean(dq for _, dq in datos)))
     print("Total: |dQoE| medio {:.4f}, maximo {:.4f}".format(statistics.mean(todas), max(todas)))
 
 
