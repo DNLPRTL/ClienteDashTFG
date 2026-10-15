@@ -7,7 +7,9 @@ Dos modos por sesion:
 
 Uso:
   python validar_simulador.py <paquete> [<paquete> ...] [--modo forzado|cerrado|ambos]
-         [--controladores a,b] [--procesos N] [--salida informe.json]
+         [--controladores a,b] [--procesos N] [--regla cabeza|esperado] [--salida informe.json]
+
+--regla esperado para los paquetes grabados con el reproductor corregido (C2, desde el 15/10).
 """
 from __future__ import annotations
 
@@ -28,7 +30,17 @@ from core.controladores.base import ControladorBase  # noqa: E402
 from core.controladores.contrato import cuantizar_tasa_a_nivel  # noqa: E402
 from core.evaluacion.qoe import EntradaQoESegmento, calcular_qoe_lineal  # noqa: E402
 
-CLAVES_CONTROLADOR = ("basado_en_tasa", "bba", "bola", "mpc_robusto", "controlador_propio", "mpc")
+CLAVES_CONTROLADOR = (
+    "basado_en_tasa",
+    "bba",
+    "bola",
+    "mpc_robusto",
+    "controlador_propio",
+    "mpc",
+    "propio_mediana",
+    "propio_cuantiles_fijos",
+    "propio_cuantiles_recientes",
+)
 
 
 class ControladorReplay(ControladorBase):
@@ -94,6 +106,8 @@ def config_sim(item: Dict[str, Any]) -> sim.ConfigSesion:
     parametros = dict((config.get("controlador") or {}).get("parametros") or {})
     if "dir_bundle" in parametros:
         parametros["dir_bundle"] = sim.DIR_BUNDLE_WINDOWS
+    if "ruta_cuantiles_fijos" in parametros:
+        parametros["ruta_cuantiles_fijos"] = r"C:\Users\danie\Documents\TFG Material\03_modelos\cuantiles_fijos\cuantiles_fijos.json"
     red = config.get("reproduccion_red") or {}
     # Latencia de cada decision tal como la midio el reproductor (los paquetes de agosto y
     # octubre llevan el planificador antiguo, de 174-315 ms por decision).
@@ -114,6 +128,8 @@ def config_sim(item: Dict[str, Any]) -> sim.ConfigSesion:
         max_segmentos=int((config.get("reproduccion") or {}).get("max_segmentos_video", 30)),
         etiqueta=sesion["id_sesion"],
         latencias_registradas_s=latencias,
+        # Paquetes con el reproductor corregido (C2): regla "esperado"; los anteriores, "cabeza".
+        regla_paradas=item.get("regla", "cabeza"),
     )
 
 
@@ -223,6 +239,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--modo", choices=("forzado", "cerrado", "ambos"), default="ambos")
     p.add_argument("--controladores", default="")
     p.add_argument("--procesos", type=int, default=max(1, (os.cpu_count() or 2) - 2))
+    p.add_argument("--regla", choices=("cabeza", "esperado"), default="cabeza")
     p.add_argument("--salida", default="")
     args = p.parse_args(argv)
     claves = set(filter(None, args.controladores.split(","))) or set(CLAVES_CONTROLADOR)
@@ -232,6 +249,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         for item in leer_sesiones(raiz):
             if item["sesion"]["clave_controlador"] in claves and not item["sesion"].get("sintetica"):
                 item["paquete"] = os.path.basename(raiz.rstrip("/\\"))
+                item["regla"] = args.regla
                 items.append(item)
     print("sesiones reales completadas:", len(items), flush=True)
 
@@ -247,7 +265,8 @@ def main(argv: Optional[List[str]] = None) -> int:
             fila["paquete"] = item["paquete"]
         r = resumen_modo(filas, modo)
         if modo == "cerrado":
-            r["pareadas_propio_vs_mpc_robusto"] = diferencias_pareadas(filas, "controlador_propio", "mpc_robusto")
+            for otro in ("mpc_robusto", "propio_mediana", "propio_cuantiles_fijos", "propio_cuantiles_recientes"):
+                r["pareadas_propio_vs_" + otro] = diferencias_pareadas(filas, "controlador_propio", otro)
             r["pareadas_bola_vs_bba"] = diferencias_pareadas(filas, "bola", "bba")
         informe[modo] = r
         informe[modo + "_sesiones"] = filas

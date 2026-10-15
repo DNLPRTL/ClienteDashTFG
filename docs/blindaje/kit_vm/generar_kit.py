@@ -40,7 +40,7 @@ def sha256(ruta: str) -> str:
 def huellas(raiz: str, salida: str) -> int:
     lineas = []
     for directorio, subdirs, ficheros in os.walk(raiz):
-        subdirs[:] = sorted(d for d in subdirs if d not in ("__pycache__", ".idea"))
+        subdirs[:] = sorted(d for d in subdirs if d not in ("__pycache__", ".idea", ".ruff_cache", ".pytest_cache"))
         for nombre in sorted(ficheros):
             ruta = os.path.join(directorio, nombre)
             relativa = "./" + os.path.relpath(ruta, raiz).replace("\\", "/")

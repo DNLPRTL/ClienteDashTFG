@@ -3,6 +3,17 @@
 Propuesta de Claude tras leer `00_HANDOFF_FASE_BLINDAJE.md` y comprobarlo
 contra el código de `TFG Material\01_codigo\ClienteDashTFG` y los datos.
 
+> **Estado (15/10/2026):**
+> - Hechos F0–F5 y F8 (el pulido se adelantó: el código se congela antes del
+>   final).
+> - Semáforo 1 en ámbar → adelante (`04_SEMAFORO_1.md`). Semáforo 2 en ámbar
+>   → adelante (`05_SEMAFORO_2.md`): la latencia se corrigió en C8 y r = 0,894
+>   no afecta al final.
+> - Protocolo del final fijado en `06_PROTOCOLO_FINAL.md`.
+> - Siguiente: F6, el experimento final en la VM con el kit
+>   (`kit_vm/LEEME.md`), por script con `nohup` en lugar de la interfaz,
+>   porque sobrevive al cierre de la ventana.
+
 **Daniel confirmó D1–D8 tal como se recomiendan el 14/10 por la noche,**
 incluido el permiso para descargar `tears_of_steel_1080p.mov.zip` en la VM
 servidor. Falta el tope de horas de VM para el experimento final, que da él

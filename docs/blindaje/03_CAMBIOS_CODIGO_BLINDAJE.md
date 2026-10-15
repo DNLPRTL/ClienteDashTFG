@@ -255,3 +255,65 @@ Verificación:
   respaldos; la trayectoria del propio es idéntica a la del simulador;
 - simulador sobre las 100 ventanas de validación: propio − MPC = −0,017
   [−0,045; +0,013], con 0,01 frente a 0,12 paradas por sesión.
+
+## C8. Pulido antes de congelar (F8), 15/10
+
+Copia exacta del código que ejecutó la prueba corta, antes de este pulido:
+`TFG\legacy\codigo_previa_vm_20261014\ClienteDashTFG`. Sus huellas son las del
+kit con el que la VM pasó `comprobar` (`hashes_codigo.sha256`, 100 ficheros).
+
+- **Carga del modelo al crear el controlador.**
+  - Problema: el propio y sus 3 variantes cargaban el bundle en la primera
+    decisión (comprobación de huellas incluida). En la prueba corta, esa
+    decisión tardó 53–98 ms; el resto, 1,5–2,9 ms de mediana (p99 de todas las
+    decisiones: 66–72 ms). Incumplía el criterio del semáforo 2 (p99 < 20 ms).
+  - Cambio en `controlador_propio.py`: `_cargar_modelo()` se llama en
+    `__init__`. El controlador se crea antes de arrancar el reproductor
+    (`main.py`), así que la carga queda fuera de la sesión, como en un
+    reproductor real al arrancar. Si la carga falla, se reintenta en cada
+    decisión y decide el respaldo con motivo `fallo_carga_bundle`, como antes.
+    Los cuantiles fijos se cargan en el mismo sitio.
+  - Medido en Windows: crear el controlador, 10–12 ms; primera decisión,
+    1,8–3,4 ms. El MPC robusto, 2,6 ms en su primera decisión.
+- **Fuera los ganchos de D7 no adoptados:** `alfa_riesgo="buffer"`,
+  `ruta_recalibracion`, `cargar_desplazamientos` y los desplazamientos de
+  `bundle.predecir`. `bundle.py` vuelve a ser idéntico al anterior al blindaje.
+- **Fuera el código muerto de Q_H:** `entrenamiento/politicas_rollout.py` y
+  `entrenamiento/utilidades_rollout.py` (guardados en
+  `TFG\legacy\qh_retirado_20261015`).
+  - Las dos funciones que usaba `generar_dataset.py` pasan a sus sitios:
+    `reescrituras_rutas_por_defecto` a `corpus_trazas/rutas.py`, y
+    `cargar_catalogo_trazas` ya existía en `corpus_trazas/ventanas.py`.
+  - `entrenamiento/constantes.py` se queda con las 5 constantes que se usan.
+    `FASE_DATASET_QH` conserva su valor porque está escrito en los metadatos del
+    dataset entregado.
+- **Pruebas dentro del código entregado:** `pruebas/` con las de C2–C6 y una
+  nueva, `test_carga_modelo.py`. `pruebas/artefactos.py` encuentra el bundle y
+  los cuantiles fijos en Windows y en la VM. 18 pruebas, todas correctas.
+- **`.idea`** sale de la carpeta del código (a `TFG\legacy\idea_ClienteDashTFG_20261015`).
+- **Fuera del código (datos):** el `esquema_targets.json` de
+  `06_dataset_entrenamiento` tenía los 4 nombres de campo en inglés, mientras
+  que las muestras `.jsonl` los usan en castellano
+  (`objetivos_cuantiles_throughput.throughput_base_bps`…). Se sustituye por el
+  que escribe el código actual, idéntico salvo esos 4 nombres. Ningún manifiesto
+  guarda su huella. El original está en
+  `TFG\legacy\dataset_esquema_targets_ingles`.
+
+Verificación:
+- **regresión con el simulador:** 4000 sesiones de validación (100 ventanas ×
+  5 vídeos × 8 controladores), con la misma latencia simulada antes y después.
+  Las 4000 filas, idénticas;
+- **dataset piloto** (2 + 2 ventanas) regenerado antes y después: muestras,
+  esquema y auditorías idénticos byte a byte; solo cambian las marcas de tiempo;
+- `ruff check --select F` sin avisos, salvo un `f-string` sin variables en
+  `reproductor.py:496`, anterior y sin efecto;
+- `python -m unittest discover -s pruebas`: 18 pruebas correctas;
+- `kit_vm/comprobar_controladores.py` en Windows: los 8 controladores deciden
+  con los 5 vídeos.
+
+El kit de la VM se regenera con 103 ficheros de código. `comprobar` ahora:
+- ejecuta las pruebas en la VM;
+- falla si sobra algún fichero de una versión anterior.
+
+El humo comprueba la latencia: p99 < 20 ms y primera decisión del propio
+< 20 ms.

@@ -11,6 +11,10 @@ entre la media armonica de las ultimas descargas):
 
 Uso: python calibracion_predictor.py --salida informe.json [--recalibracion desplazamientos.json]
 Solo muestras con historial no vacio, como decide el controlador. No va a la memoria tal cual.
+
+La recalibracion no se adopto (semaforo 1) y su gancho en el controlador (ruta_recalibracion) se
+retiro en el pulido F8 del 15/10. Para repetir su prueba en bucle cerrado hay que usar el codigo de
+la prueba corta: TFG_CODIGO=C:/Users/danie/Documents/TFG/legacy/codigo_previa_vm_20261014/ClienteDashTFG.
 """
 from __future__ import annotations
 

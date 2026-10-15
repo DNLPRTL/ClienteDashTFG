@@ -1,7 +1,7 @@
 """Crea los 8 controladores del experimento con cada uno de los 5 videos y les hace decidir una vez.
 
 Detecta antes de lanzar nada un descriptor de video, un bundle o unos cuantiles fijos que falten, y
-mide la latencia de una decision. Se ejecuta desde la carpeta del codigo:
+mide cuanto tarda en crearse cada controlador (ahi se carga el modelo) y su primera decision. Se ejecuta desde la carpeta del codigo:
   cd ~/TFG/ClienteDashTFG && python3 ~/TFG/kit_vm/comprobar_controladores.py
 """
 import statistics
@@ -32,16 +32,22 @@ def main():
     controladores = list(config["experimento"]["controladores"])
     videos = especificacion_preset("final_blindaje")["ids_perfiles_video"]
     latencias = {}
+    primeras = {}
+    creacion = {}
     for video in videos:
         perfil = PerfilTamanosSegmentos.cargar_por_id(video)
         tasas = [b / 8.0 for b in perfil.bitrates_bps]
         for clave in controladores:
             parametros = dict(parametros_controlador(config, clave))
             parametros["id_perfil_video"] = video
+            inicio = time.perf_counter()
             controlador = crear_controlador(clave, parametros)
+            creacion.setdefault(clave, []).append(1000.0 * (time.perf_counter() - inicio))
             controlador.fijarFeedbackReproductor(realimentacion(1, tasas, 4.0))
             controlador.fijarFeedbackReproductor(realimentacion(2, tasas, 7.5))
+            inicio = time.perf_counter()
             controlador.calcularAccionControl()
+            primeras.setdefault(clave, []).append(1000.0 * (time.perf_counter() - inicio))
             inicio = time.perf_counter()
             controlador.fijarFeedbackReproductor(realimentacion(3, tasas, 10.0))
             controlador.calcularAccionControl()
@@ -53,8 +59,10 @@ def main():
                     return 1
         print("   {0}: los {1} controladores deciden".format(PERFILES_VIDEO[video]["nombre_visible"], len(controladores)))
     for clave, valores in latencias.items():
-        print("   {0:28s} decision media {1:6.1f} ms (maximo {2:6.1f} ms)".format(clave, statistics.mean(valores), max(valores)))
-    return 0 if max(max(v) for v in latencias.values()) < 50.0 else 1
+        print("   {0:28s} crear {1:6.1f} ms | primera decision {2:5.1f} ms | siguiente {3:5.1f} ms (maximos)".format(
+            clave, max(creacion[clave]), max(primeras[clave]), max(valores)))
+    peor = max(max(v) for v in list(latencias.values()) + list(primeras.values()))
+    return 0 if peor < 50.0 else 1
 
 
 if __name__ == "__main__":

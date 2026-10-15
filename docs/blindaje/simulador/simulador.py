@@ -255,7 +255,9 @@ def _latencia(cfg: ConfigSesion, num_decision: int, medida_s: float) -> float:
         return medida_s
     tabla = cfg.latencias_s or {}
     if cfg.clave_controlador.startswith(("controlador_propio", "propio")):
-        return tabla.get("propio_primera", 0.05) if num_decision == 0 else tabla.get("propio", 0.003)
+        # Desde el pulido F8 (15/10) el modelo se carga al crear el controlador: la primera decision
+        # ya no paga la carga (antes, 0.05 s; medido en la VM: 53-98 ms).
+        return tabla.get("propio_primera", 0.006) if num_decision == 0 else tabla.get("propio", 0.003)
     return tabla.get("clasico", 0.0003)
 
 
