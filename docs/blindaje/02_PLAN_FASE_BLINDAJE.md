@@ -3,6 +3,12 @@
 Propuesta de Claude tras leer `00_HANDOFF_FASE_BLINDAJE.md` y comprobarlo
 contra el código de `TFG Material\01_codigo\ClienteDashTFG` y los datos.
 
+> **Estado (16/10/2026): parte técnica CERRADA.**
+> - F6 hecho: 1208/1208 sesiones en 41,3 h. P1–P5 aceptadas tras Holm.
+> - F7 hecho: verificación, auditoría de las 35 032 decisiones, física y
+>   análisis reproducidos (`07_RESULTADO_FINAL.md`).
+> - Siguiente: F9, la memoria.
+>
 > **Estado (15/10/2026):**
 > - Hechos F0–F5 y F8 (el pulido se adelantó: el código se congela antes del
 >   final).
