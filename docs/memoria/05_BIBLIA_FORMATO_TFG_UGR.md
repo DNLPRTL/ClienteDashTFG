@@ -1,4 +1,4 @@
-# Biblia de formato y estilo de la memoria (TFG ETSIIT-UGR) — v1, 08/11/2026
+# Biblia de formato y estilo de la memoria (TFG ETSIIT-UGR) — v2, 09/11/2026
 
 Guía obligatoria para redactar cualquier apartado de la memoria desde el 5.3.
 Sale de siete TFG aprobados en la ETSIIT (tres del tutor Juan José Ramos
@@ -17,7 +17,7 @@ biblia; si hay conflicto de contenido, manda el plan.
 | TFG | Año | Tutor | Herramienta | Páginas | Cuerpo (palabras) | Fig. / Tab. / Refs. | Peso |
 |---|---|---|---|---|---|---|---|
 | Cañizares Cancho | 2025 | Ramos Muñoz y Navarro Ortiz | Word, plantilla oficial ETSIIT, Arial 12 | 108 | ~15 000 | 57 / 13 / 34 | máximo |
-| Marín Munuera | 2024 | Navarro Ortiz y Ramos Muñoz | LaTeX, plantilla ETSIIT, 11 pt | 144 | ~30 000 | 15 / 1 / ~40 | máximo |
+| Marín Munuera | 2024 | Navarro Ortiz (director) y Ramos Muñoz (codirector) | LaTeX, plantilla ETSIIT, 11 pt | 143 | ~14 900 | 14 / 1 / 38 | alto (firma Navarro: algunos rasgos pueden ser suyos) |
 | González Callejas | 2017 | Ramos Muñoz | LaTeX, plantilla ETSIIT | 150 | ~29 000 | 54 / 10 / 27 | medio |
 | Sánchez Martínez | 2024 | Molero y Pérez Escribano | LaTeX, plantilla ETSIIT | 150 | ~39 000 | 43 / 2 / 24 | alto |
 | Hernández Manrique | 2024 | Peinado y Gómez | LaTeX, plantilla ETSIIT | 110 | ~24 000 | 15+ / 15 / 28 | alto |
@@ -268,10 +268,20 @@ reproducción); lista de acrónimos; citas a especificaciones y documentación
 oficial además de a artículos; su grupo publica sobre redes y telemática
 (carpeta `02_trabajos_locales_ugr` de la biblioteca: citar lo pertinente).
 
-## 10. Pendiente de incorporar
+## 10. Lo que añade el TFG del tutor de 2024 (ficha `ficha_tutor_2024_marin.md`)
 
-La ficha del TFG del tutor de 2024 (`ficha_tutor_2024_marin.md`) estaba
-terminándose al cerrar esta versión; lo que aquí se dice de 2024 sale de la
-lectura directa de su portada, índice, autorizaciones, planificación,
-conclusión y bibliografía. Cuando exista la ficha, repasar los § 2–4 y
-subir esta biblia a v2.
+Confirma lo anterior: capítulo 2 «Planificación y Costes» justo tras la
+introducción (Gantt, hardware amortizado a 3 años, software, personal con
+12 ECTS × 25 h a 20 €/h y tutores a 50 €/h, cuadro con el total); objetivos
+en lista en la introducción y conclusión que los repasa uno a uno con su
+veredicto; estado del arte breve, un párrafo por trabajo que acaba diciendo
+en qué se diferencia de este; capítulo de tecnologías con una frase de enlace
+por herramienta («En este trabajo, X sirve para…»); figuras anunciadas antes
+y descritas después (ejes, unidades, colores); cada resultado con su número
+y su causa en la misma frase; código en apéndices remitido con «(véase el
+Apéndice X)».
+
+Errores suyos que no se copian: referencias cruzadas rotas («Figura 4.x»
+para figuras del capítulo 5), plantilla del abstract sin rellenar, apéndices
+más largos que el cuerpo con ficheros de configuración volcados enteros,
+diseño narrado en futuro, resultados de una sola ejecución sin estadística.
