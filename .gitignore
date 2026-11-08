@@ -21,3 +21,8 @@ media/
 dash_media/
 config/client.local.yaml
 config/phase6.local.yaml
+
+# TFG de otros alumnos (material de referencia con datos personales): no se suben
+docs/memoria/DE MI TUTOR JUAN JOSE RAMOS MUNOZ/
+docs/memoria/DE OTROS TUTORES PERO RECIENTES DE MI FACULTAD/
+docs/memoria/.tmp.driveupload/
