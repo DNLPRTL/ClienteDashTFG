@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 440" width="960" height="440" font-family="Arial, Helvetica, sans-serif">
+  <rect x="0" y="0" width="960" height="440" fill="#ffffff"/>
+
+  <!-- Columna 1: lo que se congela antes de ejecutar -->
+  <rect x="20" y="20" width="250" height="400" rx="6" fill="#f1f3f5" stroke="#868e96" stroke-width="1.2"/>
+  <text x="145" y="48" font-size="15" font-weight="bold" fill="#212529" text-anchor="middle">Se congela antes de ejecutar</text>
+  <text x="38" y="80" font-size="13" fill="#212529">Código entregado (103 ficheros)</text>
+  <text x="38" y="104" font-size="13" fill="#212529">Configuración de la evaluación</text>
+  <text x="38" y="128" font-size="13" fill="#212529">Modelo (5 ficheros) y cuantiles fijos</text>
+  <text x="38" y="152" font-size="13" fill="#212529">Catálogo de trazas</text>
+  <text x="38" y="176" font-size="13" fill="#212529">Descriptor del vídeo nuevo</text>
+  <text x="38" y="200" font-size="13" fill="#212529">77 ventanas esperadas</text>
+  <text x="38" y="224" font-size="13" fill="#212529">Hipótesis P1 a P5 y su análisis</text>
+  <line x1="38" y1="246" x2="252" y2="246" stroke="#adb5bd" stroke-width="1"/>
+  <text x="38" y="270" font-size="13" fill="#212529">Comprobado en la VM al lanzar:</text>
+  <text x="38" y="292" font-size="12.5" fill="#495057">huellas SHA-256 de cada pieza</text>
+  <text x="38" y="312" font-size="12.5" fill="#495057">18 pruebas automáticas</text>
+  <text x="38" y="332" font-size="12.5" fill="#495057">plan en seco = 77 ventanas</text>
+  <text x="38" y="352" font-size="12.5" fill="#495057">8 controladores × 5 vídeos deciden</text>
+  <text x="38" y="372" font-size="12.5" fill="#495057">servidor responde a los 5 MPD</text>
+  <text x="38" y="400" font-size="12.5" fill="#1971c2">Ninguna sesión se repite ni se descarta</text>
+
+  <!-- Columna 2: los tres factores del diseño -->
+  <rect x="300" y="20" width="300" height="110" rx="6" fill="#ffffff" stroke="#868e96" stroke-width="1.2"/>
+  <text x="450" y="46" font-size="15" font-weight="bold" fill="#212529" text-anchor="middle">Red: 74 ventanas reales</text>
+  <text x="450" y="70" font-size="13" fill="#212529" text-anchor="middle">partición de evaluación, 160 s, una vuelta</text>
+  <text x="450" y="92" font-size="13" fill="#212529" text-anchor="middle">media &lt; 6 Mbit/s y mínimo &gt; 0,2 Mbit/s</text>
+  <text x="450" y="114" font-size="13" fill="#212529" text-anchor="middle">Oboe 56, FCC 18; más 3 sintéticas aparte</text>
+
+  <rect x="300" y="160" width="300" height="110" rx="6" fill="#fff9db" stroke="#868e96" stroke-width="1.2"/>
+  <text x="450" y="186" font-size="15" font-weight="bold" fill="#212529" text-anchor="middle">Contenido: 2 vídeos por ventana</text>
+  <text x="450" y="210" font-size="13" fill="#212529" text-anchor="middle">uno visto, en rotación entre cuatro</text>
+  <text x="450" y="232" font-size="13" fill="#212529" text-anchor="middle">(Paseo y Blender, 30 y 60 fps)</text>
+  <text x="450" y="254" font-size="13" fill="#212529" text-anchor="middle">y Tears of Steel, nuevo para el modelo</text>
+
+  <rect x="300" y="300" width="300" height="120" rx="6" fill="#ffffff" stroke="#868e96" stroke-width="1.2"/>
+  <text x="450" y="326" font-size="15" font-weight="bold" fill="#212529" text-anchor="middle">Controladores: 8</text>
+  <text x="450" y="350" font-size="13" fill="#212529" text-anchor="middle">basado en tasa, BBA, BOLA</text>
+  <text x="450" y="372" font-size="13" fill="#212529" text-anchor="middle">MPC robusto canónico</text>
+  <text x="450" y="394" font-size="13" fill="#212529" text-anchor="middle">controlador propio y 3 variantes de ablación</text>
+  <text x="450" y="412" font-size="12" fill="#495057" text-anchor="middle">un solo juego de parámetros cada uno</text>
+
+  <!-- Operadores -->
+  <text x="450" y="151" font-size="20" fill="#495057" text-anchor="middle">×</text>
+  <text x="450" y="291" font-size="20" fill="#495057" text-anchor="middle">×</text>
+
+  <!-- Flecha hacia las sesiones -->
+  <line x1="600" y1="220" x2="650" y2="220" stroke="#495057" stroke-width="1.5"/>
+  <polygon points="650,215 660,220 650,225" fill="#495057"/>
+
+  <!-- Columna 3: sesiones y ejecucion -->
+  <rect x="670" y="120" width="270" height="200" rx="6" fill="#e7f1fb" stroke="#1971c2" stroke-width="1.5"/>
+  <text x="805" y="150" font-size="16" font-weight="bold" fill="#1971c2" text-anchor="middle">1208 sesiones</text>
+  <text x="805" y="176" font-size="13" fill="#212529" text-anchor="middle">74 × 2 × 8 = 1184 reales</text>
+  <text x="805" y="198" font-size="13" fill="#212529" text-anchor="middle">3 × 1 × 8 = 24 sintéticas</text>
+  <line x1="690" y1="214" x2="920" y2="214" stroke="#adb5bd" stroke-width="1"/>
+  <text x="805" y="238" font-size="13" fill="#212529" text-anchor="middle">en serie, en la VM cliente</text>
+  <text x="805" y="260" font-size="13" fill="#212529" text-anchor="middle">orden de los 8 sorteado por escenario</text>
+  <text x="805" y="282" font-size="13" fill="#212529" text-anchor="middle">30 segmentos de 4 s, 29 evaluables</text>
+  <text x="805" y="304" font-size="13" fill="#212529" text-anchor="middle">una repetición; 41,3 h</text>
+
+  <!-- Salida -->
+  <line x1="805" y1="320" x2="805" y2="350" stroke="#495057" stroke-width="1.5"/>
+  <polygon points="800,350 805,360 810,350" fill="#495057"/>
+  <rect x="670" y="362" width="270" height="56" rx="6" fill="#f1f3f5" stroke="#868e96" stroke-width="1.2"/>
+  <text x="805" y="386" font-size="13" fill="#212529" text-anchor="middle">Paquete de evidencia (protocolo, sesiones,</text>
+  <text x="805" y="406" font-size="13" fill="#212529" text-anchor="middle">resultados, verificación): apartados 6.3 a 6.6</text>
+
+  <!-- Flecha de lo congelado a la ejecucion -->
+  <line x1="270" y1="220" x2="300" y2="220" stroke="#495057" stroke-width="1.5" stroke-dasharray="4 3"/>
+</svg>

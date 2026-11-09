@@ -29,7 +29,7 @@ def main(ruta):
 
     # 1. Titulos numerados y en estilo de titulo.
     for estilo, t in parrafos:
-        if estilo.startswith("Heading") and not re.match(r"^\d+(\.\d+)*\. \S", t):
+        if estilo.startswith("Heading") and estilo != "Heading 1" and not re.match(r"^\d+(\.\d+)*\. \S", t):  # Heading 1 = titulo del capitulo, sin numero
             avisos.append("titulo sin numeracion 'N.M. Titulo': " + t)
         if estilo == "Normal" and re.match(r"^\d+\.\d+(\.\d+)?\. [A-ZÁÉÍÓÚ]", t) and len(t) < 90:
             avisos.append("posible titulo en estilo Normal: " + t)
@@ -60,6 +60,8 @@ def main(ruta):
         trozo = m.group(0)
         if re.match(r"^\d\.\d+$", trozo) and int(trozo.split(".")[0]) <= 9 and len(trozo.split(".")[1]) <= 2:
             continue  # numero de apartado, ecuacion, tabla o figura
+        if re.search(r"Ubuntu " + re.escape(trozo), texto + "\n" + celdas):
+            continue  # version de Ubuntu (20.04), no es un decimal
         avisos.append("punto decimal: " + trozo)
 
     # 4. Tics y markdown.
