@@ -16,6 +16,7 @@ import sys
 from pathlib import Path
 
 from docx import Document
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Pt
 
 RAIZ_REPO = Path(__file__).resolve().parents[3]
@@ -135,6 +136,7 @@ def titulo_pagina(b, texto):
     r.bold = True
     r.font.size = Pt(16)
     p.paragraph_format.space_after = Pt(12)
+    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
     return p
 
 
