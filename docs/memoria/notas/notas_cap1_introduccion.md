@@ -1,9 +1,9 @@
 # Notas del capítulo 1 (no van a la memoria) — 09/11/2026
 
-Entregable: `docs/memoria/borradores_docx/cap1_introduccion.docx` (≈2680 palabras de cuerpo, 7 páginas: apertura,
-1.1 Motivación y contexto (3 párrafos), 1.2 Problema (3), 1.3 Enfoque del trabajo (5 + Figura 1.1), 1.4 Objetivos
-(objetivo general + Objetivos 1–5 en lista + correspondencia con capítulos), 1.5 Alcance (2), 1.6 Estructura de la
-memoria (lista, una frase por capítulo y anexos); 17 citas, sin tablas). Generado por
+Entregable: `docs/memoria/borradores_docx/cap1_introduccion.docx` (≈3400 palabras de cuerpo, 8 páginas: apertura,
+1.1 Motivación y contexto (4 párrafos), 1.2 Problema (4), 1.3 Enfoque del trabajo (6 + Figura 1.1), 1.4 Objetivos
+(objetivo general + Objetivos 1–5 en lista + correspondencia con capítulos), 1.5 Alcance (3), 1.6 Estructura de la
+memoria (lista, una frase por capítulo y anexos + convenciones); 17 citas, sin tablas). Generado por
 `docs/memoria/apoyo/generar_cap1.py`. Comprobador sin avisos. Sin cierre propio: el capítulo acaba en la estructura,
 como en los TFG del tutor.
 
@@ -15,6 +15,11 @@ como en los TFG del tutor.
   referencia el propio, motor simulado.
 - Ninguna fuente `.py` del código entregado menciona «audio» (por eso el 1.5 dice «una sola pista de vídeo, sin
   audio ni subtítulos»).
+- Del descriptor de tamaños entregado (`perfiles_video/tamanos_segmentos/paseo_almunecar_10min_30fps_4s.json`), calidad
+  4300 kbit/s: 151 segmentos, mín 168 367 B, máx 2 465 881 B, cociente 14,65 (> 14, «más de 14 veces»); nominal CBR
+  2 150 000 B → máx/nominal 1,15 (> 10 %), mín/nominal 0,08 (< décima parte). Todo con aserciones.
+- Del catálogo de trazas entregado: 12 `id_dataset` distintos = 12 carpetas de `datasets_normalizados`.
+- Existencia de los siete bloques de `TFG Material` que enumera el 1.5 (00–06).
 - Ninguna cifra decimal ni «1208» ni «41,3» en el texto: el capítulo no adelanta resultados (biblia §4).
 
 ## Citas (todas verificadas ya en los capítulos 2 y 5; página del PDF en `biblioteca_final/`)
@@ -61,9 +66,13 @@ a «[n], [m]» al maquetar, biblia §5); el script las valida todas contra el .b
 - Antecedentes locales dentro del 1.1 (biblia §9: citar lo pertinente del grupo del tutor), enlazando con el 2.1.
 - «Ensayo prerregistrado» se usa como analogía; el 6.1 y el 6.3 cuentan el mecanismo real (protocolo congelado con
   huellas).
-- Extensión: 7 páginas, por debajo de las 8–10 orientativas de la biblia. Si se quiere alargar sin relleno: un
-  párrafo en 1.1 sobre el coste de las paradas para el proveedor con cita (no hay fuente en el .bib que lo cuantifique;
-  habría que pedir permiso para una nueva) o un subapartado en 1.3 sobre las cuatro máquinas (ya está en 6.1, T6.3).
+- **Ampliación 09/11 (Daniel: «alargar el cap 1»)**, de 7 a 8 páginas con cinco párrafos sin relleno: (1.1) el buffer
+  como variable que media entre red y usuario, con la preferencia por el retardo inicial frente a la parada (Seufert
+  p. 3); (1.2) la variabilidad real de los tamaños en el contenido principal, con cifras leídas del descriptor; (1.3)
+  las cuatro aportaciones (instrumento, controlador, método de evaluación, resultados negativos); (1.5) el material
+  entregado, bloque a bloque; (1.6) convenciones (préstamos del inglés, siglas, numeración, cifras del cap 6
+  regenerables). Se descartó un párrafo sobre el coste de las paradas para el proveedor porque exigiría una referencia
+  nueva, y otro sobre las cuatro máquinas porque ya está en 6.1 (T6.3).
 
 ## Preguntas probables del tribunal
 

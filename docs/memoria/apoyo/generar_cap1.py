@@ -25,6 +25,8 @@ CODIGO = TFG_MATERIAL / "01_codigo" / "ClienteDashTFG"
 MPD = TFG_MATERIAL / "05_contenido_dash" / "Paseo_Almunecar_10min_30fps" / "4sec" / "Paseo_Almunecar_10min_30fps_simple_4s.mpd"
 PROTOCOLO = (TFG_MATERIAL / "04_evidencia_final" / "20261015_031741_final_blindaje" / "00_protocolo"
              / "protocolo_validacion.json")
+TAMANOS = CODIGO / "perfiles_video" / "tamanos_segmentos" / "paseo_almunecar_10min_30fps_4s.json"
+CATALOGO = TFG_MATERIAL / "02_corpus_red" / "catalogo_trazas.json"
 PLANTILLA = RAIZ_REPO / "docs" / "memoria" / "plantilla" / "plantilla_memoria_ugr.docx"
 SALIDA = RAIZ_REPO / "docs" / "memoria" / "borradores_docx" / "cap1_introduccion.docx"
 FIGURA_PNG = RAIZ_REPO / "docs" / "memoria" / "figuras" / "fig_1_1_enfoque_trabajo.png"
@@ -51,8 +53,27 @@ def datos_verificados():
     # Sin pista de audio en el codigo entregado: ninguna fuente menciona "audio".
     con_audio = [p for p in CODIGO.rglob("*.py") if "audio" in p.read_text(encoding="utf-8", errors="ignore").lower()]
     assert not con_audio, con_audio
+    # Variabilidad real de los tamaños en la calidad mas alta del contenido principal (descriptor entregado).
+    tam = json.loads(TAMANOS.read_text(encoding="utf-8"))
+    rep_max = max(tam["representations"], key=lambda r: r["bandwidth_bps"])
+    assert rep_max["bandwidth_bps"] // 1000 == anchos[-1]
+    bytes_seg = [x for x in rep_max["segment_bytes"] if x]
+    nominal = rep_max["cbr_nominal_bytes"]
+    cociente = max(bytes_seg) / min(bytes_seg)
+    assert cociente >= 10 and max(bytes_seg) / nominal > 1.10 and min(bytes_seg) / nominal < 0.10, (
+        cociente, max(bytes_seg) / nominal, min(bytes_seg) / nominal)
+    # Corpus de red entregado: numero de conjuntos de trazas.
+    cat = json.loads(CATALOGO.read_text(encoding="utf-8"))
+    conjuntos = {t["id_dataset"] for t in cat["trazas"]}
+    carpetas = {c.name for c in (TFG_MATERIAL / "02_corpus_red" / "datasets_normalizados").iterdir() if c.is_dir()}
+    assert conjuntos == carpetas and len(conjuntos) == 12, (len(conjuntos), conjuntos ^ carpetas)
+    # Bloques del material entregado que el 1.5 enumera.
+    for bloque in ["00_info_entorno", "01_codigo", "02_corpus_red", "03_modelos", "04_evidencia_final",
+                   "05_contenido_dash", "06_dataset_entrenamiento"]:
+        assert (TFG_MATERIAL / bloque).is_dir(), bloque
     return {"niveles": len(anchos), "min_kbps": anchos[0], "max_kbps": anchos[-1], "seg_s": int(dur / ts),
-            "n_clasicos": len(clasicos), "n_variantes": len(variantes), "n_hipotesis": len(hipotesis)}
+            "n_clasicos": len(clasicos), "n_variantes": len(variantes), "n_hipotesis": len(hipotesis),
+            "cociente_tamanos": int(cociente), "n_conjuntos": len(conjuntos)}
 
 
 def main():
@@ -99,6 +120,18 @@ def main():
         "no cómo debe decidir el cliente."
     )
     b.parrafo(
+        "Conviene fijar desde ahora cómo se produce esa experiencia, porque todo el trabajo gira en torno a ello. "
+        "El cliente no reproduce lo que descarga en el instante, sino que acumula por delante unos segundos de "
+        "vídeo en un buffer: mientras la red va más deprisa que la reproducción, el buffer crece; cuando va más "
+        "despacio, se consume. Si llega a vaciarse, la imagen se congela hasta que llega el siguiente segmento, "
+        "y esa parada es lo que los usuarios peor toleran: los estudios recogidos por Seufert et al. muestran que "
+        "la gran mayoría prefiere esperar unos segundos al principio antes que sufrir una interrupción a mitad "
+        "de la reproducción [seufert2015hasQoeSurvey]. La adaptación de la calidad existe para evitar esas "
+        "paradas sin renunciar a la imagen que la red permite, pero introduce su propio coste, el de los "
+        "cambios de calidad visibles. El buffer es, por tanto, la variable que media entre la red y el usuario, "
+        "y la decisión del controlador consiste en administrarlo."
+    )
+    b.parrafo(
         "El problema sigue abierto y activo. Las revisiones de la última década lo han recorrido desde los "
         "heurísticos basados en el ancho de banda o en el buffer hasta los métodos con aprendizaje automático "
         "[bentaleb2019survey, amer2025learningReview], y las de los dos últimos años lo sitúan en la cadena "
@@ -138,6 +171,16 @@ def main():
         "dos segmentos de la misma calidad pueden tardar en descargarse tiempos muy distintos con la misma red. "
         "Un controlador que planifique con la tasa nominal planifica con unos bytes que no son los que va a "
         "pedir."
+    )
+    b.parrafo(
+        "El efecto no es marginal. En el contenido principal de este trabajo, un vídeo de diez minutos "
+        "codificado con tasa variable, el segmento más pesado de la calidad más alta ocupa más de {0} veces los "
+        "bytes del más ligero de esa misma calidad; el más pesado supera en más de un diez por ciento el tamaño "
+        "que correspondería a la tasa nominal y el más ligero no llega a la décima parte. Con un ancho de banda "
+        "constante, descargar uno u otro tarda, por tanto, tiempos que difieren en más de un orden de magnitud, "
+        "y la diferencia entre vaciar el buffer o no está en saber cuál de los dos se va a pedir. El cliente "
+        "puede saberlo, porque el tamaño de cada segmento se conoce al empaquetar el contenido; el apartado 1.3 "
+        "explica cómo este trabajo pone esa información al alcance del controlador.".format(d["cociente_tamanos"])
     )
     b.parrafo(
         "A este problema de decisión se suma otro de evaluación, que la literatura reciente ha puesto en primer "
@@ -215,6 +258,18 @@ def main():
         "tablas y figuras de esta memoria. Las hipótesis se formularon para que un resultado negativo también "
         "fuera informativo, y la memoria da cuenta de lo que se cumplió y de lo que no."
     )
+    b.parrafo(
+        "De esas cuatro decisiones se derivan las aportaciones del trabajo. La primera es un instrumento: un "
+        "cliente DASH y un banco de pruebas que permiten comparar cualquier controlador escrito contra la misma "
+        "interfaz en condiciones idénticas de red y de contenido, con la telemetría necesaria para explicar cada "
+        "decisión. La segunda es el controlador propio, con su predictor de cuantiles, su planificador con medida "
+        "de riesgo y el entorno de entrenamiento fiel al medio que lo hace posible. La tercera es un método de "
+        "evaluación, trasladado de los ensayos prerregistrados a la comparación de algoritmos de adaptación: "
+        "hipótesis, métricas y pruebas fijadas antes, una sola ejecución y un paquete de evidencia que cualquiera "
+        "puede verificar. La cuarta, menos habitual en un trabajo de este tipo, es el registro de las líneas que "
+        "se intentaron y se descartaron durante el desarrollo, con las razones por las que no funcionaron, que el "
+        "capítulo 7 recoge como resultados negativos."
+    )
 
     # 1.4 ------------------------------------------------------------------------------------------------
     b.h2("1.4. Objetivos")
@@ -281,6 +336,16 @@ def main():
         "trabajo, de modo que la comparación mide la aportación de la predicción y del planificador, no la de "
         "una puesta a punto."
     )
+    b.parrafo(
+        "El trabajo entrega, además de esta memoria, el material necesario para auditarlo y repetirlo: el código "
+        "del cliente, de los controladores, del modelo y de la evaluación, escrito en Python y documentado en "
+        "castellano; el corpus de red, con el catálogo de trazas de {0} conjuntos públicos y sus particiones sin "
+        "fuga; el modelo entrenado con las huellas de sus ficheros; el paquete de evidencia del experimento final, "
+        "con la telemetría de cada sesión, los resultados y la verificación de su integridad; el contenido DASH tal "
+        "como lo sirve el servidor; el conjunto de datos con que se entrenó el modelo, y los informes de hardware y "
+        "software de cada máquina. Los anexos describen cómo se reproduce el experimento a partir de ese "
+        "material.".format(d["n_conjuntos"])
+    )
 
     # 1.6 ------------------------------------------------------------------------------------------------
     b.h2("1.6. Estructura de la memoria")
@@ -312,6 +377,16 @@ def main():
          "reúnen el material de apoyo: la reproducción del experimento a partir del paquete de evidencia, el "
          "manual de uso del cliente y la documentación complementaria a la que remite el texto."),
     ])
+    b.parrafo(
+        "Algunas convenciones se mantienen en toda la memoria. Los términos técnicos que la literatura y la "
+        "práctica usan en inglés sin traducción asentada, como buffer, bitrate, throughput o QoE, se conservan y "
+        "se explican la primera vez que aparecen; las siglas se expanden en su primer uso y se recogen en la lista "
+        "de acrónimos del principio. Las figuras, tablas y ecuaciones se numeran por capítulo y se anuncian en el "
+        "texto antes de aparecer. Las referencias bibliográficas se numeran por orden de aparición. Todas las "
+        "cifras del capítulo 6 proceden del paquete de evidencia del experimento final y se recalculan a partir "
+        "de él con los programas que acompañan a la memoria, de modo que cada tabla y cada figura se pueden "
+        "regenerar desde los datos originales."
+    )
 
     b.guardar(SALIDA)
     texto = " ".join(p.text for p in b.doc.paragraphs)
