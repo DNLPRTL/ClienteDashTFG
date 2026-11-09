@@ -174,44 +174,36 @@ Leyenda de cada apartado: **[Q]** qué explicar · **[R]** de dónde sale en el 
 
 ### Capítulo 1 — Introducción
 
-**1.1 Motivación.**
-- **[Q]** El vídeo domina el tráfico de Internet; el consumo es bajo demanda y por
-  HTTP; la calidad percibida importa para el negocio y el usuario.
-- **[B]** `Bentaleb19`, `TimmererReview`, `Alsader25`, `PeroniGorinsky25` (cifras de
-  tráfico y contexto). Citar dato de tráfico de vídeo de un survey reciente, no de blog.
-- **[P]** Prestada (contexto). Propia: el encuadre del problema concreto.
+> **ENTREGADO 09/11** como `borradores_docx/cap1_introduccion.docx` (`apoyo/generar_cap1.py`; notas en
+> `notas/notas_cap1_introduccion.md`). Estructura final (difiere de la propuesta inicial: el 1.3 pasa a ser
+> «Enfoque del trabajo» con las cuatro decisiones de partida y se añade el 1.5 «Alcance» que pide la biblia §4):
 
-**1.2 Problema técnico.**
-- **[Q]** La red varía en el tiempo; el cliente debe elegir bitrate segmento a
-  segmento; trade-off calidad ↔ rebuffer ↔ estabilidad; por qué es difícil (futuro
-  de red desconocido, medio VBR).
-- **[B]** `Yin15`, `Seufert15`, `Bentaleb19`.
-- **[P]** Propia: formulación del problema tal como lo aborda el proyecto.
+**Apertura.** Un párrafo: qué construye el trabajo y mapa 1.1–1.6.
+**1.1 Motivación y contexto.** Vídeo = mayoría del tráfico (Seufert 2015 p. 1, Timmerer 2025 p. 2); HAS y DASH
+(ISO 23009-1, Stockhammer); la QoE la deciden las paradas y los cambios (Seufert); el estándar no fija el
+controlador; campo activo (Bentaleb, Amer, Peroni 2025, Timmerer, Alsader); antecedentes locales del grupo del
+tutor (Ameigeiras 2012, Ramos-Muñoz 2014) → «este trabajo continúa esa línea en el controlador del cliente».
+**1.2 Problema.** Decisión secuencial bajo incertidumbre con objetivos en conflicto (Yin 2015); dos rasgos:
+error de predicción asimétrico (MPC robusto, BayesMPC) y medio VBR (tasa nominal ≠ bytes reales); problema de
+evaluación: simulación frente a realidad (Puffer, Hoffman 2025), sesgo de las trazas (CausalSim), el orden
+depende del modelo de QoE (Peroni 2024). «Decidir mejor y evaluar de forma defendible».
+**1.3 Enfoque del trabajo.** Cuatro decisiones con sus razones + **Figura 1.1** (`fig_1_1_enfoque_trabajo.svg`):
+(1) entorno completo propio, cliente ABR-neutral (remite a 2.6); (2) fidelidad al medio (contenido real VBR, 6
+calidades 300–4300, 4 s, servidor real; red emulada por trazas sin fuga; entrenamiento con tamaños reales);
+(3) aprendizaje acotado a la predicción: cuantiles + MPC con medida de riesgo; 4 clásicos + 3 variantes (leídos
+del protocolo); (4) evaluación como ensayo prerregistrado, ejecución única, paquete verificable.
+**1.4 Objetivos.** Objetivo general + **Objetivos 1–5** en lista con entradilla «Objetivo n» (cliente; interfaz y
+clásicos fieles; controlador propio + entorno de entrenamiento; banco de evaluación reproducible con protocolo
+prerregistrado; evaluación y declaración de lo que se puede afirmar). Párrafo final: correspondencia con los
+capítulos. **El 7.1 responde a estos cinco, por número.**
+**1.5 Alcance.** VoD (no directo ni baja latencia); una pista de vídeo sin audio ni subtítulos (comprobado en el
+código: 0 menciones a «audio»); una sesión, un servidor local, sin CDN ni clientes competidores; red emulada
+(limitación declarada → 6.7); QoE lineal por bitrate, sin métricas perceptuales ni usuarios; clásicos con
+parámetros publicados, sin ajuste.
+**1.6 Estructura de la memoria.** Lista con entradilla «Capítulo n» (2–7) y «Anexos», una frase cada uno. Sin
+cierre: el capítulo termina en la estructura (corpus del tutor).
 
-**1.3 Por qué un cliente DASH propio (no caja negra).**
-- **[Q]** Justificación de construir un entorno experimental válido y no contaminante,
-  con telemetría controlada y trazas reproducibles, frente a usar un reproductor
-  comercial cerrado. (Este es el punto que te preocupaba: aquí va.)
-- **[R]** `core/` (cliente), `core/phase6/` (evaluación), contratos de telemetría.
-- **[B]** `Puffer20`/`Hoffman25`/`CausalSim23` (la validez del entorno y el sesgo de
-  simulación justifican por qué un entorno fiel importa).
-- **[P]** **Propia (fuerte).** Es tu decisión de ingeniería.
-
-**1.4 Objetivos.** Lista numerada, medibles. Propuesta:
-1. Implementar un cliente/reproductor DASH modular en Python (MPD, descarga, buffer,
-   reproducción, telemetría).
-2. Definir una API común de controladores ABR e integrar baselines clásicos fieles a
-   la literatura.
-3. Diseñar e integrar un controlador propio con predicción de throughput,
-   incertidumbre y planificación MPC consciente del riesgo.
-4. Construir un procedimiento de evaluación reproducible con métricas QoE y trazas
-   de red controladas.
-5. Comparar controladores de forma honesta (mismas condiciones, sin claims sin gates).
-- **[P]** Propia. **Las conclusiones (cap 7) responden una a una a estos objetivos.**
-
-**1.5 Estructura del documento.** Una frase por capítulo.
-
-> Resumen del capítulo.
+Sin resultados ni cifras del experimento (el script lo comprueba: ninguna cifra decimal, ni 1208, ni 41,3).
 
 ### Capítulo 2 — Precedentes, antecedentes y estado del arte
 
@@ -577,6 +569,7 @@ pide cifras, están en el histórico).
 
 | # | Figura | Capítulo | Origen |
 |---|---|---|---|
+| F1.1 | Enfoque del trabajo: real/emulado, interfaz común con clásicos + propio + variantes, entrenamiento fuera de línea, protocolo → experimento único → paquete (HECHA 09/11) | 1.3 | `fig_1_1_enfoque_trabajo.svg` (propia) |
 | F1 | Arquitectura de módulos del cliente | 4.1 | diagrama propio |
 | F2 | Flujo de una sesión (secuencia) | 4.1 | diagrama propio |
 | F3 | Interfaz del controlador ABR | 4.5 | diagrama propio |
@@ -645,7 +638,7 @@ pide cifras, están en el histórico).
 | Apartado | Estado | Nota |
 |---|---|---|
 | Título / resumen / keywords | BORRADOR | título A elegido; confirmar con tutor |
-| Cap 1 Introducción | TODO | |
+| Cap 1 Introducción | **ENTREGADO 09/11** (`borradores_docx/cap1_introduccion.docx`, ≈2680 palabras, 7 páginas; apertura, 1.1 motivación, 1.2 problema, 1.3 enfoque con F1.1 `fig_1_1_enfoque_trabajo.svg/png`, 1.4 Objetivos 1–5 numerados, 1.5 alcance, 1.6 estructura; 17 citas ya verificadas en los caps 2 y 5; `apoyo/generar_cap1.py` lee escalera, controladores y variantes del material entregado y comprueba que no hay cifras de resultados; notas en `notas/notas_cap1_introduccion.md`) | Siguiente: capítulo 7 (responde a los Objetivos 1–5 por número) |
 | Cap 2 Estado del arte | **APERTURA + 2.1 + 2.2 ENTREGADOS 09/11** (`borradores_docx/cap2_1_2_has_dash.docx`, ≈1520 palabras, 9 citas verificadas con página; `apoyo/generar_cap2_1_2.py`; notas en `notas/notas_cap2_1_2_has_dash.md`). **2.3 + 2.4 ENTREGADOS 09/11** (`borradores_docx/cap2_3_4_problema_familias.docx`, ≈2190 palabras, Tabla 2.1 de familias, 15 citas con página; `apoyo/generar_cap2_3_4.py`; notas en `notas/notas_cap2_3_4_problema_familias.md`). **2.5 + 2.6 + 2.7 + CIERRE ENTREGADOS 09/11** (`borradores_docx/cap2_5_7_qoe_reproductores_lagunas.docx`, ≈1790 palabras, 22 citas; `apoyo/generar_cap2_5_7.py`; notas en `notas/notas_cap2_5_7_qoe_reproductores_lagunas.md`). **CAPÍTULO 2 COMPLETO** (2.1–2.7 + cierre; T2.1; sin figuras). Siguiente: capítulo 3 | Fuentes: 02_BIBLIOGRAFIA §2.1–2.3; .md convertidos en `docs/todos los estudios pdf convertidos a md/` para buscar, PDF de `biblioteca_final` para la página |
 | Cap 3 Planificación/costes | **ENTREGADO 09/11** (`borradores_docx/cap3_planificacion_costes.docx`, ≈1390 palabras; F3.1 Gantt `fig_3_1_gantt.svg/png`; T3.1 fases→tareas→entregable, T3.2 horas, T3.3 hardware, T3.4 total; ec. 3.1 amortización). **DATOS EDITABLES en `apoyo/planificacion_cap3.json`** (fases, fechas, horas, tarifas, hardware); regenerar con `apoyo/generar_cap3.py`. Notas en `notas/notas_cap3_planificacion_costes.md` | Supuestos a revisar por Daniel: fechas de F1, horas (300 = 12 ECTS × 25 h), tarifas 20/50 €/h, precios del hardware |
 | Cap 4 Diseño | REDACTADO POR DANIEL EN WORD; REVISADO 09/11 (`notas/revision_cap4_contenido_20261109.md`: C1–C32, F4.2/F4.5/F4.6 textos) | Su Word manda; no tocar los borradores del repo. Al cerrar el blindaje, Daniel pasa el Word y Claude indica cambios de texto y figuras (lista orientativa en §8 del traspaso de `docs/blindaje/`). Historial: 4.1–4.7 redactados por Daniel; 4.8 BORRADOR entregado 27/08 (cap4_8_separacion_evaluacion.md + T4.7 gates + resumen del capítulo). Al masticar 4.8: pasada de coherencia del capítulo entero. 14/10 (cc38089): borradores devueltos al estado del remake del 5.6; solo se añaden "validación" (4.7 y T4.7) y el paso de espera de 0,01 s en la evaluación (4.3/T4.3). La frase del empate del 4.7 se revisa con el experimento final |
