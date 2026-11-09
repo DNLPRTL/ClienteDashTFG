@@ -1,6 +1,6 @@
 # Notas del 6.1 (no van a la memoria) — 09/11/2026
 
-Entregable: `docs/memoria/borradores_docx/cap6_1_diseno_experimento.docx` (≈1880 palabras de cuerpo, 6 páginas:
+Entregable: `docs/memoria/borradores_docx/cap6_1_diseno_experimento.docx` (≈1890 palabras de cuerpo, 6 páginas:
 apertura del capítulo 6 sin epígrafe + 6.1 con cuatro subapartados, Figura 6.1, Tablas 6.1 a 6.3, 3 citas, sin
 ecuaciones). Generado por `docs/memoria/apoyo/generar_cap6_1.py`. Comprobador sin avisos (tras dos ajustes del
 comprobador: el título de capítulo, estilo Heading 1, va sin número por diseño; «Ubuntu 20.04» no es un decimal).
@@ -65,9 +65,9 @@ Dato para la defensa: esa sesión dio QoE 3,97, 0 paradas, 29 inferencias de la 
 - `akhtar2018oboe` p. 7 («We use throughput traces from real user sessions collected over a three month period»)
   y p. 10 (FCC y HSDPA como conjuntos públicos): verificadas en el PDF. Se cita como origen de las trazas Oboe.
 - `fccMeasuringBroadbandAmerica`: web oficial (misc), sin PDF; se cita como origen de los datos.
-- **Pendiente de permiso:** ficha de Tears of Steel (Blender Foundation, mango.blender.org, CC-BY 3.0). El texto
-  dice «cortometraje de la Blender Foundation publicado con licencia Creative Commons Atribución 3.0» SIN cita;
-  cuando Daniel autorice la descarga se añade `blenderTearsOfSteel` al .bib y la cita a la frase. Origen del
+- `blenderTearsOfSteel` (alta 09/11 con permiso de Daniel): páginas index y Sharing de mango.blender.org guardadas
+  en `biblioteca_final/11_estadistica/`; la página Sharing dice «licensed under the Creative Commons Attribution 3.0
+  license». La cita va en la frase del cortometraje. Origen del
   fichero usado: `https://download.blender.org/demo/movies/ToS/tears_of_steel_1080p.mov.zip` (583 774 281 bytes,
   `kit_servidor/preparar_video_nuevo.sh`).
 

@@ -419,7 +419,7 @@ def main():
         "vistos por el modelo en el entrenamiento (Paseo de Almuñécar y Blender Sunflower, a 30 y 60 fps), "
         "asignado por rotación en el orden de las ventanas, de modo que cada uno aparece en {0} o {1} "
         "ventanas reales. El segundo es Tears of Steel, un cortometraje de la Blender Foundation publicado con "
-        "licencia Creative Commons Atribución 3.0, del que se tomaron los primeros {2} s a 30 fps y se "
+        "licencia Creative Commons Atribución 3.0 [blenderTearsOfSteel], del que se tomaron los primeros {2} s a 30 fps y se "
         "empaquetaron con GPAC {3} con la misma escalera de seis niveles, segmentos de 4 s y resolución "
         "máxima de 1920 por 1080. Es contenido nuevo para el modelo: no intervino en el entrenamiento ni en "
         "ninguna decisión de diseño. Su interés está en que el predictor no ve el contenido pero el "

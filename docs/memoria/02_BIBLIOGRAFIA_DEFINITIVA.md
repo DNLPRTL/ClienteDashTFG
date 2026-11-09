@@ -9,7 +9,7 @@
 | Campo | Valor |
 |---|---|
 | Fecha | 2026-08-10 |
-| Fichero BibTeX | `docs/memoria/bibliografia.bib` (92 entradas con claves únicas y sintaxis validada; BibTeX solo imprime las citadas) |
+| Fichero BibTeX | `docs/memoria/bibliografia.bib` (96 entradas con claves únicas y sintaxis validada, 4 altas del 09/11/2026 para el cap 6; BibTeX solo imprime las citadas) |
 | Verificación | Cada entrada verificada contra: source cards del repo (con DOI), los .md convertidos de los PDF reales, y/o Crossref/página del editor (pasada 08/2026). Ninguna entrada de memoria/oídas. |
 | Regla heredada | `bibliography_plan.md` (07_memory): "Do not include bibliography entries for papers not cited in the final text" → el .bib es generoso, la memoria cita lo que use. |
 
@@ -120,6 +120,10 @@ material, verificados vía Crossref/editor (los pediste explícitamente):**
 | `rockafellar2000cvar` | Rockafellar & Uryasev 2000, J. of Risk | Definición canónica del CVaR del planner. PDF en `10_fundamentos_matematicos/` (web del autor, 09/11/2026). |
 | `cho2014gru` | Cho 2014, EMNLP | La GRU del predictor temporal. PDF en `10_fundamentos_matematicos/` (arXiv 1406.1078, 09/11/2026). |
 | `lakshminarayanan2017ensembles` | Lakshminarayanan 2017, NIPS | Deep ensembles = el ensemble de 5 GRUs con incertidumbre. PDF en `10_fundamentos_matematicos/` (arXiv 1612.01474, 09/11/2026). |
+| `schuirmann1987tost` | Schuirmann 1987, J. Pharmacokinet. Biopharm. | Procedimiento TOST de equivalencia (P1 del cap 6): equivale a exigir que el IC al 1−2α caiga en el margen. PDF en `11_estadistica/` (Zenodo 1232484, dominio público, 09/11/2026); verificado p. 657 y 661. |
+| `holm1979bonferroni` | Holm 1979, Scand. J. Statist. | Corrección de multiplicidad de P1–P5. SIN PDF (JSTOR 4615733, acceso UGR pendiente; sin copia abierta legítima): se cita por lo que es. |
+| `efron1993bootstrap` | Efron & Tibshirani 1993, libro (Chapman & Hall) | Bootstrap de los intervalos por bloques de ventanas. Libro, se cita sin PDF. |
+| `blenderTearsOfSteel` | Blender Foundation 2012, mango.blender.org | Ficha del vídeo nuevo del experimento final (CC-BY 3.0). Páginas index y Sharing guardadas en `11_estadistica/` (09/11/2026). |
 
 **Datasets de mayor peso del corpus (Cap 6.3):**
 | Clave | Fuente | Justifica |
