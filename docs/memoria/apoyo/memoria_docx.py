@@ -347,8 +347,10 @@ class Borrador:
 
 # Ayudas OMML ----------------------------------------------------------------
 def m_r(texto, cursiva=True):
+    from xml.sax.saxutils import escape
+
     estilo = "" if cursiva else '<m:rPr><m:sty m:val="p"/></m:rPr>'
-    return "<m:r>{0}<m:t xml:space=\"preserve\">{1}</m:t></m:r>".format(estilo, texto)
+    return "<m:r>{0}<m:t xml:space=\"preserve\">{1}</m:t></m:r>".format(estilo, escape(str(texto)))
 
 
 def m_f(num, den):

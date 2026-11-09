@@ -1,4 +1,20 @@
-# Apoyo de la memoria — reproducción de las decisiones del controlador propio
+# Apoyo de la memoria
+
+**Vigente (09/11/2026): generación de los borradores .docx y reproducciones sobre el paquete FINAL**
+`TFG Material_evidencia_final61015_031741_final_blindaje`.
+
+| Script | Qué hace |
+|---|---|
+| `memoria_docx.py` | Plantilla `.docx` de la biblia y clase `Borrador` (títulos, párrafos, tablas, figuras, ecuaciones OMML) |
+| `generar_cap5_3.py` … `generar_cap5_6.py` | Un script por apartado: recalcula sus tablas y ejemplos desde el código del entregable o el paquete final y escribe `borradores_docx/cap5_X.docx` |
+| `reproducir_propio_final.py` | Reproduce las 4379 decisiones del controlador propio del paquete final y las variantes sobre el mismo estado; escribe `resumen_propio_final.json` |
+| `comprobar_borrador_docx.py` | Lista de comprobaciones de la biblia (§7.4) sobre un `.docx` |
+| `docx_a_pdf.py`, `svg_a_png.py` | Render con Word (COM) para revisar; SVG a PNG vía Word y PyMuPDF |
+
+Los scripts de 2026-09/10 (`reproducir_decisiones_propio.py`, `analizar_decisiones_propio.py`,
+`generar_fig_5_3.py`, `resumen_decisiones_propio*.json`) trabajaban sobre los paquetes de agosto y
+octubre (desarrollo) y quedan como histórico; sus números no van a la memoria.
+
 
 Scripts que respaldan los números del apartado 5.6.4 (Tabla 5.7) y la
 Figura 5.3. Todos leen el material de entrega (`TFG Material\`), no el repo.
