@@ -548,12 +548,19 @@ ventanas duras; sustituida por el conjunto de GRU). Párrafo de cierre que enlaz
   citada**. No citar lo no usado.
 - Distinguir aportación propia vs previa por las citas.
 
-### Anexos
-- A. Configuración completa (config Phase 6, registro de controladores).
-- B. Comandos de validación y reproducción (scripts `run_*`, `check_client_readiness`).
-- C. Detalle de entorno (versiones, hardware, ROCm).
-- D. Tablas largas (corpus de trazas, tamaños VBR por segmento).
-- E. Fragmentos de implementación extensos (si no caben en cap 5).
+### Anexos (ENTREGADOS 10/11 como `borradores_docx/anexos.docx`; `apoyo/generar_anexos.py`; notas en `notas/notas_anexos.md`)
+Los tres que anuncia el 1.6, 23 páginas, 12 tablas y 6 listados; todas las tablas de claves/opciones/controladores se
+generan leyendo el código entregado y todos los conteos se hacen sobre TFG Material:
+- **Anexo A. Reproducción del experimento a partir del material entregado:** A.1 inventario (T A.1), A.2 preparación
+  del cliente (L A.1), A.3 servidor, A.4 comprobaciones y plan en seco (L A.2), A.5 ejecución (T A.2 qué coincide),
+  A.6 análisis, verificación e integridad (L A.3, huella `e5dc724b…3126`).
+- **Anexo B. Manual de uso del cliente:** B.1 instalación, B.2 una sesión (L B.1, T B.1 claves de `ConfigCliente`,
+  L B.2 configuración real de la sesión 8), B.3 controladores (T B.2 del registro), B.4 salidas, B.5 evaluación
+  (T B.3 claves, T B.4 opciones CLI), B.6 GStreamer, B.7 contenido y entrenamiento (T B.5 scripts, L B.3).
+- **Anexo C. Documentación complementaria:** C.1 corpus por conjunto (T C.1 = la antigua T7), C.2 contenido DASH
+  (T C.2), C.3 ficheros del paquete (T C.3), C.4 columnas de `segmentos.csv` (T C.4), C.5 columnas de `sesiones.csv`
+  (T C.5).
+Se descartó el anexo de entorno (ya está en la T6.3) y el de fragmentos de código (el cuerpo remite al entregable).
 
 ---
 
@@ -599,7 +606,7 @@ ventanas duras; sustituida por el conjunto de GRU). Párrafo de cierre que enlaz
 | T6.8 | Agregados por controlador (148 sesiones reales) (HECHA 09/11) | 6.5 |
 | T6.9 | Descomposición de ΔQoE por componentes frente a cada rival (HECHA 09/11) | 6.5 |
 | T6.10 | Estratos exploratorios (Oboe/FCC, visto/nuevo) (HECHA 09/11) | 6.6 |
-| T7 | Corpus de trazas (los 12 conjuntos) | Anexo D (el cap 4.7 ya lo resume) |
+| T7 | Corpus de trazas (los 12 conjuntos) (HECHA 10/11 como Tabla C.1) | Anexo C.1 (el cap 4.7 ya lo resume) |
 
 ---
 
@@ -638,6 +645,6 @@ ventanas duras; sustituida por el conjunto de GRU). Párrafo de cierre que enlaz
 | Cap 6 Evaluación | ESQUEMA REESCRITO 09/11 con el experimento final (§5, Capítulo 6: 6.1–6.7 y cierre; mapas de figuras F6.1–F6.4 y tablas T6.1–T6.9). **6.1 ENTREGADO 09/11** (`borradores_docx/cap6_1_diseno_experimento.docx`: apertura del capítulo + 6.1.1–6.1.4, ≈1890 palabras, F6.1 `fig_6_1_diseno_experimento.svg/png`, T6.1 controladores e hipótesis, T6.2 lo que se congela, T6.3 máquinas; ejemplo = sesión 8 del plan; `apoyo/generar_cap6_1.py` recalcula todo desde el paquete, el kit y el código y verifica las huellas; notas en `notas/notas_cap6_1_diseno_experimento.md`). **6.2 ENTREGADO 09/11** (`borradores_docx/cap6_2_metricas_hipotesis.docx`, ≈1810 palabras, T6.4 métricas, T6.5 hipótesis, ec. 6.1 QoE, 6.2 TOST, 6.3 Holm; ejemplo = QoE de la sesión 8 recalculada desde sus segmentos con el módulo del entregable; 6 citas verificadas; `apoyo/generar_cap6_2.py`; notas en `notas/notas_cap6_2_metricas_hipotesis.md`). **6.3 ENTREGADO 09/11** (`borradores_docx/cap6_3_integridad_verificacion.docx`, ≈1340 palabras, T6.6; `apoyo/generar_cap6_3.py` recalcula las 9699 huellas del paquete y repite el análisis prerregistrado con el módulo del entregable (0 diferencias > 1e-9, caché en `apoyo/contrastes_reproducidos.json`); notas en `notas/notas_cap6_3_integridad_verificacion.md`). **6.4 ENTREGADO 09/11** (`borradores_docx/cap6_4_resultados_hipotesis.docx`, ≈970 palabras, T6.7 desde `contrastes_prerregistrados.json` cotejada con el análisis repetido, F6.2 `fig_6_2_diferencias_por_ventana.svg/png` por matplotlib desde `sesiones.csv`; `apoyo/generar_cap6_4.py`; notas en `notas/notas_cap6_4_resultados_hipotesis.md`). **6.5 ENTREGADO 09/11** (`borradores_docx/cap6_5_descriptivos.docx`, ≈1140 palabras, T6.8 agregados recalculados = `agregados_por_controlador.json`, T6.9 descomposición de ΔQoE, F6.3 CDF y F6.4 paradas-bitrate rehechas con matplotlib; `apoyo/generar_cap6_5.py`; `memoria_docx.tabla` ahora con anchos fijos; notas en `notas/notas_cap6_5_descriptivos.md`). **6.6 ENTREGADO 09/11** (`borradores_docx/cap6_6_exploratorio.docx`, ≈1260 palabras, T6.10 estratos recalculados con las funciones del entregable; interacción 40/31/3; sintéticas aparte; `apoyo/generar_cap6_6.py`; notas en `notas/notas_cap6_6_exploratorio.md`). **6.7 + CIERRE ENTREGADOS 09/11** (`borradores_docx/cap6_7_interpretacion_cierre.docx`, ≈1280 palabras: qué se afirma y qué no, 8 limitaciones, fidelidad al protocolo, cierre sin epígrafe; `apoyo/generar_cap6_7.py` comprueba que no introduce cifras nuevas; notas en `notas/notas_cap6_7_interpretacion_cierre.md`). **CAPÍTULO 6 COMPLETO** (6.1–6.7 + cierre; F6.1–F6.4; T6.1–T6.10; ec. 6.1–6.3). Siguiente: capítulos 2, 3, 1 y 7 | 14/10 noche: el experimento con el kit de `docs/evaluacion_final/` se detuvo (desarrollo, no se analiza). El diseño nuevo (controladores, ventanas, vídeos, estadística) sale de la fase de blindaje (`docs/blindaje/`). Historial: EXPERIMENTO FINAL ÚNICO con la versión final del controlador (planificador vectorizado, inferencia de un hilo, calentamiento, entradas como en el entrenamiento) y 12 ventanas nunca ejecutadas; protocolo y kit en `docs/evaluacion_final/`. Las ejecuciones de agosto y de la réplica son desarrollo (archivadas en `TFG\legacy\evidencia_desarrollo\`) y no van a la memoria |
 | Cap 7 Conclusiones | **ENTREGADO 09/11** (`borradores_docx/cap7_conclusiones.docx`, ≈2900 palabras, 6 páginas; 7.1 Objetivos 1–5 por número, 7.2 resultados sin cifras nuevas, 7.3 limitaciones en tres clases, 7.4 trabajo futuro en lista, 7.5 cuatro resultados negativos cualitativos; `apoyo/generar_cap7.py` comprueba cifras contra los caps 5 y 6, objetivos contra el cap 1, bundle y protocolo del material entregado, y la ausencia de nombres internos; notas en `notas/notas_cap7_conclusiones.md`) | Siguiente: resumen/abstract, anexos, bibliografía |
 | Bibliografía (BibTeX) | HECHA (96 entradas) | `bibliografia.bib` cerrado 10/08; 4 altas 09/11 para el cap 6 (TOST, Holm, bootstrap, Tears of Steel); solo se imprime lo citado |
-| Anexos | TODO | Siguiente: reproducción del experimento desde el paquete, manual de uso del cliente, documentación complementaria |
+| Anexos | **ENTREGADOS 10/11** (`borradores_docx/anexos.docx`: A reproducción, B manual de uso, C documentación complementaria; 23 páginas, 12 tablas, 6 listados; `apoyo/generar_anexos.py` genera las tablas desde el código y cuenta todo sobre TFG Material) | Daniel: decidir si copia los programas de auditoría a la carpeta de verificación de TFG Material (el A.6 los nombra solo si están). Siguiente: bibliografía impresa (solo lo citado) y pasada de coherencia |
 | Tabla de correspondencias | HECHA 12/08 | `04_CORRESPONDENCIAS_NOMENCLATURA.md` |
 | Plantilla .docx y tooling | HECHA 09/11 | `plantilla/plantilla_memoria_ugr.docx` (biblia §2) generada por `apoyo/memoria_docx.py`; `apoyo/comprobar_borrador_docx.py` (lista §7.4 de la biblia) y `apoyo/docx_a_pdf.py` (render con Word) |
