@@ -314,10 +314,10 @@ def main():
         "ofrece la traza, no el throughput que mediría una descarga concreta, que depende de su tamaño y de "
         "si la traza cambia durante ella. El conjunto de validación procede de la partición de validación del "
         "catálogo, con la que también se eligió α (apartado 5.6), así que la calibración de la Tabla 5.14 no "
-        "es una medida sobre datos nunca vistos: esa medida es el experimento del capítulo 6. Con esto se "
-        "cierra la implementación: el cliente, el ejecutor, los comparadores, el controlador propio y el "
-        "entorno que fabrica su modelo. El capítulo 6 presenta el experimento final y sus resultados."
+        "es una medida sobre datos nunca vistos: esa medida es el experimento del capítulo 6."
     )
+    # El cierre del capitulo (tres parrafos que recapitulan 5.1 a 5.7 y enlazan con el 6) va aparte:
+    # docs/memoria/apoyo/generar_cap5_resumen.py -> borradores_docx/cap5_8_resumen_capitulo5.docx.
 
     b.guardar(SALIDA)
     print("palabras del cuerpo:", b.palabras_cuerpo)
