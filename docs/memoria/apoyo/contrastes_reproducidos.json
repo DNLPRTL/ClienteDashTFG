@@ -1,0 +1,1295 @@
+{
+ "hipotesis": {
+  "alfa": 0.05,
+  "intervalos": "bootstrap por ventanas, 10000 remuestreos, semilla 2026",
+  "margen_equivalencia_qoe": 0.15,
+  "metricas_secundarias": [
+   "qoe_lineal_media",
+   "num_stalls",
+   "rebuffering_total_s",
+   "bitrate_medio_kbps",
+   "num_cambios_calidad",
+   "qoe_log_media"
+  ],
+  "multiplicidad": "Holm sobre las hipotesis principales",
+  "principales": [
+   {
+    "id": "P1",
+    "metrica": "qoe_lineal_media",
+    "rival": "mpc_robusto",
+    "texto": "QoE equivalente a la del MPC robusto (margen +-0,15)",
+    "tipo": "equivalencia"
+   },
+   {
+    "id": "P2",
+    "metrica": "num_stalls",
+    "rival": "mpc_robusto",
+    "texto": "menos paradas por sesion que el MPC robusto",
+    "tipo": "menor"
+   },
+   {
+    "id": "P3",
+    "metrica": "num_stalls",
+    "rival": "propio_cuantiles_recientes",
+    "texto": "menos paradas que la variante sin red con cuantiles de las ultimas descargas",
+    "tipo": "menor"
+   },
+   {
+    "id": "P4",
+    "metrica": "qoe_lineal_media",
+    "rival": "propio_cuantiles_fijos",
+    "texto": "mas QoE que la variante sin red con cuantiles fijos",
+    "tipo": "mayor"
+   },
+   {
+    "id": "P5",
+    "metrica": "num_stalls",
+    "rival": "propio_mediana",
+    "texto": "menos paradas que la variante sin CVaR (solo la mediana)",
+    "tipo": "menor"
+   }
+  ],
+  "pruebas": "signo exacta sobre las diferencias medias por ventana (unilateral en 'menor'/'mayor'); equivalencia por TOST: IC90 dentro de +-margen y p = max de los dos unilaterales (aprox. normal)",
+  "referencia": "controlador_propio",
+  "unidad": "escenario (ventana x video); bloque: ventana",
+  "version": "hipotesis_blindaje_v1"
+ },
+ "principales": {
+  "P1": {
+   "id": "P1",
+   "metrica": "qoe_lineal_media",
+   "rival": "mpc_robusto",
+   "texto": "QoE equivalente a la del MPC robusto (margen +-0,15)",
+   "tipo": "equivalencia",
+   "n_escenarios": 148,
+   "n_ventanas": 74,
+   "media_diferencia": -0.0008219547772881744,
+   "ic95": [
+    -0.021891413668239035,
+    0.020640224170040022
+   ],
+   "ic90": [
+    -0.0183948519696454,
+    0.016746925828353947
+   ],
+   "ventanas_positivas": 31,
+   "ventanas_negativas": 39,
+   "ventanas_empate": 4,
+   "escenarios_empate": 8,
+   "p_valor": 0.0,
+   "margen": 0.15,
+   "equivalente_ic90": true,
+   "p": 0.0,
+   "p_holm": 0.0,
+   "rechazada_nula": true
+  },
+  "P2": {
+   "id": "P2",
+   "metrica": "num_stalls",
+   "rival": "mpc_robusto",
+   "texto": "menos paradas por sesion que el MPC robusto",
+   "tipo": "menor",
+   "n_escenarios": 148,
+   "n_ventanas": 74,
+   "media_diferencia": -0.12162162162162163,
+   "ic95": [
+    -0.19594594594594594,
+    -0.05405405405405406
+   ],
+   "ic90": [
+    -0.1891891891891892,
+    -0.060810810810810814
+   ],
+   "ventanas_positivas": 1,
+   "ventanas_negativas": 12,
+   "ventanas_empate": 61,
+   "escenarios_empate": 130,
+   "p_valor": 0.001708984375,
+   "p": 0.001708984375,
+   "p_holm": 0.001708984375,
+   "rechazada_nula": true
+  },
+  "P3": {
+   "id": "P3",
+   "metrica": "num_stalls",
+   "rival": "propio_cuantiles_recientes",
+   "texto": "menos paradas que la variante sin red con cuantiles de las ultimas descargas",
+   "tipo": "menor",
+   "n_escenarios": 148,
+   "n_ventanas": 74,
+   "media_diferencia": -0.4391891891891892,
+   "ic95": [
+    -0.5945945945945946,
+    -0.2972972972972973
+   ],
+   "ic90": [
+    -0.5675675675675675,
+    -0.31756756756756754
+   ],
+   "ventanas_positivas": 1,
+   "ventanas_negativas": 35,
+   "ventanas_empate": 38,
+   "escenarios_empate": 102,
+   "p_valor": 5.384208634495735e-10,
+   "p": 5.384208634495735e-10,
+   "p_holm": 1.6152625903487206e-09,
+   "rechazada_nula": true
+  },
+  "P4": {
+   "id": "P4",
+   "metrica": "qoe_lineal_media",
+   "rival": "propio_cuantiles_fijos",
+   "texto": "mas QoE que la variante sin red con cuantiles fijos",
+   "tipo": "mayor",
+   "n_escenarios": 148,
+   "n_ventanas": 74,
+   "media_diferencia": 0.148613333516829,
+   "ic95": [
+    0.10742115008412216,
+    0.18983952138121482
+   ],
+   "ic90": [
+    0.11425570902322629,
+    0.18254403696493254
+   ],
+   "ventanas_positivas": 59,
+   "ventanas_negativas": 15,
+   "ventanas_empate": 0,
+   "escenarios_empate": 2,
+   "p_valor": 1.2767110037205525e-07,
+   "p": 1.2767110037205525e-07,
+   "p_holm": 2.553422007441105e-07,
+   "rechazada_nula": true
+  },
+  "P5": {
+   "id": "P5",
+   "metrica": "num_stalls",
+   "rival": "propio_mediana",
+   "texto": "menos paradas que la variante sin CVaR (solo la mediana)",
+   "tipo": "menor",
+   "n_escenarios": 148,
+   "n_ventanas": 74,
+   "media_diferencia": -0.7905405405405406,
+   "ic95": [
+    -1.027027027027027,
+    -0.581081081081081
+   ],
+   "ic90": [
+    -0.9864864864864865,
+    -0.6081081081081081
+   ],
+   "ventanas_positivas": 1,
+   "ventanas_negativas": 43,
+   "ventanas_empate": 30,
+   "escenarios_empate": 81,
+   "p_valor": 2.5579538487363607e-12,
+   "p": 2.5579538487363607e-12,
+   "p_holm": 1.0231815394945443e-11,
+   "rechazada_nula": true
+  }
+ },
+ "secundarias": {
+  "basado_en_tasa": {
+   "qoe_lineal_media": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": 0.7955302540260856,
+    "ic95": [
+     0.7069762798202937,
+     0.8839747661667722
+    ],
+    "ic90": [
+     0.7201660598689521,
+     0.868854403242338
+    ],
+    "ventanas_positivas": 74,
+    "ventanas_negativas": 0,
+    "ventanas_empate": 0,
+    "escenarios_empate": 0,
+    "p_valor_bilateral": 1.0587911840678754e-22
+   },
+   "num_stalls": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": 0.02027027027027027,
+    "ic95": [
+     0.0,
+     0.0472972972972973
+    ],
+    "ic90": [
+     0.006756756756756757,
+     0.04054054054054054
+    ],
+    "ventanas_positivas": 3,
+    "ventanas_negativas": 0,
+    "ventanas_empate": 71,
+    "escenarios_empate": 145,
+    "p_valor_bilateral": 0.25
+   },
+   "rebuffering_total_s": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": 0.021423868196162967,
+    "ic95": [
+     -0.00036341152028054804,
+     0.05527521308151238
+    ],
+    "ic90": [
+     0.00010547954062113186,
+     0.04919971367603835
+    ],
+    "ventanas_positivas": 3,
+    "ventanas_negativas": 3,
+    "ventanas_empate": 68,
+    "escenarios_empate": 142,
+    "p_valor_bilateral": 1.0
+   },
+   "bitrate_medio_kbps": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": 832.4673811742778,
+    "ic95": [
+     745.6197576887232,
+     918.837371854613
+    ],
+    "ic90": [
+     759.541006523765,
+     905.4869524697109
+    ],
+    "ventanas_positivas": 74,
+    "ventanas_negativas": 0,
+    "ventanas_empate": 0,
+    "escenarios_empate": 1,
+    "p_valor_bilateral": 1.0587911840678754e-22
+   },
+   "num_cambios_calidad": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -1.2702702702702702,
+    "ic95": [
+     -1.9662162162162162,
+     -0.5743243243243243
+    ],
+    "ic90": [
+     -1.8513513513513513,
+     -0.6824324324324325
+    ],
+    "ventanas_positivas": 24,
+    "ventanas_negativas": 48,
+    "ventanas_empate": 2,
+    "escenarios_empate": 8,
+    "p_valor_bilateral": 0.006309827313666047
+   },
+   "qoe_log_media": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": 0.33397260342089735,
+    "ic95": [
+     0.303070843772137,
+     0.3637339715002777
+    ],
+    "ic90": [
+     0.3080532162598861,
+     0.3589084435642907
+    ],
+    "ventanas_positivas": 72,
+    "ventanas_negativas": 2,
+    "ventanas_empate": 0,
+    "escenarios_empate": 0,
+    "p_valor_bilateral": 2.939204326972422e-19
+   }
+  },
+  "bba": {
+   "qoe_lineal_media": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": 0.3151685622009472,
+    "ic95": [
+     0.255804943771525,
+     0.374312812142924
+    ],
+    "ic90": [
+     0.26581705428538827,
+     0.3645165764338387
+    ],
+    "ventanas_positivas": 67,
+    "ventanas_negativas": 7,
+    "ventanas_empate": 0,
+    "escenarios_empate": 0,
+    "p_valor_bilateral": 2.1198660113131958e-13
+   },
+   "num_stalls": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -0.14189189189189189,
+    "ic95": [
+     -0.33783783783783783,
+     0.006756756756756757
+    ],
+    "ic90": [
+     -0.30405405405405406,
+     -0.013513513513513514
+    ],
+    "ventanas_positivas": 3,
+    "ventanas_negativas": 4,
+    "ventanas_empate": 67,
+    "escenarios_empate": 137,
+    "p_valor_bilateral": 1.0
+   },
+   "rebuffering_total_s": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -0.17033857474303363,
+    "ic95": [
+     -0.3884574416482104,
+     0.0013697302838900705
+    ],
+    "ic90": [
+     -0.3486001985401271,
+     -0.02305101768197838
+    ],
+    "ventanas_positivas": 4,
+    "ventanas_negativas": 4,
+    "ventanas_empate": 66,
+    "escenarios_empate": 136,
+    "p_valor_bilateral": 1.0
+   },
+   "bitrate_medio_kbps": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": 63.4669151910531,
+    "ic95": [
+     31.71015843429631,
+     94.48974836905869
+    ],
+    "ic90": [
+     37.24370922646783,
+     89.66682199440817
+    ],
+    "ventanas_positivas": 52,
+    "ventanas_negativas": 22,
+    "ventanas_empate": 0,
+    "escenarios_empate": 2,
+    "p_valor_bilateral": 0.0006428073490507031
+   },
+   "num_cambios_calidad": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -6.763513513513513,
+    "ic95": [
+     -7.777027027027027,
+     -5.77027027027027
+    ],
+    "ic90": [
+     -7.608108108108108,
+     -5.925675675675675
+    ],
+    "ventanas_positivas": 1,
+    "ventanas_negativas": 73,
+    "ventanas_empate": 0,
+    "escenarios_empate": 9,
+    "p_valor_bilateral": 7.940933880509066e-21
+   },
+   "qoe_log_media": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": 0.15417026760553162,
+    "ic95": [
+     0.12344218446114519,
+     0.18618285287619124
+    ],
+    "ic90": [
+     0.1282707395998988,
+     0.1808716719938288
+    ],
+    "ventanas_positivas": 64,
+    "ventanas_negativas": 10,
+    "ventanas_empate": 0,
+    "escenarios_empate": 0,
+    "p_valor_bilateral": 8.957423581215868e-11
+   }
+  },
+  "bola": {
+   "qoe_lineal_media": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": 1.3525747728451487,
+    "ic95": [
+     0.8394398318228649,
+     2.0170878825421847
+    ],
+    "ic90": [
+     0.904723327489838,
+     1.8929653242829936
+    ],
+    "ventanas_positivas": 72,
+    "ventanas_negativas": 2,
+    "ventanas_empate": 0,
+    "escenarios_empate": 0,
+    "p_valor_bilateral": 2.939204326972422e-19
+   },
+   "num_stalls": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -1.1756756756756757,
+    "ic95": [
+     -2.445945945945946,
+     -0.20945945945945946
+    ],
+    "ic90": [
+     -2.222972972972973,
+     -0.2972972972972973
+    ],
+    "ventanas_positivas": 3,
+    "ventanas_negativas": 4,
+    "ventanas_empate": 67,
+    "escenarios_empate": 137,
+    "p_valor_bilateral": 1.0
+   },
+   "rebuffering_total_s": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -4.017836148729387,
+    "ic95": [
+     -8.79756878371631,
+     -0.27755029324308034
+    ],
+    "ic90": [
+     -7.914548932588357,
+     -0.7811128734792874
+    ],
+    "ventanas_positivas": 3,
+    "ventanas_negativas": 5,
+    "ventanas_empate": 66,
+    "escenarios_empate": 136,
+    "p_valor_bilateral": 0.7265625
+   },
+   "bitrate_medio_kbps": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": 745.8876980428704,
+    "ic95": [
+     638.5601118359738,
+     851.9687791239519
+    ],
+    "ic90": [
+     657.4557315936626,
+     834.7390493942219
+    ],
+    "ventanas_positivas": 70,
+    "ventanas_negativas": 4,
+    "ventanas_empate": 0,
+    "escenarios_empate": 0,
+    "p_valor_bilateral": 1.2898469490022716e-16
+   },
+   "num_cambios_calidad": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -2.141891891891892,
+    "ic95": [
+     -2.7432432432432434,
+     -1.5405405405405406
+    ],
+    "ic90": [
+     -2.6486486486486487,
+     -1.6418918918918919
+    ],
+    "ventanas_positivas": 11,
+    "ventanas_negativas": 58,
+    "ventanas_empate": 5,
+    "escenarios_empate": 18,
+    "p_valor_bilateral": 7.555829742748269e-09
+   },
+   "qoe_log_media": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": 0.6700405171190911,
+    "ic95": [
+     0.36511468300761923,
+     1.0681969976659342
+    ],
+    "ic90": [
+     0.40086507692380563,
+     0.9933091051543438
+    ],
+    "ventanas_positivas": 68,
+    "ventanas_negativas": 6,
+    "ventanas_empate": 0,
+    "escenarios_empate": 0,
+    "p_valor_bilateral": 2.1448756331687684e-14
+   }
+  },
+  "mpc_robusto": {
+   "qoe_lineal_media": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -0.0008219547772881744,
+    "ic95": [
+     -0.021891413668239035,
+     0.020640224170040022
+    ],
+    "ic90": [
+     -0.0183948519696454,
+     0.016746925828353947
+    ],
+    "ventanas_positivas": 31,
+    "ventanas_negativas": 39,
+    "ventanas_empate": 4,
+    "escenarios_empate": 8,
+    "p_valor_bilateral": 0.40296307504607976
+   },
+   "num_stalls": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -0.12162162162162163,
+    "ic95": [
+     -0.19594594594594594,
+     -0.05405405405405406
+    ],
+    "ic90": [
+     -0.1891891891891892,
+     -0.060810810810810814
+    ],
+    "ventanas_positivas": 1,
+    "ventanas_negativas": 12,
+    "ventanas_empate": 61,
+    "escenarios_empate": 130,
+    "p_valor_bilateral": 0.00341796875
+   },
+   "rebuffering_total_s": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -0.08213728801992319,
+    "ic95": [
+     -0.16320464251288827,
+     -0.01292438503986813
+    ],
+    "ic90": [
+     -0.1498113808978618,
+     -0.022230389418542176
+    ],
+    "ventanas_positivas": 4,
+    "ventanas_negativas": 14,
+    "ventanas_empate": 56,
+    "escenarios_empate": 125,
+    "p_valor_bilateral": 0.0308837890625
+   },
+   "bitrate_medio_kbps": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -58.60904007455731,
+    "ic95": [
+     -71.92451071761418,
+     -45.479962721342034
+    ],
+    "ic90": [
+     -69.75768872320594,
+     -47.67008387698046
+    ],
+    "ventanas_positivas": 6,
+    "ventanas_negativas": 65,
+    "ventanas_empate": 3,
+    "escenarios_empate": 9,
+    "p_valor_bilateral": 1.3321308760808536e-13
+   },
+   "num_cambios_calidad": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -0.581081081081081,
+    "ic95": [
+     -0.9662162162162162,
+     -0.20945945945945946
+    ],
+    "ic90": [
+     -0.9054054054054054,
+     -0.2702702702702703
+    ],
+    "ventanas_positivas": 23,
+    "ventanas_negativas": 37,
+    "ventanas_empate": 14,
+    "escenarios_empate": 33,
+    "p_valor_bilateral": 0.09246098107292373
+   },
+   "qoe_log_media": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -0.001684543246147908,
+    "ic95": [
+     -0.011255935171000528,
+     0.008258310257021288
+    ],
+    "ic90": [
+     -0.009854295538007625,
+     0.006492227800844106
+    ],
+    "ventanas_positivas": 32,
+    "ventanas_negativas": 39,
+    "ventanas_empate": 3,
+    "escenarios_empate": 6,
+    "p_valor_bilateral": 0.4766877934342755
+   }
+  },
+  "propio_cuantiles_fijos": {
+   "qoe_lineal_media": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": 0.148613333516829,
+    "ic95": [
+     0.10742115008412216,
+     0.18983952138121482
+    ],
+    "ic90": [
+     0.11425570902322629,
+     0.18254403696493254
+    ],
+    "ventanas_positivas": 59,
+    "ventanas_negativas": 15,
+    "ventanas_empate": 0,
+    "escenarios_empate": 2,
+    "p_valor_bilateral": 2.553422007441105e-07
+   },
+   "num_stalls": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": 0.013513513513513514,
+    "ic95": [
+     -0.02702702702702703,
+     0.0472972972972973
+    ],
+    "ic90": [
+     -0.02027027027027027,
+     0.04054054054054054
+    ],
+    "ventanas_positivas": 4,
+    "ventanas_negativas": 1,
+    "ventanas_empate": 69,
+    "escenarios_empate": 142,
+    "p_valor_bilateral": 0.375
+   },
+   "rebuffering_total_s": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -0.0024331041078423025,
+    "ic95": [
+     -0.06479250706065245,
+     0.04714261601396641
+    ],
+    "ic90": [
+     -0.05087996649298647,
+     0.039160844067983154
+    ],
+    "ventanas_positivas": 4,
+    "ventanas_negativas": 3,
+    "ventanas_empate": 67,
+    "escenarios_empate": 140,
+    "p_valor_bilateral": 1.0
+   },
+   "bitrate_medio_kbps": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": 194.3033550792171,
+    "ic95": [
+     157.46738117427768,
+     231.7218080149115
+    ],
+    "ic90": [
+     163.58341099720403,
+     225.6407269338304
+    ],
+    "ventanas_positivas": 65,
+    "ventanas_negativas": 8,
+    "ventanas_empate": 1,
+    "escenarios_empate": 2,
+    "p_valor_bilateral": 3.230981506909271e-12
+   },
+   "num_cambios_calidad": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": 0.6824324324324325,
+    "ic95": [
+     0.35135135135135137,
+     1.0202702702702702
+    ],
+    "ic90": [
+     0.40540540540540543,
+     0.9662162162162162
+    ],
+    "ventanas_positivas": 42,
+    "ventanas_negativas": 20,
+    "ventanas_empate": 12,
+    "escenarios_empate": 40,
+    "p_valor_bilateral": 0.007148733833163067
+   },
+   "qoe_log_media": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": 0.0442754648562857,
+    "ic95": [
+     0.021063089725084385,
+     0.06588318044687175
+    ],
+    "ic90": [
+     0.024859326023700248,
+     0.06274968292830557
+    ],
+    "ventanas_positivas": 58,
+    "ventanas_negativas": 16,
+    "ventanas_empate": 0,
+    "escenarios_empate": 2,
+    "p_valor_bilateral": 9.674891137601899e-07
+   }
+  },
+  "propio_cuantiles_recientes": {
+   "qoe_lineal_media": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -0.03600216551193324,
+    "ic95": [
+     -0.07130711348892058,
+     -0.0026751443983982974
+    ],
+    "ic90": [
+     -0.06551430876387974,
+     -0.007565479929054312
+    ],
+    "ventanas_positivas": 27,
+    "ventanas_negativas": 45,
+    "ventanas_empate": 2,
+    "escenarios_empate": 9,
+    "p_valor_bilateral": 0.04437092000802569
+   },
+   "num_stalls": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -0.4391891891891892,
+    "ic95": [
+     -0.5945945945945946,
+     -0.2972972972972973
+    ],
+    "ic90": [
+     -0.5675675675675675,
+     -0.31756756756756754
+    ],
+    "ventanas_positivas": 1,
+    "ventanas_negativas": 35,
+    "ventanas_empate": 38,
+    "escenarios_empate": 102,
+    "p_valor_bilateral": 1.076841726899147e-09
+   },
+   "rebuffering_total_s": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -0.32523366691197764,
+    "ic95": [
+     -0.4798762506008545,
+     -0.1891382952832115
+    ],
+    "ic90": [
+     -0.45488514833640376,
+     -0.20796889395195822
+    ],
+    "ventanas_positivas": 2,
+    "ventanas_negativas": 37,
+    "ventanas_empate": 35,
+    "escenarios_empate": 98,
+    "p_valor_bilateral": 2.841261448338628e-09
+   },
+   "bitrate_medio_kbps": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -118.94221808014909,
+    "ic95": [
+     -138.88630009319658,
+     -99.86020503261878
+    ],
+    "ic90": [
+     -135.49627213420317,
+     -102.81919850885365
+    ],
+    "ventanas_positivas": 1,
+    "ventanas_negativas": 71,
+    "ventanas_empate": 2,
+    "escenarios_empate": 9,
+    "p_valor_bilateral": 3.091670257478196e-20
+   },
+   "num_cambios_calidad": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -0.3581081081081081,
+    "ic95": [
+     -0.7364864864864865,
+     0.02702702702702703
+    ],
+    "ic90": [
+     -0.6824324324324325,
+     -0.033783783783783786
+    ],
+    "ventanas_positivas": 30,
+    "ventanas_negativas": 32,
+    "ventanas_empate": 12,
+    "escenarios_empate": 34,
+    "p_valor_bilateral": 0.899076313652859
+   },
+   "qoe_log_media": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -0.023986821858597192,
+    "ic95": [
+     -0.03924468491987461,
+     -0.009240687217226515
+    ],
+    "ic90": [
+     -0.03667005888672503,
+     -0.011387768191758811
+    ],
+    "ventanas_positivas": 24,
+    "ventanas_negativas": 48,
+    "ventanas_empate": 2,
+    "escenarios_empate": 8,
+    "p_valor_bilateral": 0.006309827313666047
+   }
+  },
+  "propio_mediana": {
+   "qoe_lineal_media": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -0.023686612555755278,
+    "ic95": [
+     -0.07142015026230877,
+     0.022740799050692297
+    ],
+    "ic90": [
+     -0.0634498190161827,
+     0.015386801560846925
+    ],
+    "ventanas_positivas": 34,
+    "ventanas_negativas": 38,
+    "ventanas_empate": 2,
+    "escenarios_empate": 7,
+    "p_valor_bilateral": 0.723948145746914
+   },
+   "num_stalls": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -0.7905405405405406,
+    "ic95": [
+     -1.027027027027027,
+     -0.581081081081081
+    ],
+    "ic90": [
+     -0.9864864864864865,
+     -0.6081081081081081
+    ],
+    "ventanas_positivas": 1,
+    "ventanas_negativas": 43,
+    "ventanas_empate": 30,
+    "escenarios_empate": 81,
+    "p_valor_bilateral": 5.115907697472721e-12
+   },
+   "rebuffering_total_s": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -0.5284208970941207,
+    "ic95": [
+     -0.7663015159392867,
+     -0.32846759676868786
+    ],
+    "ic90": [
+     -0.7271598120606615,
+     -0.35472070146568363
+    ],
+    "ventanas_positivas": 1,
+    "ventanas_negativas": 45,
+    "ventanas_empate": 28,
+    "escenarios_empate": 78,
+    "p_valor_bilateral": 1.3358203432289883e-12
+   },
+   "bitrate_medio_kbps": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -163.68825722273994,
+    "ic95": [
+     -195.1770736253495,
+     -135.28657968313138
+    ],
+    "ic90": [
+     -189.27073625349502,
+     -139.13094128611368
+    ],
+    "ventanas_positivas": 0,
+    "ventanas_negativas": 72,
+    "ventanas_empate": 2,
+    "escenarios_empate": 9,
+    "p_valor_bilateral": 4.235164736271502e-22
+   },
+   "num_cambios_calidad": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -1.0405405405405406,
+    "ic95": [
+     -1.5472972972972974,
+     -0.5337837837837838
+    ],
+    "ic90": [
+     -1.4594594594594594,
+     -0.6148648648648649
+    ],
+    "ventanas_positivas": 27,
+    "ventanas_negativas": 41,
+    "ventanas_empate": 6,
+    "escenarios_empate": 28,
+    "p_valor_bilateral": 0.11425430684992328
+   },
+   "qoe_log_media": {
+    "n_escenarios": 148,
+    "n_ventanas": 74,
+    "media_diferencia": -0.01718826421683225,
+    "ic95": [
+     -0.03469726040511023,
+     -0.00027691414744456867
+    ],
+    "ic90": [
+     -0.03184966390588009,
+     -0.0028815616872737582
+    ],
+    "ventanas_positivas": 28,
+    "ventanas_negativas": 44,
+    "ventanas_empate": 2,
+    "escenarios_empate": 7,
+    "p_valor_bilateral": 0.07636915467183139
+   }
+  }
+ },
+ "estratos": {
+  "video_nuevo": {
+   "mpc_robusto": {
+    "qoe_lineal_media": {
+     "n_escenarios": 74,
+     "n_ventanas": 74,
+     "media_diferencia": -0.023080712779304895,
+     "ic95": [
+      -0.0463037916782397,
+      -0.0003668059379688003
+     ],
+     "ic90": [
+      -0.04233626005864598,
+      -0.0038637335822037503
+     ],
+     "ventanas_positivas": 26,
+     "ventanas_negativas": 43,
+     "ventanas_empate": 5,
+     "escenarios_empate": 5,
+     "p_valor_bilateral": 0.053289363816513634
+    },
+    "num_stalls": {
+     "n_escenarios": 74,
+     "n_ventanas": 74,
+     "media_diferencia": -0.06756756756756757,
+     "ic95": [
+      -0.13513513513513514,
+      0.0
+     ],
+     "ic90": [
+      -0.12162162162162163,
+      -0.013513513513513514
+     ],
+     "ventanas_positivas": 1,
+     "ventanas_negativas": 6,
+     "ventanas_empate": 67,
+     "escenarios_empate": 67,
+     "p_valor_bilateral": 0.125
+    }
+   },
+   "propio_cuantiles_recientes": {
+    "qoe_lineal_media": {
+     "n_escenarios": 74,
+     "n_ventanas": 74,
+     "media_diferencia": -0.053087732835997374,
+     "ic95": [
+      -0.08954737013253511,
+      -0.017800485379356027
+     ],
+     "ic90": [
+      -0.08349712665176454,
+      -0.023034231362281117
+     ],
+     "ventanas_positivas": 23,
+     "ventanas_negativas": 46,
+     "ventanas_empate": 5,
+     "escenarios_empate": 5,
+     "p_valor_bilateral": 0.007620521855025697
+    },
+    "num_stalls": {
+     "n_escenarios": 74,
+     "n_ventanas": 74,
+     "media_diferencia": -0.36486486486486486,
+     "ic95": [
+      -0.527027027027027,
+      -0.21621621621621623
+     ],
+     "ic90": [
+      -0.5,
+      -0.22972972972972974
+     ],
+     "ventanas_positivas": 1,
+     "ventanas_negativas": 20,
+     "ventanas_empate": 53,
+     "escenarios_empate": 53,
+     "p_valor_bilateral": 2.09808349609375e-05
+    }
+   }
+  },
+  "videos_vistos": {
+   "mpc_robusto": {
+    "qoe_lineal_media": {
+     "n_escenarios": 74,
+     "n_ventanas": 74,
+     "media_diferencia": 0.021436803224728546,
+     "ic95": [
+      -0.006783628132065181,
+      0.051346433659297405
+     ],
+     "ic90": [
+      -0.0025833417311245483,
+      0.04617548505259459
+     ],
+     "ventanas_positivas": 35,
+     "ventanas_negativas": 36,
+     "ventanas_empate": 3,
+     "escenarios_empate": 3,
+     "p_valor_bilateral": 1.0
+    },
+    "num_stalls": {
+     "n_escenarios": 74,
+     "n_ventanas": 74,
+     "media_diferencia": -0.17567567567567569,
+     "ic95": [
+      -0.2972972972972973,
+      -0.08108108108108109
+     ],
+     "ic90": [
+      -0.2702702702702703,
+      -0.0945945945945946
+     ],
+     "ventanas_positivas": 0,
+     "ventanas_negativas": 11,
+     "ventanas_empate": 63,
+     "escenarios_empate": 63,
+     "p_valor_bilateral": 0.0009765625
+    }
+   },
+   "propio_cuantiles_recientes": {
+    "qoe_lineal_media": {
+     "n_escenarios": 74,
+     "n_ventanas": 74,
+     "media_diferencia": -0.018916598187869105,
+     "ic95": [
+      -0.0619784854318909,
+      0.023238373495676718
+     ],
+     "ic90": [
+      -0.054729900458515536,
+      0.01623196199737499
+     ],
+     "ventanas_positivas": 33,
+     "ventanas_negativas": 37,
+     "ventanas_empate": 4,
+     "escenarios_empate": 4,
+     "p_valor_bilateral": 0.7202027723528613
+    },
+    "num_stalls": {
+     "n_escenarios": 74,
+     "n_ventanas": 74,
+     "media_diferencia": -0.5135135135135135,
+     "ic95": [
+      -0.7297297297297297,
+      -0.32432432432432434
+     ],
+     "ic90": [
+      -0.6891891891891891,
+      -0.35135135135135137
+     ],
+     "ventanas_positivas": 0,
+     "ventanas_negativas": 25,
+     "ventanas_empate": 49,
+     "escenarios_empate": 49,
+     "p_valor_bilateral": 5.960464477539063e-08
+    }
+   }
+  },
+  "oboe": {
+   "mpc_robusto": {
+    "qoe_lineal_media": {
+     "n_escenarios": 112,
+     "n_ventanas": 56,
+     "media_diferencia": -0.013344591555464946,
+     "ic95": [
+      -0.03761094597432391,
+      0.011070919891892418
+     ],
+     "ic90": [
+      -0.033762838629509996,
+      0.007310080830728964
+     ],
+     "ventanas_positivas": 22,
+     "ventanas_negativas": 32,
+     "ventanas_empate": 2,
+     "escenarios_empate": 3,
+     "p_valor_bilateral": 0.22032849417661104
+    },
+    "num_stalls": {
+     "n_escenarios": 112,
+     "n_ventanas": 56,
+     "media_diferencia": -0.09821428571428571,
+     "ic95": [
+      -0.1875,
+      -0.026785714285714284
+     ],
+     "ic90": [
+      -0.17857142857142858,
+      -0.03571428571428571
+     ],
+     "ventanas_positivas": 1,
+     "ventanas_negativas": 7,
+     "ventanas_empate": 48,
+     "escenarios_empate": 101,
+     "p_valor_bilateral": 0.0703125
+    }
+   },
+   "propio_cuantiles_recientes": {
+    "qoe_lineal_media": {
+     "n_escenarios": 112,
+     "n_ventanas": 56,
+     "media_diferencia": -0.05012654853708808,
+     "ic95": [
+      -0.09229525451729588,
+      -0.008204289994316294
+     ],
+     "ic90": [
+      -0.08534181796698055,
+      -0.015460848389784855
+     ],
+     "ventanas_positivas": 19,
+     "ventanas_negativas": 37,
+     "ventanas_empate": 0,
+     "escenarios_empate": 4,
+     "p_valor_bilateral": 0.022241389472860112
+    },
+    "num_stalls": {
+     "n_escenarios": 112,
+     "n_ventanas": 56,
+     "media_diferencia": -0.4107142857142857,
+     "ic95": [
+      -0.5982142857142857,
+      -0.24107142857142858
+     ],
+     "ic90": [
+      -0.5714285714285714,
+      -0.26785714285714285
+     ],
+     "ventanas_positivas": 1,
+     "ventanas_negativas": 23,
+     "ventanas_empate": 32,
+     "escenarios_empate": 81,
+     "p_valor_bilateral": 2.9802322387695312e-06
+    }
+   }
+  },
+  "fcc": {
+   "mpc_robusto": {
+    "qoe_lineal_media": {
+     "n_escenarios": 36,
+     "n_ventanas": 18,
+     "media_diferencia": 0.03813735964370622,
+     "ic95": [
+      0.005001576951365482,
+      0.07559567160882763
+     ],
+     "ic90": [
+      0.009871861271514817,
+      0.06859255700087635
+     ],
+     "ventanas_positivas": 9,
+     "ventanas_negativas": 7,
+     "ventanas_empate": 2,
+     "escenarios_empate": 5,
+     "p_valor_bilateral": 0.803619384765625
+    },
+    "num_stalls": {
+     "n_escenarios": 36,
+     "n_ventanas": 18,
+     "media_diferencia": -0.19444444444444445,
+     "ic95": [
+      -0.3611111111111111,
+      -0.05555555555555555
+     ],
+     "ic90": [
+      -0.3333333333333333,
+      -0.08333333333333333
+     ],
+     "ventanas_positivas": 0,
+     "ventanas_negativas": 5,
+     "ventanas_empate": 13,
+     "escenarios_empate": 29,
+     "p_valor_bilateral": 0.0625
+    }
+   },
+   "propio_cuantiles_recientes": {
+    "qoe_lineal_media": {
+     "n_escenarios": 36,
+     "n_ventanas": 18,
+     "media_diferencia": 0.007940359455215172,
+     "ic95": [
+      -0.03584073240740461,
+      0.058221322228574096
+     ],
+     "ic90": [
+      -0.02948423643910138,
+      0.04954453125425202
+     ],
+     "ventanas_positivas": 8,
+     "ventanas_negativas": 8,
+     "ventanas_empate": 2,
+     "escenarios_empate": 5,
+     "p_valor_bilateral": 1.0
+    },
+    "num_stalls": {
+     "n_escenarios": 36,
+     "n_ventanas": 18,
+     "media_diferencia": -0.5277777777777778,
+     "ic95": [
+      -0.7777777777777778,
+      -0.3055555555555556
+     ],
+     "ic90": [
+      -0.7222222222222222,
+      -0.3333333333333333
+     ],
+     "ventanas_positivas": 0,
+     "ventanas_negativas": 12,
+     "ventanas_empate": 6,
+     "escenarios_empate": 21,
+     "p_valor_bilateral": 0.00048828125
+    }
+   }
+  }
+ },
+ "contenido_nuevo_frente_a_visto": {
+  "n_escenarios": 74,
+  "n_ventanas": 74,
+  "media_diferencia": -0.04451751600403344,
+  "ic95": [
+   -0.07678359967363094,
+   -0.013731947554494202
+  ],
+  "ic90": [
+   -0.07163358413146795,
+   -0.018684815086383415
+  ],
+  "ventanas_positivas": 31,
+  "ventanas_negativas": 40,
+  "ventanas_empate": 3,
+  "escenarios_empate": 3,
+  "p_valor_bilateral": 0.3424709984198679
+ }
+}
