@@ -1,0 +1,89 @@
+{
+  "_leeme": [
+    "FICHERO EDITABLE: es la unica fuente de datos del capitulo 3. Cambia fechas, horas, precios o textos aqui y",
+    "vuelve a ejecutar  py -3.12 docs/memoria/apoyo/generar_cap3.py  para regenerar el Gantt, las tablas y el docx.",
+    "Fechas en AAAA-MM-DD. Las horas son del alumno. Los valores marcados en 'supuestos' son hipotesis que la memoria",
+    "declara: ajustalos a tu realidad antes de entregar.",
+    "Anclas reales del historial git (no cambian): primer commit 2026-05-06; sin commits en julio (entrenamiento en",
+    "WSL); paquete de agosto 2026-08-10; fase de blindaje 2026-10-14; experimento final 2026-10-15 a 2026-10-16;",
+    "redaccion de la memoria desde 2026-08-10."
+  ],
+  "proyecto": {"inicio": "2026-04-20", "fin": "2026-11-30", "titulo_corto": "cliente DASH y controlador ABR propio"},
+  "fases": [
+    {
+      "id": "F1", "nombre": "Estudio previo y estado del arte", "inicio": "2026-04-20", "fin": "2026-05-15", "horas": 30,
+      "tipo": "estudio",
+      "descripcion": "lectura del estándar MPEG-DASH y de la literatura de adaptación de tasa y de calidad de experiencia, selección de los algoritmos de referencia y de la métrica, y definición de los objetivos con el tutor",
+      "tareas": ["lectura de surveys y artículos primarios", "elección de los comparadores y de la QoE de Pensieve", "objetivos y alcance"],
+      "entregable": "lista de fuentes y objetivos acordados"
+    },
+    {
+      "id": "F2", "nombre": "Cliente DASH modular", "inicio": "2026-05-06", "fin": "2026-05-31", "horas": 50,
+      "tipo": "desarrollo",
+      "descripcion": "diseño e implementación del cliente en Python: analizador del manifiesto, descarga y buffer, motores de reproducción simulado y real, telemetría e interfaz común de controladores",
+      "tareas": ["analizador del MPD", "descargador y buffer", "motores de reproducción", "telemetría y artefactos de sesión", "interfaz y registro de controladores"],
+      "entregable": "cliente capaz de reproducir contenido DASH real con cualquier controlador registrado"
+    },
+    {
+      "id": "F3", "nombre": "Infraestructura experimental", "inicio": "2026-06-01", "fin": "2026-06-25", "horas": 40,
+      "tipo": "desarrollo",
+      "descripcion": "servidor DASH y empaquetado del contenido con tasa variable, extracción de los tamaños reales de los segmentos, emulación de red por trazas y corpus de trazas normalizado con particiones sin fuga",
+      "tareas": ["servidor web y contenido DASH de 6 niveles", "descriptores de tamaños reales", "emulación de red por trazas", "catálogo de 12 conjuntos de trazas y particiones"],
+      "entregable": "banco de pruebas reproducible: servidor, contenido, emulación y catálogo"
+    },
+    {
+      "id": "F4", "nombre": "Controladores clásicos y MPC robusto", "inicio": "2026-06-01", "fin": "2026-06-20", "horas": 25,
+      "tipo": "desarrollo",
+      "descripcion": "implementación fiel de los comparadores a partir de sus artículos: basado en tasa, BBA, BOLA y MPC robusto, con sus pruebas",
+      "tareas": ["basado en tasa, BBA y BOLA", "MPC y MPC robusto canónico", "pruebas de fidelidad"],
+      "entregable": "cuatro comparadores verificados"
+    },
+    {
+      "id": "F5", "nombre": "Controlador propio", "inicio": "2026-06-15", "fin": "2026-08-10", "horas": 70,
+      "tipo": "desarrollo",
+      "descripcion": "entorno de entrenamiento fiel al medio, predictor de cuantiles y planificador con agregación de riesgo; incluye las iteraciones descartadas (clonación de comportamiento, puntuador con horizonte, predictor sin memoria) y el entrenamiento en la máquina con GPU",
+      "tareas": ["simulador y dataset de entrenamiento", "predictor de cuantiles y entrenamiento en GPU", "planificador con CVaR y respaldo", "iteraciones descartadas"],
+      "entregable": "controlador propio con su paquete de modelo"
+    },
+    {
+      "id": "F6", "nombre": "Evaluación y experimento final", "inicio": "2026-08-01", "fin": "2026-10-16", "horas": 45,
+      "tipo": "validacion",
+      "descripcion": "ejecutor de experimentos, protocolo y contrastes prerregistrados, fase de blindaje con la revisión del código y la ejecución única del experimento final en la máquina virtual",
+      "tareas": ["ejecutor, protocolo y paquete de evidencia", "contrastes prerregistrados", "fase de blindaje (revisión y congelación)", "experimento final y verificación"],
+      "entregable": "paquete de evidencia del experimento final, verificado"
+    },
+    {
+      "id": "F7", "nombre": "Redacción de la memoria", "inicio": "2026-08-10", "fin": "2026-11-30", "horas": 40,
+      "tipo": "redaccion",
+      "descripcion": "bibliografía definitiva, borradores por capítulo con figuras y tablas generadas desde el material entregado, revisión con el tutor",
+      "tareas": ["bibliografía", "capítulos de diseño e implementación", "capítulos de evaluación, estado del arte, planificación, introducción y conclusiones", "revisión final"],
+      "entregable": "memoria"
+    }
+  ],
+  "hitos": [
+    {"fecha": "2026-05-06", "texto": "primer commit del cliente"},
+    {"fecha": "2026-06-25", "texto": "banco de pruebas completo"},
+    {"fecha": "2026-08-10", "texto": "primera evaluación completa (desarrollo)"},
+    {"fecha": "2026-10-14", "texto": "inicio de la fase de blindaje"},
+    {"fecha": "2026-10-16", "texto": "experimento final completado"}
+  ],
+  "supuestos": {
+    "tarifa_alumno_eur_h": 20,
+    "tarifa_tutor_eur_h": 50,
+    "horas_tutor": 25,
+    "vida_util_hardware_anios": 4,
+    "meses_proyecto": 7,
+    "nota": "tarifas tomadas de los TFG de referencia de la ETSIIT (alumno 20-25 EUR/h, tutor 50 EUR/h); vida util de 3-4 anios"
+  },
+  "hardware": [
+    {"concepto": "Equipo de desarrollo con GPU (Intel Core i5-14600KF, 32 GiB, AMD Radeon RX 7800 XT), que aloja también las dos máquinas virtuales y el subsistema Linux", "precio_eur": 1800, "uso_meses": 7},
+    {"concepto": "Periféricos y red local (monitor, teclado, router)", "precio_eur": 300, "uso_meses": 7}
+  ],
+  "software": [
+    {"concepto": "Python, PyTorch, NumPy, matplotlib, requests", "licencia": "libre", "coste_eur": 0},
+    {"concepto": "Ubuntu, VirtualBox, WSL2, ROCm", "licencia": "libre", "coste_eur": 0},
+    {"concepto": "Apache HTTP Server, GPAC/MP4Box, FFmpeg, GStreamer", "licencia": "libre", "coste_eur": 0},
+    {"concepto": "Git y GitHub (plan gratuito)", "licencia": "libre", "coste_eur": 0},
+    {"concepto": "Microsoft Office (licencia de la universidad)", "licencia": "incluida", "coste_eur": 0}
+  ]
+}
