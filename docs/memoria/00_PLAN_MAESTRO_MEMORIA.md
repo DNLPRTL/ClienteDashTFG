@@ -460,9 +460,8 @@ por ventana (empates excluidos e informados); IC por bootstrap por bloques de ve
 remuestreos, semilla 2026); TOST con p = máximo de los dos unilaterales (aproximación normal sobre
 las medias por ventana) e IC90 dentro del margen; Holm sobre P1–P5 con α = 0,05. Todo escrito en
 `core/evaluacion/contrastes.py` y copiado al protocolo antes de ejecutar.
-- **[F/T]** **Tabla 6.4** las cinco hipótesis (id, enunciado, rival, métrica, prueba).
-  Ecuaciones (6.1) QoE lineal, (6.2) TOST (los dos unilaterales), (6.3) Holm o la regla del
-  bootstrap por bloques (solo si aporta).
+- **[F/T]** **Tabla 6.4** métricas por sesión; **Tabla 6.5** las cinco hipótesis (id, enunciado, rival, métrica, prueba).
+  Ecuaciones (6.1) QoE lineal, (6.2) TOST (los dos unilaterales), (6.3) Holm. HECHO 09/11; las tablas de 6.3–6.6 pasan a T6.6–T6.10.
 - **[B]** `mao2017pensieve` (QoE), Schuirmann 1987 (TOST), Holm 1979, Efron y Tibshirani 1993
   (bootstrap), `peroni2024qoePitfalls` (distribuciones, no solo medias). Las tres estadísticas
   NO están en el .bib: pedir permiso antes de descargar.
@@ -477,7 +476,7 @@ congelado desde la realimentación registrada (contraprueba: α = 0,5 cambia 96,
 876); fidelidad del simulador en modo forzado (mediana |ΔQoE| = 0, p90 0,006); análisis
 reproducido en Windows (contrastes idénticos); huellas de los 9699 ficheros. Las 77 ventanas
 coinciden con las esperadas.
-- **[F/T]** **Tabla 6.5** comprobaciones de integridad (qué, resultado).
+- **[F/T]** **Tabla 6.6** comprobaciones de integridad (qué, resultado).
 - **[R]** `verificacion_paquete.{md,json}`, `verificacion_windows_20261016/*.json`,
   `resumen_resultados.json` (auditoría de inferencia).
 - **[P]** Propia (rigor).
@@ -487,7 +486,7 @@ diferencia, IC95, IC90, ventanas +/−/=, p y p de Holm, y la decisión. Las cin
 −0,001 con IC90 [−0,018; +0,017] dentro de ±0,15 (cabría en ±0,02); P2 −0,122 paradas por sesión
 (61 ventanas empatadas, 12 de 13 a favor del propio); P3 −0,439; P4 +0,149; P5 −0,791. Cada
 cifra con su interpretación y lo que NO dice (P1 no es superioridad en QoE).
-- **[F/T]** **Tabla 6.6** P1–P5 recalculada por el script desde `contrastes_prerregistrados.json`
+- **[F/T]** **Tabla 6.7** P1–P5 recalculada por el script desde `contrastes_prerregistrados.json`
   (debe coincidir). **Figura 6.2** diferencias por ventana (propio − MPC robusto en QoE y en
   paradas) con el margen de equivalencia y los IC, matplotlib desde `sesiones.csv`.
 - **[P]** Propia.
@@ -503,8 +502,8 @@ cuantiles recientes (−0,036 QoE, 12 veces menos paradas), frente a cuantiles f
 misma seguridad), CVaR frente a mediana (−0,024 QoE no significativo, 20 veces menos paradas).
 Frente a los clásicos: BBA +0,315, basado en tasa +0,796, BOLA +1,353 (BOLA sufre en baja
 capacidad, 4,05 s de rebuffering por sesión).
-- **[F/T]** **Tabla 6.7** agregados por controlador (de `agregados_por_controlador.json`,
-  recalculados desde `sesiones.csv`). **Tabla 6.8** descomposición de ΔQoE por componentes.
+- **[F/T]** **Tabla 6.8** agregados por controlador (de `agregados_por_controlador.json`,
+  recalculados desde `sesiones.csv`). **Tabla 6.9** descomposición de ΔQoE por componentes.
   **Figura 6.3** CDF de la QoE lineal por controlador y **Figura 6.4** paradas o rebuffering
   frente a bitrate medio (dispersión), ambas REHECHAS con estilo sobrio desde `sesiones.csv`;
   las PNG del paquete (`03_graficas`) no se pegan tal cual (decidir por figura y decirlo).
@@ -517,7 +516,7 @@ signo p = 0,34 (40/31/3): con el contenido nuevo la ventaja en paradas se reduce
 algo por debajo; hipótesis de trabajo NO comprobadas (VBR mucho mayor, dos primeros segmentos
 casi negros). Las 3 sintéticas aparte (propio 2,448 y 0 paradas; MPC 2,416 y 0,33; n = 3, nada
 se concluye).
-- **[F/T]** **Tabla 6.9** estratos (ventanas, ΔQoE con IC95, Δparadas con IC95).
+- **[F/T]** **Tabla 6.10** estratos (ventanas, ΔQoE con IC95, Δparadas con IC95).
 - **[P]** Propia (honestidad).
 
 **6.7 Interpretación y limitaciones.** Qué se puede afirmar (equivalencia en QoE con el MPC
@@ -608,12 +607,13 @@ pide cifras, están en el histórico).
 | T6.1 | Los 8 controladores: papel e hipótesis en la que intervienen | 6.1 |
 | T6.2 | Lo que se congela antes de ejecutar (pieza, contenido, huella o comprobación) | 6.1 |
 | T6.3 | Las cuatro máquinas del proyecto (rol, sistema, hardware, Python y paquetes) | 6.1 |
-| T6.4 | Hipótesis prerregistradas P1–P5 (enunciado, rival, métrica, prueba) | 6.2 |
-| T6.5 | Comprobaciones de integridad de la ejecución y del paquete | 6.3 |
-| T6.6 | Resultados P1–P5: media, IC95, IC90, ventanas +/−/=, p, p Holm, decisión | 6.4 |
-| T6.7 | Agregados por controlador (148 sesiones reales) | 6.5 |
-| T6.8 | Descomposición de ΔQoE por componentes frente a cada rival | 6.5 |
-| T6.9 | Estratos exploratorios (Oboe/FCC, visto/nuevo) | 6.6 |
+| T6.4 | Métricas por sesión (definición, unidad, papel) (HECHA 09/11) | 6.2 |
+| T6.5 | Hipótesis prerregistradas P1–P5 (enunciado, rival, métrica, prueba) (HECHA 09/11) | 6.2 |
+| T6.6 | Comprobaciones de integridad de la ejecución y del paquete | 6.3 |
+| T6.7 | Resultados P1–P5: media, IC95, IC90, ventanas +/−/=, p, p Holm, decisión | 6.4 |
+| T6.8 | Agregados por controlador (148 sesiones reales) | 6.5 |
+| T6.9 | Descomposición de ΔQoE por componentes frente a cada rival | 6.5 |
+| T6.10 | Estratos exploratorios (Oboe/FCC, visto/nuevo) | 6.6 |
 | T7 | Corpus de trazas (los 12 conjuntos) | Anexo D (el cap 4.7 ya lo resume) |
 
 ---
@@ -650,7 +650,7 @@ pide cifras, están en el histórico).
 | Cap 3 Planificación/costes | TODO | sacar Gantt del git log |
 | Cap 4 Diseño | REDACTADO POR DANIEL EN WORD; REVISADO 09/11 (`notas/revision_cap4_contenido_20261109.md`: C1–C32, F4.2/F4.5/F4.6 textos) | Su Word manda; no tocar los borradores del repo. Al cerrar el blindaje, Daniel pasa el Word y Claude indica cambios de texto y figuras (lista orientativa en §8 del traspaso de `docs/blindaje/`). Historial: 4.1–4.7 redactados por Daniel; 4.8 BORRADOR entregado 27/08 (cap4_8_separacion_evaluacion.md + T4.7 gates + resumen del capítulo). Al masticar 4.8: pasada de coherencia del capítulo entero. 14/10 (cc38089): borradores devueltos al estado del remake del 5.6; solo se añaden "validación" (4.7 y T4.7) y el paso de espera de 0,01 s en la evaluación (4.3/T4.3). La frase del empate del 4.7 se revisa con el experimento final |
 | Cap 5 Implementación | 5.1–5.2 EN WORD DE DANIEL (revisados 09/11: `notas/revision_cap5_1_5_2_contenido_20261109.md`); **5.3 ENTREGADO 09/11** (`borradores_docx/cap5_3_analizador_mpd.docx`, 1201 palabras, T5.3 y T5.4, ec. 5.1, 5 citas verificadas en PDF; notas en `notas/notas_cap5_3_analizador_mpd.md`); **5.4 ENTREGADO 09/11** (`borradores_docx/cap5_4_ejecutor_configuracion.docx`, 1634 palabras, F5.2 `fig_5_2_ejecutor_evaluacion.svg/png`, T5.5 y T5.6, ec. 5.2 y 5.3; selección de ventanas reproducida con el código del entregable: 77/77 iguales al paquete; notas en `notas/notas_cap5_4_ejecutor_configuracion.md`); **5.5 ENTREGADO 09/11** (`borradores_docx/cap5_5_controladores_clasicos.docx`, 1747 palabras, F5.3 `fig_5_3_decision_mpc_robusto.svg/png` generada por script desde el paquete, T5.7 y T5.8, ec. 5.4–5.6, 6 citas verificadas; 29/29 decisiones de una sesión del MPC robusto reproducidas; notas en `notas/notas_cap5_5_controladores_clasicos.md`); **5.6 ENTREGADO 09/11** (`borradores_docx/cap5_6_controlador_propio.docx`, ≈3250 palabras, F5.4 arquitectura y F5.5 decisión real por script, T5.9–T5.12, ec. 5.7–5.12, 7 citas; 4379/4379 decisiones del propio reproducidas desde el paquete final con `apoyo/reproducir_propio_final.py`; notas en `notas/notas_cap5_6_controlador_propio.md`); **5.7 ENTREGADO 09/11** (`borradores_docx/cap5_7_entorno_entrenamiento.docx`, ≈1735 palabras, F5.6, T5.13–T5.15, ec. 5.13–5.14; calibración del modelo entregado recalculada con `apoyo/calibracion_validacion.py` sobre las 111 630 muestras de validación; notas en `notas/notas_cap5_7_entorno_entrenamiento.md`). **RESUMEN DEL CAPÍTULO ENTREGADO 09/11** (`borradores_docx/cap5_8_resumen_capitulo5.docx`, 425 palabras, 3 párrafos sin epígrafe, cierre del 5.7 según biblia §6.3; `apoyo/generar_cap5_resumen.py` verifica que cada cifra ya está en 5.1–5.7; el 5.7 se regeneró sin sus dos frases de cierre, 1702 palabras; notas en `notas/notas_cap5_resumen.md`). CAPÍTULO 5 COMPLETO (5.1–5.2 de Daniel + 5.3–5.7 y cierre de Claude) | 5.1–5.3: igual que el cap 4 (Word de Daniel; Claude indica cambios al cerrar lo técnico). 5.4–5.7: Claude rehace los borradores ENTEROS con el experimento final del blindaje; los actuales del repo son base. Historial: 5.1–5.5 masticados por Daniel. 5.6 VERSIÓN 2 entregada 13/10 (cap5_6_controlador_propio.md rehecho: 6 subapartados, 8 ecuaciones, decisión real reproducida, T5.6 comparativa MPC/robusto/propio, T5.7 efecto de cada componente, ficha al Anexo A; F5.2 rehecha + F5.3 nueva `fig_5_3_decision_real.svg` generada por script; reproducción 1740/1740 en `docs/memoria/apoyo/`). 14/10 (cc38089): borradores devueltos al estado del remake del 5.6; correcciones válidas: 5.1 (requests 2.32.4, matplotlib 3.7.5, NumPy como dependencia del planificador), 5.4 (configuración final con grupos de captura excluidos y la frase metodológica de las ventanas) y 5.5 (referencia "fijada antes de evaluar, por diseño"). El 5.6 se actualiza en UNA pasada con el paquete final (lista en sus notas). cap5_1 queda SIN commitear porque lleva cambios de Daniel pendientes. Siguiente: 5.7 entorno de entrenamiento fiel. PENDIENTE EN CAP 4: corregir T4.3 "paso de espera 0,5 s" → "0,5 s (0,01 s en la evaluación)" |
-| Cap 6 Evaluación | ESQUEMA REESCRITO 09/11 con el experimento final (§5, Capítulo 6: 6.1–6.7 y cierre; mapas de figuras F6.1–F6.4 y tablas T6.1–T6.9). **6.1 ENTREGADO 09/11** (`borradores_docx/cap6_1_diseno_experimento.docx`: apertura del capítulo + 6.1.1–6.1.4, ≈1890 palabras, F6.1 `fig_6_1_diseno_experimento.svg/png`, T6.1 controladores e hipótesis, T6.2 lo que se congela, T6.3 máquinas; ejemplo = sesión 8 del plan; `apoyo/generar_cap6_1.py` recalcula todo desde el paquete, el kit y el código y verifica las huellas; notas en `notas/notas_cap6_1_diseno_experimento.md`). PENDIENTE: 6.2 (necesita permiso para descargar Schuirmann 1987, Holm 1979, Efron y Tibshirani 1993 y la ficha de Tears of Steel), 6.3–6.7 y cierre | 14/10 noche: el experimento con el kit de `docs/evaluacion_final/` se detuvo (desarrollo, no se analiza). El diseño nuevo (controladores, ventanas, vídeos, estadística) sale de la fase de blindaje (`docs/blindaje/`). Historial: EXPERIMENTO FINAL ÚNICO con la versión final del controlador (planificador vectorizado, inferencia de un hilo, calentamiento, entradas como en el entrenamiento) y 12 ventanas nunca ejecutadas; protocolo y kit en `docs/evaluacion_final/`. Las ejecuciones de agosto y de la réplica son desarrollo (archivadas en `TFG\legacy\evidencia_desarrollo\`) y no van a la memoria |
+| Cap 6 Evaluación | ESQUEMA REESCRITO 09/11 con el experimento final (§5, Capítulo 6: 6.1–6.7 y cierre; mapas de figuras F6.1–F6.4 y tablas T6.1–T6.9). **6.1 ENTREGADO 09/11** (`borradores_docx/cap6_1_diseno_experimento.docx`: apertura del capítulo + 6.1.1–6.1.4, ≈1890 palabras, F6.1 `fig_6_1_diseno_experimento.svg/png`, T6.1 controladores e hipótesis, T6.2 lo que se congela, T6.3 máquinas; ejemplo = sesión 8 del plan; `apoyo/generar_cap6_1.py` recalcula todo desde el paquete, el kit y el código y verifica las huellas; notas en `notas/notas_cap6_1_diseno_experimento.md`). **6.2 ENTREGADO 09/11** (`borradores_docx/cap6_2_metricas_hipotesis.docx`, ≈1810 palabras, T6.4 métricas, T6.5 hipótesis, ec. 6.1 QoE, 6.2 TOST, 6.3 Holm; ejemplo = QoE de la sesión 8 recalculada desde sus segmentos con el módulo del entregable; 6 citas verificadas; `apoyo/generar_cap6_2.py`; notas en `notas/notas_cap6_2_metricas_hipotesis.md`). PENDIENTE: 6.3 integridad (T6.6), 6.4 (T6.7, F6.2), 6.5 (T6.8, T6.9, F6.3, F6.4), 6.6 (T6.10), 6.7 y cierre | 14/10 noche: el experimento con el kit de `docs/evaluacion_final/` se detuvo (desarrollo, no se analiza). El diseño nuevo (controladores, ventanas, vídeos, estadística) sale de la fase de blindaje (`docs/blindaje/`). Historial: EXPERIMENTO FINAL ÚNICO con la versión final del controlador (planificador vectorizado, inferencia de un hilo, calentamiento, entradas como en el entrenamiento) y 12 ventanas nunca ejecutadas; protocolo y kit en `docs/evaluacion_final/`. Las ejecuciones de agosto y de la réplica son desarrollo (archivadas en `TFG\legacy\evidencia_desarrollo\`) y no van a la memoria |
 | Cap 7 Conclusiones | TODO | al final |
 | Bibliografía (BibTeX) | HECHA (96 entradas) | `bibliografia.bib` cerrado 10/08; 4 altas 09/11 para el cap 6 (TOST, Holm, bootstrap, Tears of Steel); solo se imprime lo citado |
 | Anexos | TODO | |
