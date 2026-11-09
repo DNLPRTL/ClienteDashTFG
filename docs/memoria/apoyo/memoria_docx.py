@@ -280,6 +280,14 @@ class Borrador:
         tabla.alignment = WD_TABLE_ALIGNMENT.CENTER
         if anchos_cm is None:
             anchos_cm = [ANCHO_TEXTO_CM / len(cabecera)] * len(cabecera)
+        # Disposicion fija: Word respeta los anchos pedidos en vez de ajustarlos al contenido.
+        tabla.autofit = False
+        tblpr = tabla._tbl.tblPr
+        layout = OxmlElement("w:tblLayout")
+        layout.set(qn("w:type"), "fixed")
+        tblpr.append(layout)
+        for i, ancho in enumerate(anchos_cm):
+            tabla.columns[i].width = Cm(ancho)
         for i, texto in enumerate(cabecera):
             celda = tabla.rows[0].cells[i]
             celda.width = Cm(anchos_cm[i])
