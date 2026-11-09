@@ -63,28 +63,19 @@
 > *Diseño, implementación y evaluación comparativa de controladores de bitrate
 > adaptativo sobre un cliente DASH propio.*
 
-**Resumen (ES):**
-> Este trabajo desarrolla una plataforma experimental modular para streaming
-> adaptativo MPEG-DASH. Se implementa un cliente de reproducción en Python que
-> descarga y reproduce contenido segmentado, interpreta el MPD, registra telemetría
-> y ejecuta distintos controladores de bitrate adaptativo (ABR) bajo una interfaz
-> común, evaluándolos bajo condiciones de red reproducibles mediante trazas. Sobre
-> esa base se implementan baselines clásicos de ABR fieles a la literatura y se
-> diseña un controlador propio que combina un predictor temporal de throughput con
-> estimación de incertidumbre y un planificador de control predictivo (MPC)
-> consciente del riesgo. El proyecto incorpora un procedimiento reproducible de
-> evaluación comparativa con métricas de calidad de experiencia (QoE), control de
-> artefactos y separación estricta entre pruebas de humo y evaluación formal, junto
-> con un análisis honesto de resultados y limitaciones.
+**Resumen (ES), abstract (EN) y palabras clave: ENTREGADOS 09/11** como
+`borradores_docx/resumen_abstract.docx` (`apoyo/generar_resumen.py`; notas en `notas/notas_resumen_abstract.md`).
+Cuatro párrafos (encuadre, qué se construyó, qué se evaluó y qué salió, aportaciones y límites), 389 palabras el
+resumen y 367 el abstract; cifras solo del capítulo 6 (comprobado por el script); siglas DASH, ABR, MPC, CVaR y QoE
+definidas en el propio resumen. El título lo lee el script de este apartado (opción A): si cambia, cambiar aquí.
 
-**Abstract (EN):** (traducción fiel del anterior; redactar al cerrar el resumen ES).
+**Palabras clave (8):** streaming adaptativo, MPEG-DASH, adaptación de tasa (ABR), calidad de experiencia (QoE),
+control predictivo (MPC), predicción de cuantiles, riesgo (CVaR), reproducibilidad.
 
-**Palabras clave:** streaming adaptativo; MPEG-DASH; ABR; QoE; control predictivo
-(MPC); predicción de throughput; incertidumbre; aprendizaje automático;
-reproducibilidad.
+**Keywords (8):** adaptive streaming, MPEG-DASH, adaptive bitrate (ABR), quality of experience (QoE), model
+predictive control (MPC), quantile prediction, risk (CVaR), reproducibility.
 
-**Keywords:** adaptive streaming; MPEG-DASH; ABR; QoE; model predictive control;
-throughput prediction; uncertainty; machine learning; reproducibility.
+Pendiente de Daniel: confirmar el título con el tutor y poner su nombre completo (el docx lleva «Daniel Pretel»).
 
 ---
 
@@ -638,7 +629,7 @@ ventanas duras; sustituida por el conjunto de GRU). Párrafo de cierre que enlaz
 
 | Apartado | Estado | Nota |
 |---|---|---|
-| Título / resumen / keywords | BORRADOR | título A elegido; confirmar con tutor |
+| Título / resumen / keywords | **RESUMEN + ABSTRACT + PALABRAS CLAVE ENTREGADOS 09/11** (`borradores_docx/resumen_abstract.docx`, 389 + 367 palabras, 8 palabras clave; `apoyo/generar_resumen.py` lee el título del §1 y comprueba las cifras contra el cap 6) | título A: confirmar con tutor; nombre completo del autor |
 | Cap 1 Introducción | **ENTREGADO 09/11** (`borradores_docx/cap1_introduccion.docx`, ≈3400 palabras, 8 páginas; apertura, 1.1 motivación, 1.2 problema, 1.3 enfoque con F1.1 `fig_1_1_enfoque_trabajo.svg/png`, 1.4 Objetivos 1–5 numerados, 1.5 alcance, 1.6 estructura; 17 citas ya verificadas en los caps 2 y 5; `apoyo/generar_cap1.py` lee escalera, controladores y variantes del material entregado y comprueba que no hay cifras de resultados; notas en `notas/notas_cap1_introduccion.md`) | Siguiente: capítulo 7 (responde a los Objetivos 1–5 por número) |
 | Cap 2 Estado del arte | **APERTURA + 2.1 + 2.2 ENTREGADOS 09/11** (`borradores_docx/cap2_1_2_has_dash.docx`, ≈1520 palabras, 9 citas verificadas con página; `apoyo/generar_cap2_1_2.py`; notas en `notas/notas_cap2_1_2_has_dash.md`). **2.3 + 2.4 ENTREGADOS 09/11** (`borradores_docx/cap2_3_4_problema_familias.docx`, ≈2190 palabras, Tabla 2.1 de familias, 15 citas con página; `apoyo/generar_cap2_3_4.py`; notas en `notas/notas_cap2_3_4_problema_familias.md`). **2.5 + 2.6 + 2.7 + CIERRE ENTREGADOS 09/11** (`borradores_docx/cap2_5_7_qoe_reproductores_lagunas.docx`, ≈1790 palabras, 22 citas; `apoyo/generar_cap2_5_7.py`; notas en `notas/notas_cap2_5_7_qoe_reproductores_lagunas.md`). **CAPÍTULO 2 COMPLETO** (2.1–2.7 + cierre; T2.1; sin figuras). Siguiente: capítulo 3 | Fuentes: 02_BIBLIOGRAFIA §2.1–2.3; .md convertidos en `docs/todos los estudios pdf convertidos a md/` para buscar, PDF de `biblioteca_final` para la página |
 | Cap 3 Planificación/costes | **ENTREGADO 09/11** (`borradores_docx/cap3_planificacion_costes.docx`, ≈1390 palabras; F3.1 Gantt `fig_3_1_gantt.svg/png`; T3.1 fases→tareas→entregable, T3.2 horas, T3.3 hardware, T3.4 total; ec. 3.1 amortización). **DATOS EDITABLES en `apoyo/planificacion_cap3.json`** (fases, fechas, horas, tarifas, hardware); regenerar con `apoyo/generar_cap3.py`. Notas en `notas/notas_cap3_planificacion_costes.md` | Supuestos a revisar por Daniel: fechas de F1, horas (300 = 12 ECTS × 25 h), tarifas 20/50 €/h, precios del hardware |
@@ -647,6 +638,6 @@ ventanas duras; sustituida por el conjunto de GRU). Párrafo de cierre que enlaz
 | Cap 6 Evaluación | ESQUEMA REESCRITO 09/11 con el experimento final (§5, Capítulo 6: 6.1–6.7 y cierre; mapas de figuras F6.1–F6.4 y tablas T6.1–T6.9). **6.1 ENTREGADO 09/11** (`borradores_docx/cap6_1_diseno_experimento.docx`: apertura del capítulo + 6.1.1–6.1.4, ≈1890 palabras, F6.1 `fig_6_1_diseno_experimento.svg/png`, T6.1 controladores e hipótesis, T6.2 lo que se congela, T6.3 máquinas; ejemplo = sesión 8 del plan; `apoyo/generar_cap6_1.py` recalcula todo desde el paquete, el kit y el código y verifica las huellas; notas en `notas/notas_cap6_1_diseno_experimento.md`). **6.2 ENTREGADO 09/11** (`borradores_docx/cap6_2_metricas_hipotesis.docx`, ≈1810 palabras, T6.4 métricas, T6.5 hipótesis, ec. 6.1 QoE, 6.2 TOST, 6.3 Holm; ejemplo = QoE de la sesión 8 recalculada desde sus segmentos con el módulo del entregable; 6 citas verificadas; `apoyo/generar_cap6_2.py`; notas en `notas/notas_cap6_2_metricas_hipotesis.md`). **6.3 ENTREGADO 09/11** (`borradores_docx/cap6_3_integridad_verificacion.docx`, ≈1340 palabras, T6.6; `apoyo/generar_cap6_3.py` recalcula las 9699 huellas del paquete y repite el análisis prerregistrado con el módulo del entregable (0 diferencias > 1e-9, caché en `apoyo/contrastes_reproducidos.json`); notas en `notas/notas_cap6_3_integridad_verificacion.md`). **6.4 ENTREGADO 09/11** (`borradores_docx/cap6_4_resultados_hipotesis.docx`, ≈970 palabras, T6.7 desde `contrastes_prerregistrados.json` cotejada con el análisis repetido, F6.2 `fig_6_2_diferencias_por_ventana.svg/png` por matplotlib desde `sesiones.csv`; `apoyo/generar_cap6_4.py`; notas en `notas/notas_cap6_4_resultados_hipotesis.md`). **6.5 ENTREGADO 09/11** (`borradores_docx/cap6_5_descriptivos.docx`, ≈1140 palabras, T6.8 agregados recalculados = `agregados_por_controlador.json`, T6.9 descomposición de ΔQoE, F6.3 CDF y F6.4 paradas-bitrate rehechas con matplotlib; `apoyo/generar_cap6_5.py`; `memoria_docx.tabla` ahora con anchos fijos; notas en `notas/notas_cap6_5_descriptivos.md`). **6.6 ENTREGADO 09/11** (`borradores_docx/cap6_6_exploratorio.docx`, ≈1260 palabras, T6.10 estratos recalculados con las funciones del entregable; interacción 40/31/3; sintéticas aparte; `apoyo/generar_cap6_6.py`; notas en `notas/notas_cap6_6_exploratorio.md`). **6.7 + CIERRE ENTREGADOS 09/11** (`borradores_docx/cap6_7_interpretacion_cierre.docx`, ≈1280 palabras: qué se afirma y qué no, 8 limitaciones, fidelidad al protocolo, cierre sin epígrafe; `apoyo/generar_cap6_7.py` comprueba que no introduce cifras nuevas; notas en `notas/notas_cap6_7_interpretacion_cierre.md`). **CAPÍTULO 6 COMPLETO** (6.1–6.7 + cierre; F6.1–F6.4; T6.1–T6.10; ec. 6.1–6.3). Siguiente: capítulos 2, 3, 1 y 7 | 14/10 noche: el experimento con el kit de `docs/evaluacion_final/` se detuvo (desarrollo, no se analiza). El diseño nuevo (controladores, ventanas, vídeos, estadística) sale de la fase de blindaje (`docs/blindaje/`). Historial: EXPERIMENTO FINAL ÚNICO con la versión final del controlador (planificador vectorizado, inferencia de un hilo, calentamiento, entradas como en el entrenamiento) y 12 ventanas nunca ejecutadas; protocolo y kit en `docs/evaluacion_final/`. Las ejecuciones de agosto y de la réplica son desarrollo (archivadas en `TFG\legacy\evidencia_desarrollo\`) y no van a la memoria |
 | Cap 7 Conclusiones | **ENTREGADO 09/11** (`borradores_docx/cap7_conclusiones.docx`, ≈2900 palabras, 6 páginas; 7.1 Objetivos 1–5 por número, 7.2 resultados sin cifras nuevas, 7.3 limitaciones en tres clases, 7.4 trabajo futuro en lista, 7.5 cuatro resultados negativos cualitativos; `apoyo/generar_cap7.py` comprueba cifras contra los caps 5 y 6, objetivos contra el cap 1, bundle y protocolo del material entregado, y la ausencia de nombres internos; notas en `notas/notas_cap7_conclusiones.md`) | Siguiente: resumen/abstract, anexos, bibliografía |
 | Bibliografía (BibTeX) | HECHA (96 entradas) | `bibliografia.bib` cerrado 10/08; 4 altas 09/11 para el cap 6 (TOST, Holm, bootstrap, Tears of Steel); solo se imprime lo citado |
-| Anexos | TODO | |
+| Anexos | TODO | Siguiente: reproducción del experimento desde el paquete, manual de uso del cliente, documentación complementaria |
 | Tabla de correspondencias | HECHA 12/08 | `04_CORRESPONDENCIAS_NOMENCLATURA.md` |
 | Plantilla .docx y tooling | HECHA 09/11 | `plantilla/plantilla_memoria_ugr.docx` (biblia §2) generada por `apoyo/memoria_docx.py`; `apoyo/comprobar_borrador_docx.py` (lista §7.4 de la biblia) y `apoyo/docx_a_pdf.py` (render con Word) |

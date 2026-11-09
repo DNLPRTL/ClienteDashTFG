@@ -55,12 +55,13 @@ def main(ruta):
     if re.search(r"\bfigura \d|\btabla \d|\bFig\.", texto):
         avisos.append("mencion en minuscula o 'Fig.' (la biblia pide 'Figura 4.3', 'Tabla 4.1')")
 
-    # 3. Numeros: coma decimal.
-    for m in re.finditer(r"\b\d+\.\d+\b", texto + "\n" + celdas):
+    # 3. Numeros: coma decimal (el abstract en ingles, si lo hay, lleva punto decimal y se excluye).
+    texto_es = texto.split("\nAbstract\n")[0] if "\nKeywords:" in texto else texto
+    for m in re.finditer(r"\b\d+\.\d+\b", texto_es + "\n" + celdas):
         trozo = m.group(0)
         if re.match(r"^\d\.\d+$", trozo) and int(trozo.split(".")[0]) <= 9 and len(trozo.split(".")[1]) <= 2:
             continue  # numero de apartado, ecuacion, tabla o figura
-        if re.search(r"Ubuntu " + re.escape(trozo), texto + "\n" + celdas):
+        if re.search(r"Ubuntu " + re.escape(trozo), texto_es + "\n" + celdas):
             continue  # version de Ubuntu (20.04), no es un decimal
         avisos.append("punto decimal: " + trozo)
 
