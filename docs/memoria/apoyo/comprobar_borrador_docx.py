@@ -16,7 +16,7 @@ RAIZ = Path(__file__).resolve().parents[3]
 BIB = RAIZ / "docs" / "memoria" / "bibliografia.bib"
 TICS = [
     "—", "cabe destacar", "conviene subrayar", "conviene precisar", "dicho de otro modo",
-    "en definitiva", "es importante destacar", "en el vasto", "clave para", "robusto ",
+    "en definitiva", "es importante destacar", "en el vasto", "clave para", "muy robust", "más robust", "bastante robust",
 ]
 
 
@@ -64,7 +64,7 @@ def main(ruta):
 
     # 4. Tics y markdown.
     bajo = texto.lower()
-    sin_mpc = re.sub(r"mpc robusto", "mpc_r", bajo)  # "MPC robusto" es el nombre del controlador
+    sin_mpc = bajo
     for tic in TICS:
         if tic.lower() in sin_mpc:
             avisos.append("tic prohibido: " + tic.strip())
