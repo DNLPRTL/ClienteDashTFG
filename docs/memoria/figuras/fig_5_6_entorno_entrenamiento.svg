@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="600" viewBox="0 0 1000 600" font-family="Arial, Helvetica, sans-serif">
+  <defs>
+    <marker id="f" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#495057"/>
+    </marker>
+    <marker id="fa" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b08900"/>
+    </marker>
+  </defs>
+
+  <!-- Entradas -->
+  <rect x="40" y="40" width="270" height="78" fill="#ffffff" stroke="#868e96" stroke-width="1.2" rx="6"/>
+  <text x="175" y="64" font-size="13" font-weight="bold" fill="#212529" text-anchor="middle">Catálogo de trazas</text>
+  <text x="175" y="84" font-size="12" fill="#343a40" text-anchor="middle">particiones por grupo de captura</text>
+  <text x="175" y="102" font-size="12" fill="#343a40" text-anchor="middle">entrenamiento y validación; evaluación prohibida</text>
+
+  <rect x="365" y="40" width="270" height="78" fill="#fff9db" stroke="#b08900" stroke-width="1.5" rx="6"/>
+  <text x="500" y="64" font-size="13" font-weight="bold" fill="#212529" text-anchor="middle">Tablas de tamaños reales</text>
+  <text x="500" y="84" font-size="12" fill="#343a40" text-anchor="middle">8 vídeos de 4 s, rotados por ventana</text>
+  <text x="500" y="102" font-size="12" fill="#343a40" text-anchor="middle">bytes reales de cada segmento (VBR)</text>
+
+  <rect x="690" y="40" width="270" height="78" fill="#ffffff" stroke="#868e96" stroke-width="1.2" rx="6"/>
+  <text x="825" y="64" font-size="13" font-weight="bold" fill="#212529" text-anchor="middle">Cuatro políticas de recorrido</text>
+  <text x="825" y="84" font-size="12" fill="#343a40" text-anchor="middle">tasa prudente, subida, buffer seguro, cíclica</text>
+  <text x="825" y="102" font-size="12" fill="#343a40" text-anchor="middle">solo para visitar estados; no son etiqueta</text>
+
+  <path d="M175,118 L175,160" stroke="#495057" stroke-width="1.5" fill="none" marker-end="url(#f)"/>
+  <path d="M500,118 L500,160" stroke="#b08900" stroke-width="1.5" fill="none" marker-end="url(#fa)"/>
+  <path d="M825,118 L825,160" stroke="#495057" stroke-width="1.5" fill="none" marker-end="url(#f)"/>
+
+  <!-- Paso 1: muestreo -->
+  <rect x="40" y="160" width="270" height="130" fill="#f8f9fa" stroke="#495057" stroke-width="1.5" rx="8"/>
+  <text x="56" y="184" font-size="14" font-weight="bold" fill="#212529">1. Muestreo de ventanas</text>
+  <text x="56" y="207" font-size="12" fill="#343a40">ventanas de 120 s (30 segmentos)</text>
+  <text x="56" y="226" font-size="12" fill="#343a40">hasta 4 por traza; cuotas por origen</text>
+  <text x="56" y="245" font-size="12" fill="#343a40">más peso a las redes lentas y variables</text>
+  <text x="56" y="272" font-size="12" font-weight="bold" fill="#1971c2">4096 de entrenamiento, 935 de validación</text>
+
+  <!-- Paso 2: simulador -->
+  <path d="M310,225 L365,225" stroke="#495057" stroke-width="1.5" fill="none" marker-end="url(#f)"/>
+  <rect x="365" y="160" width="595" height="130" fill="#f8f9fa" stroke="#495057" stroke-width="1.5" rx="8"/>
+  <text x="381" y="184" font-size="14" font-weight="bold" fill="#212529">2. Simulador de sesiones fiel al medio</text>
+  <text x="381" y="207" font-size="12" fill="#343a40">la traza marca el tiempo y la tabla del vídeo, los bytes; buffer y rebuffering como en el cliente</text>
+  <text x="381" y="226" font-size="12" fill="#343a40">en cada paso: lo que vería el controlador (5 descargas y 7 escalares) y, como etiqueta, el futuro de la traza</text>
+  <text x="381" y="245" font-size="12" fill="#343a40">etiqueta: ln(ancho de banda de los 4 s siguientes / media armónica), para cinco horizontes</text>
+  <text x="381" y="272" font-size="12" font-weight="bold" fill="#1971c2">490 500 muestras de entrenamiento y 111 630 de validación; sin ventanas de evaluación</text>
+
+  <!-- Paso 3: entrenamiento -->
+  <path d="M500,290 L500,330" stroke="#495057" stroke-width="1.5" fill="none" marker-end="url(#f)"/>
+  <rect x="40" y="330" width="595" height="130" fill="#f8f9fa" stroke="#495057" stroke-width="1.5" rx="8"/>
+  <text x="56" y="354" font-size="14" font-weight="bold" fill="#212529">3. Entrenamiento del ensemble (GPU)</text>
+  <text x="56" y="377" font-size="12" fill="#343a40">5 redes GRU con semillas distintas; pérdida pinball más suavidad temporal</text>
+  <text x="56" y="396" font-size="12" fill="#343a40">80 épocas, lotes de 1024, AdamW; se conserva la mejor época según la validación</text>
+  <text x="56" y="415" font-size="12" fill="#343a40">normalización ajustada solo con la partición de entrenamiento</text>
+  <text x="56" y="442" font-size="12" font-weight="bold" fill="#1971c2">comprobación de calibración: cobertura empírica de cada cuantil</text>
+
+  <!-- Paso 4: bundle -->
+  <path d="M635,395 L690,395" stroke="#495057" stroke-width="1.5" fill="none" marker-end="url(#f)"/>
+  <rect x="690" y="330" width="270" height="130" fill="#e7f5ff" stroke="#1971c2" stroke-width="1.5" rx="8"/>
+  <text x="706" y="354" font-size="14" font-weight="bold" fill="#212529">4. Paquete del modelo</text>
+  <text x="706" y="377" font-size="12" fill="#343a40">pesos de los 5 miembros</text>
+  <text x="706" y="396" font-size="12" fill="#343a40">configuración, normalización</text>
+  <text x="706" y="415" font-size="12" fill="#343a40">configuración del planificador (α = 0,75)</text>
+  <text x="706" y="442" font-size="12" fill="#343a40">manifiesto con SHA-256 de cada fichero</text>
+
+  <!-- Salida -->
+  <path d="M825,460 L825,500" stroke="#495057" stroke-width="1.5" fill="none" marker-end="url(#f)"/>
+  <rect x="690" y="500" width="270" height="56" fill="#ffffff" stroke="#868e96" stroke-width="1.2" rx="6"/>
+  <text x="825" y="524" font-size="13" font-weight="bold" fill="#212529" text-anchor="middle">Cliente (controlador propio)</text>
+  <text x="825" y="544" font-size="12" fill="#343a40" text-anchor="middle">carga y verifica el paquete al crearse</text>
+
+  <text x="40" y="530" font-size="12" fill="#c92a2a" font-style="italic">la red solo ve lo que vería en el cliente; el throughput futuro es etiqueta y nunca entrada</text>
+  <text x="40" y="552" font-size="11.5" fill="#868e96">en la evaluación cambian la red (ventanas de evaluación) y el contenido (un vídeo nuevo); el modelo no se reentrena</text>
+</svg>

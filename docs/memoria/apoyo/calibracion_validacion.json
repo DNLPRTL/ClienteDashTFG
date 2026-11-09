@@ -1,0 +1,111 @@
+{
+ "generado": "2026-11-09T02:40:20",
+ "num_muestras_validacion": 111630,
+ "por_politica_rollout": {
+  "tasa_robusta": 27960,
+  "subir_tasa": 27960,
+  "buffer_seguro": 27960,
+  "ciclica": 27750
+ },
+ "cuantiles": [
+  0.1,
+  0.25,
+  0.5,
+  0.75
+ ],
+ "horizonte": 5,
+ "ensanchado_cola": 1.0,
+ "cobertura_con_ensanchado": {
+  "global": [
+   0.0696,
+   0.1831,
+   0.4393,
+   0.79
+  ],
+  "por_horizonte": [
+   [
+    0.0359,
+    0.1361,
+    0.4408,
+    0.8216
+   ],
+   [
+    0.0681,
+    0.1851,
+    0.4369,
+    0.7917
+   ],
+   [
+    0.0775,
+    0.1863,
+    0.4315,
+    0.7813
+   ],
+   [
+    0.0783,
+    0.1973,
+    0.4355,
+    0.7742
+   ],
+   [
+    0.0881,
+    0.2105,
+    0.452,
+    0.7809
+   ]
+  ]
+ },
+ "cobertura_sin_ensanchado": {
+  "global": [
+   0.072,
+   0.1896,
+   0.4393,
+   0.79
+  ],
+  "por_horizonte": [
+   [
+    0.0373,
+    0.1441,
+    0.4408,
+    0.8216
+   ],
+   [
+    0.0709,
+    0.1919,
+    0.4369,
+    0.7917
+   ],
+   [
+    0.0802,
+    0.1926,
+    0.4315,
+    0.7813
+   ],
+   [
+    0.0807,
+    0.203,
+    0.4355,
+    0.7742
+   ],
+   [
+    0.0908,
+    0.2164,
+    0.452,
+    0.7809
+   ]
+  ]
+ },
+ "pinball_media": 0.16239,
+ "pinball_media_sin_ensanchado": 0.1619,
+ "pinball_por_miembro": [
+  0.163,
+  0.16227,
+  0.16345,
+  0.16251,
+  0.16235
+ ],
+ "desacuerdo_epistemico_medio": 0.03159,
+ "desacuerdo_epistemico_p90": 0.0722,
+ "error_abs_max_cobertura": 0.0669,
+ "duracion_s": 12.1
+}

@@ -116,10 +116,10 @@ en el HANDOFF (líneas 64-68):**
 material, verificados vía Crossref/editor (los pediste explícitamente):**
 | Clave | Fuente | Justifica |
 |---|---|---|
-| `koenker1978quantiles` | Koenker & Bassett 1978, Econometrica | Regresión de cuantiles = la pinball loss del predictor. |
-| `rockafellar2000cvar` | Rockafellar & Uryasev 2000, J. of Risk | Definición canónica del CVaR del planner. |
-| `cho2014gru` | Cho 2014, EMNLP | La GRU del predictor temporal. |
-| `lakshminarayanan2017ensembles` | Lakshminarayanan 2017, NIPS | Deep ensembles = el ensemble de 5 GRUs con incertidumbre. |
+| `koenker1978quantiles` | Koenker & Bassett 1978, Econometrica | Regresión de cuantiles = la pinball loss del predictor. SIN PDF (JSTOR, acceso UGR pendiente); se cita por lo que es. |
+| `rockafellar2000cvar` | Rockafellar & Uryasev 2000, J. of Risk | Definición canónica del CVaR del planner. PDF en `10_fundamentos_matematicos/` (web del autor, 09/11/2026). |
+| `cho2014gru` | Cho 2014, EMNLP | La GRU del predictor temporal. PDF en `10_fundamentos_matematicos/` (arXiv 1406.1078, 09/11/2026). |
+| `lakshminarayanan2017ensembles` | Lakshminarayanan 2017, NIPS | Deep ensembles = el ensemble de 5 GRUs con incertidumbre. PDF en `10_fundamentos_matematicos/` (arXiv 1612.01474, 09/11/2026). |
 
 **Datasets de mayor peso del corpus (Cap 6.3):**
 | Clave | Fuente | Justifica |

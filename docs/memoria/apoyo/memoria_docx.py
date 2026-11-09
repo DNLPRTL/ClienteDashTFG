@@ -298,7 +298,7 @@ class Borrador:
                     p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
                 _anadir_texto_marcado(p, str(texto))
         # Repetir la cabecera si la tabla salta de pagina y no dejar la cabecera sola al pie.
-        for fila in tabla.rows[:-1]:
+        for fila in tabla.rows:  # tambien la ultima, para que el pie no se separe de la tabla
             for celda in fila.cells:
                 for p in celda.paragraphs:
                     p.paragraph_format.keep_with_next = True
