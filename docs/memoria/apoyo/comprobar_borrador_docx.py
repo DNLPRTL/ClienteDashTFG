@@ -64,8 +64,9 @@ def main(ruta):
 
     # 4. Tics y markdown.
     bajo = texto.lower()
+    sin_mpc = re.sub(r"mpc robusto", "mpc_r", bajo)  # "MPC robusto" es el nombre del controlador
     for tic in TICS:
-        if tic.lower() in bajo:
+        if tic.lower() in sin_mpc:
             avisos.append("tic prohibido: " + tic.strip())
     if re.search(r"(^|\n)#|\*\*|`|\|---", texto):
         avisos.append("markdown residual")

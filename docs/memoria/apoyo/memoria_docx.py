@@ -18,7 +18,7 @@ Uso:
     b.parrafo("Texto con //cursiva// y cita [clave_bib].")
     b.guardar("docs/memoria/borradores_docx/cap5_3_x.docx")
 
-Marcas de texto: //texto// pasa a cursiva; **texto** a negrita (solo entradillas).
+Marcas de texto: //texto// pasa a cursiva; **texto** a negrita (solo entradillas); V~r~ pone r como subindice.
 """
 from __future__ import annotations
 
@@ -213,7 +213,7 @@ def crear_plantilla(ruta_salida):
     return ruta_salida
 
 
-_MARCAS = re.compile(r"(\*\*.+?\*\*|//.+?//)")
+_MARCAS = re.compile(r"(\*\*.+?\*\*|//.+?//|~[^~\s]+~)")
 
 
 def _anadir_texto_marcado(parrafo, texto, tamano=None):
@@ -226,6 +226,9 @@ def _anadir_texto_marcado(parrafo, texto, tamano=None):
         elif trozo.startswith("//") and trozo.endswith("//"):
             run = parrafo.add_run(trozo[2:-2])
             run.italic = True
+        elif trozo.startswith("~") and trozo.endswith("~"):
+            run = parrafo.add_run(trozo[1:-1])
+            run.font.subscript = True
         else:
             run = parrafo.add_run(trozo)
         if tamano is not None:
@@ -294,7 +297,15 @@ class Borrador:
                 elif alineaciones and alineaciones[i] == "r":
                     p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
                 _anadir_texto_marcado(p, str(texto))
-        # Repetir la cabecera si la tabla salta de pagina.
+        # Repetir la cabecera si la tabla salta de pagina y no dejar la cabecera sola al pie.
+        for fila in tabla.rows[:-1]:
+            for celda in fila.cells:
+                for p in celda.paragraphs:
+                    p.paragraph_format.keep_with_next = True
+            trpr_fila = fila._tr.get_or_add_trPr()
+            cant = OxmlElement("w:cantSplit")
+            cant.set(qn("w:val"), "true")
+            trpr_fila.append(cant)
         trpr = tabla.rows[0]._tr.get_or_add_trPr()
         th = OxmlElement("w:tblHeader")
         th.set(qn("w:val"), "true")

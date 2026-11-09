@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="640" viewBox="0 0 1000 640" font-family="Arial, Helvetica, sans-serif">
+  <defs>
+    <marker id="flecha" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#495057"/>
+    </marker>
+    <marker id="flecha_gris" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#868e96"/>
+    </marker>
+  </defs>
+
+  <!-- Entradas -->
+  <text x="40" y="34" font-size="15" font-weight="bold" fill="#212529">Entradas</text>
+  <rect x="40" y="46" width="200" height="56" fill="#ffffff" stroke="#868e96" stroke-width="1.2" rx="6"/>
+  <text x="140" y="68" font-size="12.5" fill="#343a40" text-anchor="middle" font-weight="bold">Configuración (JSON)</text>
+  <text x="140" y="88" font-size="12.5" fill="#343a40" text-anchor="middle">controladores, semilla, exclusiones</text>
+
+  <rect x="260" y="46" width="200" height="56" fill="#ffffff" stroke="#868e96" stroke-width="1.2" rx="6"/>
+  <text x="360" y="68" font-size="12.5" fill="#343a40" text-anchor="middle" font-weight="bold">Preset del experimento</text>
+  <text x="360" y="88" font-size="12.5" fill="#343a40" text-anchor="middle">ventana de 160 s, 30 segmentos</text>
+
+  <rect x="480" y="46" width="200" height="56" fill="#ffffff" stroke="#868e96" stroke-width="1.2" rx="6"/>
+  <text x="580" y="68" font-size="12.5" fill="#343a40" text-anchor="middle" font-weight="bold">Catálogo de trazas</text>
+  <text x="580" y="88" font-size="12.5" fill="#343a40" text-anchor="middle">6768 trazas, particiones por grupo</text>
+
+  <rect x="700" y="46" width="200" height="56" fill="#ffffff" stroke="#868e96" stroke-width="1.2" rx="6"/>
+  <text x="800" y="68" font-size="12.5" fill="#343a40" text-anchor="middle" font-weight="bold">Perfiles de vídeo</text>
+  <text x="800" y="88" font-size="12.5" fill="#343a40" text-anchor="middle">4 vistos y 1 nuevo</text>
+
+  <!-- Flechas de entradas al paso 1 y 2 -->
+  <path d="M140,102 L140,140" stroke="#495057" stroke-width="1.5" fill="none" marker-end="url(#flecha)"/>
+  <path d="M360,102 L360,140" stroke="#495057" stroke-width="1.5" fill="none" marker-end="url(#flecha)"/>
+  <path d="M580,102 L580,140" stroke="#495057" stroke-width="1.5" fill="none" marker-end="url(#flecha)"/>
+  <path d="M800,102 L800,140" stroke="#495057" stroke-width="1.5" fill="none" marker-end="url(#flecha)"/>
+
+  <!-- Paso 1: seleccion -->
+  <rect x="40" y="140" width="420" height="150" fill="#f8f9fa" stroke="#495057" stroke-width="1.5" rx="8"/>
+  <text x="56" y="164" font-size="15" font-weight="bold" fill="#212529">1. Selección de ventanas de red</text>
+  <text x="56" y="188" font-size="12.5" fill="#343a40">partición de evaluación y duración suficiente (160 s)</text>
+  <text x="56" y="208" font-size="12.5" fill="#343a40">fuera los 42 grupos de captura usados en el desarrollo</text>
+  <text x="56" y="228" font-size="12.5" fill="#343a40">filtro de relevancia en la ventana: media &lt; 6 Mbit/s, mínimo &gt; 0,2 Mbit/s</text>
+  <text x="56" y="248" font-size="12.5" fill="#343a40">inicio de cada ventana fijado por la semilla, en múltiplos de 4 s</text>
+  <text x="56" y="274" font-size="12.5" fill="#1971c2" font-weight="bold">74 ventanas reales (Oboe 56, FCC 18) y 3 sintéticas de diagnóstico</text>
+
+  <!-- Paso 2: protocolo y plan -->
+  <rect x="480" y="140" width="420" height="150" fill="#f8f9fa" stroke="#495057" stroke-width="1.5" rx="8"/>
+  <text x="496" y="164" font-size="15" font-weight="bold" fill="#212529">2. Protocolo y plan de sesiones</text>
+  <text x="496" y="188" font-size="12.5" fill="#343a40">cada ventana real con un vídeo visto (en rotación) y el nuevo</text>
+  <text x="496" y="208" font-size="12.5" fill="#343a40">orden de los 8 controladores sorteado en cada escenario</text>
+  <text x="496" y="228" font-size="12.5" fill="#343a40">hipótesis P1 a P5 copiadas al protocolo antes de ejecutar</text>
+  <text x="496" y="248" font-size="12.5" fill="#343a40">protocolo y plan escritos en JSON y CSV</text>
+  <text x="496" y="274" font-size="12.5" fill="#1971c2" font-weight="bold">1208 sesiones: (74 × 2 + 3 × 1) × 8</text>
+
+  <path d="M460,215 L480,215" stroke="#495057" stroke-width="1.5" fill="none" marker-end="url(#flecha)"/>
+
+  <!-- Paso 3: ejecucion -->
+  <path d="M690,290 L690,322" stroke="#495057" stroke-width="1.5" fill="none" marker-end="url(#flecha)"/>
+  <rect x="40" y="322" width="860" height="150" fill="#f8f9fa" stroke="#495057" stroke-width="1.5" rx="8"/>
+  <text x="56" y="346" font-size="15" font-weight="bold" fill="#212529">3. Ejecución, una sesión detrás de otra</text>
+  <text x="56" y="410" font-size="12.5" fill="#343a40">para cada sesión: configuración completa del cliente en JSON (vídeo, traza, ventana, controlador)</text>
+  <text x="56" y="430" font-size="12.5" fill="#343a40">si ya existe una ejecución completada, la sesión se omite (reanudación sin repetir trabajo)</text>
+  <text x="56" y="370" font-size="12.5" fill="#343a40">tras cada sesión, línea de progreso: ejecutadas, fallidas, omitidas y tiempo restante estimado</text>
+  <text x="56" y="458" font-size="12" fill="#c92a2a" font-style="italic">una sesión fallida se marca; ninguna sesión completada se descarta por su resultado</text>
+
+  <rect x="600" y="352" width="280" height="44" fill="#fff9db" stroke="#b08900" stroke-width="1.5" rx="8"/>
+  <text x="740" y="370" font-size="12.5" fill="#343a40" text-anchor="middle" font-weight="bold">Proceso independiente por sesión</text>
+  <text x="740" y="388" font-size="12.5" fill="#343a40" text-anchor="middle">main.py con la configuración; límite de 900 s</text>
+
+  <!-- Paso 4: analisis -->
+  <path d="M470,472 L470,504" stroke="#495057" stroke-width="1.5" fill="none" marker-end="url(#flecha)"/>
+  <rect x="40" y="504" width="420" height="92" fill="#f8f9fa" stroke="#495057" stroke-width="1.5" rx="8"/>
+  <text x="56" y="528" font-size="15" font-weight="bold" fill="#212529">4. Análisis y verificación</text>
+  <text x="56" y="552" font-size="12.5" fill="#343a40">QoE por sesión y contrastes prerregistrados (P1 a P5)</text>
+  <text x="56" y="572" font-size="12.5" fill="#343a40">8 compuertas de validez y 15 comprobaciones del paquete</text>
+
+  <!-- Salida: paquete -->
+  <path d="M460,550 L480,550" stroke="#495057" stroke-width="1.5" fill="none" marker-end="url(#flecha)"/>
+  <rect x="480" y="504" width="420" height="92" fill="#e7f5ff" stroke="#1971c2" stroke-width="1.5" rx="8"/>
+  <text x="496" y="528" font-size="15" font-weight="bold" fill="#212529">Paquete de evidencia</text>
+  <text x="496" y="552" font-size="12.5" fill="#343a40">00_protocolo · 01_ejecucion · 02_resultados</text>
+  <text x="496" y="572" font-size="12.5" fill="#343a40">03_graficas · 04_informe</text>
+
+  <text x="470" y="622" font-size="12" fill="#868e96" text-anchor="middle">Todo lo que ejecuta la evaluación final sale de la configuración y del preset; el código de las sesiones es el mismo cliente del apartado 5.2.</text>
+</svg>
