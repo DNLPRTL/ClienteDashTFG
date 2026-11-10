@@ -1000,7 +1000,10 @@ def main():
         "y, sobre todo, Tears of Steel varían mucho de un segmento a otro, que es la situación del apartado 1.2.")
     filas = []
     for v in d["videos"]:
-        filas.append((v["carpeta"].replace("_", " "), v["fps"], str(v["segmentos"]), fmt_dec(v["total"] / 1e6, 0),
+        nombre = (v["carpeta"].replace("Paseo_Almunecar", "Paseo de Almuñécar").replace("Blender_Sunflower", "Blender Sunflower")
+                  .replace("Tears_of_Steel", "Tears of Steel").replace("_10min_", ", 10 min, ").replace("_1min_", ", 1 min, ")
+                  .replace("30fps", "30 fps").replace("60fps", "60 fps"))
+        filas.append((nombre, v["fps"], str(v["segmentos"]), fmt_dec(v["total"] / 1e6, 0),
                       fmt_dec(v["ratio_real_nominal"], 2), fmt_dec(v["max_min"], 1)))
     b.tabla(["Vídeo", "fps", "Segmentos", "Tamaño total (MB)", "Nivel alto: media real / nominal",
              "Nivel alto: mayor / menor"], filas,

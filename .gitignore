@@ -26,3 +26,6 @@ config/phase6.local.yaml
 docs/memoria/DE MI TUTOR JUAN JOSE RAMOS MUNOZ/
 docs/memoria/DE OTROS TUTORES PERO RECIENTES DE MI FACULTAD/
 docs/memoria/.tmp.driveupload/
+
+# Copias de los borradores con las citas numeradas (se regeneran con apoyo/numerar_citas.py)
+docs/memoria/borradores_docx/numerado/

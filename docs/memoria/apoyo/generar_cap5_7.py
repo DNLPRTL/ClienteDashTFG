@@ -42,7 +42,8 @@ def coma(x, dec=2):
 
 
 def miles(n):
-    return "{0:,}".format(int(n)).replace(",", " ")
+    # Separador de miles solo a partir de cinco cifras ("4096 ventanas", "111 630"), como la biblia.
+    return "{0:,}".format(int(n)).replace(",", " ") if int(n) >= 10000 else str(int(n))
 
 
 def m_sum(sub, sup, cuerpo):

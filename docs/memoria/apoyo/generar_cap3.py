@@ -41,7 +41,8 @@ def coma(x, dec=2):
 
 
 def eur(x):
-    s = "{0:,.2f}".format(x).replace(",", "X").replace(".", ",").replace("X", " ")
+    # Separador de miles solo a partir de cinco cifras ("7556,00 €", "12 345,00 €"), como la biblia.
+    s = "{0:,.2f}".format(x).replace(",", "X").replace(".", ",").replace("X", " " if x >= 10000 else "")
     return s + " €"
 
 
