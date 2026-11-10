@@ -489,10 +489,10 @@ def main():
     )
     b.parrafo(
         "El proyecto usa cuatro máquinas, resumidas en la Tabla 6.3. Las dos máquinas virtuales, cliente y "
-        "servidor, corren en el mismo equipo físico bajo VirtualBox y se comunican por la red local; el "
+        "servidor, corren en el mismo equipo físico bajo VirtualBox [virtualboxDoc] y se comunican por la red local; el "
         "cliente es la que ejecutó las {0} sesiones, con el mismo intérprete y las mismas versiones en "
         "todas ellas, registradas por cada sesión en su fichero de entorno. El modelo se entrenó en un "
-        "subsistema Linux para Windows con una GPU de AMD y la variante ROCm de PyTorch; el cliente lo "
+        "subsistema Linux para Windows [wslDoc] con una GPU de AMD y la variante ROCm [rocmDocs] de PyTorch; el cliente lo "
         "ejecuta en CPU con la variante estándar. El desarrollo, las pruebas rápidas y el análisis "
         "reproducido del apartado 6.3 se hicieron en el equipo anfitrión con Windows.".format(miles(len(plan)))
     )

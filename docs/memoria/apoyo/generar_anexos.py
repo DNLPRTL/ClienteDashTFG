@@ -51,7 +51,23 @@ sys.path.insert(0, str(CODIGO))  # para importar el codigo entregado (core.*)
 
 PROHIBIDOS = ["SPBC", "Q_H", "mpc_prudente", "Phase", "Fase 6", "v1", "v2", "Neural", "tfg_final",
               "benchmark_autorizado", "ensemble temporal", "Codex", "DashClientModular"]
-CITAS = ["apacheHttpd", "gstreamerDocs", "pytorchDocs", "mao2017pensieve", "blenderTearsOfSteel"]
+CITAS = ["apacheHttpd", "gstreamerDocs", "pytorchDocs", "mao2017pensieve", "blenderTearsOfSteel", "requestsDoc",
+         "pyyamlDoc", "pygobjectDoc", "ffmpegDoc", "gpacMp4boxWiki", "dockerDoc"]
+# Fuente de cada conjunto de trazas (clave del .bib); el sintetico es propio y no lleva cita.
+CITAS_CORPUS = {
+    "fcc_measuring_broadband_america": ["fccMeasuringBroadbandAmerica"],
+    "gavist5g": ["hassanein2025gavist5g"],
+    "ghent_4g_lte": ["vanDerHooft2016ghent4g"],
+    "lumos5g": ["narayanan2020lumos5g"],
+    "norway_hsdpa_umass": ["riiser2013commutePath"],
+    "nyu_mets": ["mei2019nyumetsPam", "nyuMetsDataset"],
+    "oboe": ["akhtar2018oboe"],
+    "puffer_stanford": ["yan2020puffer", "pufferDataArchive"],
+    "roma_4g_nbiot_5g_nsa": ["kousias2024romaDataset"],
+    "synthetic_controlled_network": [],
+    "ucc_4g_lte_beyond_throughput": ["raca2018beyondThroughput4g"],
+    "ucc_5g_beyond_throughput": ["raca2020beyondThroughput5g"],
+}
 
 SESION_EJEMPLO = "s00008_controlador_propio_paseo_10min_30fps_4s_real_001_e5ffa59001_r1"
 
@@ -578,8 +594,10 @@ def datos_verificados():
     cap1 = texto_docx(BORRADORES / "cap1_introduccion.docx")
     assert "la reproducción del experimento a partir del paquete de evidencia, el manual de uso del cliente" in cap1
     claves_bib = set(re.findall(r"^@\w+\{([^,]+),", BIB.read_text(encoding="utf-8"), re.M))
-    for c in CITAS:
+    for c in CITAS + [c for cs in CITAS_CORPUS.values() for c in cs]:
         assert c in claves_bib, c
+    assert set(CITAS_CORPUS) == set(d["corpus"])
+    d["claves_bib"] = claves_bib
     return d
 
 
@@ -773,16 +791,18 @@ def main():
     b.h2("B.1. Instalación")
     b.parrafo(
         "El código no se instala como paquete: se copia la carpeta y se ejecuta desde ella. Los requisitos son los "
-        "del apartado A.2 (Listado A.1): Python 3, //requests//, //NumPy// y //matplotlib// desde el fichero de "
-        "requisitos, PyTorch de CPU para el controlador propio y, solo para la reproducción real, GStreamer con sus "
-        "enlaces de Python [gstreamerDocs]. Las {0} pruebas automáticas de la carpeta //pruebas// comprueban la "
+        "del apartado A.2 (Listado A.1): Python 3, //requests// [requestsDoc], //NumPy// y //matplotlib// desde el "
+        "fichero de requisitos, PyTorch de CPU para el controlador propio y, solo para la reproducción real, "
+        "GStreamer [gstreamerDocs] con sus enlaces de Python, PyGObject [pygobjectDoc]. Las {0} pruebas automáticas "
+        "de la carpeta //pruebas// comprueban la "
         "instalación en alrededor de un minuto.".format(d["n_tests"]))
 
     b.h2("B.2. Una sesión")
     b.parrafo(
         "Una sesión es una reproducción de un vídeo con un controlador. Se lanza con //main.py// y un fichero de "
         "configuración (Listado B.1). El fichero puede ser YAML o JSON: el cargador prueba primero JSON y, si no, "
-        "YAML con la biblioteca PyYAML si está instalada o, en su defecto, con un lector propio de YAML simple. Las "
+        "YAML con la biblioteca PyYAML [pyyamlDoc] si está instalada o, en su defecto, con un lector propio de YAML "
+        "simple. Las "
         "claves que no aparecen toman el valor "
         "por defecto de las clases de datos del módulo //core/configuracion_cliente.py//, y la configuración "
         "resultante, con todos los valores ya resueltos, se archiva en el directorio de la sesión. La Tabla B.1 "
@@ -904,8 +924,9 @@ def main():
     b.parrafo(
         "El conjunto de datos entregado tiene {0} muestras de entrenamiento y {1} de validación, generadas a "
         "partir de {2} y {3} ventanas del catálogo respectivamente (apartado 5.7). El contenido se regenera con los "
-        "dos scripts de shell de la primera etapa, que usan ffmpeg para codificar y GPAC para segmentar, y el "
-        "descriptor de tamaños reales de cada vídeo se extrae después del servidor con el tercero.".format(
+        "dos scripts de shell de la primera etapa, que usan ffmpeg [ffmpegDoc] para codificar y GPAC [gpacMp4boxWiki] "
+        "para segmentar, este último desde una imagen de Docker [dockerDoc], y el descriptor de tamaños reales de "
+        "cada vídeo se extrae después del servidor con el tercero.".format(
             fmt_num(d["dataset"][0]), fmt_num(d["dataset"][1]), fmt_num(d["dataset"][2]), fmt_num(d["dataset"][3])))
 
     # ===================================================================================================
@@ -921,8 +942,9 @@ def main():
         "El catálogo contiene {0} trazas de {1} conjuntos, once públicos y uno sintético de diagnóstico, repartidas "
         "en las particiones de entrenamiento, prueba y evaluación por grupo de captura, de modo que las trazas de "
         "un mismo dispositivo, usuario o campaña caen en la misma partición (apartado 4.7). La Tabla C.1 da, para "
-        "cada conjunto, el número de trazas, las horas acumuladas, el reparto por particiones, el número de grupos "
-        "de captura y el tipo de medida que contiene. Del manifiesto de conversión original, con {2} trazas, se "
+        "cada conjunto, con la cita de su fuente, el número de trazas, las horas acumuladas, el reparto por "
+        "particiones, el número de grupos de captura y el tipo de medida que contiene. Del manifiesto de conversión "
+        "original, con {2} trazas, se "
         "excluyeron {3} por calidad (pocas muestras, poca duración o throughput siempre nulo) y {4} duplicadas. En "
         "el experimento final solo intervienen las ventanas de la partición de evaluación que pasan el filtro de "
         "relevancia de Pensieve [mao2017pensieve], 74 de dos conjuntos (apartado 6.1.2); el resto del catálogo "
@@ -949,7 +971,8 @@ def main():
     tot = Counter()
     for k, v in d["corpus"].items():
         sem = ", ".join(semanticas[s] for s in v["sem"])
-        filas.append((nombres[k], fmt_num(v["n"]), fmt_dec(v["dur"] / 3600, 1),
+        cita = " " + ", ".join("[{0}]".format(c) for c in CITAS_CORPUS[k]) if CITAS_CORPUS[k] else ""
+        filas.append((nombres[k] + cita, fmt_num(v["n"]), fmt_dec(v["dur"] / 3600, 1),
                       "{0} / {1} / {2}".format(v["part"]["train"], v["part"]["test"], v["part"]["eval"]),
                       fmt_num(len(v["grupos"])), sem))
         tot["n"] += v["n"]
@@ -961,9 +984,9 @@ def main():
     filas.append(("Total", fmt_num(tot["n"]), fmt_dec(tot["dur"] / 3600, 1),
                   "{0} / {1} / {2}".format(tot["train"], tot["test"], tot["eval"]), fmt_num(tot["g"]), ""))
     b.tabla(["Conjunto", "Trazas", "Horas", "Entren. / prueba / eval.", "Grupos", "Tipo de medida"], filas,
-            "Tabla C.1: Los doce conjuntos del catálogo de trazas: número de trazas, horas acumuladas, reparto por "
-            "particiones, grupos de captura y tipo de medida. Contado sobre el catálogo entregado.",
-            anchos_cm=[3.4, 1.4, 1.6, 2.9, 1.7, 5.0], alineaciones=["l", "r", "r", "c", "r", "l"])
+            "Tabla C.1: Los doce conjuntos del catálogo de trazas, con su fuente: número de trazas, horas acumuladas, "
+            "reparto por particiones, grupos de captura y tipo de medida. Contado sobre el catálogo entregado.",
+            anchos_cm=[4.4, 1.4, 1.6, 2.9, 1.7, 4.0], alineaciones=["l", "r", "r", "c", "r", "l"])
 
     b.h2("C.2. Contenido DASH servido")
     b.parrafo(
@@ -1054,9 +1077,9 @@ def main():
                 texto += "\n" + celda.text
     for nombre in PROHIBIDOS:
         assert not re.search(r"\b" + re.escape(nombre) + r"\b", texto), nombre
-    claves_bib = set(re.findall(r"^@\w+\{([^,]+),", BIB.read_text(encoding="utf-8"), re.M))
-    for c in set(re.findall(r"\[([A-Za-z]\w*\d{4}\w*|\w+Docs?|\w+Httpd|blender\w+)\]", texto)):
-        assert c in claves_bib, c
+    for grupo in re.findall(r"\[([A-Za-z][\w, ]*)\]", texto):
+        for c in grupo.split(", "):
+            assert c in d["claves_bib"], c
     b.guardar(SALIDA)
     print("Guardado:", SALIDA)
     print("palabras del cuerpo:", b.palabras_cuerpo, "| tablas:", len(b.doc.tables))

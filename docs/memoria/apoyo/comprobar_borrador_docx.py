@@ -57,7 +57,7 @@ def main(ruta):
 
     # 3. Numeros: coma decimal (el abstract en ingles, si lo hay, lleva punto decimal y se excluye; los listados
     #    de codigo tambien, porque reproducen ficheros y comandos tal cual).
-    texto_es = "\n".join(t for e, t in parrafos if e != "Codigo")
+    texto_es = "\n".join(t for e, t in parrafos if e not in ("Codigo", "Bibliografia"))  # DOI y URL llevan puntos
     texto_es = texto_es.split("\nAbstract\n")[0] if "\nKeywords:" in texto_es else texto_es
     for m in re.finditer(r"\b\d+\.\d+\b", texto_es + "\n" + celdas):
         trozo = m.group(0)

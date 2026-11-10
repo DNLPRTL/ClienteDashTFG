@@ -8,6 +8,7 @@
 | `memoria_docx.py` | Plantilla `.docx` de la biblia y clase `Borrador` (títulos, párrafos, tablas, figuras, ecuaciones OMML) |
 | `generar_cap5_3.py` … `generar_cap5_6.py` | Un script por apartado: recalcula sus tablas y ejemplos desde el código del entregable o el paquete final y escribe `borradores_docx/cap5_X.docx` |
 | `generar_cap6_1.py` … `generar_cap6_7.py`, `generar_cap7.py`, `generar_cap1.py`, `generar_cap2_*.py`, `generar_cap3.py`, `generar_resumen.py`, `generar_anexos.py` | Lo mismo para el resto de capítulos, el resumen y los anexos; `generar_anexos.py` (ejecutar con `py -3.12`) importa el código entregado para generar las tablas de claves, controladores y opciones |
+| `generar_bibliografia.py` | Lee las citas `[clave]` de todos los .docx en el orden de la memoria (también los Word de Daniel), numera por primera aparición y escribe `borradores_docx/bibliografia.docx` (solo lo citado, formato unsrt en castellano) y `bibliografia_numeracion.json` |
 | `reproducir_propio_final.py` | Reproduce las 4379 decisiones del controlador propio del paquete final y las variantes sobre el mismo estado; escribe `resumen_propio_final.json` |
 | `comprobar_borrador_docx.py` | Lista de comprobaciones de la biblia (§7.4) sobre un `.docx` |
 | `docx_a_pdf.py`, `svg_a_png.py` | Render con Word (COM) para revisar; SVG a PNG vía Word y PyMuPDF |
