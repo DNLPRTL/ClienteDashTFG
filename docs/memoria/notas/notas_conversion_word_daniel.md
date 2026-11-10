@@ -44,14 +44,64 @@ su posición: cap 4 tras el cap 3; 5.1–5.2 antes del 5.3) y entiende también 
 claves que cita están todas en el .bib; se incorporan a la numeración (y varias entradas que estaban sin citar, como
 pythonDocs, las RFC 9110 y 9112, mahimahi y digregorio2026mlLoading, ya se imprimen).
 
-## Avisos del comprobador que son de Daniel (NO se han tocado)
+## Ajustes tipográficos autorizados (10/11, segunda pasada)
 
-- Pie de la Figura 4.2 sin punto final.
-- Tres tics de la lista de la biblia en su prosa: «cabe destacar», «dicho de otro modo», «es importante destacar».
-- Menciones «figura 4.1», «tabla 4.1» en minúscula (la biblia unifica a «Figura 4.1», «Tabla 4.1»); por eso el
-  comprobador dice que las figuras y tablas «no se anuncian antes del pie».
-- Pie de la Tabla 5.1: igual, la mención en el texto va en minúscula.
-- Decimales con punto, si los hay, y demás reglas de estilo se verán en la pasada de coherencia.
+Daniel aclaró que sí podía tocar caracteres y formato, no la gramática ni la elección de palabras. El script aplica
+ahora, además del formato, estos ajustes de la biblia, cada uno registrado con su contexto (lista completa abajo):
+mayúscula en «Figura n.m» y «Tabla n.m» en el texto; espacio sobrante antes de coma, punto y coma o dos puntos;
+espacio tras dos puntos («(60 s):antes»); dobles espacios; punto final del pie de la Figura 4.2; «video» → «vídeo»
+(él mismo escribe «vídeo» 15 veces); «Dash» → «DASH»; la errata «amuestra»; las tildes de «cálculo estimado» y «está
+diseñada»; y las entradillas de las viñetas en negrita (9 ítems con la forma «Nombre: texto»). La comparación de
+palabras se hace sobre el texto ya ajustado, así que sigue garantizando que no hay ningún otro cambio.
+
+NO se han tocado, por ser redacción y no tipografía (los decide Daniel): «se haya definida» y «se haya separado»
+(«halla»), «divido en» («dividido»), «haya redactado» («halla»), los tres tics «cabe destacar», «dicho de otro modo»
+y «es importante destacar», y la Figura 4.5, que el texto no anuncia antes del pie (el comprobador lo avisa).
+
+Lista de los 42 ajustes aplicados (regla :: contexto):
+
+- «vídeo» con tilde (como en el resto del texto) :: scargar los segmentos de video que aloja el servidor y
+- sigla DASH :: ucir realmente contenido Dash servido a través de HTTP
+- mayúscula en Figura/Tabla :: En la figura 4.1 se presenta la arquit
+- mayúscula en Figura/Tabla :: La tabla 4.1 es un resumen de los
+- mayúscula en Figura/Tabla :: a sesión se resume en la figura 4.2. Una vez se ha cargad
+- tilde «cálculo» :: a descarga más reciente, calculo estimado del ancho de banda) y se
+- «vídeo» con tilde (como en el resto del texto) :: ite por cada segmento de video; los eventos que suceden
+- espacio sobrante antes de signo :: te de cara al controlador : el reproductor es ignora
+- «vídeo» con tilde (como en el resto del texto) ::  a la inicialización del video y los segmentos de este)
+- «vídeo» con tilde (como en el resto del texto) :: gmentos que conforman el video, su duración y, si fuera
+- mayúscula en Figura/Tabla :: en el experimento, en la tabla 4.2 se detalla que inform
+- espacio sobrante antes de signo ::  para todos los segmentos , de manera que, de nuevo,
+- «vídeo» con tilde (como en el resto del texto) :: s modelado por tiempo de video almacenado: lo que nos a
+- espacio tras dos puntos :: Tope de ocupación (60 s):antes de que dé lugar la
+- mayúscula en Figura/Tabla :: nto de configuración; la tabla 4.3 que se muestra a cont
+- mayúscula en Figura/Tabla :: pítulo 6. En cuanto a la figura 4.4 esta resume el diseño
+- mayúscula en Figura/Tabla :: rarse en cuatro bloques (tabla 4.5): el estado en el buf
+- espacio sobrante antes de signo :: nos de tasa y no de nivel ; el otro beneficio es que
+- espacio sobrante antes de signo :: lásico a modo de respaldo , el cual recibe el peso d
+- mayúscula en Figura/Tabla :: ues de orden invariable (tabla 4.6): el identificador de
+- espacio sobrante antes de signo :: ilidad de la red reciente , buffer en número de segm
+- espacio sobrante antes de signo :: en el que los bits llegan , por otra parte, tenemos
+- doble espacio :: banda del que se dispone)  se establecen las condici
+- tilde «está» :: La emulación esta diseñada de tal manera que se apl
+- espacio sobrante antes de signo ::  esta información del VBR , por lo tanto, solo forma
+- «vídeo» con tilde (como en el resto del texto) :: ara funcionar bien en un video en concreto, dado que el
+- espacio sobrante antes de signo ::  pequeña (0,4 por ciento) , por consiguiente, no exi
+- mayúscula en Figura/Tabla :: La figura 4.6 resumen los dos aspec
+- espacio sobrante antes de signo :: as únicas que se utilizan , se escogen de manera bal
+- doble espacio :: os con los controladores.  La expresión concreta y l
+- mayúscula en Figura/Tabla :: validez del experimento (tabla 4.7). En el caso de que t
+- espacio sobrante antes de signo :: n el análisis estadístico , las sesiones de un contr
+- punto final del pie :: …ra asíncrona en el fichero de telemetría → .
+- doble espacio :: ema de Windows para Linux  (WSL) para poder hacer us
+- mayúscula en Figura/Tabla :: ferentes entornos. En la tabla 5.1 se muestra un resumen
+- espacio sobrante antes de signo ::  de datos (`dataclasses`) , especificando que tipo d
+- espacio sobrante antes de signo :: 5.7, en su versión 2.9.1) , también es empleada una
+- mayúscula en Figura/Tabla :: tulo 4 y resumidos en la tabla 4.1. Dentro de `entrenami
+- espacio sobrante antes de signo :: pción de emulación de red , el descargador se ve cub
+- espacio sobrante antes de signo ::  entregado al controlador , ya podría decidir el niv
+- espacio sobrante antes de signo ::  fichero de manera remota , a través de una petición
+- errata «amuestra» :: ventana de traza muestra amuestra, con la última usada sol
 
 ## Decisiones
 

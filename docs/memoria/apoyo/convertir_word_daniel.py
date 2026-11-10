@@ -59,6 +59,32 @@ def palabras(texto):
     return re.findall(r"\w+", texto)
 
 
+# Ajustes tipograficos de la biblia autorizados por Daniel el 10/11 (caracteres y formato, nunca la gramatica ni la
+# eleccion de palabras). Cada aplicacion se registra en CAMBIOS con su contexto para que pueda revisarlos uno a uno.
+AJUSTES = [
+    ("mayúscula en Figura/Tabla", re.compile(r"\b(figura|tabla)(s?) (?=\d+\.\d+)"),
+     lambda m: m.group(1).capitalize() + m.group(2) + " "),
+    ("espacio sobrante antes de signo", re.compile(r" +([,;:.])(?=\s|$)"), r"\1"),
+    ("espacio tras dos puntos", re.compile(r"(?<=[\w)]):(?=[A-Za-zÁ-ÿ])"), ": "),
+    ("doble espacio", re.compile(r"(?<=\S)  +(?=\S)"), " "),
+    ("«vídeo» con tilde (como en el resto del texto)", re.compile(r"\bvideo(s?)\b"), r"vídeo\1"),
+    ("sigla DASH", re.compile(r"\bDash\b"), "DASH"),
+    ("errata «amuestra»", re.compile(r"\bamuestra\b"), "a muestra"),
+    ("tilde «cálculo»", re.compile(r"\bcalculo estimado\b"), "cálculo estimado"),
+    ("tilde «está»", re.compile(r"\besta diseñada\b"), "está diseñada"),
+]
+CAMBIOS = []
+
+
+def ajustar(texto):
+    t = texto
+    for nombre, patron, repl in AJUSTES:
+        for m in patron.finditer(t):
+            CAMBIOS.append((nombre, t[max(0, m.start() - 25):m.end() + 25].replace("\n", " ")))
+        t = patron.sub(repl, t)
+    return t
+
+
 def marcar(texto):
     """Restos de markdown a la marca de Borrador: `x` y ‘’x’’ a //x// (cursiva); **x** ya lo entiende."""
     t = re.sub(r"`([^`]*)`", r"//\1//", texto)
@@ -89,10 +115,10 @@ class Lector:
                 fmt = None
                 if numpr is not None:
                     fmt = self._formato_numeracion(numpr.find(qn("w:numId")).get(qn("w:val")))
-                self.items.append({"tipo": "p", "texto": p.text.strip(), "imagen": rid, "lista": fmt})
+                self.items.append({"tipo": "p", "texto": ajustar(p.text.strip()), "imagen": rid, "lista": fmt})
             elif tag == "tbl":
                 tb = Table(hijo, self.doc)
-                filas = [[c.text.strip() for c in fila.cells] for fila in tb.rows]
+                filas = [[ajustar(c.text.strip()) for c in fila.cells] for fila in tb.rows]
                 self.items.append({"tipo": "tbl", "filas": filas})
 
     def _formato_numeracion(self, num_id):
@@ -121,7 +147,7 @@ def convertir(origen, salida, tmp):
     items = lector.items
     b = Borrador(PLANTILLA)
     stats = {"placeholders": 0, "pies_unidos": 0, "prefijo_pie": 0, "cursivas": 0, "negritas": 0, "titulos": 0,
-             "tablas_md": 0, "tablas_word": 0, "figuras": 0, "vacios": 0, "listas": 0, "citas": 0}
+             "tablas_md": 0, "tablas_word": 0, "figuras": 0, "vacios": 0, "listas": 0, "citas": 0, "entradillas": 0}
     palabras_orig = []  # palabras del original que deben aparecer en la salida
     consumidos = set()
 
@@ -139,7 +165,11 @@ def convertir(origen, salida, tmp):
             indices.append(j)
             stats["pies_unidos"] += 1
             j += 1
-        return texto.rstrip("*").strip(), indices
+        texto = texto.rstrip("*").strip()
+        if not texto.endswith("."):
+            CAMBIOS.append(("punto final del pie", "…" + texto[-40:] + " → ."))
+            texto += "."
+        return texto, indices
 
     def buscar_pie(desde, clase, max_saltos=4):
         for j in range(desde, min(desde + max_saltos, len(items))):
@@ -282,7 +312,33 @@ def convertir(origen, salida, tmp):
         stats["negritas"] += t.count("**") // 2
         if it["lista"]:
             estilo = "List Number" if it["lista"] == "decimal" else "List Bullet"
-            b.parrafo(marcar(t), estilo=estilo)
+            tm = marcar(t)
+            # Vinetas con entradilla («Nombre (ruta): texto»): la entradilla en negrita, como pide la biblia.
+            pos = -1
+            if estilo == "List Bullet":
+                dentro = False
+                k = 0
+                while k < len(tm) - 1 and k < 80:
+                    if tm[k:k + 2] == "//":
+                        dentro = not dentro
+                        k += 2  # la marca ocupa dos caracteres (y «///» cierra una cursiva seguida de «/»)
+                        continue
+                    if tm[k] == ":" and not dentro:
+                        pos = k
+                        break
+                    k += 1
+            if pos > 0:
+                from memoria_docx import _anadir_texto_marcado
+                p = b.doc.add_paragraph(style=estilo)
+                n0 = len(p.runs)
+                _anadir_texto_marcado(p, tm[:pos] + ":")
+                for r in p.runs[n0:]:
+                    r.bold = True
+                _anadir_texto_marcado(p, tm[pos + 1:])
+                b.palabras_cuerpo += len(palabras(t))
+                stats["entradillas"] += 1
+            else:
+                b.parrafo(tm, estilo=estilo)
             stats["listas"] += 1
         else:
             b.parrafo(marcar(t))
@@ -315,9 +371,13 @@ def main():
     tmp = tempfile.mkdtemp(prefix="word_daniel_")
     for origen, salida in DOCUMENTOS:
         assert origen.exists(), origen
+        CAMBIOS.clear()
         stats, n = convertir(origen, salida, tmp)
-        print("Guardado:", salida, "| palabras:", n, "| identicas al original: si")
+        print("Guardado:", salida, "| palabras:", n, "| identicas al original (tras los ajustes): si")
         print("  formato aplicado:", stats)
+        print("  ajustes tipograficos aplicados:", len(CAMBIOS))
+        for nombre, contexto in CAMBIOS:
+            print("    -", nombre, "::", contexto)
         res = subprocess.run([sys.executable, "-I", "-X", "utf8", str(Path(__file__).with_name("comprobar_borrador_docx.py")), str(salida)],
                              capture_output=True, text=True, encoding="utf-8")
         print(res.stdout.strip())
