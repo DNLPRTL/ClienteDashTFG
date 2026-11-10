@@ -1,6 +1,6 @@
 # Notas de la bibliografía impresa (no van a la memoria) — 10/11/2026
 
-Entregable: `docs/memoria/borradores_docx/bibliografia.docx` (78 entradas, comprobador sin avisos) y
+Entregable: `docs/memoria/borradores_docx/bibliografia.docx` (79 entradas, comprobador sin avisos) y
 `docs/memoria/apoyo/bibliografia_numeracion.json` (clave → número, primera aparición de cada clave, citas por
 documento, claves no citadas, texto impreso de cada entrada). Generado por `docs/memoria/apoyo/generar_bibliografia.py`
 (Python 3.11 basta; no importa el código entregado).
@@ -14,14 +14,14 @@ documento, claves no citadas, texto impreso de cada entrada). Generado por `docs
   el orden real del cuerpo (párrafos y tablas intercalados).
 - Daniel cita con la sintaxis de LaTeX (`\cite{iso23009_1_2022}`): la primera pasada, que solo buscaba corchetes,
   contó cero citas en sus Word; corregido el 10/11. Sus 30 claves (17 citas en el cap 4, 13 en el 5.1–5.2) están
-  todas en el .bib. Si cambia sus citas, basta con volver a ejecutar el conversor y después este script.
-- Solo se imprime lo citado: 78 de las 96 entradas. Las 18 no citadas no se imprimen (biblia: «entradas nunca
+  todas en el .bib; las citas propuestas el 10/11 (dash.js, Shaka, ISO BMFF, RFC 9111, BBA, BOLA, MPC, Pensieve,
+  Oboe) van ya en rojo en su cap 4. Si cambia sus citas, basta con volver a ejecutar el conversor y después este script.
+- Solo se imprime lo citado: 79 de las 96 entradas. Las 17 no citadas no se imprimen (biblia: «entradas nunca
   citadas» es error del corpus del tutor): bentaleb2024ahaggar, huang2023deepbuffer, huang2026eastream,
-  hussein2026mambra, kingma2015adam, li2024metaabr, luo2025sabr, mao2020abrl, patel2023plume, rfc9111,
-  sentosa2025cellreplay, wang2026nmoeabr, wei2019traceBasedEmulation, yi2025airl, yi2025fortuna, yin2024ant,
-  zhang2025beta, zhou2022adaptiveStreamingQualityAssessment. Son descartes del cap 2 (más la RFC 9111 de caché y
-  Adam, ver pendientes).
-- Citas por documento (ocurrencias de clave): cap 1 21, cap 2 65 (13 + 28 + 24), cap 4 19, 5.1–5.2 15, 5.3 6, 5.4 1,
+  hussein2026mambra, kingma2015adam, li2024metaabr, luo2025sabr, mao2020abrl, patel2023plume, sentosa2025cellreplay,
+  wang2026nmoeabr, wei2019traceBasedEmulation, yi2025airl, yi2025fortuna, yin2024ant, zhang2025beta,
+  zhou2022adaptiveStreamingQualityAssessment. Son descartes del cap 2 (más Adam, ver pendientes).
+- Citas por documento (ocurrencias de clave): cap 1 21, cap 2 65 (13 + 28 + 24), cap 4 30, 5.1–5.2 15, 5.3 6, 5.4 1,
   5.5 19, 5.6 8, 6.1 7, 6.2 6, 6.7 1, cap 7 5, anexos 24; resumen, cap 3, 5.7, 5.8, 6.3–6.6: 0.
 
 ## Citas añadidas el 10/11 para no dejar fuentes sin citar

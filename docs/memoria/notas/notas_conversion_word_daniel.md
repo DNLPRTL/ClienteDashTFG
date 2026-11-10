@@ -103,6 +103,27 @@ Lista de los 42 ajustes aplicados (regla :: contexto):
 - espacio sobrante antes de signo ::  fichero de manera remota , a través de una petición
 - errata «amuestra» :: ventana de traza muestra amuestra, con la última usada sol
 
+## Cambios de contenido aplicados y marcados en rojo (10/11, tercera pasada)
+
+Daniel pidió aplicar él mismo las revisiones de contenido, y después cambió de idea: que las aplique el script sobre
+sus docx y que TODO lo nuevo o reescrito vaya en rojo subrayado, para reformularlo con sus palabras. La tabla de
+cambios está en `apoyo/cambios_contenido_daniel.py`: cada uno con su identificador (C1–C32 del cap 4, D1–D8 y E1–E9
+del 5.1–5.2, erratas y citas propuestas), el texto original exacto y el nuevo; el script exige que cada uno se
+aplique exactamente una vez y falla si no encuentra el original (si Daniel reescribe su Word, hay que revisar la
+tabla). `--texto-intacto` regenera los docx solo con formato y ajustes tipográficos.
+
+- Cap 4: 45 sustituciones y 2 filas nuevas (Tabla 4.1 `pruebas/`, Tabla 4.3 cola mínima del motor), 60 tramos en
+  rojo. Citas añadidas: dash.js y Shaka (4.1), ISO BMFF (4.2), RFC 9111 (4.3), BBA, BOLA, MPC y Pensieve (4.5),
+  Oboe (4.7), Pensieve en la QoE y en el filtro de ventanas (4.8). 10 855 palabras.
+- 5.1–5.2: 25 sustituciones y 1 fila nueva (NumPy en la Tabla 5.1), 30 tramos en rojo. 4299 palabras.
+- Tics que siguen siendo suyos: «Cabe destacar ciertos aspectos» (4.7), «dicho de otro modo», «es importante
+  destacar»; la Figura 4.5 sigue sin anunciarse en el texto antes del pie.
+- Las figuras NO se tocan (SVG suyos, algunos sin commitear). Cambios de texto pendientes en ellas:
+  - **Figura 4.2**: caja 5 → «Nivel inicial fijado por configuración (el más bajo en la evaluación); el primer segmento no cambia (calentamiento)»
+  - **Figura 4.5**: caja «Registro»: añadir las tres variantes; caja «Respaldo a controlador clásico» → «Respaldo al MPC robusto»
+  - **Figura 4.6**: «Ventana 300 s» → «Ventana 160 s con una vuelta de seguridad»; «entrenamiento / prueba / evaluación» → «entrenamiento / validación / evaluación»; «si falla algo la sesión se detiene» → «la traza se repite como mucho una vez; si aun así se agota, la sesión se detiene»; «8 vídeos en el servidor» → «9 vídeos (5 en el experimento, uno nuevo)»; «variación típica 10 %, hasta 16 %» → «CV de 0,05 a 0,19 en los vistos y de 0,28 a 0,31 en el contenido nuevo»
+  - **Figura 5.1**: «si se termina antes de finalizar una entrega, la sesión falla y se registra» → «al final de la ventana la traza vuelve a empezar (una sola vuelta); si aun así se agota, la sesión falla y se registra»
+
 ## Decisiones
 
 - Las imágenes del cap 4 se toman tal cual están incrustadas en su Word (PNG), no de los SVG del repo, para
