@@ -46,8 +46,8 @@ ORDEN = [
     BORRADORES / "cap2_3_4_problema_familias.docx",
     BORRADORES / "cap2_5_7_qoe_reproductores_lagunas.docx",
     BORRADORES / "cap3_planificacion_costes.docx",
-    WORD_DANIEL / "Borrador Capitulo 4 Diseño.docx",
-    WORD_DANIEL / "hasta 5_2.docx",
+    BORRADORES / "cap4_diseno_daniel.docx",  # conversion al formato de la biblia de los Word de Daniel
+    BORRADORES / "cap5_1_2_daniel.docx",      # (apoyo/convertir_word_daniel.py), con sus citas como [clave]
     BORRADORES / "cap5_3_analizador_mpd.docx",
     BORRADORES / "cap5_4_ejecutor_configuracion.docx",
     BORRADORES / "cap5_5_controladores_clasicos.docx",
@@ -96,6 +96,7 @@ def limpiar(texto):
     """Pasa el LaTeX del .bib a texto plano."""
     t = texto
     t = re.sub(r"\\url\{([^}]*)\}", r"\1", t)
+    t = re.sub(r"\\(texttt|textit|textbf|emph|textrm)\{([^}]*)\}", r"\2", t)
     for marca, mapa in ACENTOS.items():
         for letra, res in mapa.items():
             t = t.replace("{\\" + marca + letra + "}", res).replace("\\" + marca + "{" + letra + "}", res)
@@ -257,8 +258,9 @@ def citas_en_orden(claves_bib):
         leidos.append(ruta.name)
         t = texto_en_orden(ruta)
         encontradas = []
-        for m in re.finditer(r"\[([^\[\]]+)\]", t):
-            for k in re.split(r"[,;]\s*", m.group(1)):
+        # Citas como [clave] o [clave1], [clave2] (borradores) y como \cite{clave} o \cite{a,b} (Word de Daniel).
+        for m in re.finditer(r"\[([^\[\]]+)\]|\\cite\{([^}]*)\}", t):
+            for k in re.split(r"[,;]\s*", m.group(1) or m.group(2)):
                 k = k.strip()
                 if k in claves_bib:
                     encontradas.append(k)
